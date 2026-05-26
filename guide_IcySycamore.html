@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python环境配置指南 | 团队标准版</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        background-color: #f6f9fc;
+        color: #1a2a3a;
+        padding: 2rem;
+        line-height: 1.5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 2rem;
+      }
+      h1,
+      h2 {
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+      h1 {
+        border-bottom: none;
+        background: linear-gradient(135deg, #1e6f3f, #2d9c5c);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        font-size: 2rem;
+        margin-top: 0;
+      }
+      h3 {
+        margin: 1.2rem 0 0.6rem;
+        font-size: 1.2rem;
+        color: #2c3e4e;
+      }
+      .badge-tech {
+        background-color: #fff3e0;
+        border-left: 8px solid #f39c12;
+        padding: 1rem 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      .badge-tech h3 {
+        margin-top: 0;
+        color: #e67e22;
+      }
+      .tip-box {
+        background-color: #e9f7ef;
+        border-left: 5px solid #2ecc71;
+        padding: 0.8rem 1.2rem;
+        margin: 1rem 0;
+        border-radius: 12px;
+      }
+      .warning-box {
+        background-color: #ffe8e6;
+        border-left: 5px solid #e74c3c;
+        padding: 0.8rem 1.2rem;
+        margin: 1rem 0;
+        border-radius: 12px;
+      }
+      pre {
+        background-color: #e0f2e9; /* 淡绿色块 */
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        overflow-x: auto;
+        font-family: "Fira Code", "Cascadia Code", monospace;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 1rem 0;
+        box-shadow:
+          inset 0 0 0 1px #b6e0cc,
+          0 2px 4px rgba(0, 0, 0, 0.05);
+        position: relative;
+      }
+      .copy-btn {
+        background: #2c7a4d;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        float: right;
+        margin-top: -0.5rem;
+        margin-right: 0.5rem;
+        transition: 0.2s;
+      }
+      .copy-btn:hover {
+        background: #1e5a38;
+      }
+      ul,
+      ol {
+        margin: 1rem 0 1rem 2rem;
+      }
+      li {
+        margin: 0.4rem 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      th,
+      td {
+        border: 1px solid #cfdee9;
+        padding: 0.6rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background-color: #ecf8f2;
+      }
+      hr {
+        margin: 2rem 0;
+      }
+      .footer {
+        margin-top: 2rem;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #5f7f6e;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 1rem;
+      }
+      @media (max-width: 700px) {
+        body {
+          padding: 1rem;
+        }
+        .container {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        Python 环境配置完全指南<br /><span style="font-size: 0.9rem"
+          >团队标准工作流 · 兼容 Windows / macOS / Linux</span
+        >
+      </h1>
+
+      <!-- 技术栈提示块（橙黄色） -->
+      <div class="badge-tech">
+        <h3>🛠️ 团队技术栈 & 注意事项</h3>
+        <p>
+          <strong>核心栈：</strong> <code>Python 3.12</code> +
+          <code>PyQt5/PySide6</code> + <code>(ana)conda (或Miniconda)</code> +
+          <code>VSCode</code><br />
+          <strong>AI/CV 项目：</strong> PyTorch (CUDA), Open3D, trimesh, Fast3R
+          等。<br />
+          <strong>⚠️ 易错点：</strong><br />
+          • 不要使用 Python 3.13+ (很多科学包未适配)<br />
+          • 避免在 base 环境乱装包，务必创建虚拟环境<br />
+          • 不要混用 conda 和 pip 安装同一核心包（如 numpy, torch）避免 DLL
+          冲突<br />
+          • OpenMP 冲突（常见于 PyTorch + MKL）→ 设置环境变量
+          <code>KMP_DUPLICATE_LIB_OK=TRUE</code>
+        </p>
+      </div>
+
+      <!-- 1 虚拟环境重要性 -->
+      <h2>1. 什么是 Python 虚拟环境？为什么必须用？</h2>
+      <p>
+        虚拟环境是一个隔离的 Python 运行沙箱，每个项目拥有独立的包版本。重要性：
+      </p>
+      <ul>
+        <li>✅ 避免包版本冲突（项目A需要 torch 1.5，项目B需要 torch 2.0）</li>
+        <li>✅ 无需管理员权限，环境可随时删除重建</li>
+        <li>
+          ✅ 与团队协作：提交 <code>requirements.txt</code> 即可一键复现环境
+        </li>
+      </ul>
+      <div class="tip-box">
+        💡 <strong>核心理念</strong>：永远不在 base
+        环境工作！每次项目都创建专属环境。
+      </div>
+
+      <!-- 2 pip / conda / Anaconda-->
+      <h2>2. pip, conda, Anaconda 三兄弟的关系</h2>
+      <table>
+        <tr>
+          <th>工具</th>
+          <th>定位</th>
+          <th>适用场景</th>
+        </tr>
+        <tr>
+          <td>pip</td>
+          <td>Python 官方包管理器（PyPI）</td>
+          <td>纯 Python 包，轻量快速</td>
+        </tr>
+        <tr>
+          <td>conda</td>
+          <td>跨语言包管理器+环境管理</td>
+          <td>管理复杂二进制 (CUDA, OpenCV) + 环境</td>
+        </tr>
+        <tr>
+          <td>Anaconda</td>
+          <td>发行版 (conda + Python + 150+ 科学包)</td>
+          <td>新手，但体积大；追求轻量化可以使用Miniconda</td>
+        </tr>
+      </table>
+      <div class="badge-tech">
+        ⚠️ 项目成员请统一选择安装 <strong>conda</strong> ，用 conda 创建环境，用
+        pip/conda 安装 requirements.txt 中的包。
+      </div>
+
+      <!-- 3 Anaconda 的终端工具 -->
+      <h2>3. Anaconda 的三种操作界面（PowerShell / CMD / Navigator）</h2>
+      <ul>
+        <li>
+          <strong>Anaconda PowerShell Prompt</strong> – 自动激活
+          base，推荐日常使用。
+        </li>
+        <li><strong>Anaconda CMD (prompt)</strong> – 适合脚本/CI。</li>
+        <li>
+          <strong>Anaconda Navigator</strong> – 图形界面，适合新手或启动
+          Jupyter。
+        </li>
+      </ul>
+
+      <div class="badge-tech">
+        ⚠️ 在 VSCode 中我们统一使用集成终端 + conda 初始化，见下一节
+      </div>
+
+      <!-- 4 VSCode 配置 conda 终端 -->
+      <h2>4. VSCode 中配置 Anaconda PowerShell 终端</h2>
+      <div class="warning-box">
+        ❗ 常见错误：在 VSCode 终端输入 <code>conda</code> 提示
+        <code>conda-script.py: error: argument COMMAND: invalid choice: ''</code
+        ><br />
+        原因：VSCode 终端未加载 conda 初始化函数。
+      </div>
+      <p>
+        <strong>
+          🔸 权宜之计，更健康且可能更有效的工作流见下一点（仅需做一次）<br /></strong
+        >在 <strong>系统原生终端</strong>（不是 VSCode 内部）执行 conda init。
+      </p>
+      <h4>Windows (PowerShell)</h4>
+      <pre><code># win+x 再按a<br>conda init powershell<br>conda init pwsh        # 如果你使用 PowerShell 7+</code><button class="copy-btn">复制</button></pre>
+      <h4>macOS / Linux (bash/zsh)</h4>
+      <pre><code>conda init<br>source ~/.bashrc      # 或重启终端</code><button class="copy-btn">复制</button></pre>
+      <p>
+        <strong
+          >完成后关闭 VSCode 所有窗口，重新打开 → 新建终端即可正常使用
+          <code>conda</code> 命令。</strong
+        >
+      </p>
+      <div class="tip-box">
+        💡 如果你不想让系统终端显示 (base) 且减少启动延迟，请看「9. conda init
+        profile 取消延迟」章节。
+      </div>
+      <p>
+        🔸
+        <strong
+          >在setting.json中进行配置（之后可能会出团队统一的工作区setting.json）</strong
+        ><br /><br />
+        <img
+          src="./setting.png"
+          alt="你似乎没有把图片放到本说明的同一路径下"
+        /><br />
+        像图中一样配置anaconda
+        powershell，其中path和参数顺序不变，将"D://anaconda3"换成你自己的路径
+      </p>
+
+      <!-- 5 conda 建立虚拟环境 -->
+      <h2>5. conda 创建 & 管理虚拟环境</h2>
+      <pre><code># 查看所有环境<br>conda env list<br><br># 创建新环境 ( 指定 Python 版本，例如 3.12,其中-y是传递给命令行的参数，相当于对之后出现的y/n询问做确认 )<br>conda create -n 环境名称 python=3.12 -y<br><br># 激活环境<br>conda activate 环境名称<br><br># 退出当前环境<br>conda deactivate<br><br># 删除环境（加 -y 自动确认）<br>conda env remove -n 环境名称 -y<br><br># 克隆现有环境（作为备份）<br>conda create --name 新环境名 --clone 旧环境名</code><button class="copy-btn">复制</button></pre>
+      <div class="tip-box">
+        建议统一起名为Omni3D便于交流和管理（ 其实是直接复制命令 ）。
+      </div>
+
+      <!-- 6 pip与conda安装依赖 -->
+      <h2>6. 安装依赖：pip vs conda 最佳实践</h2>
+      <ul>
+        <li>
+          <strong>（可选）优先用 conda 安装</strong> 二进制复杂包：<code
+            >conda install -c conda-forge numpy pytorch opencv</code
+          >
+        </li>
+        <li>
+          <strong>所有包统一用 pip</strong> 安装
+          <code>requirements.txt</code>，简单可靠。
+        </li>
+      </ul>
+      <pre><code># 在 conda 环境内<br>conda activate Omni3D<br><br>pip install -r requirements.txt       # 安装项目依赖<br><br># 如果上一条报错或出现问题，一般是deepspeed，<br># open3d和vtk的问题<br># windows系统不怎么适配deepseed，有方法可以但太麻烦，<br># deepseed不是win用户必选项，当然你也可以选择linux或者WSL,<br># 以下是一般性解决方案：<br># 先在requirement.txt用#注释掉deepseed，然后用conda安装复杂包<br>conda install open3d pyqt5 vtk<br><br># 然后注释掉open3d，因为已通过conda安装，<br># 用pip安装requirements.txt<br>pip install -r requirements.txt<br><br># 如果后续python报错缺少moudle ctype/qt库相关，这条用来解决ctypes依赖<br>conda install -c conda-forge libffi/pyqt5<br><br></code><button class="copy-btn">复制</button></pre>
+      <h4>示例：安装 PyTorch (以CUDA 12.1为例)</h4>
+      <pre><code>pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121<br></code><button class="copy-btn">复制</button></pre>
+      <div class="badge-tech">
+        ⚠️ 自行查阅ai或访问nvida官网获取自己gpu版本及对应的安装命令/CUDA版本
+      </div>
+      <h4>从 requirements.txt 检查缺失包（不安装）</h4>
+      <pre><code>pip install -r requirements.txt --dry-run --ignore-installed</code><br><br><button class="copy-btn">复制</button></pre>
+      <div class="badge-tech">⚠️ 此条在不同win系统上实际执行情况存疑</div>
+
+      <!-- 7 修改 requirement 使 conda 能用 pip 编写的 requirement -->
+      <h2>7. 如何让 conda 也能使用 pip 编写的 requirements.txt？</h2>
+      <div class="warning-box">
+        ❗ <code>conda install --file requirements.txt</code> 不支持
+        <code>&gt;=</code>、<code>~=</code> 等版本约束符，仅接受包名或
+        <code>==version</code>。
+      </div>
+      <p>
+        <strong>推荐方案</strong>：直接在 conda 环境里用 pip 安装
+        requirements.txt，这依然是最稳定且最简单的做法。
+      </p>
+      <p>
+        <strong
+          >备选方案：编写 environment.yml 同时管理 conda 和 pip 依赖</strong
+        >
+      </p>
+      <pre><code>name: myenv<br>channels:<br>  - conda-forge<br>  - defaults<br>dependencies:<br>  - python=3.12<br>  - pip<br>  - pip:<br>      - -r requirements.txt</code><button class="copy-btn">复制</button></pre>
+      <p>用下面命令一键创建环境：</p>
+      <pre><code>conda env create -f environment.yml</code><button class="copy-btn">复制</button></pre>
+
+      <!-- 8 conda init profile 及取消延迟 -->
+      <h2>8. conda init profile：为什么要 init？如何取消以减少启动延迟？</h2>
+      <ul>
+        <li>
+          <strong>为什么需要 <code>conda init</code></strong
+          >：它会将 conda 初始化代码写入 shell 配置文件（.bashrc,
+          profile.ps1），使每次终端启动时自动激活 conda 函数。
+        </li>
+        <li>
+          <strong>副作用</strong>：终端启动变慢（1200-2000ms），并且显示
+          <code>(base)</code> 前缀。
+        </li>
+        <li><strong>So,如何取消（恢复干净的终端）？</strong></li>
+      </ul>
+      <h4>Windows (PowerShell)</h4>
+      <pre><code>conda init --reverse powershell</code><button class="copy-btn">复制</button></pre>
+      <h4>macOS / Linux</h4>
+      <pre><code>conda init --reverse</code><button class="copy-btn">复制</button></pre>
+      <br />
+      <div class="tip-box">
+        💡 更好的折中：只在 VSCode 内部启用 conda，而不污染全局终端 →
+        见章节4的“仅影响 VSCode 终端的配置文件”。
+      </div>
+
+      <!-- 9 包冲突解决（OpenMP 冲突及其他）-->
+      <h2>9. 常见包冲突解决：OpenMP 运行时冲突以及 DLL 丢失</h2>
+      <h3>
+        🔸 典型错误：<code
+          >OMP: Error #15: Initializing libomp.dll, but found libiomp5md.dll
+          already initialized.</code
+        >
+      </h3>
+      <p>
+        <strong>原因</strong>：同时加载了 Intel MKL 的 OpenMP 与 LLVM 的
+        OpenMP。
+      </p>
+      <p><strong>✔ 快速解决（推荐）</strong>：运行脚本前设置环境变量。</p>
+      <pre><code># Windows PowerShell 临时设置<br>$env:KMP_DUPLICATE_LIB_OK="TRUE"<br><br># macOS / Linux<br>export KMP_DUPLICATE_LIB_OK=TRUE</code><button class="copy-btn">复制</button></pre>
+      <p>或在 Python 代码开头加入：</p>
+      <pre><code>import os<br>os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"</code><button class="copy-btn">复制</button></pre>
+      <h3>🔸 （据说的）根本清理方案（能跑起来就行，没必要）</h3>
+      <pre><code># 方法 A：保留 Intel，移除 LLVM<br>conda remove llvm-openmp -y<br>conda install intel-openmp -c conda-forge -y<br><br># 方法 B：若冲突依旧，手动重命名 libiomp5md.dll 备份<br># 路径： <环境目录>\Library\bin\libiomp5md.dll</code><button class="copy-btn">复制</button></pre>
+
+      <h3>
+        🔸 另一个常见问题：<code
+          >ImportError: DLL load failed while importing _ctypes</code
+        >
+      </h3>
+      <p>
+        原因：缺失 <code>ffi.dll</code>（conda 环境更新导致的残留）。手动从
+        conda 缓存恢复：
+      </p>
+      <pre><code># 找到 libffi 缓存目录<br>cd D:\anaconda3\pkgs<br>dir libffi-*<br><br># 复制 ffi.dll 到当前环境 (例：环境名为 Omni3D)<br>copy libffi-3.4.4-hd77b12b_1\Library\bin\ffi.dll D:\anaconda3\envs\Omni3D\Library\bin\</code><button class="copy-btn">复制</button></pre>
+
+      <!-- 10 团队协作 checklist -->
+      <h2>10. ( obsolete )团队协作 Checklist / 快速配置脚本</h2>
+      <div class="tip-box">
+        🚀 新成员一键配置（Windows 示例，macOS/Linux 类似）：
+      </div>
+      <pre><code># 1. 安装 Miniconda (https://docs.conda.io/en/latest/miniconda.html)<br># 2. 打开 Anaconda PowerShell Prompt 或系统终端<br>conda create -n team_env python=3.12 -y<br>conda activate team_env<br>pip install -r requirements.txt<br><br># 3. 若使用 PyQt5 / Fast3R 等额外包，确保 Python 3.12 版本<br>pip install pyqt5 open3d trimesh roma</code><br><br><button class="copy-btn">复制</button></pre>
+      <div class="footer">
+        🧭 本指南涵盖虚拟环境、conda/pip、VSCode
+        集成、依赖解决、冲突处理。遇到问题优先查此文档，或联系 @IcySycamore。<br />
+        最后更新：2026-04-29 | 团队环境配置标准 v2.0
+      </div>
+    </div>
+
+    <script>
+      // 为所有 pre 内的 code 添加复制按钮功能
+      document.querySelectorAll(".copy-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const pre = this.closest("pre");
+          const codeBlock = pre.querySelector("code");
+          let text = codeBlock.innerText;
+          // 处理 &lt;br&gt; 还原为换行
+          text = text.replace(/<br>/gi, "\n");
+          // 创建临时文本域
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+          // 反馈
+          const originalText = btn.textContent;
+          btn.textContent = "✓ 已复制";
+          setTimeout(() => (btn.textContent = originalText), 1500);
+        });
+      });
+    </script>
+  </body>
+</html>

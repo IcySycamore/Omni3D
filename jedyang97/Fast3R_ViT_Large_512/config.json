@@ -1,0 +1,45 @@
+{
+  "decoder_args": {
+    "attn_bias_for_inference_enabled": false,
+    "attn_drop": 0.0,
+    "attn_implementation": "flash_attention",
+    "decoder_type": "fast3r",
+    "depth": 24,
+    "drop": 0.0,
+    "embed_dim": 1024,
+    "enc_embed_dim": 1024,
+    "mlp_ratio": 4.0,
+    "num_heads": 16,
+    "qkv_bias": true,
+    "random_image_idx_embedding": true
+  },
+  "encoder_args": {
+    "attn_implementation": "flash_attention",
+    "depth": 24,
+    "embed_dim": 1024,
+    "encoder_type": "croco",
+    "img_size": 512,
+    "mlp_ratio": 4,
+    "num_heads": 16,
+    "patch_embed_cls": "PatchEmbedDust3R",
+    "patch_size": 16,
+    "pos_embed": "RoPE100"
+  },
+  "head_args": {
+    "conf_mode": [
+      "exp",
+      1,
+      Infinity
+    ],
+    "depth_mode": [
+      "exp",
+      -Infinity,
+      Infinity
+    ],
+    "head_type": "dpt",
+    "landscape_only": false,
+    "output_mode": "pts3d",
+    "patch_size": 16,
+    "with_local_head": true
+  }
+}
