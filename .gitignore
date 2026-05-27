@@ -1,5 +1,8 @@
 logs
 
+# Qoder IDE files
+.qoder/
+
 notebooks/figures/
 notebooks/output/
 
