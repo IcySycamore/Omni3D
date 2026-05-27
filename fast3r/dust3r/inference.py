@@ -19,6 +19,15 @@ from dust3r.utils.misc import invalid_to_nans
 
 
 def _interleave_imgs(img1, img2):
+    """将两个图像字典按样本交错合并。
+
+    Args:
+        img1 (dict): 第一个图像批次字典。
+        img2 (dict): 第二个图像批次字典。
+
+    Returns:
+        dict: 交错合并后的字典，每对样本依次排列。
+    """
     res = {}
     for key, value1 in img1.items():
         value2 = img2[key]
@@ -31,6 +40,14 @@ def _interleave_imgs(img1, img2):
 
 
 def make_batch_symmetric(batch):
+    """将批次数据对称化（同时考虑正向和反向图像对）。
+
+    Args:
+        batch (tuple): (view1, view2) 图像对。
+
+    Returns:
+        tuple: 交错对称后的 (view1, view2)。
+    """
     view1, view2 = batch
     view1, view2 = (_interleave_imgs(view1, view2), _interleave_imgs(view2, view1))
     return view1, view2
@@ -39,6 +56,21 @@ def make_batch_symmetric(batch):
 def loss_of_one_batch(
     batch, model, criterion, device, symmetrize_batch=False, use_amp=False, ret=None
 ):
+    """对单个批次进行推理并计算损失。
+
+    Args:
+        batch (tuple): (view1, view2) 图像对批次。
+        model (nn.Module): 推理模型。
+        criterion (callable | None): 损失函数，为 None 时跳过损失计算。
+        device (str | torch.device): 目标设备。
+        symmetrize_batch (bool): 是否对批次进行对称化处理。默认 False。
+        use_amp (bool): 是否使用自动混合精度。默认 False。
+        ret (str | None): 若指定，则只返回结果字典中对应键的值。
+
+    Returns:
+        dict | Any: 包含 view1, view2, pred1, pred2, loss 的字典，
+            或若 ret 指定了键则返回对应值。
+    """
     view1, view2 = batch
     for view in batch:
         for (
@@ -68,6 +100,18 @@ def loss_of_one_batch(
 
 @torch.no_grad()
 def inference(pairs, model, device, batch_size=8, verbose=True):
+    """对图像对列表进行批量推理。
+
+    Args:
+        pairs (list): 图像对列表，每个元素为 (view1, view2) 字典对。
+        model (nn.Module): 推理模型。
+        device (str | torch.device): 目标设备。
+        batch_size (int): 每批处理的图像对数量。若图像尺寸不一致则强制为 1。
+        verbose (bool): 是否显示进度条。默认 True。
+
+    Returns:
+        dict: 所有批次的推理结果合并字典。
+    """
     if verbose:
         print(f">> Inference with model on {len(pairs)} image pairs")
     result = []
@@ -89,6 +133,14 @@ def inference(pairs, model, device, batch_size=8, verbose=True):
 
 
 def check_if_same_size(pairs):
+    """检查所有图像对中的图像是否具有相同尺寸。
+
+    Args:
+        pairs (list): 图像对列表。
+
+    Returns:
+        bool: 若所有图像尺寸相同返回 True，否则返回 False。
+    """
     shapes1 = [img1["img"].shape[-2:] for img1, img2 in pairs]
     shapes2 = [img2["img"].shape[-2:] for img1, img2 in pairs]
     return all(shapes1[0] == s for s in shapes1) and all(
@@ -97,6 +149,18 @@ def check_if_same_size(pairs):
 
 
 def get_pred_pts3d(gt, pred, use_pose=False):
+    """从模型预测中提取 3D 点云。
+
+    根据预测字典中的键（'depth'/'pts3d'/'pts3d_in_other_view'）选择不同提取策略。
+
+    Args:
+        gt (dict): 真实标注，可能包含相机内参。
+        pred (dict): 模型预测字典。
+        use_pose (bool): 若为 True，将点云从相机坐标系变换到世界坐标系。
+
+    Returns:
+        Tensor: 形状为 (B, H, W, 3) 的 3D 点云。
+    """
     if "depth" in pred and "pseudo_focal" in pred:
         try:
             pp = gt["camera_intrinsics"][..., :2, 2]
@@ -130,6 +194,21 @@ def find_opt_scaling(
     valid1=None,
     valid2=None,
 ):
+    """找到使预测点云与真实点云最对齐的最优缩放因子。
+
+    Args:
+        gt_pts1 (Tensor): 视图1 的真实 3D 点，形状 (B, H, W, 3)。
+        gt_pts2 (Tensor | None): 视图2 的真实 3D 点，形状 (B, H, W, 3)。
+        pr_pts1 (Tensor): 视图1 的预测 3D 点，形状 (B, H, W, 3)。
+        pr_pts2 (Tensor | None): 视图2 的预测 3D 点。
+        fit_mode (str): 拟合方法，可选 'avg', 'median', 'weiszfeld',
+            加 '_stop_grad' 后缀可停止梯度传播。
+        valid1 (Tensor | None): 视图1 的有效像素掩码。
+        valid2 (Tensor | None): 视图2 的有效像素掩码。
+
+    Returns:
+        Tensor: 形状为 (B,) 的最优缩放因子，已裁剪到 [1e-3, +∞)。
+    """
     assert gt_pts1.ndim == pr_pts1.ndim == 4
     assert gt_pts1.shape == pr_pts1.shape
     if gt_pts2 is not None:

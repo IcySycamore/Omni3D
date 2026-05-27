@@ -44,6 +44,16 @@ assert version.parse(hf_version_number) >= version.parse(
 
 
 def load_model(model_path, device, verbose=True):
+    """从检查点路径加载 DUSt3R 模型。
+
+    Args:
+        model_path: 模型检查点路径。
+        device: 目标设备（如 'cpu'、'cuda'）。
+        verbose: 是否打印加载信息，默认 True。
+
+    Returns:
+        nn.Module: 加载好权重的模型。
+    """
     if verbose:
         print("... loading model from", model_path)
     ckpt = torch.load(model_path, map_location="cpu")
@@ -84,9 +94,21 @@ class AsymmetricCroCo3DStereo(
         conf_mode=("exp", 1, inf),
         freeze="none",
         landscape_only=True,
-        patch_embed_cls="PatchEmbedDust3R",  # PatchEmbedDust3R or ManyAR_PatchEmbed
+        patch_embed_cls="PatchEmbedDust3R",
         **croco_kwargs,
     ):
+        """初始化 AsymmetricCroCo3DStereo 模型。
+
+        Args:
+            output_mode: 输出模式，默认 'pts3d'。
+            head_type: 预测头类型，默认 'linear'。
+            depth_mode: 深度模式元组，默认 ('exp', -inf, inf)。
+            conf_mode: 置信度模式元组，默认 ('exp', 1, inf)。
+            freeze: 冻结策略，可选 'none'、'mask'、'encoder'。
+            landscape_only: 是否仅横屏模式，默认 True。
+            patch_embed_cls: Patch 嵌入类名。
+            **croco_kwargs: CroCo 模型的其他参数。
+        """
         self.patch_embed_cls = patch_embed_cls
         self.croco_args = fill_default_args(croco_kwargs, super().__init__)
         super().__init__(**croco_kwargs)
@@ -105,6 +127,15 @@ class AsymmetricCroCo3DStereo(
 
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path, **kw):
+        """从预训练模型加载。
+
+        Args:
+            pretrained_model_name_or_path: 预训练模型路径或 HuggingFace 仓库标识。
+            **kw: 其他关键字参数。
+
+        Returns:
+            AsymmetricCroCo3DStereo: 加载好权重的模型。
+        """
         if os.path.isfile(pretrained_model_name_or_path):
             return load_model(pretrained_model_name_or_path, device="cpu")
         else:
@@ -118,7 +149,17 @@ class AsymmetricCroCo3DStereo(
         )
 
     def load_state_dict(self, ckpt, **kw):
-        # duplicate all weights for the second decoder if not present
+        """加载状态字典，自动复制解码器权重到第二个解码器。
+
+        如果检查点中没有 dec_blocks2 的权重，会自动将 dec_blocks 的权重复制到 dec_blocks2。
+
+        Args:
+            ckpt: 状态字典。
+            **kw: 传递给父类的额外参数。
+
+        Returns:
+            _IncompatibleKeys: 包含 missing_keys 和 unexpected_keys。
+        """
         new_ckpt = dict(ckpt)
         if not any(k.startswith("dec_blocks2") for k in ckpt):
             for key, value in ckpt.items():
@@ -126,7 +167,15 @@ class AsymmetricCroCo3DStereo(
                     new_ckpt[key.replace("dec_blocks", "dec_blocks2")] = value
         return super().load_state_dict(new_ckpt, **kw)
 
-    def set_freeze(self, freeze):  # this is for use by downstream models
+    def set_freeze(self, freeze):
+        """设置模型冻结策略。
+
+        Args:
+            freeze: 冻结策略，可选值：
+                - 'none': 不冻结
+                - 'mask': 仅冻结 mask_token
+                - 'encoder': 冻结 mask_token、patch_embed 和 enc_blocks
+        """
         self.freeze = freeze
         to_be_frozen = {
             "none": [],
@@ -187,6 +236,17 @@ class AsymmetricCroCo3DStereo(
         return x, pos, None
 
     def _encode_image_pairs(self, img1, img2, true_shape1, true_shape2):
+        """编码一对图像，支持不同尺寸的图像对。
+
+        Args:
+            img1: 第一张图像。
+            img2: 第二张图像。
+            true_shape1: 第一张图像的真实形状。
+            true_shape2: 第二张图像的真实形状。
+
+        Returns:
+            tuple: (out1, out2, pos1, pos2) 各视图的编码特征和位置编码。
+        """
         if img1.shape[-2:] == img2.shape[-2:]:
             out, pos, _ = self._encode_image(
                 torch.cat((img1, img2), dim=0),
@@ -200,6 +260,17 @@ class AsymmetricCroCo3DStereo(
         return out, out2, pos, pos2
 
     def _encode_symmetrized(self, view1, view2):
+        """对称编码两个视图，支持对称化数据增强。
+
+        如果两个视图已对称化，只计算一半的前向传播以提高效率。
+
+        Args:
+            view1: 第一个视图字典。
+            view2: 第二个视图字典。
+
+        Returns:
+            tuple: ((shape1, shape2), (feat1, feat2), (pos1, pos2))
+        """
         img1 = view1["img"]
         img2 = view2["img"]
         B = img1.shape[0]
@@ -227,6 +298,19 @@ class AsymmetricCroCo3DStereo(
         return (shape1, shape2), (feat1, feat2), (pos1, pos2)
 
     def _decoder(self, f1, pos1, f2, pos2):
+        """非对称双解码器前向传播。
+
+        两组解码器块分别处理两个视图的特征，进行交叉注意力交互。
+
+        Args:
+            f1: 视图 1 的编码特征。
+            pos1: 视图 1 的位置编码。
+            f2: 视图 2 的编码特征。
+            pos2: 视图 2 的位置编码。
+
+        Returns:
+            zip: 两组解码器输出的迭代器。
+        """
         final_output = [(f1, f2)]  # before projection
 
         # project to decoder dim
@@ -248,12 +332,35 @@ class AsymmetricCroCo3DStereo(
         return zip(*final_output)
 
     def _downstream_head(self, head_num, decout, img_shape):
+        """获取下游预测头的输出。
+
+        Args:
+            head_num: 预测头编号（1 或 2）。
+            decout: 解码器输出元组。
+            img_shape: 图像形状。
+
+        Returns:
+            dict: 预测结果，包含 'pts3d' 和可选的 'conf'。
+        """
         B, S, D = decout[-1].shape
         # img_shape = tuple(map(int, img_shape))
         head = getattr(self, f"head{head_num}")
         return head(decout, img_shape)
 
     def forward(self, view1, view2):
+        """双视图 DUSt3R 前向传播。
+
+        编码两个视图，通过非对称解码器交互，输出两个视图的 3D 点预测。
+
+        Args:
+            view1: 第一个视图字典，包含 'img' 等键。
+            view2: 第二个视图字典。
+
+        Returns:
+            tuple: (res1, res2)
+                - res1: 视图 1 的预测结果
+                - res2: 视图 2 的预测结果（pts3d 为在视图 1 坐标系下的 3D 点）
+        """
         # encode the two images --> B,S,D
         (shape1, shape2), (feat1, feat2), (pos1, pos2) = self._encode_symmetrized(
             view1, view2
@@ -291,12 +398,29 @@ class FlashDUSt3R(
         conf_mode=("exp", 1, inf),
         freeze="none",
         landscape_only=True,
-        patch_embed_cls="PatchEmbedDust3R",  # PatchEmbedDust3R or ManyAR_PatchEmbed
+        patch_embed_cls="PatchEmbedDust3R",
         decoder_pos_embed_type="sinusoidal",
         attn_implementation="pytorch_naive",
         random_image_idx_embedding=False,
         **croco_kwargs,
     ):
+        """初始化 FlashDUSt3R 模型。
+
+        与 AsymmetricCroCo3DStereo 不同，FlashDUSt3R 使用单个大型解码器处理多视图。
+
+        Args:
+            output_mode: 输出模式，默认 'pts3d'。
+            head_type: 预测头类型，默认 'linear'。
+            depth_mode: 深度模式元组。
+            conf_mode: 置信度模式元组。
+            freeze: 冻结策略。
+            landscape_only: 是否仅横屏模式。
+            patch_embed_cls: Patch 嵌入类名。
+            decoder_pos_embed_type: 解码器位置编码类型。
+            attn_implementation: 注意力实现方式。
+            random_image_idx_embedding: 是否使用随机图像索引嵌入。
+            **croco_kwargs: CroCo 模型的其他参数。
+        """
         self.patch_embed_cls = patch_embed_cls
         self.random_image_idx_embedding = random_image_idx_embedding
         self.croco_args = fill_default_args(croco_kwargs, super().__init__)
@@ -333,6 +457,15 @@ class FlashDUSt3R(
 
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path, **kw):
+        """从预训练模型加载。
+
+        Args:
+            pretrained_model_name_or_path: 预训练模型路径或 HuggingFace 仓库标识。
+            **kw: 其他关键字参数。
+
+        Returns:
+            FlashDUSt3R: 加载好权重的模型。
+        """
         if os.path.isfile(pretrained_model_name_or_path):
             return load_model(pretrained_model_name_or_path, device="cpu")
         else:
@@ -341,12 +474,13 @@ class FlashDUSt3R(
             )
 
     def _set_patch_embed(self, img_size=224, patch_size=16, enc_embed_dim=768):
+        """设置 Patch 嵌入层（FlashDUSt3R 版本）。"""
         self.patch_embed = get_patch_embed(
             self.patch_embed_cls, img_size, patch_size, enc_embed_dim
         )
 
     def load_state_dict(self, ckpt, **kw):
-        return super().load_state_dict(ckpt, **kw)
+        """加载状态字典。"""
 
     def set_freeze(self, freeze):  # this is for use by downstream models
         self.freeze = freeze

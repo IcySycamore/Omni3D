@@ -47,6 +47,15 @@ class Fast3R(nn.Module,
              repo_url="https://github.com/facebookresearch/fast3r",
              tags=["image-to-3d"]
              ):
+    """Fast3R: Fast 3D Reconstruction from Multiple Views.
+
+    该模型从多张图像中快速重建 3D 场景。由三部分组成：
+    - Encoder: 图像编码器（支持 CroCo / DINOv2），将图像编码为 patch 特征
+    - Decoder: 多视角解码器（支持 Fast3RDecoder / LlamaDecoder），融合多视角信息
+    - Head: 预测头（DPT），输出逐像素的 3D 点坐标和置信度
+
+    继承自 nn.Module 和 HuggingFace PyTorchModelHubMixin，支持从 HuggingFace Hub 加载模型。
+    """
     def __init__(
         self,
         encoder_args: dict,
@@ -54,6 +63,14 @@ class Fast3R(nn.Module,
         head_args: dict,
         freeze="none",
     ):
+        """初始化 Fast3R 模型。
+
+        Args:
+            encoder_args: 编码器配置字典，需包含 'encoder_type'（'croco' 或 'dino_v2'）。
+            decoder_args: 解码器配置字典，需包含 'decoder_type'（'fast3r' 或 'llama'）。
+            head_args: 预测头配置字典，需包含 'output_mode'、'head_type'、'depth_mode'、'conf_mode'。
+            freeze: 冻结策略，可选 'none'（不冻结）、'encoder'（冻结编码器）、'sandwich'（冻结编码器和头）。
+        """
         super(Fast3R, self).__init__()
 
         self.encoder_args = OmegaConf.to_container(encoder_args) if isinstance(encoder_args, DictConfig) else encoder_args
@@ -70,7 +87,16 @@ class Fast3R(nn.Module,
         self.set_freeze(freeze)
 
     def build_encoder(self, encoder_args: dict):
-        # Initialize the encoder based on the encoder type
+        """根据配置构建图像编码器。
+
+        Args:
+            encoder_args: 编码器配置，必须包含 'encoder_type' 键。
+                - 'croco': 构建 CroCoEncoder
+                - 'dino_v2': 构建 DinoEncoder
+
+        Raises:
+            ValueError: 不支持的编码器类型时抛出。
+        """
         if encoder_args["encoder_type"] == "croco":
             # Drop the encoder_type key
             encoder_args = deepcopy(encoder_args)
@@ -85,6 +111,16 @@ class Fast3R(nn.Module,
             raise ValueError(f"Unsupported encoder type: {encoder_args['encoder_type']}")
 
     def build_decoder(self, decoder_args: dict):
+        """根据配置构建多视角解码器。
+
+        Args:
+            decoder_args: 解码器配置，需包含 'decoder_type' 键。
+                - 'fast3r': 构建 Fast3RDecoder（基于 CroCo Transformer）
+                - 'llama': 构建 LlamaDecoder（基于 LLaMA Transformer）
+
+        Raises:
+            ValueError: 不支持的解码器类型时抛出。
+        """
         decoder_args["decoder_type"] = decoder_args.get('decoder_type', 'fast3r')  # default to fast3r if not specified
         if decoder_args["decoder_type"] == 'fast3r':
             decoder_args = deepcopy(decoder_args)
@@ -101,6 +137,18 @@ class Fast3R(nn.Module,
         self,
         head_args: dict,
     ):
+        """构建预测头（DPT Head），用于将解码器输出映射为逐像素的 3D 点坐标。
+
+        Args:
+            head_args: 预测头配置，包含：
+                - output_mode: 输出模式（'pts3d'）
+                - head_type: 头类型（'dpt'）
+                - depth_mode: 深度模式
+                - conf_mode: 置信度模式
+                - with_local_head: 是否使用局部预测头（默认 False）
+                - landscape_only: 是否仅横屏模式
+                - patch_size: patch 大小
+        """
         self.output_mode = head_args['output_mode']
         self.head_type = head_args['head_type']
         self.depth_mode = head_args['depth_mode']
@@ -132,7 +180,22 @@ class Fast3R(nn.Module,
             self.local_head = None
 
     def head_factory(self, head_type, output_mode, has_conf=False, patch_size=16):
-        """ " build a prediction head for the decoder"""
+        """构建解码器的预测头。
+
+        根据头类型和输出模式创建对应的预测头模块。当前仅支持 DPT 头用于 pts3d 输出。
+
+        Args:
+            head_type: 头类型，目前仅支持 'dpt'。
+            output_mode: 输出模式，目前仅支持 'pts3d'。
+            has_conf: 是否输出置信度，默认 False。
+            patch_size: Patch 大小，默认 16。
+
+        Returns:
+            PixelwiseTaskWithDPT: DPT 预测头实例。
+
+        Raises:
+            NotImplementedError: 不支持的头类型或输出模式时抛出。
+        """
         if head_type == "dpt" and output_mode == "pts3d":
             assert self.decoder_args["depth"] > 9
             l2 = self.decoder_args["depth"]
@@ -157,6 +220,17 @@ class Fast3R(nn.Module,
             raise NotImplementedError(f"unexpected {head_type=} and {output_mode=}")
 
     def load_state_dict(self, ckpt, **kw):
+        """加载模型权重。
+
+        直接委托给父类 nn.Module.load_state_dict。
+
+        Args:
+            ckpt: 状态字典。
+            **kw: 传递给父类的额外参数。
+
+        Returns:
+            _IncompatibleKeys: 包含 missing_keys 和 unexpected_keys 的命名元组。
+        """
         return super().load_state_dict(ckpt, **kw)
 
     def load_from_dust3r_checkpoint(self, dust3r_checkpoint_path: str):
@@ -238,7 +312,15 @@ class Fast3R(nn.Module,
         log.info(f"Loaded first-level keys: {sorted(loaded_first_level_keys)}")
         log.info(f"First-level keys not loaded: {sorted(not_loaded_first_level_keys)}")
 
-    def set_freeze(self, freeze):  # this is for use by downstream models
+    def set_freeze(self, freeze):
+        """设置模型冻结策略。
+
+        Args:
+            freeze: 冻结策略，可选值：
+                - 'none': 不冻结任何参数
+                - 'encoder': 冻结编码器参数
+                - 'sandwich': 冻结编码器和预测头参数
+        """
         self.freeze = freeze
         to_be_frozen = {
             "none": [],
@@ -248,6 +330,21 @@ class Fast3R(nn.Module,
         freeze_all_params(to_be_frozen[freeze])
 
     def _encode_images(self, views, chunk_size=400):
+        """编码所有视图的图像。
+
+        将多张图像通过编码器，支持分块处理以避免 OOM。当所有图像形状相同时，
+        会批量处理；否则逐张处理。
+
+        Args:
+            views: 视图列表，每个视图为包含 'img' 和 'true_shape' 的字典。
+            chunk_size: 批量处理时每块的大小，用于控制显存。默认 400。
+
+        Returns:
+            tuple: (encoded_feats, positions, shapes)
+                - encoded_feats: 每个视图的编码特征列表，形状 [B, N_patches, D]
+                - positions: 每个视图的位置编码列表，形状 [B, N_patches, 2]
+                - shapes: 每个视图的真实形状列表
+        """
         B = views[0]["img"].shape[0]
 
         # Check if all images have the same shape
@@ -296,7 +393,11 @@ class Fast3R(nn.Module,
         return encoded_feats, positions, shapes
 
     def set_max_parallel_views_for_head(self, max_parallel_views_for_head):
-        # expose this to user to control the number of views processed in parallel in the head
+        """设置预测头并行处理的最大视图数，用于控制推理时显存占用。
+
+        Args:
+            max_parallel_views_for_head: 最大并行视图数。
+        """
         self.max_parallel_views_for_head = max_parallel_views_for_head
 
     def forward(self, views, profiling=False):
@@ -497,6 +598,17 @@ class Fast3R(nn.Module,
             return final_results
 
 class CroCoEncoder(nn.Module):
+    """CroCo 图像编码器，基于 Vision Transformer。
+
+    将图像分割为 patch，通过 Transformer 编码器块提取特征，
+    支持 RoPE2D 旋转位置编码。
+
+    Attributes:
+        patch_embed: Patch 嵌入层。
+        rope: RoPE2D 旋转位置编码器。
+        enc_blocks: Transformer 编码器块列表。
+        enc_norm: 最终 LayerNorm 层。
+    """
     def __init__(
         self,
         img_size=512,
@@ -510,6 +622,20 @@ class CroCoEncoder(nn.Module):
         pos_embed="RoPE100",
         attn_implementation="pytorch_naive",
     ):
+        """初始化 CroCo 编码器。
+
+        Args:
+            img_size: 输入图像大小，默认 512。
+            patch_size: Patch 大小，默认 16。
+            patch_embed_cls: Patch 嵌入类名，默认 'ManyAR_PatchEmbed'。
+            embed_dim: 嵌入维度，默认 768。
+            num_heads: 注意力头数，默认 12。
+            depth: Transformer 层数，默认 12。
+            mlp_ratio: MLP 隐藏层扩展比，默认 4。
+            norm_layer: 归一化层，默认 LayerNorm。
+            pos_embed: 位置编码类型，默认 'RoPE100'。
+            attn_implementation: 注意力实现方式，默认 'pytorch_naive'。
+        """
         super(CroCoEncoder, self).__init__()
 
         # patch embeddings  (with initialization done as in MAE)
@@ -542,11 +668,36 @@ class CroCoEncoder(nn.Module):
         self.enc_norm = norm_layer(embed_dim)
 
     def _set_patch_embed(self, img_size=224, patch_size=16, enc_embed_dim=768):
+        """设置 Patch 嵌入层。
+
+        Args:
+            img_size: 输入图像大小。
+            patch_size: Patch 大小。
+            enc_embed_dim: 编码器嵌入维度。
+        """
+        """设置 Patch 嵌入层。
+
+        Args:
+            img_size: 输入图像大小。
+            patch_size: Patch 大小。
+            enc_embed_dim: 编码器嵌入维度。
+        """
         self.patch_embed = get_patch_embed(
             self.patch_embed_cls, img_size, patch_size, enc_embed_dim
         )
 
     def forward(self, image, true_shape):
+        """CroCo 编码器前向传播：编码图像为 patch 特征。
+
+        Args:
+            image: 输入图像张量，形状 [B, C, H, W]。
+            true_shape: 真实图像形状，形状 [B, 2]（H, W）。
+
+        Returns:
+            tuple: (x, pos)
+                - x: 编码特征，形状 [B, N_patches, D]
+                - pos: 位置信息，形状 [B, N_patches, 2]
+        """
         # embed the image into patches  (x has size B x Npatches x C)
         x, pos = self.patch_embed(image, true_shape=true_shape)
 
@@ -559,11 +710,24 @@ class CroCoEncoder(nn.Module):
         return x, pos
 
 class DinoEncoder(nn.Module):
+    """DINOv2 图像编码器，使用预训练的 DINOv2 ViT-L/14 模型。
+
+    支持横屏和竖屏图像的自动处理，通过 PositionGetter 计算位置编码。
+    """
     def __init__(
         self,
         patch_size=14,
         **kwargs
     ):
+        """初始化 DINO 编码器。
+
+        Args:
+            patch_size: Patch 大小，必须为 14（与 DINOv2 ViT-L/14 匹配）。
+            **kwargs: 其他关键字参数（当前未使用）。
+
+        Raises:
+            AssertionError: patch_size 不为 14 时抛出。
+        """
         super(DinoEncoder, self).__init__()
         # Load the pretrained DINOv2 model
         self.model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
@@ -572,7 +736,17 @@ class DinoEncoder(nn.Module):
         self.position_getter = PositionGetter()
 
     def forward(self, image, true_shape):
-        # image shape: B x C x H x W
+        """编码图像为 patch 特征，自动处理横屏和竖屏图像。
+
+        Args:
+            image: 输入图像张量，形状 [B, C, H, W]。
+            true_shape: 真实图像形状，形状 [B, 2]（H, W）。
+
+        Returns:
+            tuple: (encoded_feats, encoded_pos)
+                - encoded_feats: 编码特征，形状 [B, N_patches, D]
+                - encoded_pos: 位置信息，形状 [B, N_patches, 2]
+        """
         B, C, H, W = image.shape
 
         # Split the batch into landscape and portrait based on true_shape
@@ -652,6 +826,17 @@ class DinoEncoder(nn.Module):
 
 
 class Fast3RDecoder(nn.Module):
+    """Fast3R 多视角解码器，基于 CroCo Transformer Block。
+
+    将多个视图的编码特征拼接后，通过 Transformer 解码器块进行跨视角信息交互，
+    使用图像索引位置编码区分不同视图。
+
+    Attributes:
+        decoder_embed: 线性映射层，将编码器维度映射到解码器维度。
+        dec_blocks: Transformer 解码器块列表。
+        image_idx_emb: 图像索引的正弦-余弦位置嵌入。
+        dec_norm: 最终 LayerNorm 层。
+    """
     def __init__(
         self,
         random_image_idx_embedding: bool,
@@ -667,6 +852,22 @@ class Fast3RDecoder(nn.Module):
         attn_bias_for_inference_enabled=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
     ):
+        """初始化 Fast3R 解码器。
+
+        Args:
+            random_image_idx_embedding: 是否使用随机图像索引嵌入（训练时数据增强）。
+            enc_embed_dim: 编码器嵌入维度。
+            embed_dim: 解码器嵌入维度，默认 768。
+            num_heads: 注意力头数，默认 12。
+            depth: Transformer 层数，默认 12。
+            mlp_ratio: MLP 扩展比，默认 4.0。
+            qkv_bias: 是否在 QKV 投影中使用偏置，默认 True。
+            drop: Dropout 概率，默认 0.0。
+            attn_drop: 注意力 Dropout 概率，默认 0.0。
+            attn_implementation: 注意力实现方式。
+            attn_bias_for_inference_enabled: 推理时是否启用注意力偏置。
+            norm_layer: 归一化层。
+        """
         super(Fast3RDecoder, self).__init__()
 
         # transfer from encoder to decoder
@@ -700,9 +901,13 @@ class Fast3RDecoder(nn.Module):
         self.dec_norm = norm_layer(embed_dim)
 
     def _generate_per_rank_generator(self):
-        # this way, the randperm will be different for each rank, but deterministic given a fixed number of forward passes (tracked by self.random_generator)
-        # and to ensure determinism when resuming from a checkpoint, we only need to save self.random_generator to state_dict
-        # generate a per-rank random seed
+        """生成每个分布式 rank 的随机数生成器。
+
+        确保不同 rank 使用不同种子，同一 rank 在不同前向传播中产生不同随机数。
+
+        Returns:
+            torch.Generator: 配置好种子的随机数生成器。
+        """
         per_forward_pass_seed = torch.randint(0, 2 ** 32, (1,)).item()
         world_rank = torch.distributed.get_rank() if torch.distributed.is_initialized() else 0
         per_rank_seed = per_forward_pass_seed + world_rank
@@ -808,6 +1013,20 @@ class Fast3RDecoder(nn.Module):
         return final_output
 
 class LlamaDecoder(nn.Module):
+    """LLaMA 风格的多视角解码器。
+
+    使用 LLaMA Transformer 架构进行跨视角信息交互，
+    支持 GQA（Grouped Query Attention）和 SwiGLU 激活函数，
+    使用 RoPE 旋转位置编码和视图 0 特殊嵌入。
+
+    Attributes:
+        head_dim: 每个注意力头的维度。
+        precomputed_freqs_cis: 预计算的 RoPE 频率复数。
+        view0_embed: 视图 0 的可学习嵌入。
+        decoder_embed: 线性映射层。
+        layers: LLaMA Transformer 层列表。
+        norm: RMSNorm 归一化层。
+    """
     def __init__(
         self,
         random_image_idx_embedding: bool,
@@ -816,15 +1035,32 @@ class LlamaDecoder(nn.Module):
         n_layers: int = 32,
         n_heads: int = 32,
         n_kv_heads: Optional[int] = None,
-        multiple_of: int = 256,  # make SwiGLU hidden layer size multiple of large power of 2
+        multiple_of: int = 256,
         ffn_dim_multiplier: Optional[float] = None,
         norm_eps: float = 1e-5,
         rope_theta: float = 10000,
         max_seq_len: int = 1000,
-        is_causal: bool = False,  # use bidirectional attention
+        is_causal: bool = False,
         depth_init: bool = True,
         **kwargs
     ):
+        """初始化 LLaMA 解码器。
+
+        Args:
+            random_image_idx_embedding: 是否使用随机图像索引嵌入。
+            enc_embed_dim: 编码器嵌入维度。
+            embed_dim: 解码器嵌入维度，默认 4096。
+            n_layers: Transformer 层数，默认 32。
+            n_heads: 注意力头数，默认 32。
+            n_kv_heads: KV 头数（用于 GQA），默认 None（等于 n_heads）。
+            multiple_of: SwiGLU 隐藏层的倍数基数，默认 256。
+            ffn_dim_multiplier: FFN 维度乘数，默认 None。
+            norm_eps: 归一化 epsilon，默认 1e-5。
+            rope_theta: RoPE 的 theta 参数，默认 10000。
+            max_seq_len: 最大序列长度，默认 1000。
+            is_causal: 是否使用因果注意力，默认 False（双向注意力）。
+            depth_init: 是否使用深度初始化，默认 True。
+        """
         super(LlamaDecoder, self).__init__()
 
         # assign the flags to attributes for later use
@@ -854,6 +1090,14 @@ class LlamaDecoder(nn.Module):
         self.norm = RMSNorm(dim=embed_dim, eps=norm_eps)
 
     def _precompute_freqs_cis(self, max_seq_len) -> torch.Tensor:
+        """预计算 RoPE 频率复数张量。
+
+        Args:
+            max_seq_len: 最大序列长度。
+
+        Returns:
+            torch.Tensor: 预计算的频率复数张量。
+        """
         return precompute_freqs_cis(
             self.head_dim,
             # Need to compute until at least the max token limit for generation
@@ -863,7 +1107,11 @@ class LlamaDecoder(nn.Module):
         )
 
     def _generate_per_rank_generator(self):
-        # Generate a per-rank random seed
+        """生成每个分布式 rank 的随机数生成器。
+
+        Returns:
+            torch.Generator: 配置好种子的随机数生成器。
+        """
         per_forward_pass_seed = torch.randint(0, 2 ** 32, (1,)).item()
         world_rank = torch.distributed.get_rank() if torch.distributed.is_initialized() else 0
         per_rank_seed = per_forward_pass_seed + world_rank
@@ -927,7 +1175,16 @@ class LlamaDecoder(nn.Module):
         return freqs_cis
 
     def forward(self, encoded_feats, positions, image_ids):
-        x = torch.cat(encoded_feats, dim=1)  # Concatenate along the patch dimension
+        """LLaMA 解码器前向传播。
+
+        Args:
+            encoded_feats: 每个视图的编码特征列表，形状 [B, N_patches, D]。
+            positions: 每个视图的位置嵌入列表，形状 [B, N_patches, 2]。
+            image_ids: 图像 ID 张量，形状 [B, N_patches]。
+
+        Returns:
+            list[Tensor]: 各层输出列表，第一个为投影前，最后一个为最终归一化后。
+        """
         pos = torch.cat(positions, dim=1)
         batch_size = x.shape[0]
         device = x.device

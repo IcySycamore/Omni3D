@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.models.multiview_dust3r_module - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class="active"><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.models.multiview_dust3r_module</h1>
+        <div class="module-stats">
+            <span>📁 2 类</span>
+            <span>⚡ 3 函数</span>
+            <span>🔧 25 方法</span>
+            <span class="warn">
+                ⚠️ 2 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/models/multiview_dust3r_module.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-AccumulatedSum">class AccumulatedSum</a></li>
+<li><a href="#class-MultiViewDUSt3RLitModule">class MultiViewDUSt3RLitModule</a></li>
+<li><a href="#func-gather_deduplicated_scene_metrics">gather_deduplicated_scene_metrics()</a></li>
+<li><a href="#func-estimate_cam_pose_one_sample">estimate_cam_pose_one_sample()</a></li>
+<li><a href="#func-estimate_focal">estimate_focal()</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-AccumulatedSum">
+            <h2>
+                
+                class <span class="cls-name">AccumulatedSum</span>(BaseAggregator)
+                <span class="line-no">L33-61</span>
+            </h2>
+            <div class="docstring"><p>累计求和指标，用于跨 GPU 聚合整数值。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-AccumulatedSum-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">**kwargs</span>: <span class="arg-type">Any</span>)  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L35-46</span>
+                </div>
+                <div class="docstring"><p>初始化 AccumulatedSum。</p></div>
+            </div>
+            
+            <div class="method" id="method-AccumulatedSum-update">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">update</span> (<span class="arg-name">value</span>: <span class="arg-type">int</span>)  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L48-53</span>
+                </div>
+                <div class="docstring"><p>更新累计和。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    value: 要累加的整数值。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AccumulatedSum-compute">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute</span> ()  -> <span class="ret-type">torch.LongTensor</span></code>
+                    <span class="line-no">L55-61</span>
+                </div>
+                <div class="docstring"><p>计算并返回当前累计和。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.LongTensor: 累计求和结果。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-MultiViewDUSt3RLitModule">
+            <h2>
+                
+                class <span class="cls-name">MultiViewDUSt3RLitModule</span>(LightningModule)
+                <span class="line-no">L78-1160</span>
+            </h2>
+            <div class="docstring"><p>Fast3R 的 PyTorch Lightning 训练模块。</p>
+<p>封装了 Fast3R 模型的训练、验证、评估流程，包括：</p>
+<p>- 训练/验证步</p>
+<p>- 相机位姿评估（RRA、RTA、mAA）</p>
+<p>- 3D 重建评估（Accuracy、Completion、Normal Consistency）</p>
+<p>- 局部点云对齐到全局坐标系</p>
+<p>- 优化器和学习率调度配置</p>
+<p>继承自 LightningModule，与 Lightning Trainer 无缝集成。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-MultiViewDUSt3RLitModule-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">net</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">train_criterion</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">validation_criterion</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">optimizer</span>: <span class="arg-type">torch.optim.Optimizer</span>, <span class="arg-name">scheduler</span>: <span class="arg-type">torch.optim.lr_scheduler</span>, <span class="arg-name">compile</span>: <span class="arg-type">bool</span>, <span class="arg-name">pretrained</span>: <span class="arg-type">Optional[str]</span> = <span class="arg-default">None</span>, <span class="arg-name">resume_from_checkpoint</span>: <span class="arg-type">Optional[str]</span> = <span class="arg-default">None</span>, <span class="arg-name">eval_use_pts3d_from_local_head</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>)  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L90-152</span>
+                </div>
+                <div class="docstring"><p>初始化多视图 DUSt3R Lightning 模块。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    net: 核心模型（Fast3R 或 FlashDUSt3R）。</div>
+<div class="doc-detail">    train_criterion: 训练损失函数。</div>
+<div class="doc-detail">    validation_criterion: 验证损失函数。</div>
+<div class="doc-detail">    optimizer: 优化器配置。</div>
+<div class="doc-detail">    scheduler: 学习率调度器配置。</div>
+<div class="doc-detail">    compile: 是否使用 torch.compile 编译模型。</div>
+<div class="doc-detail">    pretrained: 预训练权重路径。</div>
+<div class="doc-detail">    resume_from_checkpoint: 恢复训练的检查点路径。</div>
+<div class="doc-detail">    eval_use_pts3d_from_local_head: 评估时是否使用局部预测头的 3D 点。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-load_for_inference">
+                <div class="method-header">
+                    <span class="badge cls">cls</span>
+                    <code><span class="fn-name">load_for_inference</span> (<span class="arg-name">net</span>: <span class="arg-type">Fast3R</span>)</code>
+                    <span class="line-no">L155-166</span>
+                </div>
+                <div class="docstring"><p>创建用于推理的 Lightning 模块。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    net: 已加载权重的 Fast3R 模型。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    MultiViewDUSt3RLitModule: 设置为 eval 模式的 Lightning 模块。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">views</span>: <span class="arg-type">List[Dict[str, torch.Tensor]]</span>)  -> <span class="ret-type">Any</span></code>
+                    <span class="line-no">L168-177</span>
+                </div>
+                <div class="docstring"><p>前向传播，委托给核心模型。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    views: 视图列表，每个视图为包含 &#x27;img&#x27;、&#x27;pts3d&#x27; 等键的字典。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list[dict]: 每个视图的预测结果。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-on_load_checkpoint">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">on_load_checkpoint</span> (<span class="arg-name">checkpoint</span>: <span class="arg-type">Dict[str, Any]</span>)  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L179-189</span>
+                </div>
+                <div class="docstring"><p>加载检查点时的回调，用于处理旧版本检查点的兼容性。</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-on_train_start">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">on_train_start</span> ()  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L191-203</span>
+                </div>
+                <div class="docstring"><p>Lightning hook that is called when training begins.</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-on_train_epoch_start">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">on_train_epoch_start</span> ()  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L205-210</span>
+                </div>
+                <div class="docstring"><p>训练 epoch 开始时的回调，设置数据集和采样器的 epoch 以保证数据增强的随机性。</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-on_validation_epoch_start">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">on_validation_epoch_start</span> ()  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L212-218</span>
+                </div>
+                <div class="docstring"><p>验证 epoch 开始时的回调，设置数据集的 epoch 为 0。</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-model_step">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">model_step</span> (<span class="arg-name">batch</span>: <span class="arg-type">List[Dict[str, torch.Tensor]]</span>, <span class="arg-name">criterion</span>: <span class="arg-type">torch.nn.Module</span>)  -> <span class="ret-type">Tuple[torch.Tensor, Dict]</span></code>
+                    <span class="line-no">L220-252</span>
+                </div>
+                <div class="docstring"><p>执行一步模型推理和损失计算。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    batch: 输入批次数据，视图列表。</div>
+<div class="doc-detail">    criterion: 损失函数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (views, preds, loss, loss_details)</div>
+<div class="doc-detail">        - views: 移动到设备后的输入视图</div>
+<div class="doc-detail">        - preds: 模型预测结果</div>
+<div class="doc-detail">        - loss: 总损失值</div>
+<div class="doc-detail">        - loss_details: 损失细分字典</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-training_step">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">training_step</span> (<span class="arg-name">batch</span>: <span class="arg-type">List[Dict[str, torch.Tensor]]</span>, <span class="arg-name">batch_idx</span>: <span class="arg-type">int</span>)  -> <span class="ret-type">torch.Tensor</span></code>
+                    <span class="line-no">L254-310</span>
+                </div>
+                <div class="docstring"><p>Lightning 训练步，执行前向传播、损失计算和指标记录。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    batch: 输入批次数据。</div>
+<div class="doc-detail">    batch_idx: 批次索引。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 当前步的损失值。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-validation_step">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">validation_step</span> (<span class="arg-name">batch</span>: <span class="arg-type">List[Dict[str, torch.Tensor]]</span>, <span class="arg-name">batch_idx</span>: <span class="arg-type">int</span>, <span class="arg-name">dataloader_idx</span>: <span class="arg-type">int</span> = <span class="arg-default">0</span>)  -> <span class="ret-type">torch.Tensor</span></code>
+                    <span class="line-no">L312-391</span>
+                </div>
+                <div class="docstring"><p>Lightning 验证步，计算验证损失并触发指标评估。</p>
+<p>对于 Co3D_v2 数据集评估相机位姿，对于 DTU/7Scenes/NRGBD 评估 3D 重建。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    batch: 输入批次数据。</div>
+<div class="doc-detail">    batch_idx: 批次索引。</div>
+<div class="doc-detail">    dataloader_idx: 数据加载器索引。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 当前步的损失值。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-on_validation_epoch_end">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">on_validation_epoch_end</span> ()  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L393-404</span>
+                </div>
+                <div class="docstring"><p>验证 epoch 结束时的回调，记录汇总指标和 3D 重建评估结果。</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-aggregate_and_log_reconstruction_detail_losses">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">aggregate_and_log_reconstruction_detail_losses</span> ()</code>
+                    <span class="line-no">L411-440</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-aggregate_and_log_reconstruction_metrics">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">aggregate_and_log_reconstruction_metrics</span> ()</code>
+                    <span class="line-no">L462-510</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-align_local_pts3d_to_global">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">align_local_pts3d_to_global</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">0</span>)</code>
+                    <span class="line-no">L512-634</span>
+                </div>
+                <div class="docstring"><p>Aligns the local point clouds to the global coordinate frame.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    preds (List[Dict]): A list of dictionaries containing predictions for each view.</div>
+<div class="doc-detail">    views (List[Dict]): A list of dictionaries containing ground truth data for each view.</div>
+<div class="doc-detail">    min_conf_thr_percentile (float): Minimum confidence percentile threshold (default is 0).</div>
+</div>
+<div class="doc-section"><strong>Modifies:</strong>
+<div class="doc-detail">    preds: Each pred dictionary in the list will have a new key &#x27;pts3d_local_aligned_to_global&#x27;,</div>
+<div class="doc-detail">        which contains the aligned local points.</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-evaluate_reconstruction">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">evaluate_reconstruction</span> (<span class="arg-name">views</span>, <span class="arg-name">preds</span>, <span class="arg-name">dataset_name</span>, <span class="arg-name">min_conf_thr_percentile_for_local_alignment_and_icp</span> = <span class="arg-default">0</span>, <span class="arg-name">min_conf_thr_percentile_for_metric_cacluation</span> = <span class="arg-default">0</span>, <span class="arg-name">use_pts3d_from_local_head</span> = <span class="arg-default">True</span>)</code>
+                    <span class="line-no">L636-833</span>
+                </div>
+                <div class="docstring"><p>评估 3D 重建质量。</p>
+<p>计算预测点云与 GT 点云之间的 Accuracy、Completion 和 Normal Consistency。</p>
+<p>先将局部预测头的输出对齐到全局坐标系，然后用 roma 刚体变换进行 ICP 对齐。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    views: 视图列表，包含 GT 点云信息。</div>
+<div class="doc-detail">    preds: 模型预测结果列表。</div>
+<div class="doc-detail">    dataset_name: 数据集名称（&#x27;dtu&#x27;, &#x27;7scenes&#x27;, &#x27;nrgbd&#x27;）。</div>
+<div class="doc-detail">    min_conf_thr_percentile_for_local_alignment_and_icp: ICP 对齐的置信度百分位阈值。</div>
+<div class="doc-detail">    min_conf_thr_percentile_for_metric_cacluation: 指标计算的置信度百分位阈值。</div>
+<div class="doc-detail">    use_pts3d_from_local_head: 是否使用局部预测头的 3D 点进行评估。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-evaluate_camera_poses">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">evaluate_camera_poses</span> (<span class="arg-name">views</span>, <span class="arg-name">preds</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">focal_length_estimation_method</span> = <span class="arg-default">&#x27;individual&#x27;</span>)</code>
+                    <span class="line-no">L835-902</span>
+                </div>
+                <div class="docstring"><p>Evaluate camera poses and focal lengths using fast_pnp in parallel.</p>
+<p>Focal_length_estimation_method can be &#x27;individual&#x27; or &#x27;first_view_from_local_head&#x27; or &#x27;first_view_from_global_head&#x27;.</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-estimate_camera_poses">
+                <div class="method-header">
+                    <span class="badge static">static</span>
+                    <code><span class="fn-name">estimate_camera_poses</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span> = <span class="arg-default">None</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">focal_length_estimation_method</span> = <span class="arg-default">&#x27;individual&#x27;</span>)</code>
+                    <span class="line-no">L906-967</span>
+                </div>
+                <div class="docstring"><p>Estimate camera poses and focal lengths using fast_pnp in parallel.</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-correct_preds_orientation">
+                <div class="method-header">
+                    <span class="badge static">static</span>
+                    <code><span class="fn-name">correct_preds_orientation</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span>)</code>
+                    <span class="line-no">L970-1044</span>
+                </div>
+                <div class="docstring"><p>原位修正预测点和置信度图的方向。</p>
+<p>当视图为竖屏时，数据加载器会将图像转置为横屏格式。</p>
+<p>此函数将预测结果转回原始方向。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    preds: 模型预测结果列表。</div>
+<div class="doc-detail">    views: 视图列表，包含 &#x27;true_shape&#x27; 信息。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-configure_optimizers">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">configure_optimizers</span> ()  -> <span class="ret-type">Dict[str, Any]</span></code>
+                    <span class="line-no">L1046-1100</span>
+                </div>
+                <div class="docstring"><p>配置优化器和学习率调度器。</p>
+<p>支持 LinearWarmupCosineAnnealingLR 调度器，自动将 warmup_epochs 和 max_epochs</p>
+<p>缩放到实际训练步数。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Dict[str, Any]: 包含 &#x27;optimizer&#x27; 和可选的 &#x27;lr_scheduler&#x27; 的配置字典。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-setup">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">setup</span> (<span class="arg-name">stage</span>: <span class="arg-type">str</span>)  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L1102-1115</span>
+                </div>
+                <div class="docstring"><p>Lightning setup 回调，在训练前加载预训练权重和可选的模型编译。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    stage: 当前阶段（&#x27;fit&#x27;、&#x27;validate&#x27;、&#x27;test&#x27;、&#x27;predict&#x27;）。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-_load_pretrained_weights">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_load_pretrained_weights</span> ()  -> <span class="ret-type">None</span></code>
+                    <span class="line-no">L1117-1142</span>
+                </div>
+                <div class="docstring"><p>加载预训练权重。</p>
+<p>支持从 DUSt3R 或 Fast3R 检查点加载权重。</p>
+<p>- DUSt3R: 仅加载编码器和第一个预测头的权重。</p>
+<p>- Fast3R: 加载完整权重。</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiViewDUSt3RLitModule-_update_ckpt_keys">
+                <div class="method-header">
+                    <span class="badge static">static</span>
+                    <code><span class="fn-name">_update_ckpt_keys</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">new_head_name</span> = <span class="arg-default">&#x27;downstream_head&#x27;</span>, <span class="arg-name">head_to_keep</span> = <span class="arg-default">&#x27;downstream_head1&#x27;</span>, <span class="arg-name">head_to_discard</span> = <span class="arg-default">&#x27;downstream_head2&#x27;</span>)</code>
+                    <span class="line-no">L1145-1160</span>
+                </div>
+                <div class="docstring"><p>Helper function to use the weights of a model with multiple heads in a model with a single head.</p>
+<p>specifically, keep only the weights of the first head and delete the weights of the second head.</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="func-block" id="func-gather_deduplicated_scene_metrics">
+            <h2>
+                
+                <code><span class="fn-name">gather_deduplicated_scene_metrics</span> (<span class="arg-name">reconstruction_metrics_per_epoch</span>)</code>
+                <span class="line-no">L63-76</span>
+            </h2>
+            <div class="docstring"><p>Gathers and deduplicates scene-specific metrics across all ranks by dataset.</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-estimate_cam_pose_one_sample">
+            <h2>
+                
+                <code><span class="fn-name">estimate_cam_pose_one_sample</span> (<span class="arg-name">sample_preds</span>, <span class="arg-name">device</span> = <span class="arg-default">&#x27;cpu&#x27;</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">0</span>)</code>
+                <span class="line-no">L1163-1218</span>
+            </h2>
+            <div class="docstring"><p>估计单个样本的所有视图相机位姿和焦距。</p>
+<p>使用 fast_pnp 并行估计每个视图的相机到世界 (c2w) 变换矩阵和焦距。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    sample_preds: 单个样本的预测结果列表。</div>
+<div class="doc-detail">    device: 计算设备，默认 &#x27;cpu&#x27;。</div>
+<div class="doc-detail">    niter_PnP: PnP 迭代次数，默认 10。</div>
+<div class="doc-detail">    min_conf_thr_percentile: 最小置信度百分位阈值，默认 0。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (poses_c2w, estimated_focals)</div>
+<div class="doc-detail">        - poses_c2w: 每个视图的 c2w 变换矩阵列表，形状 (4, 4)</div>
+<div class="doc-detail">        - estimated_focals: 每个视图的估计焦距列表</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-estimate_focal">
+            <h2>
+                
+                <code><span class="fn-name">estimate_focal</span> (<span class="arg-name">pts3d_i</span>, <span class="arg-name">conf_i</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">10</span>)</code>
+                <span class="line-no">L1221-1262</span>
+            </h2>
+            <div class="docstring"><p>估计相机焦距。</p>
+<p>使用 Weiszfeld 算法从 3D 点和置信度掩码估计焦距。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pts3d_i: 3D 点坐标，形状 (1, H, W, 3)。</div>
+<div class="doc-detail">    conf_i: 置信度图，形状 (1, H, W)。</div>
+<div class="doc-detail">    pp: 主点坐标，形状 (1, 2)。默认为图像中心。</div>
+<div class="doc-detail">    min_conf_thr_percentile: 置信度百分位阈值，默认 10。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 估计的焦距值。</div>
+</div></div>
+        </div>
+        
+</main>
+</body>
+</html>

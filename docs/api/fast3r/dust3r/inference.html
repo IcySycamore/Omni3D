@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.dust3r.inference - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class="active"><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.dust3r.inference</h1>
+        <div class="module-stats">
+            <span>📁 0 类</span>
+            <span>⚡ 7 函数</span>
+            <span>🔧 0 方法</span>
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/inference.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#func-_interleave_imgs">_interleave_imgs()</a></li>
+<li><a href="#func-make_batch_symmetric">make_batch_symmetric()</a></li>
+<li><a href="#func-loss_of_one_batch">loss_of_one_batch()</a></li>
+<li><a href="#func-inference">inference()</a></li>
+<li><a href="#func-check_if_same_size">check_if_same_size()</a></li>
+<li><a href="#func-get_pred_pts3d">get_pred_pts3d()</a></li>
+<li><a href="#func-find_opt_scaling">find_opt_scaling()</a></li>
+</ul></div>
+
+        <div class="func-block" id="func-_interleave_imgs">
+            <h2>
+                
+                <code><span class="fn-name">_interleave_imgs</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
+                <span class="line-no">L21-39</span>
+            </h2>
+            <div class="docstring"><p>将两个图像字典按样本交错合并。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (dict): 第一个图像批次字典。</div>
+<div class="doc-detail">    img2 (dict): 第二个图像批次字典。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: 交错合并后的字典，每对样本依次排列。</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-make_batch_symmetric">
+            <h2>
+                
+                <code><span class="fn-name">make_batch_symmetric</span> (<span class="arg-name">batch</span>)</code>
+                <span class="line-no">L42-53</span>
+            </h2>
+            <div class="docstring"><p>将批次数据对称化（同时考虑正向和反向图像对）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    batch (tuple): (view1, view2) 图像对。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 交错对称后的 (view1, view2)。</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-loss_of_one_batch">
+            <h2>
+                
+                <code><span class="fn-name">loss_of_one_batch</span> (<span class="arg-name">batch</span>, <span class="arg-name">model</span>, <span class="arg-name">criterion</span>, <span class="arg-name">device</span>, <span class="arg-name">symmetrize_batch</span> = <span class="arg-default">False</span>, <span class="arg-name">use_amp</span> = <span class="arg-default">False</span>, <span class="arg-name">ret</span> = <span class="arg-default">None</span>)</code>
+                <span class="line-no">L56-98</span>
+            </h2>
+            <div class="docstring"><p>对单个批次进行推理并计算损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    batch (tuple): (view1, view2) 图像对批次。</div>
+<div class="doc-detail">    model (nn.Module): 推理模型。</div>
+<div class="doc-detail">    criterion (callable | None): 损失函数，为 None 时跳过损失计算。</div>
+<div class="doc-detail">    device (str | torch.device): 目标设备。</div>
+<div class="doc-detail">    symmetrize_batch (bool): 是否对批次进行对称化处理。默认 False。</div>
+<div class="doc-detail">    use_amp (bool): 是否使用自动混合精度。默认 False。</div>
+<div class="doc-detail">    ret (str | None): 若指定，则只返回结果字典中对应键的值。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict | Any: 包含 view1, view2, pred1, pred2, loss 的字典，</div>
+<div class="doc-detail">        或若 ret 指定了键则返回对应值。</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-inference">
+            <h2>
+                <span class='decorator'>@torch.no_grad()</span>
+
+                <code><span class="fn-name">inference</span> (<span class="arg-name">pairs</span>, <span class="arg-name">model</span>, <span class="arg-name">device</span>, <span class="arg-name">batch_size</span> = <span class="arg-default">8</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
+                <span class="line-no">L102-132</span>
+            </h2>
+            <div class="docstring"><p>对图像对列表进行批量推理。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pairs (list): 图像对列表，每个元素为 (view1, view2) 字典对。</div>
+<div class="doc-detail">    model (nn.Module): 推理模型。</div>
+<div class="doc-detail">    device (str | torch.device): 目标设备。</div>
+<div class="doc-detail">    batch_size (int): 每批处理的图像对数量。若图像尺寸不一致则强制为 1。</div>
+<div class="doc-detail">    verbose (bool): 是否显示进度条。默认 True。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: 所有批次的推理结果合并字典。</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-check_if_same_size">
+            <h2>
+                
+                <code><span class="fn-name">check_if_same_size</span> (<span class="arg-name">pairs</span>)</code>
+                <span class="line-no">L135-148</span>
+            </h2>
+            <div class="docstring"><p>检查所有图像对中的图像是否具有相同尺寸。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pairs (list): 图像对列表。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    bool: 若所有图像尺寸相同返回 True，否则返回 False。</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-get_pred_pts3d">
+            <h2>
+                
+                <code><span class="fn-name">get_pred_pts3d</span> (<span class="arg-name">gt</span>, <span class="arg-name">pred</span>, <span class="arg-name">use_pose</span> = <span class="arg-default">False</span>)</code>
+                <span class="line-no">L151-185</span>
+            </h2>
+            <div class="docstring"><p>从模型预测中提取 3D 点云。</p>
+<p>根据预测字典中的键（&#x27;depth&#x27;/&#x27;pts3d&#x27;/&#x27;pts3d_in_other_view&#x27;）选择不同提取策略。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt (dict): 真实标注，可能包含相机内参。</div>
+<div class="doc-detail">    pred (dict): 模型预测字典。</div>
+<div class="doc-detail">    use_pose (bool): 若为 True，将点云从相机坐标系变换到世界坐标系。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 形状为 (B, H, W, 3) 的 3D 点云。</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-find_opt_scaling">
+            <h2>
+                
+                <code><span class="fn-name">find_opt_scaling</span> (<span class="arg-name">gt_pts1</span>, <span class="arg-name">gt_pts2</span>, <span class="arg-name">pr_pts1</span>, <span class="arg-name">pr_pts2</span> = <span class="arg-default">None</span>, <span class="arg-name">fit_mode</span> = <span class="arg-default">&#x27;weiszfeld_stop_grad&#x27;</span>, <span class="arg-name">valid1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid2</span> = <span class="arg-default">None</span>)</code>
+                <span class="line-no">L188-263</span>
+            </h2>
+            <div class="docstring"><p>找到使预测点云与真实点云最对齐的最优缩放因子。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_pts1 (Tensor): 视图1 的真实 3D 点，形状 (B, H, W, 3)。</div>
+<div class="doc-detail">    gt_pts2 (Tensor | None): 视图2 的真实 3D 点，形状 (B, H, W, 3)。</div>
+<div class="doc-detail">    pr_pts1 (Tensor): 视图1 的预测 3D 点，形状 (B, H, W, 3)。</div>
+<div class="doc-detail">    pr_pts2 (Tensor | None): 视图2 的预测 3D 点。</div>
+<div class="doc-detail">    fit_mode (str): 拟合方法，可选 &#x27;avg&#x27;, &#x27;median&#x27;, &#x27;weiszfeld&#x27;,</div>
+<div class="doc-detail">        加 &#x27;_stop_grad&#x27; 后缀可停止梯度传播。</div>
+<div class="doc-detail">    valid1 (Tensor | None): 视图1 的有效像素掩码。</div>
+<div class="doc-detail">    valid2 (Tensor | None): 视图2 的有效像素掩码。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 形状为 (B,) 的最优缩放因子，已裁剪到 [1e-3, +∞)。</div>
+</div></div>
+        </div>
+        
+</main>
+</body>
+</html>

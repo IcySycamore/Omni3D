@@ -26,6 +26,16 @@ from dust3r.utils.geometry import (
 
 
 def Sum(*losses_and_masks):
+    """合并多个 (loss, mask) 或 (loss, mask, loss_type) 元组。
+
+    若各损失为标量则直接求和返回；否则原样返回元组列表供 ConfLoss 使用。
+
+    Args:
+        *losses_and_masks: 可变数量的 (loss, mask) 或 (loss, mask, loss_type) 元组。
+
+    Returns:
+        若各损失为标量，返回所有损失之和（Tensor）；否则返回原始元组列表。
+    """
     if len(losses_and_masks[0]) == 2:
         loss, mask = losses_and_masks[0]
     else:
@@ -42,13 +52,31 @@ def Sum(*losses_and_masks):
 
 
 class LLoss(nn.Module):
-    """L-norm loss"""
+    """L-范数损失基类。
+
+    子类需实现 distance() 方法定义具体的距离度量。
+    支持 'none'、'sum'、'mean' 三种 reduction 模式。
+    """
 
     def __init__(self, reduction="mean"):
+        """初始化 LLoss。
+
+        Args:
+            reduction (str): 损失聚合方式，可选 'none'、'sum'、'mean'。默认 'mean'。
+        """
         super().__init__()
         self.reduction = reduction
 
     def forward(self, a, b):
+        """计算两组点之间的 L-范数损失。
+
+        Args:
+            a (Tensor): 预测点，形状为 (..., D)，D ∈ {1, 2, 3}。
+            b (Tensor): 真实点，形状与 a 相同。
+
+        Returns:
+            Tensor: 根据 reduction 模式返回标量、向量或逐像素损失。
+        """
         assert (
             a.shape == b.shape and a.ndim >= 2 and 1 <= a.shape[-1] <= 3
         ), f"Bad shape = {a.shape}"
@@ -63,13 +91,34 @@ class LLoss(nn.Module):
         raise ValueError(f"bad {self.reduction=} mode")
 
     def distance(self, a, b):
+        """计算两点之间的距离（由子类实现）。
+
+        Args:
+            a (Tensor): 预测点。
+            b (Tensor): 真实点。
+
+        Returns:
+            Tensor: 每对点的距离值，维度比输入少一维。
+
+        Raises:
+            NotImplementedError: 基类不实现此方法。
+        """
         raise NotImplementedError()
 
 
 class L21Loss(LLoss):
-    """Euclidean distance between 3d points"""
+    """3D 点之间的欧氏距离损失（L2,1 范数）。"""
 
     def distance(self, a, b):
+        """计算两组 3D 点间的欧氏距离。
+
+        Args:
+            a (Tensor): 预测点，形状为 (..., 3)。
+            b (Tensor): 真实点，形状与 a 相同。
+
+        Returns:
+            Tensor: 每对点的欧氏距离，形状为 (...)。
+        """
         return torch.norm(a - b, dim=-1)  # normalized L2 distance
 
 
@@ -77,7 +126,17 @@ L21 = L21Loss()
 
 
 class Criterion(nn.Module):
+    """损失基类，封装一个 LLoss 实例作为底层度量标准。
+
+    提供 get_name() 和 with_reduction() 接口供子类使用。
+    """
+
     def __init__(self, criterion=None):
+        """初始化 Criterion。
+
+        Args:
+            criterion (LLoss): 底层距离度量，必须是 LLoss 的实例。
+        """
         super().__init__()
         assert isinstance(criterion, LLoss), (
             f"{criterion} is not a proper criterion!" + bb()
@@ -85,9 +144,22 @@ class Criterion(nn.Module):
         self.criterion = copy(criterion)
 
     def get_name(self):
+        """返回损失的名称字符串。
+
+        Returns:
+            str: 形如 'ClassName(criterion)' 的名称。
+        """
         return f"{type(self).__name__}({self.criterion})"
 
     def with_reduction(self, mode):
+        """返回一个使用指定 reduction 模式的损失副本。
+
+        Args:
+            mode (str): reduction 模式，如 'none'、'mean'。
+
+        Returns:
+            Criterion: 新的损失对象，其 criterion.reduction 已设为 'none'。
+        """
         res = loss = deepcopy(self)
         while loss is not None:
             assert isinstance(loss, Criterion)
@@ -104,17 +176,42 @@ class MultiLoss(nn.Module):
     """
 
     def __init__(self):
+        """初始化 MultiLoss，设置权重为 1，链式损失为 None。"""
         super().__init__()
         self._alpha = 1
         self._loss2 = None
 
     def compute_loss(self, *args, **kwargs):
+        """计算损失（由子类实现）。
+
+        Returns:
+            Tensor 或 (Tensor, dict): 损失值，或损失值与细节字典的元组。
+
+        Raises:
+            NotImplementedError: 基类不实现此方法。
+        """
         raise NotImplementedError()
 
     def get_name(self):
+        """返回损失名称字符串（由子类实现）。
+
+        Returns:
+            str: 损失名称。
+
+        Raises:
+            NotImplementedError: 基类不实现此方法。
+        """
         raise NotImplementedError()
 
     def __mul__(self, alpha):
+        """返回带权重的损失副本（支持 alpha * loss 语法）。
+
+        Args:
+            alpha (int | float): 权重系数。
+
+        Returns:
+            MultiLoss: 权重已更新的损失副本。
+        """
         assert isinstance(alpha, (int, float))
         res = copy(self)
         res._alpha = alpha
@@ -123,6 +220,14 @@ class MultiLoss(nn.Module):
     __rmul__ = __mul__  # same
 
     def __add__(self, loss2):
+        """将两个损失链式连接（支持 loss1 + loss2 语法）。
+
+        Args:
+            loss2 (MultiLoss): 要追加的第二个损失。
+
+        Returns:
+            MultiLoss: 链式连接后的损失对象。
+        """
         assert isinstance(loss2, MultiLoss)
         res = cur = copy(self)
         # find the end of the chain
@@ -132,6 +237,11 @@ class MultiLoss(nn.Module):
         return res
 
     def __repr__(self):
+        """返回损失的字符串表示，含权重和链式结构。
+
+        Returns:
+            str: 如 '0.5*LossA + LossB' 格式的字符串。
+        """
         name = self.get_name()
         if self._alpha != 1:
             name = f"{self._alpha:g}*{name}"
@@ -140,6 +250,15 @@ class MultiLoss(nn.Module):
         return name
 
     def forward(self, *args, **kwargs):
+        """前向传播，计算加权损失并递归调用链式损失。
+
+        Args:
+            *args: 传递给 compute_loss 的位置参数。
+            **kwargs: 传递给 compute_loss 的关键字参数。
+
+        Returns:
+            tuple[Tensor, dict]: (总损失值, 各子损失的细节字典)。
+        """
         loss = self.compute_loss(*args, **kwargs)
         if isinstance(loss, tuple):
             loss, details = loss
@@ -169,11 +288,32 @@ class Regr3D(Criterion, MultiLoss):
     """
 
     def __init__(self, criterion, norm_mode="avg_dis", gt_scale=False):
+        """初始化 Regr3D。
+
+        Args:
+            criterion (LLoss): 底层距离度量（如 L21Loss）。
+            norm_mode (str): 点云归一化模式，如 'avg_dis'。
+            gt_scale (bool): 若为 True，真实点不做归一化（保持原始尺度）。
+        """
         super().__init__(criterion)
         self.norm_mode = norm_mode
         self.gt_scale = gt_scale
 
     def get_all_pts3d(self, gt1, gt2, pred1, pred2, dist_clip=None):
+        """提取并归一化双视角的真实与预测 3D 点。
+
+        所有点都变换到 view1 的相机坐标系中。
+
+        Args:
+            gt1 (dict): view1 的真实标注，包含 'camera_pose', 'pts3d', 'valid_mask'。
+            gt2 (dict): view2 的真实标注。
+            pred1 (dict): view1 的模型预测。
+            pred2 (dict): view2 的模型预测。
+            dist_clip (float, optional): 距离阈值，超出该距离的点标为无效。
+
+        Returns:
+            tuple: (gt_pts1, gt_pts2, pr_pts1, pr_pts2, valid1, valid2, monitoring_dict)。
+        """
         # everything is normalized w.r.t. camera of view1
         in_camera1 = inv(gt1["camera_pose"])
         gt_pts1 = geotrf(in_camera1, gt1["pts3d"])  # B,H,W,3
@@ -205,6 +345,18 @@ class Regr3D(Criterion, MultiLoss):
         return gt_pts1, gt_pts2, pr_pts1, pr_pts2, valid1, valid2, {}
 
     def compute_loss(self, gt1, gt2, pred1, pred2, **kw):
+        """计算双视角 3D 点回归损失。
+
+        Args:
+            gt1 (dict): view1 的真实标注。
+            gt2 (dict): view2 的真实标注。
+            pred1 (dict): view1 的模型预测。
+            pred2 (dict): view2 的模型预测。
+            **kw: 传递给 get_all_pts3d 的额外参数（如 dist_clip）。
+
+        Returns:
+            tuple[Tensor | list, dict]: (损失值或损失列表, 细节字典)。
+        """
         (
             gt_pts1,
             gt_pts2,
@@ -232,11 +384,30 @@ class Regr3DMultiview(Criterion, MultiLoss):
     """
 
     def __init__(self, criterion, norm_mode="avg_dis", gt_scale=False):
+        """初始化 Regr3DMultiview。
+
+        Args:
+            criterion (LLoss): 底层距离度量。
+            norm_mode (str): 点云归一化模式，如 'avg_dis'。
+            gt_scale (bool): 若为 True，真实点不做归一化。
+        """
         super().__init__(criterion)
         self.norm_mode = norm_mode
         self.gt_scale = gt_scale
 
     def get_pts3d_for_view(self, gt_anchor, pred_anchor, gt_other, pred_other, dist_clip=None):
+        """提取并归一化锚视图和目标视图的 3D 点。
+
+        Args:
+            gt_anchor (dict): 锚视图的真实标注。
+            pred_anchor (dict): 锚视图的模型预测。
+            gt_other (dict): 目标视图的真实标注。
+            pred_other (dict): 目标视图的模型预测。
+            dist_clip (float, optional): 距离裁剪阈值。
+
+        Returns:
+            tuple: (gt_pts1, gt_pts_other, pr_pts1, pr_pts_other, valid1, valid_other)。
+        """
         # everything is normalized w.r.t. camera of view1 (anchor)
         in_camera1 = inv(gt_anchor["camera_pose"].float())  # FIXME: for some reason, Lightning's bf16-true mode does not automatically cast to float32
 
@@ -268,6 +439,16 @@ class Regr3DMultiview(Criterion, MultiLoss):
         return gt_pts1, gt_pts_other, pr_pts1, pr_pts_other, valid1, valid_other
 
     def compute_loss(self, gts, preds, **kw):
+        """计算多视角 3D 点回归损失。
+
+        Args:
+            gts (list[dict]): 所有视图的真实标注列表，gts[0] 为锚视图。
+            preds (list[dict]): 所有视图的模型预测列表。
+            **kw: 传递给 get_pts3d_for_view 的额外参数。
+
+        Returns:
+            tuple[Tensor | list, dict]: (损失值或损失列表, 各视图细节字典)。
+        """
         gt_anchor = gts[0]
         pred_anchor = preds[0]
 
@@ -569,29 +750,58 @@ class Regr3DMultiviewV3(Criterion, MultiLoss):
 
 
 class ConfLossMultiview(MultiLoss):
-    """Weighted regression by learned confidence for multiple views.
-    Assuming the input pixel_loss is a pixel-level regression loss.
+    """多视角置信度加权回归损失。
 
-    Principle:
-        high-confidence means high conf = 0.1 ==> conf_loss = x / 10 + alpha*log(10)
-        low  confidence means low  conf = 10  ==> conf_loss = x * 10 - alpha*log(10)
+    利用模型学习到的置信度对逐像素损失加权，高置信区域损失惩罚更大。
 
-        alpha: hyperparameter
+    原理::
+
+        high conf = 0.1 -> conf_loss = x/10 + alpha*log(10)  (高置信，低惩罚)
+        low  conf = 10  -> conf_loss = x*10 - alpha*log(10)  (低置信，高惩罚)
     """
 
     def __init__(self, pixel_loss, alpha=1):
+        """初始化 ConfLossMultiview。
+
+        Args:
+            pixel_loss (MultiLoss): 底层像素级回归损失（会被设为 reduction='none'）。
+            alpha (float): 置信度正则化超参数，必须 > 0。
+        """
         super().__init__()
         assert alpha > 0
         self.alpha = alpha
         self.pixel_loss = pixel_loss.with_reduction("none")
 
     def get_name(self):
+        """返回损失名称。
+
+        Returns:
+            str: 形如 'ConfLossMultiview(pixel_loss)' 的名称。
+        """
         return f"ConfLossMultiview({self.pixel_loss})"
 
     def get_conf_log(self, x):
+        """返回置信度及其对数。
+
+        Args:
+            x (Tensor): 置信度预测值（正数）。
+
+        Returns:
+            tuple[Tensor, Tensor]: (conf, log_conf)。
+        """
         return x, torch.log(x)
 
     def compute_loss(self, gts, preds, **kw):
+        """计算置信度加权的多视角损失。
+
+        Args:
+            gts (list[dict]): 所有视图的真实标注。
+            preds (list[dict]): 所有视图的模型预测，需包含 'conf' 键。
+            **kw: 传递给 pixel_loss 的额外参数。
+
+        Returns:
+            tuple[Tensor, dict]: (总置信损失, 各视图细节字典)。
+        """
         # compute per-pixel loss for all views
         total_loss, details = self.pixel_loss(gts, preds, **kw)
 
@@ -614,23 +824,55 @@ class ConfLossMultiview(MultiLoss):
 
 
 class ConfLossMultiviewV2(MultiLoss):
-    """Weighted regression by learned confidence for multiple views.
-    This version normalizes the total confidence loss by the number of global and local losses separately.
+    """多视角置信度加权回归损失（V2），分别对全局和局部损失归一化。
+
+    在 V1 基础上区分 'global' 和 'local' 损失类型，分别索引对应置信度
+    ('conf' vs 'conf_local')，并按全局/局部数量各自归一化。
     """
 
     def __init__(self, pixel_loss, alpha=1):
+        """初始化 ConfLossMultiviewV2。
+
+        Args:
+            pixel_loss (MultiLoss): 底层像素级损失（通常为 Regr3DMultiviewV3）。
+            alpha (float): 置信度正则化超参数，必须 > 0。
+        """
         super().__init__()
         assert alpha > 0
         self.alpha = alpha
         self.pixel_loss = pixel_loss.with_reduction("none")
 
     def get_name(self):
+        """返回损失名称。
+
+        Returns:
+            str: 形如 'ConfLossMultiviewV2(pixel_loss)' 的名称。
+        """
         return f"ConfLossMultiviewV2({self.pixel_loss})"
 
     def get_conf_log(self, x):
+        """返回置信度及其对数。
+
+        Args:
+            x (Tensor): 置信度预测值（正数）。
+
+        Returns:
+            tuple[Tensor, Tensor]: (conf, log_conf)。
+        """
         return x, torch.log(x)
 
     def compute_loss(self, gts, preds, **kw):
+        """计算分离全局/局部路径的置信度加权损失。
+
+        Args:
+            gts (list[dict]): 所有视图的真实标注。
+            preds (list[dict]): 所有视图的模型预测，
+                全局路径需包含 'conf'，局部路径需包含 'conf_local'。
+            **kw: 传递给 pixel_loss 的额外参数。
+
+        Returns:
+            tuple[Tensor, dict]: (归一化后的总置信损失, 细节字典)。
+        """
         # compute per-pixel loss for all views
         total_loss, details = self.pixel_loss(gts, preds, **kw)
 
@@ -675,29 +917,60 @@ class ConfLossMultiviewV2(MultiLoss):
         return total_conf_loss, details
 
 class ConfLoss(MultiLoss):
-    """Weighted regression by learned confidence.
-        Assuming the input pixel_loss is a pixel-level regression loss.
+    """双视角置信度加权回归损失（原始版本）。
 
-    Principle:
-        high-confidence means high conf = 0.1 ==> conf_loss = x / 10 + alpha*log(10)
-        low  confidence means low  conf = 10  ==> conf_loss = x * 10 - alpha*log(10)
+    利用模型学习到的置信度对逐像素损失加权，适用于双视角 (view1, view2) 场景。
 
-        alpha: hyperparameter
+    原理::
+
+        high conf = 0.1 -> conf_loss = x/10 + alpha*log(10)
+        low  conf = 10  -> conf_loss = x*10 - alpha*log(10)
     """
 
     def __init__(self, pixel_loss, alpha=1):
+        """初始化 ConfLoss。
+
+        Args:
+            pixel_loss (MultiLoss): 底层像素级回归损失。
+            alpha (float): 置信度正则化超参数，必须 > 0。
+        """
         super().__init__()
         assert alpha > 0
         self.alpha = alpha
         self.pixel_loss = pixel_loss.with_reduction("none")
 
     def get_name(self):
+        """返回损失名称。
+
+        Returns:
+            str: 形如 'ConfLoss(pixel_loss)' 的名称。
+        """
         return f"ConfLoss({self.pixel_loss})"
 
     def get_conf_log(self, x):
+        """返回置信度及其对数。
+
+        Args:
+            x (Tensor): 置信度预测值（正数）。
+
+        Returns:
+            tuple[Tensor, Tensor]: (conf, log_conf)。
+        """
         return x, torch.log(x)
 
     def compute_loss(self, gt1, gt2, pred1, pred2, **kw):
+        """计算双视角置信度加权损失。
+
+        Args:
+            gt1 (dict): view1 的真实标注。
+            gt2 (dict): view2 的真实标注。
+            pred1 (dict): view1 的模型预测，需包含 'conf' 键。
+            pred2 (dict): view2 的模型预测，需包含 'conf' 键。
+            **kw: 传递给 pixel_loss 的额外参数。
+
+        Returns:
+            tuple[Tensor, dict]: (总置信损失, 细节字典)。
+        """
         # compute per-pixel loss
         ((loss1, msk1), (loss2, msk2)), details = self.pixel_loss(
             gt1, gt2, pred1, pred2, **kw
@@ -723,9 +996,25 @@ class ConfLoss(MultiLoss):
 
 
 class Regr3D_ShiftInv(Regr3D):
-    """Same than Regr3D but invariant to depth shift."""
+    """深度平移不变的 3D 点回归损失。
+
+    在 Regr3D 基础上减去联合点云的中位深度，使损失对绝对深度平移不敏感。
+    """
 
     def get_all_pts3d(self, gt1, gt2, pred1, pred2):
+        """提取并进行深度平移归一化的 3D 点。
+
+        计算并减去真实/预测点云的联合中位深度，消除深度平移影响。
+
+        Args:
+            gt1 (dict): view1 的真实标注。
+            gt2 (dict): view2 的真实标注。
+            pred1 (dict): view1 的模型预测。
+            pred2 (dict): view2 的模型预测。
+
+        Returns:
+            tuple: (gt_pts1, gt_pts2, pred_pts1, pred_pts2, mask1, mask2, monitoring)。
+        """
         # compute unnormalized points
         (
             gt_pts1,
@@ -758,11 +1047,25 @@ class Regr3D_ShiftInv(Regr3D):
 
 
 class Regr3D_ScaleInv(Regr3D):
-    """Same than Regr3D but invariant to depth shift.
-    if gt_scale == True: enforce the prediction to take the same scale than GT
+    """尺度不变的 3D 点回归损失。
+
+    在 Regr3D 基础上对点云进行全局尺度归一化。
+    若 gt_scale=True，则将预测点云强制缩放到真实尺度；
+    否则真实和预测点云各自归一化到单位尺度。
     """
 
     def get_all_pts3d(self, gt1, gt2, pred1, pred2):
+        """提取并进行尺度归一化的 3D 点。
+
+        Args:
+            gt1 (dict): view1 的真实标注。
+            gt2 (dict): view2 的真实标注。
+            pred1 (dict): view1 的模型预测。
+            pred2 (dict): view2 的模型预测。
+
+        Returns:
+            tuple: (gt_pts1, gt_pts2, pred_pts1, pred_pts2, mask1, mask2, monitoring)。
+        """
         # compute depth-normalized points
         (
             gt_pts1,
@@ -799,5 +1102,10 @@ class Regr3D_ScaleInv(Regr3D):
 
 
 class Regr3D_ScaleShiftInv(Regr3D_ScaleInv, Regr3D_ShiftInv):
+    """同时对深度平移和尺度不变的 3D 点回归损失。
+
+    通过 MRO 先应用 Regr3D_ShiftInv（深度平移归一化），
+    再应用 Regr3D_ScaleInv（尺度归一化）。
+    """
     # calls Regr3D_ShiftInv first, then Regr3D_ScaleInv
     pass

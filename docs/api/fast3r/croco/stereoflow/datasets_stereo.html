@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.croco.stereoflow.datasets_stereo - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class="active"><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.croco.stereoflow.datasets_stereo</h1>
+        <div class="module-stats">
+            <span>📁 13 类</span>
+            <span>⚡ 17 函数</span>
+            <span>🔧 43 方法</span>
+            <span class="warn">
+                ⚠️ 72 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/datasets_stereo.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-StereoDataset">class StereoDataset</a></li>
+<li><a href="#class-CREStereoDataset">class CREStereoDataset</a></li>
+<li><a href="#class-SceneFlowDataset">class SceneFlowDataset</a></li>
+<li><a href="#class-Md21Dataset">class Md21Dataset</a></li>
+<li><a href="#class-Md14Dataset">class Md14Dataset</a></li>
+<li><a href="#class-Md06Dataset">class Md06Dataset</a></li>
+<li><a href="#class-Md05Dataset">class Md05Dataset</a></li>
+<li><a href="#class-MdEval3Dataset">class MdEval3Dataset</a></li>
+<li><a href="#class-ETH3DLowResDataset">class ETH3DLowResDataset</a></li>
+<li><a href="#class-BoosterDataset">class BoosterDataset</a></li>
+<li><a href="#class-SpringDataset">class SpringDataset</a></li>
+<li><a href="#class-Kitti12Dataset">class Kitti12Dataset</a></li>
+<li><a href="#class-Kitti15Dataset">class Kitti15Dataset</a></li>
+<li><a href="#func-img_to_tensor">img_to_tensor()</a></li>
+<li><a href="#func-disp_to_tensor">disp_to_tensor()</a></li>
+<li><a href="#func-_read_img">_read_img()</a></li>
+<li><a href="#func-_read_booster_disp">_read_booster_disp()</a></li>
+<li><a href="#func-_read_png_disp">_read_png_disp()</a></li>
+<li><a href="#func-_read_pfm_disp">_read_pfm_disp()</a></li>
+<li><a href="#func-_read_npy_disp">_read_npy_disp()</a></li>
+<li><a href="#func-_read_crestereo_disp">_read_crestereo_disp()</a></li>
+<li><a href="#func-_read_middlebury20052006_disp">_read_middlebury20052006_disp()</a></li>
+<li><a href="#func-_read_kitti_disp">_read_kitti_disp()</a></li>
+<li><a href="#func-_read_hdf5_disp">_read_hdf5_disp()</a></li>
+<li><a href="#func-_read_pfm">_read_pfm()</a></li>
+<li><a href="#func-writePFM">writePFM()</a></li>
+<li><a href="#func-writeDsp5File">writeDsp5File()</a></li>
+<li><a href="#func-vis_disparity">vis_disparity()</a></li>
+<li><a href="#func-get_train_dataset_stereo">get_train_dataset_stereo()</a></li>
+<li><a href="#func-get_test_datasets_stereo">get_test_datasets_stereo()</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-StereoDataset">
+            <h2>
+                
+                class <span class="cls-name">StereoDataset</span>(data.Dataset)
+                <span class="line-no">L60-158</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-StereoDataset-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">split</span>, <span class="arg-name">augmentor</span> = <span class="arg-default">False</span>, <span class="arg-name">crop_size</span> = <span class="arg-default">None</span>, <span class="arg-name">totensor</span> = <span class="arg-default">True</span>)</code>
+                    <span class="line-no">L61-74</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">prepare_data</span> ()</code>
+                    <span class="line-no">L76-80</span>
+                </div>
+                <div class="docstring"><p>to be defined for each dataset</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-__len__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__len__</span> ()</code>
+                    <span class="line-no">L82-83</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-__getitem__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__getitem__</span> (<span class="arg-name">index</span>)</code>
+                    <span class="line-no">L85-124</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-__rmul__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__rmul__</span> (<span class="arg-name">v</span>)</code>
+                    <span class="line-no">L126-129</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-__str__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__str__</span> ()</code>
+                    <span class="line-no">L131-132</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-__repr__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__repr__</span> ()</code>
+                    <span class="line-no">L134-140</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-_set_root">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_root</span> ()</code>
+                    <span class="line-no">L142-146</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-StereoDataset-_load_or_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_load_or_build_cache</span> ()</code>
+                    <span class="line-no">L148-158</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-CREStereoDataset">
+            <h2>
+                
+                class <span class="cls-name">CREStereoDataset</span>(StereoDataset)
+                <span class="line-no">L161-187</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-CREStereoDataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L162-176</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-CREStereoDataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L178-187</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-SceneFlowDataset">
+            <h2>
+                
+                class <span class="cls-name">SceneFlowDataset</span>(StereoDataset)
+                <span class="line-no">L190-270</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-SceneFlowDataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L191-215</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-SceneFlowDataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L217-270</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Md21Dataset">
+            <h2>
+                
+                class <span class="cls-name">Md21Dataset</span>(StereoDataset)
+                <span class="line-no">L273-310</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Md21Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L274-286</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Md21Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L288-310</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Md14Dataset">
+            <h2>
+                
+                class <span class="cls-name">Md14Dataset</span>(StereoDataset)
+                <span class="line-no">L313-347</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Md14Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L314-327</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Md14Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L329-347</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Md06Dataset">
+            <h2>
+                
+                class <span class="cls-name">Md06Dataset</span>(StereoDataset)
+                <span class="line-no">L350-385</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Md06Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L351-363</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Md06Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L365-385</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Md05Dataset">
+            <h2>
+                
+                class <span class="cls-name">Md05Dataset</span>(StereoDataset)
+                <span class="line-no">L388-423</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Md05Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L389-401</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Md05Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L403-423</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-MdEval3Dataset">
+            <h2>
+                
+                class <span class="cls-name">MdEval3Dataset</span>(StereoDataset)
+                <span class="line-no">L426-510</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-MdEval3Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L427-460</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MdEval3Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L462-486</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MdEval3Dataset-submission_save_pairname">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
+                    <span class="line-no">L488-504</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MdEval3Dataset-finalize_submission">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
+                    <span class="line-no">L506-510</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-ETH3DLowResDataset">
+            <h2>
+                
+                class <span class="cls-name">ETH3DLowResDataset</span>(StereoDataset)
+                <span class="line-no">L513-578</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-ETH3DLowResDataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L514-535</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-ETH3DLowResDataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L537-560</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-ETH3DLowResDataset-submission_save_pairname">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
+                    <span class="line-no">L562-572</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-ETH3DLowResDataset-finalize_submission">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
+                    <span class="line-no">L574-578</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-BoosterDataset">
+            <h2>
+                
+                class <span class="cls-name">BoosterDataset</span>(StereoDataset)
+                <span class="line-no">L581-629</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-BoosterDataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L582-601</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BoosterDataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L603-629</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-SpringDataset">
+            <h2>
+                
+                class <span class="cls-name">SpringDataset</span>(StereoDataset)
+                <span class="line-no">L632-708</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-SpringDataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L633-654</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-SpringDataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L656-685</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-SpringDataset-submission_save_pairname">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
+                    <span class="line-no">L687-696</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-SpringDataset-finalize_submission">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
+                    <span class="line-no">L698-708</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Kitti12Dataset">
+            <h2>
+                
+                class <span class="cls-name">Kitti12Dataset</span>(StereoDataset)
+                <span class="line-no">L711-754</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Kitti12Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L712-730</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Kitti12Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L732-739</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Kitti12Dataset-submission_save_pairname">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
+                    <span class="line-no">L741-747</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Kitti12Dataset-finalize_submission">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
+                    <span class="line-no">L749-754</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Kitti15Dataset">
+            <h2>
+                
+                class <span class="cls-name">Kitti15Dataset</span>(StereoDataset)
+                <span class="line-no">L757-810</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Kitti15Dataset-_prepare_data">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_prepare_data</span> ()</code>
+                    <span class="line-no">L758-776</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Kitti15Dataset-_build_cache">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_build_cache</span> ()</code>
+                    <span class="line-no">L778-795</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Kitti15Dataset-submission_save_pairname">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
+                    <span class="line-no">L797-803</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Kitti15Dataset-finalize_submission">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
+                    <span class="line-no">L805-810</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="func-block" id="func-img_to_tensor">
+            <h2>
+                
+                <code><span class="fn-name">img_to_tensor</span> (<span class="arg-name">img</span>)</code>
+                <span class="line-no">L50-53</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-disp_to_tensor">
+            <h2>
+                
+                <code><span class="fn-name">disp_to_tensor</span> (<span class="arg-name">disp</span>)</code>
+                <span class="line-no">L56-57</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_img">
+            <h2>
+                
+                <code><span class="fn-name">_read_img</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L816-819</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_booster_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_booster_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L822-825</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_png_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_png_disp</span> (<span class="arg-name">filename</span>, <span class="arg-name">coef</span> = <span class="arg-default">1.0</span>)</code>
+                <span class="line-no">L828-832</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_pfm_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_pfm_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L835-842</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_npy_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_npy_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L845-846</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_crestereo_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_crestereo_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L849-850</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_middlebury20052006_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_middlebury20052006_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L853-854</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_kitti_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_kitti_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L857-858</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_hdf5_disp">
+            <h2>
+                
+                <code><span class="fn-name">_read_hdf5_disp</span> (<span class="arg-name">filename</span>)</code>
+                <span class="line-no">L868-872</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_read_pfm">
+            <h2>
+                
+                <code><span class="fn-name">_read_pfm</span> (<span class="arg-name">file</span>)</code>
+                <span class="line-no">L878-913</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-writePFM">
+            <h2>
+                
+                <code><span class="fn-name">writePFM</span> (<span class="arg-name">file</span>, <span class="arg-name">image</span>, <span class="arg-name">scale</span> = <span class="arg-default">1</span>)</code>
+                <span class="line-no">L916-945</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-writeDsp5File">
+            <h2>
+                
+                <code><span class="fn-name">writeDsp5File</span> (<span class="arg-name">disp</span>, <span class="arg-name">filename</span>)</code>
+                <span class="line-no">L948-950</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-vis_disparity">
+            <h2>
+                
+                <code><span class="fn-name">vis_disparity</span> (<span class="arg-name">disp</span>, <span class="arg-name">m</span> = <span class="arg-default">None</span>, <span class="arg-name">M</span> = <span class="arg-default">None</span>)</code>
+                <span class="line-no">L956-964</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-get_train_dataset_stereo">
+            <h2>
+                
+                <code><span class="fn-name">get_train_dataset_stereo</span> (<span class="arg-name">dataset_str</span>, <span class="arg-name">augmentor</span> = <span class="arg-default">True</span>, <span class="arg-name">crop_size</span> = <span class="arg-default">None</span>)</code>
+                <span class="line-no">L970-978</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-get_test_datasets_stereo">
+            <h2>
+                
+                <code><span class="fn-name">get_test_datasets_stereo</span> (<span class="arg-name">dataset_str</span>)</code>
+                <span class="line-no">L981-983</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+</main>
+</body>
+</html>

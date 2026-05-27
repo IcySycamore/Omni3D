@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class="active"><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</h1>
+        <div class="module-stats">
+            <span>📁 2 类</span>
+            <span>⚡ 9 函数</span>
+            <span>🔧 13 方法</span>
+            <span class="warn">
+                ⚠️ 14 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-NoNaviguableSpaceError">class NoNaviguableSpaceError</a></li>
+<li><a href="#class-MultiviewHabitatSimGenerator">class MultiviewHabitatSimGenerator</a></li>
+<li><a href="#func-compute_camera_intrinsics">compute_camera_intrinsics()</a></li>
+<li><a href="#func-compute_camera_pose_opencv_convention">compute_camera_pose_opencv_convention()</a></li>
+<li><a href="#func-compute_pointmap">compute_pointmap()</a></li>
+<li><a href="#func-compute_pointcloud">compute_pointcloud()</a></li>
+<li><a href="#func-compute_pointcloud_overlaps_scikit">compute_pointcloud_overlaps_scikit()</a></li>
+<li><a href="#func-_append_camera_parameters">_append_camera_parameters()</a></li>
+<li><a href="#func-look_at">look_at()</a></li>
+<li><a href="#func-look_at_for_habitat">look_at_for_habitat()</a></li>
+<li><a href="#func-generate_orientation_noise">generate_orientation_noise()</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-NoNaviguableSpaceError">
+            <h2>
+                
+                class <span class="cls-name">NoNaviguableSpaceError</span>(RuntimeError)
+                <span class="line-no">L144-146</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-NoNaviguableSpaceError-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>)</code>
+                    <span class="line-no">L145-146</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-MultiviewHabitatSimGenerator">
+            <h2>
+                
+                class <span class="cls-name">MultiviewHabitatSimGenerator</span>
+                <span class="line-no">L149-508</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-MultiviewHabitatSimGenerator-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">scene</span>, <span class="arg-name">navmesh</span>, <span class="arg-name">scene_dataset_config_file</span>, <span class="arg-name">resolution</span> = <span class="arg-default">(240, 320)</span>, <span class="arg-name">views_count</span> = <span class="arg-default">2</span>, <span class="arg-name">hfov</span> = <span class="arg-default">60</span>, <span class="arg-name">gpu_id</span> = <span class="arg-default">0</span>, <span class="arg-name">size</span> = <span class="arg-default">10000</span>, <span class="arg-name">minimum_covisibility</span> = <span class="arg-default">0.5</span>, <span class="arg-name">transform</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L150-198</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-_lazy_initialization">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_lazy_initialization</span> ()</code>
+                    <span class="line-no">L200-253</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-close">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">close</span> ()</code>
+                    <span class="line-no">L255-256</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-__del__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__del__</span> ()</code>
+                    <span class="line-no">L258-259</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-__len__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__len__</span> ()</code>
+                    <span class="line-no">L261-262</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-sample_random_viewpoint">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">sample_random_viewpoint</span> ()</code>
+                    <span class="line-no">L264-274</span>
+                </div>
+                <div class="docstring"><p>Sample a random viewpoint using the navmesh</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-sample_other_random_viewpoint">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">sample_other_random_viewpoint</span> (<span class="arg-name">observed_point</span>, <span class="arg-name">nav_point</span>)</code>
+                    <span class="line-no">L276-304</span>
+                </div>
+                <div class="docstring"><p>Sample a random viewpoint close to an existing one, using the navmesh and a reference observed point.</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-is_other_pointcloud_overlapping">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">is_other_pointcloud_overlapping</span> (<span class="arg-name">ref_pointcloud</span>, <span class="arg-name">other_pointcloud</span>)</code>
+                    <span class="line-no">L306-325</span>
+                </div>
+                <div class="docstring"><p>Check if a viewpoint is valid and overlaps significantly with a reference one.</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-is_other_viewpoint_overlapping">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">is_other_viewpoint_overlapping</span> (<span class="arg-name">ref_pointcloud</span>, <span class="arg-name">observation</span>, <span class="arg-name">position</span>, <span class="arg-name">rotation</span>)</code>
+                    <span class="line-no">L327-335</span>
+                </div>
+                <div class="docstring"><p>Check if a viewpoint is valid and overlaps significantly with a reference one.</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-render_viewpoint">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">render_viewpoint</span> (<span class="arg-name">viewpoint_position</span>, <span class="arg-name">viewpoint_orientation</span>)</code>
+                    <span class="line-no">L337-346</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-__getitem__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__getitem__</span> (<span class="arg-name">useless_idx</span>)</code>
+                    <span class="line-no">L348-446</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiviewHabitatSimGenerator-generate_random_spiral_trajectory">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">generate_random_spiral_trajectory</span> (<span class="arg-name">images_count</span> = <span class="arg-default">100</span>, <span class="arg-name">max_radius</span> = <span class="arg-default">0.5</span>, <span class="arg-name">half_turns</span> = <span class="arg-default">5</span>, <span class="arg-name">use_constant_orientation</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L448-508</span>
+                </div>
+                <div class="docstring"><p>Return a list of images corresponding to a spiral trajectory from a random starting point.</p>
+<p>Useful to generate nice visualisations.</p>
+<p>Use an even number of half turns to get a nice &quot;C1-continuous&quot; loop effect</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="func-block" id="func-compute_camera_intrinsics">
+            <h2>
+                
+                <code><span class="fn-name">compute_camera_intrinsics</span> (<span class="arg-name">height</span>, <span class="arg-name">width</span>, <span class="arg-name">hfov</span>)</code>
+                <span class="line-no">L25-28</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-compute_camera_pose_opencv_convention">
+            <h2>
+                
+                <code><span class="fn-name">compute_camera_pose_opencv_convention</span> (<span class="arg-name">camera_position</span>, <span class="arg-name">camera_orientation</span>)</code>
+                <span class="line-no">L31-34</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-compute_pointmap">
+            <h2>
+                
+                <code><span class="fn-name">compute_pointmap</span> (<span class="arg-name">depthmap</span>, <span class="arg-name">hfov</span>)</code>
+                <span class="line-no">L37-47</span>
+            </h2>
+            <div class="docstring"><p>Compute a HxWx3 pointmap in camera frame from a HxW depth map.</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-compute_pointcloud">
+            <h2>
+                
+                <code><span class="fn-name">compute_pointcloud</span> (<span class="arg-name">depthmap</span>, <span class="arg-name">hfov</span>, <span class="arg-name">camera_position</span>, <span class="arg-name">camera_rotation</span>)</code>
+                <span class="line-no">L50-61</span>
+            </h2>
+            <div class="docstring"><p>Return a 3D point cloud corresponding to valid pixels of the depth map</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-compute_pointcloud_overlaps_scikit">
+            <h2>
+                
+                <code><span class="fn-name">compute_pointcloud_overlaps_scikit</span> (<span class="arg-name">pointcloud1</span>, <span class="arg-name">pointcloud2</span>, <span class="arg-name">distance_threshold</span>, <span class="arg-name">compute_symmetric</span> = <span class="arg-default">False</span>)</code>
+                <span class="line-no">L64-82</span>
+            </h2>
+            <div class="docstring"><p>Compute &#x27;overlapping&#x27; metrics based on a distance threshold between two point clouds.</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-_append_camera_parameters">
+            <h2>
+                
+                <code><span class="fn-name">_append_camera_parameters</span> (<span class="arg-name">observation</span>, <span class="arg-name">hfov</span>, <span class="arg-name">camera_location</span>, <span class="arg-name">camera_rotation</span>)</code>
+                <span class="line-no">L85-98</span>
+            </h2>
+            <div class="docstring"><p>Add camera parameters to the observation dictionnary produced by Habitat-Sim</p>
+<p>In-place modifications.</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-look_at">
+            <h2>
+                
+                <code><span class="fn-name">look_at</span> (<span class="arg-name">eye</span>, <span class="arg-name">center</span>, <span class="arg-name">up</span>, <span class="arg-name">return_cam2world</span> = <span class="arg-default">True</span>)</code>
+                <span class="line-no">L101-121</span>
+            </h2>
+            <div class="docstring"><p>Return camera pose looking at a given center point.</p>
+<p>Analogous of gluLookAt function, using OpenCV camera convention.</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-look_at_for_habitat">
+            <h2>
+                
+                <code><span class="fn-name">look_at_for_habitat</span> (<span class="arg-name">eye</span>, <span class="arg-name">center</span>, <span class="arg-name">up</span>, <span class="arg-name">return_cam2world</span> = <span class="arg-default">True</span>)</code>
+                <span class="line-no">L124-127</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-generate_orientation_noise">
+            <h2>
+                
+                <code><span class="fn-name">generate_orientation_noise</span> (<span class="arg-name">pan_range</span>, <span class="arg-name">tilt_range</span>, <span class="arg-name">roll_range</span>)</code>
+                <span class="line-no">L130-141</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+</main>
+</body>
+</html>

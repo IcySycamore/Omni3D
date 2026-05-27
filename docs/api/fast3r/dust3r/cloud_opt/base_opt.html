@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.dust3r.cloud_opt.base_opt - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class="active"><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.dust3r.cloud_opt.base_opt</h1>
+        <div class="module-stats">
+            <span>📁 1 类</span>
+            <span>⚡ 2 函数</span>
+            <span>🔧 32 方法</span>
+            <span class="warn">
+                ⚠️ 33 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/base_opt.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-BasePCOptimizer">class BasePCOptimizer</a></li>
+<li><a href="#func-global_alignment_loop">global_alignment_loop()</a></li>
+<li><a href="#func-global_alignment_iter">global_alignment_iter()</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-BasePCOptimizer">
+            <h2>
+                
+                class <span class="cls-name">BasePCOptimizer</span>(nn.Module)
+                <span class="line-no">L40-406</span>
+            </h2>
+            <div class="docstring"><p>Optimize a global scene, given a list of pairwise observations.</p>
+<p>Graph node: images</p>
+<p>Graph edges: observations = (pred1, pred2)</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-BasePCOptimizer-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L46-55</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_init_from_views">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_init_from_views</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">dist</span> = <span class="arg-default">&#x27;l1&#x27;</span>, <span class="arg-name">conf</span> = <span class="arg-default">&#x27;log&#x27;</span>, <span class="arg-name">min_conf_thr</span> = <span class="arg-default">3</span>, <span class="arg-name">base_scale</span> = <span class="arg-default">0.5</span>, <span class="arg-name">allow_pw_adaptors</span> = <span class="arg-default">False</span>, <span class="arg-name">pw_break</span> = <span class="arg-default">20</span>, <span class="arg-name">rand_pose</span> = <span class="arg-default">torch.randn</span>, <span class="arg-name">iterationsCount</span> = <span class="arg-default">None</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
+                    <span class="line-no">L57-136</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-n_edges">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">n_edges</span> ()</code>
+                    <span class="line-no">L139-140</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-str_edges">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">str_edges</span> ()</code>
+                    <span class="line-no">L143-144</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-imsizes">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">imsizes</span> ()</code>
+                    <span class="line-no">L147-148</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-device">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">device</span> ()</code>
+                    <span class="line-no">L151-152</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-state_dict">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">state_dict</span> (<span class="arg-name">trainable</span> = <span class="arg-default">True</span>)</code>
+                    <span class="line-no">L154-161</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-load_state_dict">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">data</span>)</code>
+                    <span class="line-no">L163-164</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_check_edges">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_check_edges</span> ()</code>
+                    <span class="line-no">L166-169</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_compute_img_conf">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_compute_img_conf</span> (<span class="arg-name">pred1_conf</span>, <span class="arg-name">pred2_conf</span>)</code>
+                    <span class="line-no">L172-179</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_adaptors">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_adaptors</span> ()</code>
+                    <span class="line-no">L181-188</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_get_poses">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_get_poses</span> (<span class="arg-name">poses</span>)</code>
+                    <span class="line-no">L190-195</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_set_pose">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_pose</span> (<span class="arg-name">poses</span>, <span class="arg-name">idx</span>, <span class="arg-name">R</span>, <span class="arg-name">T</span> = <span class="arg-default">None</span>, <span class="arg-name">scale</span> = <span class="arg-default">None</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L197-218</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_pw_norm_scale_factor">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pw_norm_scale_factor</span> ()</code>
+                    <span class="line-no">L220-226</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_pw_scale">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pw_scale</span> ()</code>
+                    <span class="line-no">L228-231</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_pw_poses">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pw_poses</span> ()</code>
+                    <span class="line-no">L233-239</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_masks">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_masks</span> ()</code>
+                    <span class="line-no">L241-242</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-depth_to_pts3d">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">depth_to_pts3d</span> ()</code>
+                    <span class="line-no">L244-245</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_pts3d">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pts3d</span> (<span class="arg-name">raw</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L247-251</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_set_focal">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_focal</span> (<span class="arg-name">idx</span>, <span class="arg-name">focal</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L253-254</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_focals">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_focals</span> ()</code>
+                    <span class="line-no">L256-257</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_known_focal_mask">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_known_focal_mask</span> ()</code>
+                    <span class="line-no">L259-260</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_principal_points">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_principal_points</span> ()</code>
+                    <span class="line-no">L262-263</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_conf">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_conf</span> (<span class="arg-name">mode</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L265-267</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_im_poses">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_im_poses</span> ()</code>
+                    <span class="line-no">L269-270</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-_set_depthmap">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_depthmap</span> (<span class="arg-name">idx</span>, <span class="arg-name">depth</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L272-273</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-get_depthmaps">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_depthmaps</span> (<span class="arg-name">raw</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L275-276</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-clean_pointcloud">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">clean_pointcloud</span> (<span class="arg-name">tol</span> = <span class="arg-default">0.001</span>, <span class="arg-name">max_bad_conf</span> = <span class="arg-default">0</span>)</code>
+                    <span class="line-no">L279-317</span>
+                </div>
+                <div class="docstring"><div class="doc-section"><strong>Method:</strong>
+<div class="doc-detail">1) express all 3d points in each camera coordinate frame</div>
+<div class="doc-detail">2) if they&#x27;re in front of a depthmap --&gt; then lower their confidence</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">ret_details</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L319-346</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-compute_global_alignment">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_global_alignment</span> (<span class="arg-name">init</span> = <span class="arg-default">None</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L349-361</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-mask_sky">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">mask_sky</span> ()</code>
+                    <span class="line-no">L364-369</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-BasePCOptimizer-show">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">show</span> (<span class="arg-name">show_pw_cams</span> = <span class="arg-default">False</span>, <span class="arg-name">show_pw_pts3d</span> = <span class="arg-default">False</span>, <span class="arg-name">cam_size</span> = <span class="arg-default">None</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L371-406</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="func-block" id="func-global_alignment_loop">
+            <h2>
+                
+                <code><span class="fn-name">global_alignment_loop</span> (<span class="arg-name">net</span>, <span class="arg-name">lr</span> = <span class="arg-default">0.01</span>, <span class="arg-name">niter</span> = <span class="arg-default">300</span>, <span class="arg-name">schedule</span> = <span class="arg-default">&#x27;cosine&#x27;</span>, <span class="arg-name">lr_min</span> = <span class="arg-default">1e-06</span>)</code>
+                <span class="line-no">L409-436</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-global_alignment_iter">
+            <h2>
+                
+                <code><span class="fn-name">global_alignment_iter</span> (<span class="arg-name">net</span>, <span class="arg-name">cur_iter</span>, <span class="arg-name">niter</span>, <span class="arg-name">lr_base</span>, <span class="arg-name">lr_min</span>, <span class="arg-name">optimizer</span>, <span class="arg-name">schedule</span>)</code>
+                <span class="line-no">L439-453</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+</main>
+</body>
+</html>

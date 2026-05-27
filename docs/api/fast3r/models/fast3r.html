@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.models.fast3r - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class="active"><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.models.fast3r</h1>
+        <div class="module-stats">
+            <span>📁 5 类</span>
+            <span>⚡ 0 函数</span>
+            <span>🔧 26 方法</span>
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/models/fast3r.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-Fast3R">class Fast3R</a></li>
+<li><a href="#class-CroCoEncoder">class CroCoEncoder</a></li>
+<li><a href="#class-DinoEncoder">class DinoEncoder</a></li>
+<li><a href="#class-Fast3RDecoder">class Fast3RDecoder</a></li>
+<li><a href="#class-LlamaDecoder">class LlamaDecoder</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-Fast3R">
+            <h2>
+                
+                class <span class="cls-name">Fast3R</span>(nn.Module, huggingface_hub.PyTorchModelHubMixin)
+                <span class="line-no">L45-598</span>
+            </h2>
+            <div class="docstring"><p>Fast3R: Fast 3D Reconstruction from Multiple Views.</p>
+<p>该模型从多张图像中快速重建 3D 场景。由三部分组成：</p>
+<p>- Encoder: 图像编码器（支持 CroCo / DINOv2），将图像编码为 patch 特征</p>
+<p>- Decoder: 多视角解码器（支持 Fast3RDecoder / LlamaDecoder），融合多视角信息</p>
+<p>- Head: 预测头（DPT），输出逐像素的 3D 点坐标和置信度</p>
+<p>继承自 nn.Module 和 HuggingFace PyTorchModelHubMixin，支持从 HuggingFace Hub 加载模型。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Fast3R-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">encoder_args</span>: <span class="arg-type">dict</span>, <span class="arg-name">decoder_args</span>: <span class="arg-type">dict</span>, <span class="arg-name">head_args</span>: <span class="arg-type">dict</span>, <span class="arg-name">freeze</span> = <span class="arg-default">&#x27;none&#x27;</span>)</code>
+                    <span class="line-no">L59-87</span>
+                </div>
+                <div class="docstring"><p>初始化 Fast3R 模型。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoder_args: 编码器配置字典，需包含 &#x27;encoder_type&#x27;（&#x27;croco&#x27; 或 &#x27;dino_v2&#x27;）。</div>
+<div class="doc-detail">    decoder_args: 解码器配置字典，需包含 &#x27;decoder_type&#x27;（&#x27;fast3r&#x27; 或 &#x27;llama&#x27;）。</div>
+<div class="doc-detail">    head_args: 预测头配置字典，需包含 &#x27;output_mode&#x27;、&#x27;head_type&#x27;、&#x27;depth_mode&#x27;、&#x27;conf_mode&#x27;。</div>
+<div class="doc-detail">    freeze: 冻结策略，可选 &#x27;none&#x27;（不冻结）、&#x27;encoder&#x27;（冻结编码器）、&#x27;sandwich&#x27;（冻结编码器和头）。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-build_encoder">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">build_encoder</span> (<span class="arg-name">encoder_args</span>: <span class="arg-type">dict</span>)</code>
+                    <span class="line-no">L89-111</span>
+                </div>
+                <div class="docstring"><p>根据配置构建图像编码器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoder_args: 编码器配置，必须包含 &#x27;encoder_type&#x27; 键。</div>
+<div class="doc-detail">        - &#x27;croco&#x27;: 构建 CroCoEncoder</div>
+<div class="doc-detail">        - &#x27;dino_v2&#x27;: 构建 DinoEncoder</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    ValueError: 不支持的编码器类型时抛出。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-build_decoder">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">build_decoder</span> (<span class="arg-name">decoder_args</span>: <span class="arg-type">dict</span>)</code>
+                    <span class="line-no">L113-134</span>
+                </div>
+                <div class="docstring"><p>根据配置构建多视角解码器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    decoder_args: 解码器配置，需包含 &#x27;decoder_type&#x27; 键。</div>
+<div class="doc-detail">        - &#x27;fast3r&#x27;: 构建 Fast3RDecoder（基于 CroCo Transformer）</div>
+<div class="doc-detail">        - &#x27;llama&#x27;: 构建 LlamaDecoder（基于 LLaMA Transformer）</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    ValueError: 不支持的解码器类型时抛出。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-build_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">build_head</span> (<span class="arg-name">head_args</span>: <span class="arg-type">dict</span>)</code>
+                    <span class="line-no">L136-180</span>
+                </div>
+                <div class="docstring"><p>构建预测头（DPT Head），用于将解码器输出映射为逐像素的 3D 点坐标。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    head_args: 预测头配置，包含：</div>
+<div class="doc-detail">        - output_mode: 输出模式（&#x27;pts3d&#x27;）</div>
+<div class="doc-detail">        - head_type: 头类型（&#x27;dpt&#x27;）</div>
+<div class="doc-detail">        - depth_mode: 深度模式</div>
+<div class="doc-detail">        - conf_mode: 置信度模式</div>
+<div class="doc-detail">        - with_local_head: 是否使用局部预测头（默认 False）</div>
+<div class="doc-detail">        - landscape_only: 是否仅横屏模式</div>
+<div class="doc-detail">        - patch_size: patch 大小</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-head_factory">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">head_factory</span> (<span class="arg-name">head_type</span>, <span class="arg-name">output_mode</span>, <span class="arg-name">has_conf</span> = <span class="arg-default">False</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>)</code>
+                    <span class="line-no">L182-220</span>
+                </div>
+                <div class="docstring"><p>构建解码器的预测头。</p>
+<p>根据头类型和输出模式创建对应的预测头模块。当前仅支持 DPT 头用于 pts3d 输出。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    head_type: 头类型，目前仅支持 &#x27;dpt&#x27;。</div>
+<div class="doc-detail">    output_mode: 输出模式，目前仅支持 &#x27;pts3d&#x27;。</div>
+<div class="doc-detail">    has_conf: 是否输出置信度，默认 False。</div>
+<div class="doc-detail">    patch_size: Patch 大小，默认 16。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    PixelwiseTaskWithDPT: DPT 预测头实例。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    NotImplementedError: 不支持的头类型或输出模式时抛出。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-load_state_dict">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L222-234</span>
+                </div>
+                <div class="docstring"><p>加载模型权重。</p>
+<p>直接委托给父类 nn.Module.load_state_dict。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    ckpt: 状态字典。</div>
+<div class="doc-detail">    **kw: 传递给父类的额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    _IncompatibleKeys: 包含 missing_keys 和 unexpected_keys 的命名元组。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-load_from_dust3r_checkpoint">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">load_from_dust3r_checkpoint</span> (<span class="arg-name">dust3r_checkpoint_path</span>: <span class="arg-type">str</span>)</code>
+                    <span class="line-no">L236-313</span>
+                </div>
+                <div class="docstring"><p>Load a Dust3R checkpoint into the model.</p>
+<p>Only load the patch_embed, enc_blocks, enc_norm, and downstream_head1 components from the checkpoint.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dust3r_checkpoint_path (str): Path to the Dust3R checkpoint.</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-set_freeze">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">set_freeze</span> (<span class="arg-name">freeze</span>)</code>
+                    <span class="line-no">L315-330</span>
+                </div>
+                <div class="docstring"><p>设置模型冻结策略。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    freeze: 冻结策略，可选值：</div>
+<div class="doc-detail">        - &#x27;none&#x27;: 不冻结任何参数</div>
+<div class="doc-detail">        - &#x27;encoder&#x27;: 冻结编码器参数</div>
+<div class="doc-detail">        - &#x27;sandwich&#x27;: 冻结编码器和预测头参数</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-_encode_images">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_encode_images</span> (<span class="arg-name">views</span>, <span class="arg-name">chunk_size</span> = <span class="arg-default">400</span>)</code>
+                    <span class="line-no">L332-393</span>
+                </div>
+                <div class="docstring"><p>编码所有视图的图像。</p>
+<p>将多张图像通过编码器，支持分块处理以避免 OOM。当所有图像形状相同时，</p>
+<p>会批量处理；否则逐张处理。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    views: 视图列表，每个视图为包含 &#x27;img&#x27; 和 &#x27;true_shape&#x27; 的字典。</div>
+<div class="doc-detail">    chunk_size: 批量处理时每块的大小，用于控制显存。默认 400。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (encoded_feats, positions, shapes)</div>
+<div class="doc-detail">        - encoded_feats: 每个视图的编码特征列表，形状 [B, N_patches, D]</div>
+<div class="doc-detail">        - positions: 每个视图的位置编码列表，形状 [B, N_patches, 2]</div>
+<div class="doc-detail">        - shapes: 每个视图的真实形状列表</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-set_max_parallel_views_for_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">set_max_parallel_views_for_head</span> (<span class="arg-name">max_parallel_views_for_head</span>)</code>
+                    <span class="line-no">L395-401</span>
+                </div>
+                <div class="docstring"><p>设置预测头并行处理的最大视图数，用于控制推理时显存占用。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    max_parallel_views_for_head: 最大并行视图数。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3R-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">views</span>, <span class="arg-name">profiling</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L403-598</span>
+                </div>
+                <div class="docstring"><div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    views (list[dict]): a list of views, each view is a dict of tensors, the tensors are batched</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list[dict]: a list of results for each view</div>
+<div class="doc-detail">    dict: profiling information (if profiling=True)</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-CroCoEncoder">
+            <h2>
+                
+                class <span class="cls-name">CroCoEncoder</span>(nn.Module)
+                <span class="line-no">L600-710</span>
+            </h2>
+            <div class="docstring"><p>CroCo 图像编码器，基于 Vision Transformer。</p>
+<p>将图像分割为 patch，通过 Transformer 编码器块提取特征，</p>
+<p>支持 RoPE2D 旋转位置编码。</p>
+<div class="doc-section"><strong>Attributes:</strong>
+<div class="doc-detail">    patch_embed: Patch 嵌入层。</div>
+<div class="doc-detail">    rope: RoPE2D 旋转位置编码器。</div>
+<div class="doc-detail">    enc_blocks: Transformer 编码器块列表。</div>
+<div class="doc-detail">    enc_norm: 最终 LayerNorm 层。</div>
+</div></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-CroCoEncoder-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">512</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">patch_embed_cls</span> = <span class="arg-default">&#x27;ManyAR_PatchEmbed&#x27;</span>, <span class="arg-name">embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">12</span>, <span class="arg-name">depth</span> = <span class="arg-default">12</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">partial(nn.LayerNorm, eps=1e-06)</span>, <span class="arg-name">pos_embed</span> = <span class="arg-default">&#x27;RoPE100&#x27;</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
+                    <span class="line-no">L612-668</span>
+                </div>
+                <div class="docstring"><p>初始化 CroCo 编码器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size: 输入图像大小，默认 512。</div>
+<div class="doc-detail">    patch_size: Patch 大小，默认 16。</div>
+<div class="doc-detail">    patch_embed_cls: Patch 嵌入类名，默认 &#x27;ManyAR_PatchEmbed&#x27;。</div>
+<div class="doc-detail">    embed_dim: 嵌入维度，默认 768。</div>
+<div class="doc-detail">    num_heads: 注意力头数，默认 12。</div>
+<div class="doc-detail">    depth: Transformer 层数，默认 12。</div>
+<div class="doc-detail">    mlp_ratio: MLP 隐藏层扩展比，默认 4。</div>
+<div class="doc-detail">    norm_layer: 归一化层，默认 LayerNorm。</div>
+<div class="doc-detail">    pos_embed: 位置编码类型，默认 &#x27;RoPE100&#x27;。</div>
+<div class="doc-detail">    attn_implementation: 注意力实现方式，默认 &#x27;pytorch_naive&#x27;。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-CroCoEncoder-_set_patch_embed">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
+                    <span class="line-no">L670-687</span>
+                </div>
+                <div class="docstring"><p>设置 Patch 嵌入层。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size: 输入图像大小。</div>
+<div class="doc-detail">    patch_size: Patch 大小。</div>
+<div class="doc-detail">    enc_embed_dim: 编码器嵌入维度。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-CroCoEncoder-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
+                    <span class="line-no">L689-710</span>
+                </div>
+                <div class="docstring"><p>CroCo 编码器前向传播：编码图像为 patch 特征。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    image: 输入图像张量，形状 [B, C, H, W]。</div>
+<div class="doc-detail">    true_shape: 真实图像形状，形状 [B, 2]（H, W）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (x, pos)</div>
+<div class="doc-detail">        - x: 编码特征，形状 [B, N_patches, D]</div>
+<div class="doc-detail">        - pos: 位置信息，形状 [B, N_patches, 2]</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-DinoEncoder">
+            <h2>
+                
+                class <span class="cls-name">DinoEncoder</span>(nn.Module)
+                <span class="line-no">L712-825</span>
+            </h2>
+            <div class="docstring"><p>DINOv2 图像编码器，使用预训练的 DINOv2 ViT-L/14 模型。</p>
+<p>支持横屏和竖屏图像的自动处理，通过 PositionGetter 计算位置编码。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-DinoEncoder-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">patch_size</span> = <span class="arg-default">14</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L717-736</span>
+                </div>
+                <div class="docstring"><p>初始化 DINO 编码器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    patch_size: Patch 大小，必须为 14（与 DINOv2 ViT-L/14 匹配）。</div>
+<div class="doc-detail">    **kwargs: 其他关键字参数（当前未使用）。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    AssertionError: patch_size 不为 14 时抛出。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-DinoEncoder-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
+                    <span class="line-no">L738-808</span>
+                </div>
+                <div class="docstring"><p>编码图像为 patch 特征，自动处理横屏和竖屏图像。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    image: 输入图像张量，形状 [B, C, H, W]。</div>
+<div class="doc-detail">    true_shape: 真实图像形状，形状 [B, 2]（H, W）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (encoded_feats, encoded_pos)</div>
+<div class="doc-detail">        - encoded_feats: 编码特征，形状 [B, N_patches, D]</div>
+<div class="doc-detail">        - encoded_pos: 位置信息，形状 [B, N_patches, 2]</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-DinoEncoder-_process_images">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_process_images</span> (<span class="arg-name">images</span>, <span class="arg-name">true_shape</span>)</code>
+                    <span class="line-no">L810-825</span>
+                </div>
+                <div class="docstring"><p>Process a batch of images through the DINO encoder and compute positions.</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Fast3RDecoder">
+            <h2>
+                
+                class <span class="cls-name">Fast3RDecoder</span>(nn.Module)
+                <span class="line-no">L828-1013</span>
+            </h2>
+            <div class="docstring"><p>Fast3R 多视角解码器，基于 CroCo Transformer Block。</p>
+<p>将多个视图的编码特征拼接后，通过 Transformer 解码器块进行跨视角信息交互，</p>
+<p>使用图像索引位置编码区分不同视图。</p>
+<div class="doc-section"><strong>Attributes:</strong>
+<div class="doc-detail">    decoder_embed: 线性映射层，将编码器维度映射到解码器维度。</div>
+<div class="doc-detail">    dec_blocks: Transformer 解码器块列表。</div>
+<div class="doc-detail">    image_idx_emb: 图像索引的正弦-余弦位置嵌入。</div>
+<div class="doc-detail">    dec_norm: 最终 LayerNorm 层。</div>
+</div></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Fast3RDecoder-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">random_image_idx_embedding</span>: <span class="arg-type">bool</span>, <span class="arg-name">enc_embed_dim</span>: <span class="arg-type">int</span>, <span class="arg-name">embed_dim</span>: <span class="arg-type">int</span> = <span class="arg-default">768</span>, <span class="arg-name">num_heads</span>: <span class="arg-type">int</span> = <span class="arg-default">12</span>, <span class="arg-name">depth</span>: <span class="arg-type">int</span> = <span class="arg-default">12</span>, <span class="arg-name">mlp_ratio</span>: <span class="arg-type">float</span> = <span class="arg-default">4.0</span>, <span class="arg-name">qkv_bias</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>, <span class="arg-name">drop</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_drop</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_implementation</span>: <span class="arg-type">str</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">attn_bias_for_inference_enabled</span> = <span class="arg-default">True</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">partial(nn.LayerNorm, eps=1e-06)</span>)</code>
+                    <span class="line-no">L840-901</span>
+                </div>
+                <div class="docstring"><p>初始化 Fast3R 解码器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    random_image_idx_embedding: 是否使用随机图像索引嵌入（训练时数据增强）。</div>
+<div class="doc-detail">    enc_embed_dim: 编码器嵌入维度。</div>
+<div class="doc-detail">    embed_dim: 解码器嵌入维度，默认 768。</div>
+<div class="doc-detail">    num_heads: 注意力头数，默认 12。</div>
+<div class="doc-detail">    depth: Transformer 层数，默认 12。</div>
+<div class="doc-detail">    mlp_ratio: MLP 扩展比，默认 4.0。</div>
+<div class="doc-detail">    qkv_bias: 是否在 QKV 投影中使用偏置，默认 True。</div>
+<div class="doc-detail">    drop: Dropout 概率，默认 0.0。</div>
+<div class="doc-detail">    attn_drop: 注意力 Dropout 概率，默认 0.0。</div>
+<div class="doc-detail">    attn_implementation: 注意力实现方式。</div>
+<div class="doc-detail">    attn_bias_for_inference_enabled: 推理时是否启用注意力偏置。</div>
+<div class="doc-detail">    norm_layer: 归一化层。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3RDecoder-_generate_per_rank_generator">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_generate_per_rank_generator</span> ()</code>
+                    <span class="line-no">L903-918</span>
+                </div>
+                <div class="docstring"><p>生成每个分布式 rank 的随机数生成器。</p>
+<p>确保不同 rank 使用不同种子，同一 rank 在不同前向传播中产生不同随机数。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Generator: 配置好种子的随机数生成器。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3RDecoder-_get_random_image_pos">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_get_random_image_pos</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_views</span>, <span class="arg-name">max_image_idx</span>, <span class="arg-name">device</span>)</code>
+                    <span class="line-no">L920-971</span>
+                </div>
+                <div class="docstring"><p>Generates non-repeating random image indices for each sample, retrieves corresponding</p>
+<p>positional embeddings for each view, and concatenates them.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoded_feats (list of tensors): Encoded features for each view.</div>
+<div class="doc-detail">    batch_size (int): Number of samples in the batch.</div>
+<div class="doc-detail">    num_views (int): Number of views per sample.</div>
+<div class="doc-detail">    max_image_idx (int): Maximum image index for embedding.</div>
+<div class="doc-detail">    device (torch.device): Device to move data to.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Concatenated positional embeddings for the entire batch.</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Fast3RDecoder-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">positions</span>, <span class="arg-name">image_ids</span>)</code>
+                    <span class="line-no">L973-1013</span>
+                </div>
+                <div class="docstring"><p>Forward pass through the decoder.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoded_feats (list of tensors): Encoded features for each view. Shape: B x Npatches x D</div>
+<div class="doc-detail">    positions (list of tensors): Positional embeddings for each view. Shape: B x Npatches x 2</div>
+<div class="doc-detail">    image_ids (tensor): Image IDs for each patch. Shape: B x Npatches</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-LlamaDecoder">
+            <h2>
+                
+                class <span class="cls-name">LlamaDecoder</span>(nn.Module)
+                <span class="line-no">L1015-1225</span>
+            </h2>
+            <div class="docstring"><p>LLaMA 风格的多视角解码器。</p>
+<p>使用 LLaMA Transformer 架构进行跨视角信息交互，</p>
+<p>支持 GQA（Grouped Query Attention）和 SwiGLU 激活函数，</p>
+<p>使用 RoPE 旋转位置编码和视图 0 特殊嵌入。</p>
+<div class="doc-section"><strong>Attributes:</strong>
+<div class="doc-detail">    head_dim: 每个注意力头的维度。</div>
+<div class="doc-detail">    precomputed_freqs_cis: 预计算的 RoPE 频率复数。</div>
+<div class="doc-detail">    view0_embed: 视图 0 的可学习嵌入。</div>
+<div class="doc-detail">    decoder_embed: 线性映射层。</div>
+<div class="doc-detail">    layers: LLaMA Transformer 层列表。</div>
+<div class="doc-detail">    norm: RMSNorm 归一化层。</div>
+</div></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-LlamaDecoder-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">random_image_idx_embedding</span>: <span class="arg-type">bool</span>, <span class="arg-name">enc_embed_dim</span>: <span class="arg-type">int</span>, <span class="arg-name">embed_dim</span>: <span class="arg-type">int</span> = <span class="arg-default">4096</span>, <span class="arg-name">n_layers</span>: <span class="arg-type">int</span> = <span class="arg-default">32</span>, <span class="arg-name">n_heads</span>: <span class="arg-type">int</span> = <span class="arg-default">32</span>, <span class="arg-name">n_kv_heads</span>: <span class="arg-type">Optional[int]</span> = <span class="arg-default">None</span>, <span class="arg-name">multiple_of</span>: <span class="arg-type">int</span> = <span class="arg-default">256</span>, <span class="arg-name">ffn_dim_multiplier</span>: <span class="arg-type">Optional[float]</span> = <span class="arg-default">None</span>, <span class="arg-name">norm_eps</span>: <span class="arg-type">float</span> = <span class="arg-default">1e-05</span>, <span class="arg-name">rope_theta</span>: <span class="arg-type">float</span> = <span class="arg-default">10000</span>, <span class="arg-name">max_seq_len</span>: <span class="arg-type">int</span> = <span class="arg-default">1000</span>, <span class="arg-name">is_causal</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">depth_init</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L1030-1090</span>
+                </div>
+                <div class="docstring"><p>初始化 LLaMA 解码器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    random_image_idx_embedding: 是否使用随机图像索引嵌入。</div>
+<div class="doc-detail">    enc_embed_dim: 编码器嵌入维度。</div>
+<div class="doc-detail">    embed_dim: 解码器嵌入维度，默认 4096。</div>
+<div class="doc-detail">    n_layers: Transformer 层数，默认 32。</div>
+<div class="doc-detail">    n_heads: 注意力头数，默认 32。</div>
+<div class="doc-detail">    n_kv_heads: KV 头数（用于 GQA），默认 None（等于 n_heads）。</div>
+<div class="doc-detail">    multiple_of: SwiGLU 隐藏层的倍数基数，默认 256。</div>
+<div class="doc-detail">    ffn_dim_multiplier: FFN 维度乘数，默认 None。</div>
+<div class="doc-detail">    norm_eps: 归一化 epsilon，默认 1e-5。</div>
+<div class="doc-detail">    rope_theta: RoPE 的 theta 参数，默认 10000。</div>
+<div class="doc-detail">    max_seq_len: 最大序列长度，默认 1000。</div>
+<div class="doc-detail">    is_causal: 是否使用因果注意力，默认 False（双向注意力）。</div>
+<div class="doc-detail">    depth_init: 是否使用深度初始化，默认 True。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-LlamaDecoder-_precompute_freqs_cis">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_precompute_freqs_cis</span> (<span class="arg-name">max_seq_len</span>)  -> <span class="ret-type">torch.Tensor</span></code>
+                    <span class="line-no">L1092-1107</span>
+                </div>
+                <div class="docstring"><p>预计算 RoPE 频率复数张量。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    max_seq_len: 最大序列长度。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 预计算的频率复数张量。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-LlamaDecoder-_generate_per_rank_generator">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_generate_per_rank_generator</span> ()</code>
+                    <span class="line-no">L1109-1122</span>
+                </div>
+                <div class="docstring"><p>生成每个分布式 rank 的随机数生成器。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Generator: 配置好种子的随机数生成器。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-LlamaDecoder-_get_random_freqs_cis">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_get_random_freqs_cis</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_views</span>, <span class="arg-name">max_image_idx</span>, <span class="arg-name">device</span>)</code>
+                    <span class="line-no">L1124-1175</span>
+                </div>
+                <div class="docstring"><p>Generates freqs_cis for each patch based on random image indices.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoded_feats (list of tensors): Encoded features for each view.</div>
+<div class="doc-detail">    batch_size (int): Number of samples in the batch.</div>
+<div class="doc-detail">    num_views (int): Number of views per sample.</div>
+<div class="doc-detail">    max_image_idx (int): Maximum image index for embedding.</div>
+<div class="doc-detail">    device (torch.device): Device to move data to.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: freqs_cis of shape (batch_size, total_num_patches, head_dim)</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-LlamaDecoder-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">positions</span>, <span class="arg-name">image_ids</span>)</code>
+                    <span class="line-no">L1177-1225</span>
+                </div>
+                <div class="docstring"><p>LLaMA 解码器前向传播。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoded_feats: 每个视图的编码特征列表，形状 [B, N_patches, D]。</div>
+<div class="doc-detail">    positions: 每个视图的位置嵌入列表，形状 [B, N_patches, 2]。</div>
+<div class="doc-detail">    image_ids: 图像 ID 张量，形状 [B, N_patches]。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list[Tensor]: 各层输出列表，第一个为投影前，最后一个为最终归一化后。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+</main>
+</body>
+</html>

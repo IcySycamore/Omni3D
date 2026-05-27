@@ -26,12 +26,27 @@ except ImportError:
 
 
 def cat_3d(vecs):
+    """将多个点云数组展平并拼接为 (N, 3) 的 numpy 数组。
+
+    Args:
+        vecs (ndarray | Tensor | list): 单个或多个点云数据。
+
+    Returns:
+        ndarray: 形状为 (N, 3) 的点云数组。
+    """
     if isinstance(vecs, (np.ndarray, torch.Tensor)):
         vecs = [vecs]
     return np.concatenate([p.reshape(-1, 3) for p in to_numpy(vecs)])
 
 
 def show_raw_pointcloud(pts3d, colors, point_size=2):
+    """在 trimesh 场景中显示原始点云。
+
+    Args:
+        pts3d (ndarray | Tensor): 3D 点坐标，形状为 (N, 3) 或可被 cat_3d 处理的格式。
+        colors (ndarray | Tensor): 对应颜色，形状为 (N, 3)，值域 [0, 255]。
+        point_size (float): 点的显示大小。默认 2。
+    """
     scene = trimesh.Scene()
 
     pct = trimesh.PointCloud(cat_3d(pts3d), colors=cat_3d(colors))
@@ -41,6 +56,18 @@ def show_raw_pointcloud(pts3d, colors, point_size=2):
 
 
 def pts3d_to_trimesh(img, pts3d, valid=None):
+    """将图像和对应 3D 点云转换为 trimesh 网格字典。
+
+    每个像素生成两个三角形（正反两面），可选择过滤无效像素。
+
+    Args:
+        img (ndarray): RGB 图像，形状为 (H, W, 3)，值域 [0, 1] 或 [0, 255]。
+        pts3d (ndarray): 3D 点云，形状为 (H, W, 3)。
+        valid (ndarray | None): 有效像素布尔掩码，形状为 (H, W)。
+
+    Returns:
+        dict: 包含 'vertices', 'faces', 'face_colors' 键的网格字典。
+    """
     H, W, THREE = img.shape
     assert THREE == 3
     assert img.shape == pts3d.shape
@@ -91,6 +118,14 @@ def pts3d_to_trimesh(img, pts3d, valid=None):
 
 
 def cat_meshes(meshes):
+    """合并多个网格字典为单个网格。
+
+    Args:
+        meshes (list[dict]): 网格字典列表，每个包含 'vertices', 'faces', 'face_colors'。
+
+    Returns:
+        dict: 合并后的网格字典。
+    """
     vertices, faces, colors = zip(
         *[(m["vertices"], m["faces"], m["face_colors"]) for m in meshes]
     )
@@ -105,6 +140,16 @@ def cat_meshes(meshes):
 
 
 def show_duster_pairs(view1, view2, pred1, pred2):
+    """交互式显示 DUSt3R 图像对及其置信度图。
+
+    对每对图像显示原图和置信度图，并可选择显示 3D 点云。
+
+    Args:
+        view1 (dict): 第一视图数据，包含 'img', 'idx', 'instance' 等键。
+        view2 (dict): 第二视图数据。
+        pred1 (dict): 模型对 view1 的预测，包含 'conf', 'pts3d'。
+        pred2 (dict): 模型对 view2 的预测，包含 'conf', 'pts3d_in_other_view'。
+    """
     import matplotlib.pyplot as pl
 
     pl.ion()
@@ -131,14 +176,38 @@ def show_duster_pairs(view1, view2, pred1, pred2):
 
 
 def auto_cam_size(im_poses):
+    """根据相机位姿间距自动计算合适的相机显示大小。
+
+    Args:
+        im_poses (ndarray | Tensor): 相机位姿数组，形状为 (N, 4, 4)。
+
+    Returns:
+        float: 建议的相机显示大小（中位距离的 10%）。
+    """
     return 0.1 * get_med_dist_between_poses(im_poses)
 
 
 class SceneViz:
+    """基于 trimesh 的 3D 场景可视化工具类。
+
+    提供添加点云、相机的接口，并支持交互式显示。
+    """
+
     def __init__(self):
+        """初始化 SceneViz，创建空的 trimesh 场景。"""
         self.scene = trimesh.Scene()
 
     def add_pointcloud(self, pts3d, color, mask=None):
+        """向场景中添加点云。
+
+        Args:
+            pts3d (ndarray | Tensor | list): 点云数据，形状为 (N, H, W, 3) 或列表。
+            color (ndarray | Tensor | list | tuple): 点颜色，可以是逐点颜色数组或单一 RGB 元组。
+            mask (ndarray | None): 有效点掩码列表。
+
+        Returns:
+            SceneViz: 返回自身，支持链式调用。
+        """
         pts3d = to_numpy(pts3d)
         mask = to_numpy(mask)
         if mask is None:
@@ -167,6 +236,19 @@ class SceneViz:
         imsize=None,
         cam_size=0.03,
     ):
+        """向场景中添加单个相机。
+
+        Args:
+            pose_c2w (ndarray | Tensor): 相机到世界的变换矩阵，形状 (4, 4)。
+            focal (float | None): 焦距，用于计算相机锥体大小。
+            color (tuple): 相机线框颜色，RGB 元组。默认黑色。
+            image (ndarray | None): 相机图像，用于在相机平面上贴图。
+            imsize (tuple | None): 图像尺寸 (W, H)。
+            cam_size (float): 相机显示大小。默认 0.03。
+
+        Returns:
+            SceneViz: 返回自身，支持链式调用。
+        """
         pose_c2w, focal, color, image = to_numpy((pose_c2w, focal, color, image))
         add_scene_cam(self.scene, pose_c2w, color, image, focal, screen_width=cam_size)
         return self
@@ -174,6 +256,19 @@ class SceneViz:
     def add_cameras(
         self, poses, focals=None, images=None, imsizes=None, colors=None, **kw
     ):
+        """批量向场景中添加多个相机。
+
+        Args:
+            poses (ndarray | Tensor): 相机位姿数组，形状为 (N, 4, 4)。
+            focals (ndarray | None): 各相机焦距数组。
+            images (list | None): 各相机图像列表。
+            imsizes (list | None): 各相机图像尺寸列表。
+            colors (list | None): 各相机颜色列表。
+            **kw: 传递给 add_camera 的额外参数。
+
+        Returns:
+            SceneViz: 返回自身，支持链式调用。
+        """
         def get(arr, idx):
             return None if arr is None else arr[idx]
 
@@ -189,6 +284,15 @@ class SceneViz:
         return self
 
     def show(self, point_size=2, viewer=None):
+        """显示场景。
+
+        Args:
+            point_size (float): 点云中点的显示大小。默认 2。
+            viewer (str | None): trimesh 查看器类型。
+
+        Returns:
+            Any: trimesh 显示的返回值。
+        """
         return self.scene.show(viewer=viewer, line_settings={"point_size": point_size})
 
 
@@ -236,6 +340,17 @@ def show_raw_pointcloud_with_cams(
 def add_scene_cam(
     scene, pose_c2w, edge_color, image=None, focal=None, imsize=None, screen_width=0.03
 ):
+    """向 trimesh 场景中添加相机几何体（锥体）。
+
+    Args:
+        scene (trimesh.Scene): 目标场景。
+        pose_c2w (ndarray): 相机到世界的变换矩阵，形状 (4, 4)。
+        edge_color (tuple): 相机线框颜色，RGB 元组。
+        image (ndarray | None): 相机图像，用于贴图。
+        focal (float | None): 焦距。
+        imsize (tuple | None): 图像尺寸 (W, H)。
+        screen_width (float): 相机锥体宽度。默认 0.03。
+    """
     if image is not None:
         H, W, THREE = image.shape
         assert THREE == 3
@@ -306,6 +421,15 @@ def add_scene_cam(
 
 
 def cat(a, b):
+    """将两个点云数组拼接为 (N, 3) 的数组。
+
+    Args:
+        a (ndarray): 第一个点云数组。
+        b (ndarray): 第二个点云数组。
+
+    Returns:
+        ndarray: 拼接后的 (N, 3) 数组。
+    """
     return np.concatenate((a.reshape(-1, 3), b.reshape(-1, 3)))
 
 
@@ -328,6 +452,14 @@ CAM_COLORS = [
 
 
 def uint8(colors):
+    """将颜色数据转换为 uint8 格式。
+
+    Args:
+        colors (ndarray | list | tuple): 颜色数据，可为浮点（[0,1]）或整数（[0,255]）。
+
+    Returns:
+        ndarray: uint8 格式的颜色数组，值域 [0, 255]。
+    """
     if not isinstance(colors, np.ndarray):
         colors = np.array(colors)
     if np.issubdtype(colors.dtype, np.floating):
@@ -337,6 +469,17 @@ def uint8(colors):
 
 
 def segment_sky(image):
+    """基于颜色分割天空区域，返回布尔掩码。
+
+    使用 HSV 颜色空间识别蓝色和高亮灰色区域，通过形态学操作和连通分量分析
+    保留最大的天空区域。
+
+    Args:
+        image (ndarray | Tensor): RGB 图像，形状为 (H, W, 3)，值域 [0,1] 或 [0,255]。
+
+    Returns:
+        Tensor: 形状为 (H, W) 的布尔张量，True 表示天空像素。
+    """
     import cv2
     from scipy import ndimage
 

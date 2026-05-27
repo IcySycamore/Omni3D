@@ -15,6 +15,20 @@ from pytorch3d.transforms import so3_relative_angle
 
 
 def camera_to_rel_deg(pred_cameras_c2w, gt_cameras_c2w, device, batch_size):
+    """计算预测相机与真实相机之间的相对旋转误差（度）和平移角误差（度）。
+
+    注意：输入为列主序 SE3 矩阵（平移向量在最后一列），即 c2w 矩阵。
+
+    Args:
+        pred_cameras_c2w (Tensor): 预测的相机到世界变换矩阵，形状 (B, 4, 4)。
+        gt_cameras_c2w (Tensor): 真实的相机到世界变换矩阵，形状 (B, 4, 4)。
+        device (torch.device): 计算设备。
+        batch_size (int): 批次大小（视图数量）。
+
+    Returns:
+        tuple[Tensor, Tensor]: (rel_rangle_deg, rel_tangle_deg)，
+            分别为所有视图对的相对旋转误差和平移角误差（度）。
+    """
     # NOTE: Assumes column-major SE3 matrices, where translation vector is in the last column
     # NOTE: this takes in a c2w matrix, not the extrinsic matrix (w2c)!
     with torch.no_grad():
@@ -101,6 +115,14 @@ def calculate_auc(r_error, t_error, max_threshold=30):
 
 
 def batched_all_pairs(B):
+    """生成 B 个视图的所有不重复视图对的索引。
+
+    Args:
+        B (int): 视图数量。
+
+    Returns:
+        tuple[Tensor, Tensor]: (i1, i2)，视图对的索引张量。
+    """
     N = B
     i1_, i2_ = torch.combinations(torch.arange(N), 2, with_replacement=False).unbind(-1)
     i1, i2 = [(i[None] + torch.arange(1)[:, None] * N).reshape(-1) for i in [i1_, i2_]]
@@ -144,6 +166,16 @@ def closed_form_inverse(se3):
 
 
 def rotation_angle(rot_gt, rot_pred, batch_size=None):
+    """计算两组旋转矩阵之间的相对旋转角度（度）。
+
+    Args:
+        rot_gt (Tensor): 真实旋转矩阵，形状 (B, 3, 3)。
+        rot_pred (Tensor): 预测旋转矩阵，形状 (B, 3, 3)。
+        batch_size (int | None): 若指定，则将结果 reshape 为 (batch_size, -1)。
+
+    Returns:
+        Tensor: 相对旋转角度（度），形状 (B,) 或 (batch_size, N)。
+    """
     # rot_gt, rot_pred (B, 3, 3)
     rel_angle_cos = so3_relative_angle(rot_gt, rot_pred, eps=1e-4)
     rel_rangle_deg = rel_angle_cos * 180 / np.pi
@@ -155,6 +187,16 @@ def rotation_angle(rot_gt, rot_pred, batch_size=None):
 
 
 def translation_angle(tvec_gt, tvec_pred, batch_size=None):
+    """计算两组平移向量之间的角度误差（度）。
+
+    Args:
+        tvec_gt (Tensor): 真实平移向量，形状 (B, 3)。
+        tvec_pred (Tensor): 预测平移向量，形状 (B, 3)。
+        batch_size (int | None): 若指定，则将结果 reshape 为 (batch_size, -1)。
+
+    Returns:
+        Tensor: 平移角度误差（度），形状 (B,) 或 (batch_size, N)。
+    """
     # tvec_gt, tvec_pred (B, 3,)
     rel_tangle_deg = compare_translation_by_angle(tvec_gt, tvec_pred)
     rel_tangle_deg = rel_tangle_deg * 180.0 / np.pi
@@ -180,6 +222,17 @@ def compare_translation_by_angle(t_gt, t, eps=1e-15, default_err=1e6):
     return err_t
 
 def compute_ARE(rotation1, rotation2):
+    """计算平均相对旋转误差（Average Relative Error，度）。
+
+    对每对旋转矩阵计算相对旋转角度，返回较小值（考虑 180 度对称性）。
+
+    Args:
+        rotation1 (Tensor | ndarray): 第一组旋转矩阵，形状 (B, 3, 3)。
+        rotation2 (Tensor | ndarray): 第二组旋转矩阵，形状 (B, 3, 3)。
+
+    Returns:
+        ndarray: 每对矩阵的旋转误差（度），形状 (B,)，取 error 与 |180-error| 的最小值。
+    """
     if isinstance(rotation1, torch.Tensor):
         rotation1 = rotation1.cpu().detach().numpy()
     if isinstance(rotation2, torch.Tensor):

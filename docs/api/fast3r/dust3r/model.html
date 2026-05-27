@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.dust3r.model - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class="active"><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.dust3r.model</h1>
+        <div class="module-stats">
+            <span>📁 2 类</span>
+            <span>⚡ 1 函数</span>
+            <span>🔧 26 方法</span>
+            <span class="warn">
+                ⚠️ 9 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/model.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-AsymmetricCroCo3DStereo">class AsymmetricCroCo3DStereo</a></li>
+<li><a href="#class-FlashDUSt3R">class FlashDUSt3R</a></li>
+<li><a href="#func-load_model">load_model()</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-AsymmetricCroCo3DStereo">
+            <h2>
+                
+                class <span class="cls-name">AsymmetricCroCo3DStereo</span>(CroCoNet, huggingface_hub.PyTorchModelHubMixin)
+                <span class="line-no">L77-379</span>
+            </h2>
+            <div class="docstring"><p>Two siamese encoders, followed by two decoders.</p>
+<p>The goal is to output 3d points directly, both images in view1&#x27;s frame</p>
+<p>(hence the asymmetry).</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-AsymmetricCroCo3DStereo-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">output_mode</span> = <span class="arg-default">&#x27;pts3d&#x27;</span>, <span class="arg-name">head_type</span> = <span class="arg-default">&#x27;linear&#x27;</span>, <span class="arg-name">depth_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, -inf, inf)</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, 1, inf)</span>, <span class="arg-name">freeze</span> = <span class="arg-default">&#x27;none&#x27;</span>, <span class="arg-name">landscape_only</span> = <span class="arg-default">True</span>, <span class="arg-name">patch_embed_cls</span> = <span class="arg-default">&#x27;PatchEmbedDust3R&#x27;</span>, <span class="arg-name">**croco_kwargs</span>)</code>
+                    <span class="line-no">L89-126</span>
+                </div>
+                <div class="docstring"><p>初始化 AsymmetricCroCo3DStereo 模型。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    output_mode: 输出模式，默认 &#x27;pts3d&#x27;。</div>
+<div class="doc-detail">    head_type: 预测头类型，默认 &#x27;linear&#x27;。</div>
+<div class="doc-detail">    depth_mode: 深度模式元组，默认 (&#x27;exp&#x27;, -inf, inf)。</div>
+<div class="doc-detail">    conf_mode: 置信度模式元组，默认 (&#x27;exp&#x27;, 1, inf)。</div>
+<div class="doc-detail">    freeze: 冻结策略，可选 &#x27;none&#x27;、&#x27;mask&#x27;、&#x27;encoder&#x27;。</div>
+<div class="doc-detail">    landscape_only: 是否仅横屏模式，默认 True。</div>
+<div class="doc-detail">    patch_embed_cls: Patch 嵌入类名。</div>
+<div class="doc-detail">    **croco_kwargs: CroCo 模型的其他参数。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-from_pretrained">
+                <div class="method-header">
+                    <span class="badge cls">cls</span>
+                    <code><span class="fn-name">from_pretrained</span> (<span class="arg-name">pretrained_model_name_or_path</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L129-144</span>
+                </div>
+                <div class="docstring"><p>从预训练模型加载。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pretrained_model_name_or_path: 预训练模型路径或 HuggingFace 仓库标识。</div>
+<div class="doc-detail">    **kw: 其他关键字参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    AsymmetricCroCo3DStereo: 加载好权重的模型。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_set_patch_embed">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
+                    <span class="line-no">L146-149</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-load_state_dict">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L151-168</span>
+                </div>
+                <div class="docstring"><p>加载状态字典，自动复制解码器权重到第二个解码器。</p>
+<p>如果检查点中没有 dec_blocks2 的权重，会自动将 dec_blocks 的权重复制到 dec_blocks2。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    ckpt: 状态字典。</div>
+<div class="doc-detail">    **kw: 传递给父类的额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    _IncompatibleKeys: 包含 missing_keys 和 unexpected_keys。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-set_freeze">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">set_freeze</span> (<span class="arg-name">freeze</span>)</code>
+                    <span class="line-no">L170-185</span>
+                </div>
+                <div class="docstring"><p>设置模型冻结策略。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    freeze: 冻结策略，可选值：</div>
+<div class="doc-detail">        - &#x27;none&#x27;: 不冻结</div>
+<div class="doc-detail">        - &#x27;mask&#x27;: 仅冻结 mask_token</div>
+<div class="doc-detail">        - &#x27;encoder&#x27;: 冻结 mask_token、patch_embed 和 enc_blocks</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_set_prediction_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L187-189</span>
+                </div>
+                <div class="docstring"><p>No prediction head</p></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-set_downstream_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">set_downstream_head</span> (<span class="arg-name">output_mode</span>, <span class="arg-name">head_type</span>, <span class="arg-name">landscape_only</span>, <span class="arg-name">depth_mode</span>, <span class="arg-name">conf_mode</span>, <span class="arg-name">patch_size</span>, <span class="arg-name">img_size</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L191-222</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_encode_image">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_encode_image</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
+                    <span class="line-no">L224-236</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_encode_image_pairs">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_encode_image_pairs</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">true_shape1</span>, <span class="arg-name">true_shape2</span>)</code>
+                    <span class="line-no">L238-260</span>
+                </div>
+                <div class="docstring"><p>编码一对图像，支持不同尺寸的图像对。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1: 第一张图像。</div>
+<div class="doc-detail">    img2: 第二张图像。</div>
+<div class="doc-detail">    true_shape1: 第一张图像的真实形状。</div>
+<div class="doc-detail">    true_shape2: 第二张图像的真实形状。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (out1, out2, pos1, pos2) 各视图的编码特征和位置编码。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_encode_symmetrized">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_encode_symmetrized</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>)</code>
+                    <span class="line-no">L262-298</span>
+                </div>
+                <div class="docstring"><p>对称编码两个视图，支持对称化数据增强。</p>
+<p>如果两个视图已对称化，只计算一半的前向传播以提高效率。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    view1: 第一个视图字典。</div>
+<div class="doc-detail">    view2: 第二个视图字典。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ((shape1, shape2), (feat1, feat2), (pos1, pos2))</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_decoder">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_decoder</span> (<span class="arg-name">f1</span>, <span class="arg-name">pos1</span>, <span class="arg-name">f2</span>, <span class="arg-name">pos2</span>)</code>
+                    <span class="line-no">L300-332</span>
+                </div>
+                <div class="docstring"><p>非对称双解码器前向传播。</p>
+<p>两组解码器块分别处理两个视图的特征，进行交叉注意力交互。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    f1: 视图 1 的编码特征。</div>
+<div class="doc-detail">    pos1: 视图 1 的位置编码。</div>
+<div class="doc-detail">    f2: 视图 2 的编码特征。</div>
+<div class="doc-detail">    pos2: 视图 2 的位置编码。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    zip: 两组解码器输出的迭代器。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-_downstream_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_downstream_head</span> (<span class="arg-name">head_num</span>, <span class="arg-name">decout</span>, <span class="arg-name">img_shape</span>)</code>
+                    <span class="line-no">L334-348</span>
+                </div>
+                <div class="docstring"><p>获取下游预测头的输出。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    head_num: 预测头编号（1 或 2）。</div>
+<div class="doc-detail">    decout: 解码器输出元组。</div>
+<div class="doc-detail">    img_shape: 图像形状。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: 预测结果，包含 &#x27;pts3d&#x27; 和可选的 &#x27;conf&#x27;。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-AsymmetricCroCo3DStereo-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>)</code>
+                    <span class="line-no">L350-379</span>
+                </div>
+                <div class="docstring"><p>双视图 DUSt3R 前向传播。</p>
+<p>编码两个视图，通过非对称解码器交互，输出两个视图的 3D 点预测。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    view1: 第一个视图字典，包含 &#x27;img&#x27; 等键。</div>
+<div class="doc-detail">    view2: 第二个视图字典。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (res1, res2)</div>
+<div class="doc-detail">        - res1: 视图 1 的预测结果</div>
+<div class="doc-detail">        - res2: 视图 2 的预测结果（pts3d 为在视图 1 坐标系下的 3D 点）</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-FlashDUSt3R">
+            <h2>
+                
+                class <span class="cls-name">FlashDUSt3R</span>(CroCoNet, huggingface_hub.PyTorchModelHubMixin)
+                <span class="line-no">L382-749</span>
+            </h2>
+            <div class="docstring"><p>Two siamese encoders, followed by a single large decoder.</p>
+<p>The goal is to output 3d points directly, processing multiple views.</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-FlashDUSt3R-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">output_mode</span> = <span class="arg-default">&#x27;pts3d&#x27;</span>, <span class="arg-name">head_type</span> = <span class="arg-default">&#x27;linear&#x27;</span>, <span class="arg-name">depth_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, -inf, inf)</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, 1, inf)</span>, <span class="arg-name">freeze</span> = <span class="arg-default">&#x27;none&#x27;</span>, <span class="arg-name">landscape_only</span> = <span class="arg-default">True</span>, <span class="arg-name">patch_embed_cls</span> = <span class="arg-default">&#x27;PatchEmbedDust3R&#x27;</span>, <span class="arg-name">decoder_pos_embed_type</span> = <span class="arg-default">&#x27;sinusoidal&#x27;</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">random_image_idx_embedding</span> = <span class="arg-default">False</span>, <span class="arg-name">**croco_kwargs</span>)</code>
+                    <span class="line-no">L393-456</span>
+                </div>
+                <div class="docstring"><p>初始化 FlashDUSt3R 模型。</p>
+<p>与 AsymmetricCroCo3DStereo 不同，FlashDUSt3R 使用单个大型解码器处理多视图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    output_mode: 输出模式，默认 &#x27;pts3d&#x27;。</div>
+<div class="doc-detail">    head_type: 预测头类型，默认 &#x27;linear&#x27;。</div>
+<div class="doc-detail">    depth_mode: 深度模式元组。</div>
+<div class="doc-detail">    conf_mode: 置信度模式元组。</div>
+<div class="doc-detail">    freeze: 冻结策略。</div>
+<div class="doc-detail">    landscape_only: 是否仅横屏模式。</div>
+<div class="doc-detail">    patch_embed_cls: Patch 嵌入类名。</div>
+<div class="doc-detail">    decoder_pos_embed_type: 解码器位置编码类型。</div>
+<div class="doc-detail">    attn_implementation: 注意力实现方式。</div>
+<div class="doc-detail">    random_image_idx_embedding: 是否使用随机图像索引嵌入。</div>
+<div class="doc-detail">    **croco_kwargs: CroCo 模型的其他参数。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-from_pretrained">
+                <div class="method-header">
+                    <span class="badge cls">cls</span>
+                    <code><span class="fn-name">from_pretrained</span> (<span class="arg-name">pretrained_model_name_or_path</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L459-474</span>
+                </div>
+                <div class="docstring"><p>从预训练模型加载。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pretrained_model_name_or_path: 预训练模型路径或 HuggingFace 仓库标识。</div>
+<div class="doc-detail">    **kw: 其他关键字参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    FlashDUSt3R: 加载好权重的模型。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_set_patch_embed">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
+                    <span class="line-no">L476-480</span>
+                </div>
+                <div class="docstring"><p>设置 Patch 嵌入层（FlashDUSt3R 版本）。</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-load_state_dict">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L482-483</span>
+                </div>
+                <div class="docstring"><p>加载状态字典。</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-set_freeze">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">set_freeze</span> (<span class="arg-name">freeze</span>)</code>
+                    <span class="line-no">L485-493</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_set_prediction_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L495-497</span>
+                </div>
+                <div class="docstring"><p>No prediction head</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-set_downstream_head">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">set_downstream_head</span> (<span class="arg-name">output_mode</span>, <span class="arg-name">head_type</span>, <span class="arg-name">landscape_only</span>, <span class="arg-name">depth_mode</span>, <span class="arg-name">conf_mode</span>, <span class="arg-name">patch_size</span>, <span class="arg-name">img_size</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L499-524</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_encode_image">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_encode_image</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
+                    <span class="line-no">L526-538</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_encode_images">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_encode_images</span> (<span class="arg-name">views</span>)</code>
+                    <span class="line-no">L540-555</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_generate_per_rank_generator">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_generate_per_rank_generator</span> ()</code>
+                    <span class="line-no">L557-568</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_get_random_image_pos">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_get_random_image_pos</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_views</span>, <span class="arg-name">max_image_idx</span>, <span class="arg-name">device</span>)</code>
+                    <span class="line-no">L570-621</span>
+                </div>
+                <div class="docstring"><p>Generates non-repeating random image indices for each sample, retrieves corresponding</p>
+<p>positional embeddings for each view, and concatenates them.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoded_feats (list of tensors): Encoded features for each view.</div>
+<div class="doc-detail">    batch_size (int): Number of samples in the batch.</div>
+<div class="doc-detail">    num_views (int): Number of views per sample.</div>
+<div class="doc-detail">    max_image_idx (int): Maximum image index for embedding.</div>
+<div class="doc-detail">    device (torch.device): Device to move data to.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Concatenated positional embeddings for the entire batch.</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-_decoder">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">_decoder</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">positions</span>, <span class="arg-name">image_ids</span>)</code>
+                    <span class="line-no">L623-655</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-FlashDUSt3R-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">views</span>)</code>
+                    <span class="line-no">L657-749</span>
+                </div>
+                <div class="docstring"><div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    views (list[dict]): a list of views, each view is a dict of tensors, the tensors are batched</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list[dict]: a list of results for each view</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="func-block" id="func-load_model">
+            <h2>
+                
+                <code><span class="fn-name">load_model</span> (<span class="arg-name">model_path</span>, <span class="arg-name">device</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
+                <span class="line-no">L46-74</span>
+            </h2>
+            <div class="docstring"><p>从检查点路径加载 DUSt3R 模型。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    model_path: 模型检查点路径。</div>
+<div class="doc-detail">    device: 目标设备（如 &#x27;cpu&#x27;、&#x27;cuda&#x27;）。</div>
+<div class="doc-detail">    verbose: 是否打印加载信息，默认 True。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Module: 加载好权重的模型。</div>
+</div></div>
+        </div>
+        
+</main>
+</body>
+</html>

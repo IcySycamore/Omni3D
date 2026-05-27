@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fast3r.dust3r.losses - Fast3R API</title>
+<style>
+:root {
+    --bg: #1e1e2e;
+    --sidebar-bg: #181825;
+    --card-bg: #252540;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --accent: #89b4fa;
+    --accent2: #a6e3a1;
+    --warn: #f9e2af;
+    --err: #f38ba8;
+    --border: #45475a;
+    --code-bg: #313244;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+}
+.sidebar h2 {
+    padding: 0 16px 12px;
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.sidebar ul { list-style: none; }
+.sidebar li a {
+    display: block;
+    padding: 6px 16px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; }
+.main {
+    margin-left: 260px;
+    padding: 32px 40px;
+    max-width: 960px;
+    flex: 1;
+}
+h1 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+h2 { font-size: 20px; margin: 24px 0 12px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+h3 { font-size: 16px; margin: 16px 0 8px; color: var(--text-dim); }
+code, pre {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+pre { padding: 12px; overflow-x: auto; }
+
+/* 模块头部 */
+.module-header { margin-bottom: 24px; }
+.module-stats { display: flex; gap: 16px; margin: 8px 0; font-size: 14px; }
+.module-stats span { padding: 4px 10px; background: var(--card-bg); border-radius: 6px; }
+.module-path { font-size: 12px; color: var(--text-dim); }
+
+/* 首页统计 */
+.overview-stats { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+.stat-card {
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 100px;
+}
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* 目录 */
+.toc { background: var(--card-bg); padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
+.toc ul { columns: 2; list-style: none; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--accent); text-decoration: none; font-size: 13px; }
+.toc a:hover { text-decoration: underline; }
+
+/* 类块 */
+.class-block { background: var(--card-bg); padding: 20px 24px; border-radius: 10px; margin-bottom: 20px; }
+.class-block h2 { border-bottom: none; margin-top: 0; }
+.cls-name { color: var(--accent2); }
+.class-vars { margin: 8px 0; font-size: 13px; }
+
+/* 方法 */
+.methods { margin-top: 12px; }
+.method {
+    background: var(--code-bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid var(--border);
+}
+.method-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fn-name { color: var(--accent2); font-weight: 600; }
+.arg-name { color: var(--text); }
+.arg-type { color: var(--accent); }
+.arg-default { color: var(--warn); }
+.ret-type { color: var(--accent2); }
+.line-no { font-size: 11px; color: var(--text-dim); margin-left: auto; }
+.decorator { color: var(--warn); font-size: 12px; }
+
+/* 函数块 */
+.func-block {
+    background: var(--card-bg);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Docstring */
+.docstring { margin-top: 8px; font-size: 13px; line-height: 1.6; }
+.doc-section { margin: 8px 0 4px; }
+.doc-detail { padding-left: 16px; border-left: 2px solid var(--border); margin: 4px 0; }
+.no-doc { color: var(--err); font-style: italic; font-size: 13px; }
+.warn { color: var(--warn); }
+.ok { color: var(--accent2); }
+.badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.static { background: #45475a; color: var(--accent); }
+.badge.cls { background: #45475a; color: var(--accent2); }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th { text-align: left; padding: 10px 12px; background: var(--code-bg); color: var(--accent); font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <h2>📦 Fast3R</h2>
+    <ul>
+        <li><a href="index.html">🏠 首页</a></li>
+    </ul>
+    <h2>Modules</h2>
+    <ul>
+    <li class=""><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
+<li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_from_metadata_files.html">fast3r.croco.datasets.habitat_sim.generate_from_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/generate_multiview_images.html">fast3r.croco.datasets.habitat_sim.generate_multiview_images</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.html">fast3r.croco.datasets.habitat_sim.multiview_habitat_sim_generator</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/pack_metadata_files.html">fast3r.croco.datasets.habitat_sim.pack_metadata_files</a></li>
+<li class=""><a href="fast3r/croco/datasets/habitat_sim/paths.html">fast3r.croco.datasets.habitat_sim.paths</a></li>
+<li class=""><a href="fast3r/croco/datasets/pairs_dataset.html">fast3r.croco.datasets.pairs_dataset</a></li>
+<li class=""><a href="fast3r/croco/datasets/transforms.html">fast3r.croco.datasets.transforms</a></li>
+<li class=""><a href="fast3r/croco/demo.html">fast3r.croco.demo</a></li>
+<li class=""><a href="fast3r/croco/models/blocks.html">fast3r.croco.models.blocks</a></li>
+<li class=""><a href="fast3r/croco/models/criterion.html">fast3r.croco.models.criterion</a></li>
+<li class=""><a href="fast3r/croco/models/croco.html">fast3r.croco.models.croco</a></li>
+<li class=""><a href="fast3r/croco/models/croco_downstream.html">fast3r.croco.models.croco_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/curope.html">fast3r.croco.models.curope</a></li>
+<li class=""><a href="fast3r/croco/models/curope/curope2d.html">fast3r.croco.models.curope.curope2d</a></li>
+<li class=""><a href="fast3r/croco/models/curope/setup.html">fast3r.croco.models.curope.setup</a></li>
+<li class=""><a href="fast3r/croco/models/dpt_block.html">fast3r.croco.models.dpt_block</a></li>
+<li class=""><a href="fast3r/croco/models/head_downstream.html">fast3r.croco.models.head_downstream</a></li>
+<li class=""><a href="fast3r/croco/models/masking.html">fast3r.croco.models.masking</a></li>
+<li class=""><a href="fast3r/croco/models/perceiver_block.html">fast3r.croco.models.perceiver_block</a></li>
+<li class=""><a href="fast3r/croco/models/pos_embed.html">fast3r.croco.models.pos_embed</a></li>
+<li class=""><a href="fast3r/croco/pretrain.html">fast3r.croco.pretrain</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/augmentor.html">fast3r.croco.stereoflow.augmentor</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/criterion.html">fast3r.croco.stereoflow.criterion</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_flow.html">fast3r.croco.stereoflow.datasets_flow</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/datasets_stereo.html">fast3r.croco.stereoflow.datasets_stereo</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/engine.html">fast3r.croco.stereoflow.engine</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/test.html">fast3r.croco.stereoflow.test</a></li>
+<li class=""><a href="fast3r/croco/stereoflow/train.html">fast3r.croco.stereoflow.train</a></li>
+<li class=""><a href="fast3r/croco/utils/misc.html">fast3r.croco.utils.misc</a></li>
+<li class=""><a href="fast3r/data.html">fast3r.data</a></li>
+<li class=""><a href="fast3r/data/components.html">fast3r.data.components</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets.html">fast3r.data.components.spann3r_datasets</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/arkit.html">fast3r.data.components.spann3r_datasets.arkit</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/base_many_view_dataset.html">fast3r.data.components.spann3r_datasets.base_many_view_dataset</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/blendedmvs.html">fast3r.data.components.spann3r_datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/co3d.html">fast3r.data.components.spann3r_datasets.co3d</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/demo.html">fast3r.data.components.spann3r_datasets.demo</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/dtu.html">fast3r.data.components.spann3r_datasets.dtu</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/habitat.html">fast3r.data.components.spann3r_datasets.habitat</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/nrgbd.html">fast3r.data.components.spann3r_datasets.nrgbd</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannet.html">fast3r.data.components.spann3r_datasets.scannet</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/scannetpp.html">fast3r.data.components.spann3r_datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/data/components/spann3r_datasets/seven_scenes.html">fast3r.data.components.spann3r_datasets.seven_scenes</a></li>
+<li class=""><a href="fast3r/data/multiview_dust3r_datamodule.html">fast3r.data.multiview_dust3r_datamodule</a></li>
+<li class=""><a href="fast3r/dust3r.html">fast3r.dust3r</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt.html">fast3r.dust3r.cloud_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/base_opt.html">fast3r.dust3r.cloud_opt.base_opt</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/commons.html">fast3r.dust3r.cloud_opt.commons</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/init_im_poses.html">fast3r.dust3r.cloud_opt.init_im_poses</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/modular_optimizer.html">fast3r.dust3r.cloud_opt.modular_optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/optimizer.html">fast3r.dust3r.cloud_opt.optimizer</a></li>
+<li class=""><a href="fast3r/dust3r/cloud_opt/pair_viewer.html">fast3r.dust3r.cloud_opt.pair_viewer</a></li>
+<li class=""><a href="fast3r/dust3r/datasets.html">fast3r.dust3r.datasets</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria.html">fast3r.dust3r.datasets.aria</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/aria/camera_utils.html">fast3r.dust3r.datasets.aria.camera_utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes.html">fast3r.dust3r.datasets.arkitscenes</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/arkitscenes_multiview.html">fast3r.dust3r.datasets.arkitscenes_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/ase_multiview.html">fast3r.dust3r.datasets.ase_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base.html">fast3r.dust3r.datasets.base</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/base_stereo_view_dataset.html">fast3r.dust3r.datasets.base.base_stereo_view_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/batched_sampler.html">fast3r.dust3r.datasets.base.batched_sampler</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/base/easy_dataset.html">fast3r.dust3r.datasets.base.easy_dataset</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs.html">fast3r.dust3r.datasets.blendedmvs</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/blendedmvs_multiview.html">fast3r.dust3r.datasets.blendedmvs_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d.html">fast3r.dust3r.datasets.co3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/co3d_multiview.html">fast3r.dust3r.datasets.co3d_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/dummy_multiview.html">fast3r.dust3r.datasets.dummy_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat.html">fast3r.dust3r.datasets.habitat</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/habitat_multiview.html">fast3r.dust3r.datasets.habitat_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth.html">fast3r.dust3r.datasets.megadepth</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/megadepth_multiview.html">fast3r.dust3r.datasets.megadepth_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp.html">fast3r.dust3r.datasets.scannetpp</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/scannetpp_multiview.html">fast3r.dust3r.datasets.scannetpp_multiview</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/staticthings3d.html">fast3r.dust3r.datasets.staticthings3d</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils.html">fast3r.dust3r.datasets.utils</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/cropping.html">fast3r.dust3r.datasets.utils.cropping</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/utils/transforms.html">fast3r.dust3r.datasets.utils.transforms</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/waymo.html">fast3r.dust3r.datasets.waymo</a></li>
+<li class=""><a href="fast3r/dust3r/datasets/wildrgbd.html">fast3r.dust3r.datasets.wildrgbd</a></li>
+<li class=""><a href="fast3r/dust3r/heads.html">fast3r.dust3r.heads</a></li>
+<li class=""><a href="fast3r/dust3r/heads/dpt_head.html">fast3r.dust3r.heads.dpt_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/linear_head.html">fast3r.dust3r.heads.linear_head</a></li>
+<li class=""><a href="fast3r/dust3r/heads/postprocess.html">fast3r.dust3r.heads.postprocess</a></li>
+<li class=""><a href="fast3r/dust3r/image_pairs.html">fast3r.dust3r.image_pairs</a></li>
+<li class=""><a href="fast3r/dust3r/inference.html">fast3r.dust3r.inference</a></li>
+<li class=""><a href="fast3r/dust3r/inference_multiview.html">fast3r.dust3r.inference_multiview</a></li>
+<li class="active"><a href="fast3r/dust3r/losses.html">fast3r.dust3r.losses</a></li>
+<li class=""><a href="fast3r/dust3r/model.html">fast3r.dust3r.model</a></li>
+<li class=""><a href="fast3r/dust3r/optim_factory.html">fast3r.dust3r.optim_factory</a></li>
+<li class=""><a href="fast3r/dust3r/patch_embed.html">fast3r.dust3r.patch_embed</a></li>
+<li class=""><a href="fast3r/dust3r/post_process.html">fast3r.dust3r.post_process</a></li>
+<li class=""><a href="fast3r/dust3r/utils.html">fast3r.dust3r.utils</a></li>
+<li class=""><a href="fast3r/dust3r/utils/device.html">fast3r.dust3r.utils.device</a></li>
+<li class=""><a href="fast3r/dust3r/utils/geometry.html">fast3r.dust3r.utils.geometry</a></li>
+<li class=""><a href="fast3r/dust3r/utils/image.html">fast3r.dust3r.utils.image</a></li>
+<li class=""><a href="fast3r/dust3r/utils/misc.html">fast3r.dust3r.utils.misc</a></li>
+<li class=""><a href="fast3r/dust3r/utils/parallel.html">fast3r.dust3r.utils.parallel</a></li>
+<li class=""><a href="fast3r/dust3r/utils/path_to_croco.html">fast3r.dust3r.utils.path_to_croco</a></li>
+<li class=""><a href="fast3r/dust3r/viz.html">fast3r.dust3r.viz</a></li>
+<li class=""><a href="fast3r/dust3r/viz_plotly.html">fast3r.dust3r.viz_plotly</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval.html">fast3r.eval</a></li>
+<li class=""><a href="fast3r/eval/cam_pose_metric.html">fast3r.eval.cam_pose_metric</a></li>
+<li class=""><a href="fast3r/eval/recon_metric.html">fast3r.eval.recon_metric</a></li>
+<li class=""><a href="fast3r/models.html">fast3r.models</a></li>
+<li class=""><a href="fast3r/models/components.html">fast3r.models.components</a></li>
+<li class=""><a href="fast3r/models/components/llama.html">fast3r.models.components.llama</a></li>
+<li class=""><a href="fast3r/models/components/simple_dense_net.html">fast3r.models.components.simple_dense_net</a></li>
+<li class=""><a href="fast3r/models/fast3r.html">fast3r.models.fast3r</a></li>
+<li class=""><a href="fast3r/models/multiview_dust3r_module.html">fast3r.models.multiview_dust3r_module</a></li>
+<li class=""><a href="fast3r/resume_train.html">fast3r.resume_train</a></li>
+<li class=""><a href="fast3r/train.html">fast3r.train</a></li>
+<li class=""><a href="fast3r/utils.html">fast3r.utils</a></li>
+<li class=""><a href="fast3r/utils/checkpoint_utils.html">fast3r.utils.checkpoint_utils</a></li>
+<li class=""><a href="fast3r/utils/instantiators.html">fast3r.utils.instantiators</a></li>
+<li class=""><a href="fast3r/utils/logging_utils.html">fast3r.utils.logging_utils</a></li>
+<li class=""><a href="fast3r/utils/pylogger.html">fast3r.utils.pylogger</a></li>
+<li class=""><a href="fast3r/utils/rich_utils.html">fast3r.utils.rich_utils</a></li>
+<li class=""><a href="fast3r/utils/utils.html">fast3r.utils.utils</a></li>
+<li class=""><a href="fast3r/viz/demo.html">fast3r.viz.demo</a></li>
+<li class=""><a href="fast3r/viz/video_utils.html">fast3r.viz.video_utils</a></li>
+<li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
+    </ul>
+</nav>
+<main class="main">
+
+    <div class="module-header">
+        <h1>fast3r.dust3r.losses</h1>
+        <div class="module-stats">
+            <span>📁 14 类</span>
+            <span>⚡ 1 函数</span>
+            <span>🔧 43 方法</span>
+            <span class="warn">
+                ⚠️ 3 处缺 docstring
+            </span>
+        </div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/losses.py</div>
+    </div>
+    
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#class-LLoss">class LLoss</a></li>
+<li><a href="#class-L21Loss">class L21Loss</a></li>
+<li><a href="#class-Criterion">class Criterion</a></li>
+<li><a href="#class-MultiLoss">class MultiLoss</a></li>
+<li><a href="#class-Regr3D">class Regr3D</a></li>
+<li><a href="#class-Regr3DMultiview">class Regr3DMultiview</a></li>
+<li><a href="#class-Regr3DMultiviewV2">class Regr3DMultiviewV2</a></li>
+<li><a href="#class-Regr3DMultiviewV3">class Regr3DMultiviewV3</a></li>
+<li><a href="#class-ConfLossMultiview">class ConfLossMultiview</a></li>
+<li><a href="#class-ConfLossMultiviewV2">class ConfLossMultiviewV2</a></li>
+<li><a href="#class-ConfLoss">class ConfLoss</a></li>
+<li><a href="#class-Regr3D_ShiftInv">class Regr3D_ShiftInv</a></li>
+<li><a href="#class-Regr3D_ScaleInv">class Regr3D_ScaleInv</a></li>
+<li><a href="#class-Regr3D_ScaleShiftInv">class Regr3D_ScaleShiftInv</a></li>
+<li><a href="#func-Sum">Sum()</a></li>
+</ul></div>
+
+        <div class="class-block" id="class-LLoss">
+            <h2>
+                
+                class <span class="cls-name">LLoss</span>(nn.Module)
+                <span class="line-no">L54-106</span>
+            </h2>
+            <div class="docstring"><p>L-范数损失基类。</p>
+<p>子类需实现 distance() 方法定义具体的距离度量。</p>
+<p>支持 &#x27;none&#x27;、&#x27;sum&#x27;、&#x27;mean&#x27; 三种 reduction 模式。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-LLoss-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">reduction</span> = <span class="arg-default">&#x27;mean&#x27;</span>)</code>
+                    <span class="line-no">L61-68</span>
+                </div>
+                <div class="docstring"><p>初始化 LLoss。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    reduction (str): 损失聚合方式，可选 &#x27;none&#x27;、&#x27;sum&#x27;、&#x27;mean&#x27;。默认 &#x27;mean&#x27;。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-LLoss-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
+                    <span class="line-no">L70-91</span>
+                </div>
+                <div class="docstring"><p>计算两组点之间的 L-范数损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    a (Tensor): 预测点，形状为 (..., D)，D ∈ {1, 2, 3}。</div>
+<div class="doc-detail">    b (Tensor): 真实点，形状与 a 相同。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 根据 reduction 模式返回标量、向量或逐像素损失。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-LLoss-distance">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">distance</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
+                    <span class="line-no">L93-106</span>
+                </div>
+                <div class="docstring"><p>计算两点之间的距离（由子类实现）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    a (Tensor): 预测点。</div>
+<div class="doc-detail">    b (Tensor): 真实点。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 每对点的距离值，维度比输入少一维。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    NotImplementedError: 基类不实现此方法。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-L21Loss">
+            <h2>
+                
+                class <span class="cls-name">L21Loss</span>(LLoss)
+                <span class="line-no">L109-122</span>
+            </h2>
+            <div class="docstring"><p>3D 点之间的欧氏距离损失（L2,1 范数）。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-L21Loss-distance">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">distance</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
+                    <span class="line-no">L112-122</span>
+                </div>
+                <div class="docstring"><p>计算两组 3D 点间的欧氏距离。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    a (Tensor): 预测点，形状为 (..., 3)。</div>
+<div class="doc-detail">    b (Tensor): 真实点，形状与 a 相同。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 每对点的欧氏距离，形状为 (...)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Criterion">
+            <h2>
+                
+                class <span class="cls-name">Criterion</span>(nn.Module)
+                <span class="line-no">L128-168</span>
+            </h2>
+            <div class="docstring"><p>损失基类，封装一个 LLoss 实例作为底层度量标准。</p>
+<p>提供 get_name() 和 with_reduction() 接口供子类使用。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Criterion-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L134-144</span>
+                </div>
+                <div class="docstring"><p>初始化 Criterion。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    criterion (LLoss): 底层距离度量，必须是 LLoss 的实例。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Criterion-get_name">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_name</span> ()</code>
+                    <span class="line-no">L146-152</span>
+                </div>
+                <div class="docstring"><p>返回损失的名称字符串。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    str: 形如 &#x27;ClassName(criterion)&#x27; 的名称。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Criterion-with_reduction">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">with_reduction</span> (<span class="arg-name">mode</span>)</code>
+                    <span class="line-no">L154-168</span>
+                </div>
+                <div class="docstring"><p>返回一个使用指定 reduction 模式的损失副本。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    mode (str): reduction 模式，如 &#x27;none&#x27;、&#x27;mean&#x27;。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Criterion: 新的损失对象，其 criterion.reduction 已设为 &#x27;none&#x27;。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-MultiLoss">
+            <h2>
+                
+                class <span class="cls-name">MultiLoss</span>(nn.Module)
+                <span class="line-no">L171-276</span>
+            </h2>
+            <div class="docstring"><p>Easily combinable losses (also keep track of individual loss values):</p>
+<p>    loss = MyLoss1() + 0.1*MyLoss2()</p>
+<div class="doc-section"><strong>Usage:</strong>
+<div class="doc-detail">    Inherit from this class and override get_name() and compute_loss()</div>
+</div></div>
+            <div class="class-vars"><strong>类变量:</strong> <code>__rmul__</code></div>
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-MultiLoss-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> ()</code>
+                    <span class="line-no">L178-182</span>
+                </div>
+                <div class="docstring"><p>初始化 MultiLoss，设置权重为 1，链式损失为 None。</p></div>
+            </div>
+            
+            <div class="method" id="method-MultiLoss-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L184-193</span>
+                </div>
+                <div class="docstring"><p>计算损失（由子类实现）。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor 或 (Tensor, dict): 损失值，或损失值与细节字典的元组。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    NotImplementedError: 基类不实现此方法。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiLoss-get_name">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_name</span> ()</code>
+                    <span class="line-no">L195-204</span>
+                </div>
+                <div class="docstring"><p>返回损失名称字符串（由子类实现）。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    str: 损失名称。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    NotImplementedError: 基类不实现此方法。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiLoss-__mul__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__mul__</span> (<span class="arg-name">alpha</span>)</code>
+                    <span class="line-no">L206-218</span>
+                </div>
+                <div class="docstring"><p>返回带权重的损失副本（支持 alpha * loss 语法）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    alpha (int | float): 权重系数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    MultiLoss: 权重已更新的损失副本。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiLoss-__add__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__add__</span> (<span class="arg-name">loss2</span>)</code>
+                    <span class="line-no">L222-237</span>
+                </div>
+                <div class="docstring"><p>将两个损失链式连接（支持 loss1 + loss2 语法）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    loss2 (MultiLoss): 要追加的第二个损失。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    MultiLoss: 链式连接后的损失对象。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiLoss-__repr__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__repr__</span> ()</code>
+                    <span class="line-no">L239-250</span>
+                </div>
+                <div class="docstring"><p>返回损失的字符串表示，含权重和链式结构。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    str: 如 &#x27;0.5*LossA + LossB&#x27; 格式的字符串。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-MultiLoss-forward">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">forward</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
+                    <span class="line-no">L252-276</span>
+                </div>
+                <div class="docstring"><p>前向传播，计算加权损失并递归调用链式损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    *args: 传递给 compute_loss 的位置参数。</div>
+<div class="doc-detail">    **kwargs: 传递给 compute_loss 的关键字参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, dict]: (总损失值, 各子损失的细节字典)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3D">
+            <h2>
+                
+                class <span class="cls-name">Regr3D</span>(Criterion, MultiLoss)
+                <span class="line-no">L279-378</span>
+            </h2>
+            <div class="docstring"><p>Ensure that all 3D points are correct.</p>
+<p>Asymmetric loss: view1 is supposed to be the anchor.</p>
+<p>P1 = RT1 @ D1</p>
+<p>P2 = RT2 @ D2</p>
+<p>loss1 = (I @ pred_D1) - (RT1^-1 @ RT1 @ D1)</p>
+<p>loss2 = (RT21 @ pred_D2) - (RT1^-1 @ P2)</p>
+<p>      = (RT21 @ pred_D2) - (RT1^-1 @ RT2 @ D2)</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Regr3D-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L290-300</span>
+                </div>
+                <div class="docstring"><p>初始化 Regr3D。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    criterion (LLoss): 底层距离度量（如 L21Loss）。</div>
+<div class="doc-detail">    norm_mode (str): 点云归一化模式，如 &#x27;avg_dis&#x27;。</div>
+<div class="doc-detail">    gt_scale (bool): 若为 True，真实点不做归一化（保持原始尺度）。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Regr3D-get_all_pts3d">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_all_pts3d</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L302-345</span>
+                </div>
+                <div class="docstring"><p>提取并归一化双视角的真实与预测 3D 点。</p>
+<p>所有点都变换到 view1 的相机坐标系中。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt1 (dict): view1 的真实标注，包含 &#x27;camera_pose&#x27;, &#x27;pts3d&#x27;, &#x27;valid_mask&#x27;。</div>
+<div class="doc-detail">    gt2 (dict): view2 的真实标注。</div>
+<div class="doc-detail">    pred1 (dict): view1 的模型预测。</div>
+<div class="doc-detail">    pred2 (dict): view2 的模型预测。</div>
+<div class="doc-detail">    dist_clip (float, optional): 距离阈值，超出该距离的点标为无效。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (gt_pts1, gt_pts2, pr_pts1, pr_pts2, valid1, valid2, monitoring_dict)。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Regr3D-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L347-378</span>
+                </div>
+                <div class="docstring"><p>计算双视角 3D 点回归损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt1 (dict): view1 的真实标注。</div>
+<div class="doc-detail">    gt2 (dict): view2 的真实标注。</div>
+<div class="doc-detail">    pred1 (dict): view1 的模型预测。</div>
+<div class="doc-detail">    pred2 (dict): view2 的模型预测。</div>
+<div class="doc-detail">    **kw: 传递给 get_all_pts3d 的额外参数（如 dist_clip）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor | list, dict]: (损失值或损失列表, 细节字典)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3DMultiview">
+            <h2>
+                
+                class <span class="cls-name">Regr3DMultiview</span>(Criterion, MultiLoss)
+                <span class="line-no">L381-472</span>
+            </h2>
+            <div class="docstring"><p>Ensure that all 3D points are correct for multiple views.</p>
+<p>Asymmetric loss: view1 is supposed to be the anchor.</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Regr3DMultiview-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L386-396</span>
+                </div>
+                <div class="docstring"><p>初始化 Regr3DMultiview。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    criterion (LLoss): 底层距离度量。</div>
+<div class="doc-detail">    norm_mode (str): 点云归一化模式，如 &#x27;avg_dis&#x27;。</div>
+<div class="doc-detail">    gt_scale (bool): 若为 True，真实点不做归一化。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiview-get_pts3d_for_view">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pts3d_for_view</span> (<span class="arg-name">gt_anchor</span>, <span class="arg-name">pred_anchor</span>, <span class="arg-name">gt_other</span>, <span class="arg-name">pred_other</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L398-439</span>
+                </div>
+                <div class="docstring"><p>提取并归一化锚视图和目标视图的 3D 点。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_anchor (dict): 锚视图的真实标注。</div>
+<div class="doc-detail">    pred_anchor (dict): 锚视图的模型预测。</div>
+<div class="doc-detail">    gt_other (dict): 目标视图的真实标注。</div>
+<div class="doc-detail">    pred_other (dict): 目标视图的模型预测。</div>
+<div class="doc-detail">    dist_clip (float, optional): 距离裁剪阈值。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (gt_pts1, gt_pts_other, pr_pts1, pr_pts_other, valid1, valid_other)。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiview-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L441-472</span>
+                </div>
+                <div class="docstring"><p>计算多视角 3D 点回归损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gts (list[dict]): 所有视图的真实标注列表，gts[0] 为锚视图。</div>
+<div class="doc-detail">    preds (list[dict]): 所有视图的模型预测列表。</div>
+<div class="doc-detail">    **kw: 传递给 get_pts3d_for_view 的额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor | list, dict]: (损失值或损失列表, 各视图细节字典)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3DMultiviewV2">
+            <h2>
+                
+                class <span class="cls-name">Regr3DMultiviewV2</span>(Criterion, MultiLoss)
+                <span class="line-no">L475-582</span>
+            </h2>
+            <div class="docstring"><p>Ensure that all 3D points are correct for multiple views.</p>
+<p>The point clouds from all views are concatenated together for normalization,</p>
+<p>but loss is calculated separately for each view.</p>
+<p>Compared to Regr3DMultiview, this version uses a common normalization factor for all views.</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Regr3DMultiviewV2-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L482-485</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV2-get_pts3d_from_views">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pts3d_from_views</span> (<span class="arg-name">gt_views</span>, <span class="arg-name">pred_views</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L487-517</span>
+                </div>
+                <div class="docstring"><p>Get point clouds and valid masks for multiple views.</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV2-normalize_pointcloud_from_views">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">normalize_pointcloud_from_views</span> (<span class="arg-name">pts_list</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid_list</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L519-563</span>
+                </div>
+                <div class="docstring"><p>Normalize point clouds from multiple views, excluding invalid points from normalization.</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV2-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L565-582</span>
+                </div>
+                <div class="docstring"><p>Compute the loss by normalizing the point clouds across views and logging each view&#x27;s loss.</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3DMultiviewV3">
+            <h2>
+                
+                class <span class="cls-name">Regr3DMultiviewV3</span>(Criterion, MultiLoss)
+                <span class="line-no">L585-749</span>
+            </h2>
+            <div class="docstring"><p>Ensure that all 3D points are correct for multiple views.</p>
+<p>The point clouds from all views are concatenated together for normalization,</p>
+<p>but loss is calculated separately for each view.</p>
+<p>This version supports an additional local head for local coordinate systems.</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Regr3DMultiviewV3-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L592-595</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV3-get_pts3d_from_views">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_pts3d_from_views</span> (<span class="arg-name">gt_views</span>, <span class="arg-name">pred_views</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>, <span class="arg-name">local</span> = <span class="arg-default">False</span>)</code>
+                    <span class="line-no">L597-627</span>
+                </div>
+                <div class="docstring"><p>Get point clouds and valid masks for multiple views.</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV3-normalize_pointcloud_from_views">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">normalize_pointcloud_from_views</span> (<span class="arg-name">pts_list</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid_list</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L629-673</span>
+                </div>
+                <div class="docstring"><p>Normalize point clouds from multiple views, excluding invalid points from normalization.</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV3-normalize_pointcloud_per_view">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">normalize_pointcloud_per_view</span> (<span class="arg-name">pts_list</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid_list</span> = <span class="arg-default">None</span>)</code>
+                    <span class="line-no">L675-712</span>
+                </div>
+                <div class="docstring"><p>Normalize point clouds on a per-view basis.</p></div>
+            </div>
+            
+            <div class="method" id="method-Regr3DMultiviewV3-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L714-749</span>
+                </div>
+                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-ConfLossMultiview">
+            <h2>
+                
+                class <span class="cls-name">ConfLossMultiview</span>(MultiLoss)
+                <span class="line-no">L752-823</span>
+            </h2>
+            <div class="docstring"><p>多视角置信度加权回归损失。</p>
+<p>利用模型学习到的置信度对逐像素损失加权，高置信区域损失惩罚更大。</p>
+<p>原理::</p>
+<p>    high conf = 0.1 -&gt; conf_loss = x/10 + alpha*log(10)  (高置信，低惩罚)</p>
+<p>    low  conf = 10  -&gt; conf_loss = x*10 - alpha*log(10)  (低置信，高惩罚)</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-ConfLossMultiview-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">pixel_loss</span>, <span class="arg-name">alpha</span> = <span class="arg-default">1</span>)</code>
+                    <span class="line-no">L763-773</span>
+                </div>
+                <div class="docstring"><p>初始化 ConfLossMultiview。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pixel_loss (MultiLoss): 底层像素级回归损失（会被设为 reduction=&#x27;none&#x27;）。</div>
+<div class="doc-detail">    alpha (float): 置信度正则化超参数，必须 &gt; 0。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLossMultiview-get_name">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_name</span> ()</code>
+                    <span class="line-no">L775-781</span>
+                </div>
+                <div class="docstring"><p>返回损失名称。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    str: 形如 &#x27;ConfLossMultiview(pixel_loss)&#x27; 的名称。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLossMultiview-get_conf_log">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_conf_log</span> (<span class="arg-name">x</span>)</code>
+                    <span class="line-no">L783-792</span>
+                </div>
+                <div class="docstring"><p>返回置信度及其对数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): 置信度预测值（正数）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, Tensor]: (conf, log_conf)。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLossMultiview-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L794-823</span>
+                </div>
+                <div class="docstring"><p>计算置信度加权的多视角损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gts (list[dict]): 所有视图的真实标注。</div>
+<div class="doc-detail">    preds (list[dict]): 所有视图的模型预测，需包含 &#x27;conf&#x27; 键。</div>
+<div class="doc-detail">    **kw: 传递给 pixel_loss 的额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, dict]: (总置信损失, 各视图细节字典)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-ConfLossMultiviewV2">
+            <h2>
+                
+                class <span class="cls-name">ConfLossMultiviewV2</span>(MultiLoss)
+                <span class="line-no">L826-917</span>
+            </h2>
+            <div class="docstring"><p>多视角置信度加权回归损失（V2），分别对全局和局部损失归一化。</p>
+<p>在 V1 基础上区分 &#x27;global&#x27; 和 &#x27;local&#x27; 损失类型，分别索引对应置信度</p>
+<p>(&#x27;conf&#x27; vs &#x27;conf_local&#x27;)，并按全局/局部数量各自归一化。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-ConfLossMultiviewV2-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">pixel_loss</span>, <span class="arg-name">alpha</span> = <span class="arg-default">1</span>)</code>
+                    <span class="line-no">L833-843</span>
+                </div>
+                <div class="docstring"><p>初始化 ConfLossMultiviewV2。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pixel_loss (MultiLoss): 底层像素级损失（通常为 Regr3DMultiviewV3）。</div>
+<div class="doc-detail">    alpha (float): 置信度正则化超参数，必须 &gt; 0。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLossMultiviewV2-get_name">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_name</span> ()</code>
+                    <span class="line-no">L845-851</span>
+                </div>
+                <div class="docstring"><p>返回损失名称。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    str: 形如 &#x27;ConfLossMultiviewV2(pixel_loss)&#x27; 的名称。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLossMultiviewV2-get_conf_log">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_conf_log</span> (<span class="arg-name">x</span>)</code>
+                    <span class="line-no">L853-862</span>
+                </div>
+                <div class="docstring"><p>返回置信度及其对数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): 置信度预测值（正数）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, Tensor]: (conf, log_conf)。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLossMultiviewV2-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L864-917</span>
+                </div>
+                <div class="docstring"><p>计算分离全局/局部路径的置信度加权损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gts (list[dict]): 所有视图的真实标注。</div>
+<div class="doc-detail">    preds (list[dict]): 所有视图的模型预测，</div>
+<div class="doc-detail">        全局路径需包含 &#x27;conf&#x27;，局部路径需包含 &#x27;conf_local&#x27;。</div>
+<div class="doc-detail">    **kw: 传递给 pixel_loss 的额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, dict]: (归一化后的总置信损失, 细节字典)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-ConfLoss">
+            <h2>
+                
+                class <span class="cls-name">ConfLoss</span>(MultiLoss)
+                <span class="line-no">L919-995</span>
+            </h2>
+            <div class="docstring"><p>双视角置信度加权回归损失（原始版本）。</p>
+<p>利用模型学习到的置信度对逐像素损失加权，适用于双视角 (view1, view2) 场景。</p>
+<p>原理::</p>
+<p>    high conf = 0.1 -&gt; conf_loss = x/10 + alpha*log(10)</p>
+<p>    low  conf = 10  -&gt; conf_loss = x*10 - alpha*log(10)</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-ConfLoss-__init__">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">__init__</span> (<span class="arg-name">pixel_loss</span>, <span class="arg-name">alpha</span> = <span class="arg-default">1</span>)</code>
+                    <span class="line-no">L930-940</span>
+                </div>
+                <div class="docstring"><p>初始化 ConfLoss。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pixel_loss (MultiLoss): 底层像素级回归损失。</div>
+<div class="doc-detail">    alpha (float): 置信度正则化超参数，必须 &gt; 0。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLoss-get_name">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_name</span> ()</code>
+                    <span class="line-no">L942-948</span>
+                </div>
+                <div class="docstring"><p>返回损失名称。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    str: 形如 &#x27;ConfLoss(pixel_loss)&#x27; 的名称。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLoss-get_conf_log">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_conf_log</span> (<span class="arg-name">x</span>)</code>
+                    <span class="line-no">L950-959</span>
+                </div>
+                <div class="docstring"><p>返回置信度及其对数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): 置信度预测值（正数）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, Tensor]: (conf, log_conf)。</div>
+</div></div>
+            </div>
+            
+            <div class="method" id="method-ConfLoss-compute_loss">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">**kw</span>)</code>
+                    <span class="line-no">L961-995</span>
+                </div>
+                <div class="docstring"><p>计算双视角置信度加权损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt1 (dict): view1 的真实标注。</div>
+<div class="doc-detail">    gt2 (dict): view2 的真实标注。</div>
+<div class="doc-detail">    pred1 (dict): view1 的模型预测，需包含 &#x27;conf&#x27; 键。</div>
+<div class="doc-detail">    pred2 (dict): view2 的模型预测，需包含 &#x27;conf&#x27; 键。</div>
+<div class="doc-detail">    **kw: 传递给 pixel_loss 的额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple[Tensor, dict]: (总置信损失, 细节字典)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3D_ShiftInv">
+            <h2>
+                
+                class <span class="cls-name">Regr3D_ShiftInv</span>(Regr3D)
+                <span class="line-no">L998-1046</span>
+            </h2>
+            <div class="docstring"><p>深度平移不变的 3D 点回归损失。</p>
+<p>在 Regr3D 基础上减去联合点云的中位深度，使损失对绝对深度平移不敏感。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Regr3D_ShiftInv-get_all_pts3d">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_all_pts3d</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>)</code>
+                    <span class="line-no">L1004-1046</span>
+                </div>
+                <div class="docstring"><p>提取并进行深度平移归一化的 3D 点。</p>
+<p>计算并减去真实/预测点云的联合中位深度，消除深度平移影响。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt1 (dict): view1 的真实标注。</div>
+<div class="doc-detail">    gt2 (dict): view2 的真实标注。</div>
+<div class="doc-detail">    pred1 (dict): view1 的模型预测。</div>
+<div class="doc-detail">    pred2 (dict): view2 的模型预测。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (gt_pts1, gt_pts2, pred_pts1, pred_pts2, mask1, mask2, monitoring)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3D_ScaleInv">
+            <h2>
+                
+                class <span class="cls-name">Regr3D_ScaleInv</span>(Regr3D)
+                <span class="line-no">L1049-1101</span>
+            </h2>
+            <div class="docstring"><p>尺度不变的 3D 点回归损失。</p>
+<p>在 Regr3D 基础上对点云进行全局尺度归一化。</p>
+<p>若 gt_scale=True，则将预测点云强制缩放到真实尺度；</p>
+<p>否则真实和预测点云各自归一化到单位尺度。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                
+            <div class="method" id="method-Regr3D_ScaleInv-get_all_pts3d">
+                <div class="method-header">
+                    
+                    <code><span class="fn-name">get_all_pts3d</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>)</code>
+                    <span class="line-no">L1057-1101</span>
+                </div>
+                <div class="docstring"><p>提取并进行尺度归一化的 3D 点。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt1 (dict): view1 的真实标注。</div>
+<div class="doc-detail">    gt2 (dict): view2 的真实标注。</div>
+<div class="doc-detail">    pred1 (dict): view1 的模型预测。</div>
+<div class="doc-detail">    pred2 (dict): view2 的模型预测。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (gt_pts1, gt_pts2, pred_pts1, pred_pts2, mask1, mask2, monitoring)。</div>
+</div></div>
+            </div>
+            
+            </div>
+        </div>
+        
+
+        <div class="class-block" id="class-Regr3D_ScaleShiftInv">
+            <h2>
+                
+                class <span class="cls-name">Regr3D_ScaleShiftInv</span>(Regr3D_ScaleInv, Regr3D_ShiftInv)
+                <span class="line-no">L1104-1111</span>
+            </h2>
+            <div class="docstring"><p>同时对深度平移和尺度不变的 3D 点回归损失。</p>
+<p>通过 MRO 先应用 Regr3D_ShiftInv（深度平移归一化），</p>
+<p>再应用 Regr3D_ScaleInv（尺度归一化）。</p></div>
+            
+            <div class="methods">
+                <h3>方法</h3>
+                <p class="no-doc">无公开方法</p>
+            </div>
+        </div>
+        
+
+        <div class="func-block" id="func-Sum">
+            <h2>
+                
+                <code><span class="fn-name">Sum</span> (<span class="arg-name">*losses_and_masks</span>)</code>
+                <span class="line-no">L28-51</span>
+            </h2>
+            <div class="docstring"><p>合并多个 (loss, mask) 或 (loss, mask, loss_type) 元组。</p>
+<p>若各损失为标量则直接求和返回；否则原样返回元组列表供 ConfLoss 使用。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    *losses_and_masks: 可变数量的 (loss, mask) 或 (loss, mask, loss_type) 元组。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    若各损失为标量，返回所有损失之和（Tensor）；否则返回原始元组列表。</div>
+</div></div>
+        </div>
+        
+</main>
+</body>
+</html>
