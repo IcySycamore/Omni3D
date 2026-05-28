@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>fast3r - Fast3R API</title>
+<title>process - Fast3R API</title>
 <style>
 :root {
     --bg: #1e1e2e;
@@ -171,7 +171,7 @@ td a:hover { text-decoration: underline; }
     <ul>
     <li class=""><a href="MainWindow.html">MainWindow</a></li>
 <li class=""><a href="VTK_Widget.html">VTK_Widget</a></li>
-<li class="active"><a href="fast3r.html">fast3r</a></li>
+<li class=""><a href="fast3r.html">fast3r</a></li>
 <li class=""><a href="fast3r/croco/datasets.html">fast3r.croco.datasets</a></li>
 <li class=""><a href="fast3r/croco/datasets/crops/extract_crops_from_images.html">fast3r.croco.datasets.crops.extract_crops_from_images</a></li>
 <li class=""><a href="fast3r/croco/datasets/habitat_sim.html">fast3r.croco.datasets.habitat_sim</a></li>
@@ -300,25 +300,130 @@ td a:hover { text-decoration: underline; }
 <li class=""><a href="fast3r/viz/viser_visualizer.html">fast3r.viz.viser_visualizer</a></li>
 <li class=""><a href="images_upload_display.html">images_upload_display</a></li>
 <li class=""><a href="logic_mainwindow.html">logic_mainwindow</a></li>
-<li class=""><a href="process.html">process</a></li>
+<li class="active"><a href="process.html">process</a></li>
 <li class=""><a href="try.html">try</a></li>
     </ul>
 </nav>
 <main class="main">
 
     <div class="module-header">
-        <h1>fast3r</h1>
+        <h1>process</h1>
         <div class="module-stats">
             <span>📁 0 类</span>
-            <span>⚡ 0 函数</span>
+            <span>⚡ 8 函数</span>
             <span>🔧 0 方法</span>
-            <span class="ok">
-                ⚠️ 0 处缺 docstring
+            <span class="warn">
+                ⚠️ 6 处缺 docstring
             </span>
         </div>
-        <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/__init__.py</div>
+        <div class="module-path">源码: /Users/apple/Documents/Omni3D/process.py</div>
     </div>
     
+<div class="toc"><h2>目录</h2><ul>
+<li><a href="#func-is_outdoor_scene">is_outdoor_scene()</a></li>
+<li><a href="#func-rainbow_color">rainbow_color()</a></li>
+<li><a href="#func-detect_sky_mask">detect_sky_mask()</a></li>
+<li><a href="#func-align_local_pts3d_to_global">align_local_pts3d_to_global()</a></li>
+<li><a href="#func-start_visualization">start_visualization()</a></li>
+<li><a href="#func-frame_processing">frame_processing()</a></li>
+<li><a href="#func-reconstruction">reconstruction()</a></li>
+<li><a href="#func-on_left_click">on_left_click()</a></li>
+</ul></div>
+
+        <div class="func-block" id="func-is_outdoor_scene">
+            <h2>
+                
+                <code><span class="fn-name">is_outdoor_scene</span> (<span class="arg-name">frame_data_list</span>)</code>
+                <span class="line-no">L17-24</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-rainbow_color">
+            <h2>
+                
+                <code><span class="fn-name">rainbow_color</span> (<span class="arg-name">n</span>, <span class="arg-name">total</span>)</code>
+                <span class="line-no">L26-29</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-detect_sky_mask">
+            <h2>
+                
+                <code><span class="fn-name">detect_sky_mask</span> (<span class="arg-name">img_rgb</span>)</code>
+                <span class="line-no">L31-79</span>
+            </h2>
+            <div class="docstring"><p>Detect sky pixels using HSV color space and morphological operations.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_rgb: RGB image normalized to [-1, 1]</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Boolean mask (as int8) where True indicates non-sky pixels.</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-align_local_pts3d_to_global">
+            <h2>
+                
+                <code><span class="fn-name">align_local_pts3d_to_global</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">0</span>)</code>
+                <span class="line-no">L81-203</span>
+            </h2>
+            <div class="docstring"><p>Aligns the local point clouds to the global coordinate frame.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    preds (List[Dict]): A list of dictionaries containing predictions for each view.</div>
+<div class="doc-detail">    views (List[Dict]): A list of dictionaries containing ground truth data for each view.</div>
+<div class="doc-detail">    min_conf_thr_percentile (float): Minimum confidence percentile threshold (default is 0).</div>
+</div>
+<div class="doc-section"><strong>Modifies:</strong>
+<div class="doc-detail">    preds: Each pred dictionary in the list will have a new key &#x27;pts3d_local_aligned_to_global&#x27;,</div>
+<div class="doc-detail">        which contains the aligned local points.</div>
+</div></div>
+        </div>
+        
+
+        <div class="func-block" id="func-start_visualization">
+            <h2>
+                
+                <code><span class="fn-name">start_visualization</span> (<span class="arg-name">window</span>, <span class="arg-name">output_dict</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">10</span>, <span class="arg-name">global_conf_thr_value_to_drop_view</span> = <span class="arg-default">1.5</span>, <span class="arg-name">point_size</span> = <span class="arg-default">0.0004</span>)</code>
+                <span class="line-no">L205-214</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-frame_processing">
+            <h2>
+                
+                <code><span class="fn-name">frame_processing</span> (<span class="arg-name">output</span>, <span class="arg-name">gui_global_conf_threshold</span>)</code>
+                <span class="line-no">L217-300</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-reconstruction">
+            <h2>
+                
+                <code><span class="fn-name">reconstruction</span> (<span class="arg-name">window</span>, <span class="arg-name">frame_data_list</span>, <span class="arg-name">max_extent</span>, <span class="arg-name">gui_show_confidence_color</span>, <span class="arg-name">gui_rainbow_color_option</span>, <span class="arg-name">gui_show_global</span>, <span class="arg-name">gui_show_local</span>, <span class="arg-name">gui_point_size</span>)</code>
+                <span class="line-no">L302-400</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
+
+        <div class="func-block" id="func-on_left_click">
+            <h2>
+                
+                <code><span class="fn-name">on_left_click</span> (<span class="arg-name">obj</span>, <span class="arg-name">event</span>, <span class="arg-name">window</span>, <span class="arg-name">points</span>, <span class="arg-name">max_extent</span>)</code>
+                <span class="line-no">L402-443</span>
+            </h2>
+            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+        </div>
+        
 </main>
 </body>
 </html>

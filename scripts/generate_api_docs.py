@@ -315,19 +315,41 @@ def _format_docstring(doc: Optional[str]) -> str:
 
 
 def _module_link(name: str) -> str:
-    """生成模块链接。"""
+    """生成模块的相对路径（相对于 docs/api/ 根目录）。"""
     slug = name.replace(".", "/")
     return f'{slug}.html'
 
 
+def _module_link_from(name: str, depth: int) -> str:
+    """生成相对路径，根据当前页面的目录深度进行修正。
+    depth: 当前页面相对于 docs/api/ 的目录层数
+    """
+    prefix = "../" * depth if depth > 0 else ""
+    slug = name.replace(".", "/")
+    return f'{prefix}{slug}.html'
+
+
 def generate_module_page(mod: ModuleInfo, all_modules: list) -> str:
     """生成单个模块的 HTML 页面。"""
+    # 根据模块名中点的数量计算页面所在目录深度
+    # fast3r -> depth=0, 居于 docs/api/
+    # fast3r.models -> depth=1, 居于 docs/api/fast3r/
+    # fast3r.models.fast3r -> depth=2, 居于 docs/api/fast3r/models/
+    depth = mod.name.count(".")
+    back = "../" * depth
+
+    def link_to(target_name: str) -> str:
+        return f"{back}{target_name.replace('.', '/')}.html"
+
+    def link_to_index() -> str:
+        return f"{back}index.html"
+
     # 侧边栏
     sidebar_items = []
     for m_name in sorted(m.name for m in all_modules):
         active = "active" if m_name == mod.name else ""
         sidebar_items.append(
-            f'<li class="{active}"><a href="{_module_link(m_name)}">{_esc(m_name)}</a></li>'
+            f'<li class="{active}"><a href="{link_to(m_name)}">{_esc(m_name)}</a></li>'
         )
     sidebar = "\n".join(sidebar_items)
 
@@ -447,6 +469,7 @@ def generate_module_page(mod: ModuleInfo, all_modules: list) -> str:
         title=f"{mod.name} - Fast3R API",
         sidebar=sidebar,
         content=content,
+        index_link=link_to_index(),
     )
 
 
@@ -458,6 +481,7 @@ def generate_index_page(all_modules: list) -> str:
             f'<li><a href="{_module_link(m_name)}">{_esc(m_name)}</a></li>'
         )
     sidebar = "\n".join(sidebar_items)
+
 
     # 总览统计
     total_classes = sum(len(m.classes) for m in all_modules)
@@ -702,7 +726,7 @@ td a:hover { text-decoration: underline; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 """
 
-def _render_html(title, sidebar, content):
+def _render_html(title, sidebar, content, current_depth=0, index_link="index.html"):
     """渲染 HTML 页面。"""
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -716,7 +740,7 @@ def _render_html(title, sidebar, content):
 <nav class="sidebar">
     <h2>📦 Fast3R</h2>
     <ul>
-        <li><a href="index.html">🏠 首页</a></li>
+        <li><a href="{index_link}">🏠 首页</a></li>
     </ul>
     <h2>Modules</h2>
     <ul>
@@ -735,6 +759,16 @@ def main():
     print(f"🔍 扫描模块: {SOURCE_DIR}")
     module_list = collect_modules(SOURCE_DIR)
     print(f"📋 发现 {len(module_list)} 个模块\n")
+
+    # 同时扫描根目录下的 py 文件
+    root_py_files = [
+        f for f in PROJECT_ROOT.glob("*.py")
+        if not f.name.startswith("_") and f.name != "setup.py"
+    ]
+    for pyfile in sorted(root_py_files):
+        mod_name = pyfile.stem  # 不带 .py 后缀
+        module_list.append((str(pyfile), mod_name))
+        print(f"  发现根目录文件: {mod_name}")
 
     all_modules = []
     for filepath, mod_name in module_list:
