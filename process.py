@@ -12,7 +12,7 @@ from functools import partial
 
 closest_point = None
 last_sphere_actor = None
-before_sphere_actor = None
+before_sphere_actor = None 
 last_line_actor = None
 def is_outdoor_scene(frame_data_list):
     sky_ratios = []
