@@ -11,123 +11,326 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>3D重建系统</string>
   </property>
+  <!-- 主窗口边距：四周留白增大 -->
+  <property name="styleSheet">
+   <string notr="true">
+    /* 主窗口背景 */
+    QMainWindow {
+        background-color: #2a2a4a;
+        padding: 20px;
+    }
+    
+    /* 通用按钮样式 */
+    QPushButton {
+        background-color: #16213e;
+        color: #e2e2e2;
+        border: 1px solid #0f3460;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: left;
+        padding-left: 15px;
+    }
+    QPushButton:hover {
+        background-color: #0f3460;
+        border-color: #e94560;
+    }
+    QPushButton:pressed {
+        background-color: #e94560;
+    }
+    
+    /* 提交按钮特殊样式 */
+    QPushButton#pushButton_3 {
+        background-color: #e94560;
+        border-color: #e94560;
+        text-align: center;
+        font-size: 18px;
+        padding: 12px;
+    }
+    QPushButton#pushButton_3:hover {
+        background-color: #ff6b6b;
+    }
+    
+    /* 标签样式 - 字体放大2倍 */
+    QLabel {
+        color: #e2e2e2;
+        font-size: 16px;
+    }
+    /* 标题 - 保持之前的放大效果 */
+    QLabel#label {
+        font-size: 42px;
+        font-weight: bold;
+        color: #e94560;
+        letter-spacing: 3px;
+    }
+    /* 分组标题标签 */
+    QLabel#label_2, QLabel#label_4, QLabel#label_5 {
+        font-size: 16px;
+        font-weight: bold;
+        background-color: #3a6ea5;
+        border-radius: 6px;
+        padding: 6px;
+        color: white;
+    }
+    
+    /* 单选框样式 */
+    QRadioButton {
+        color: #e2e2e2;
+        font-size: 14px;
+        spacing: 8px;
+    }
+    QRadioButton::indicator {
+        width: 14px;
+        height: 14px;
+        border-radius: 7px;
+    }
+    QRadioButton::indicator:unchecked {
+        background-color: #16213e;
+        border: 1px solid #0f3460;
+    }
+    QRadioButton::indicator:checked {
+        background-color: #e94560;
+        border: 1px solid #e94560;
+    }
+    
+    /* 滚动区域样式 */
+    QScrollArea {
+        border: 1px solid #0f3460;
+        border-radius: 8px;
+        background-color: #1a1a3a;
+    }
+    
+    /* 状态标签 - 字体放大 */
+    QLabel#label_3 {
+        background-color: #1a1a3a;
+        border: 1px solid #0f3460;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 14px;
+    }
+    
+    /* 分组面板样式 - 更浅的蓝色背景 */
+    QWidget#resolution_widget, QWidget#mode_widget {
+        background-color: #3a6ea5;
+        border-radius: 10px;
+        padding: 10px;
+    }
+    /* 分组面板内的标签文字颜色 */
+    QWidget#resolution_widget QLabel, QWidget#mode_widget QLabel {
+        color: white;
+        font-weight: bold;
+    }
+    /* 分组面板内的单选框文字颜色 */
+    QWidget#resolution_widget QRadioButton, QWidget#mode_widget QRadioButton {
+        color: white;
+        font-size: 14px;
+    }
+   </string>
+  </property>
+  
   <widget class="QWidget" name="centralwidget">
+   <!-- 标题 -->
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>860</x>
-      <y>10</y>
-      <width>200</width>
-      <height>60</height>
+      <x>800</x>
+      <y>20</y>
+      <width>320</width>
+      <height>70</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <pointsize>25</pointsize>
-     </font>
-    </property>
     <property name="text">
-     <string>3D重建</string>
+     <string>🎨 3D重建</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QVideoWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>500</y>
-      <width>620</width>
-      <height>380</height>
-     </rect>
-    </property>
-   </widget>
+   
+   <!-- 窗口控制按钮 -->
    <widget class="QToolButton" name="toolButton_4">
     <property name="geometry">
      <rect>
-      <x>1840</x>
-      <y>0</y>
-      <width>30</width>
-      <height>30</height>
+      <x>1830</x>
+      <y>15</y>
+      <width>40</width>
+      <height>35</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(0, 255, 255);
-border-radius: 5px;
-color: rgb(255, 255, 255);</string>
+     <string notr="true">background-color: #0f3460; border-radius: 6px; color: white; font-weight: bold; font-size: 18px;</string>
     </property>
     <property name="text">
-     <string>-</string>
+     <string>─</string>
     </property>
    </widget>
    <widget class="QToolButton" name="toolButton_3">
     <property name="geometry">
      <rect>
-      <x>1880</x>
-      <y>0</y>
-      <width>30</width>
-      <height>30</height>
+      <x>1875</x>
+      <y>15</y>
+      <width>40</width>
+      <height>35</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 0, 0);
-border-radius: 5px;
-color: rgb(255, 255, 255);</string>
+     <string notr="true">background-color: #e94560; border-radius: 6px; color: white; font-weight: bold; font-size: 18px;</string>
     </property>
     <property name="text">
-     <string>X</string>
+     <string>✕</string>
     </property>
    </widget>
+   
+   <!-- 视频预览区域 -->
    <widget class="QVideoWidget" name="widget_2" native="true">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>620</width>
-      <height>380</height>
+      <x>30</x>
+      <y>100</y>
+      <width>580</width>
+      <height>300</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border: 2px solid #0f3460; border-radius: 10px; background-color: #000000;</string>
+    </property>
    </widget>
+   
+   <!-- 图片预览滚动区域 -->
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>410</y>
+      <width>580</width>
+      <height>300</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 1px solid #0f3460; border-radius: 8px;</string>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>578</width>
+       <height>298</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QWidget" name="gallery_widget" native="true"/>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   
+   <!-- 上传图片按钮 -->
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>100</width>
-      <height>30</height>
+      <x>30</x>
+      <y>60</y>
+      <width>140</width>
+      <height>40</height>
      </rect>
     </property>
     <property name="text">
-     <string>上传场景图片</string>
+     <string>📷 上传图片</string>
     </property>
    </widget>
+   
+   <!-- 上传视频按钮 -->
+   <widget class="QPushButton" name="pushButton_2">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>370</y>
+      <width>140</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>🎬 上传视频</string>
+    </property>
+   </widget>
+   
+   <!-- 提交按钮 -->
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>990</y>
+      <x>30</x>
+      <y>740</y>
+      <width>140</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>🚀 开始重建</string>
+    </property>
+   </widget>
+   
+   <!-- 分辨率设置区域 - 浅蓝色背景 -->
+   <widget class="QWidget" name="resolution_widget">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>810</y>
+      <width>160</width>
+      <height>110</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>📐 图像分辨率</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioButton">
+       <property name="text">
+        <string>512 (高精度)</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioButton_2">
+       <property name="text">
+        <string>224 (快速)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   
+   <!-- 处理信息显示区域 -->
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>740</y>
       <width>100</width>
       <height>30</height>
      </rect>
     </property>
     <property name="text">
-     <string>提交</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>890</y>
-      <width>70</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>处理速度</string>
+     <string>⚙️ 处理状态</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -136,98 +339,48 @@ color: rgb(255, 255, 255);</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>930</y>
-      <width>460</width>
-      <height>90</height>
+      <x>210</x>
+      <y>775</y>
+      <width>430</width>
+      <height>160</height>
      </rect>
     </property>
     <property name="text">
-     <string/>
+     <string>等待上传图片或视频...</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_4">
+   
+   <!-- 交互模式选择区域 - 浅蓝色背景 -->
+   <widget class="QWidget" name="mode_widget">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>890</y>
-      <width>91</width>
-      <height>20</height>
+      <x>680</x>
+      <y>100</y>
+      <width>180</width>
+      <height>110</height>
      </rect>
     </property>
-    <property name="text">
-     <string>图像分辨率</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_2">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>470</y>
-      <width>100</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Or上传视频</string>
-    </property>
-   </widget>
-   <widget class="VTKWidget" name="widget_3" native="true">
-    <property name="geometry">
-     <rect>
-      <x>640</x>
-      <y>140</y>
-      <width>1271</width>
-      <height>881</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>920</y>
-      <width>101</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QRadioButton" name="radioButton">
-       <property name="text">
-        <string>512</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="radioButton_2">
-       <property name="text">
-        <string>224</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>70</y>
-      <width>141</width>
-      <height>61</height>
-     </rect>
+    <property name="styleSheet">
+     <string notr="true">background-color: #3a6ea5; border-radius: 10px; padding: 8px;</string>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>🖱️ 交互模式</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QRadioButton" name="radioButton_3">
        <property name="text">
-        <string>选点模式</string>
+        <string>🔍 选点模式</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -237,13 +390,29 @@ color: rgb(255, 255, 255);</string>
      <item>
       <widget class="QRadioButton" name="radioButton_4">
        <property name="text">
-        <string>连线模式</string>
+        <string>📏 连线模式</string>
        </property>
       </widget>
      </item>
     </layout>
    </widget>
+   
+   <!-- 3D显示区域 - 左边界右移，给右侧留出更多空间 -->
+   <widget class="VTKWidget" name="widget_3" native="true">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>220</y>
+      <width>1180</width>
+      <height>820</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 2px solid #0f3460; border-radius: 10px; background-color: #0f0f1a;</string>
+    </property>
+   </widget>
   </widget>
+  
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -256,6 +425,7 @@ color: rgb(255, 255, 255);</string>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ 
  <customwidgets>
   <customwidget>
    <class>QVideoWidget</class>
@@ -266,10 +436,11 @@ color: rgb(255, 255, 255);</string>
   <customwidget>
    <class>VTKWidget</class>
    <extends>QWidget</extends>
-   <header location="global">VTK_Widget.h</header>
+   <header>VTK_Widget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
+ 
  <resources/>
  <connections/>
 </ui>
