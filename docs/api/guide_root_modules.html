@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>根目录模块使用指南 - Omni3D</title>
+<style>
+:root {
+  --bg: #1e1e2e;
+  --sidebar-bg: #181825;
+  --card-bg: #252540;
+  --text: #cdd6f4;
+  --muted: #a6adc8;
+  --accent: #89b4fa;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --red: #f38ba8;
+  --border: #313244;
+  --code-bg: #11111b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; display: flex; min-height: 100vh; }
+.sidebar {
+  width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
+  padding: 20px 0; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar h2 { padding: 0 16px 12px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.sidebar ul { list-style: none; }
+.sidebar li a { display: block; padding: 6px 16px; color: var(--text); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: all 0.15s; }
+.sidebar li a:hover { color: var(--accent); background: rgba(137,180,250,0.08); }
+.sidebar li.active a { color: var(--accent); background: rgba(137,180,250,0.12); font-weight: 600; border-left-color: var(--accent); }
+.main { margin-left: 260px; padding: 40px; max-width: 960px; }
+h1 { font-size: 2rem; color: var(--accent); margin-bottom: 8px; }
+h2 { font-size: 1.4rem; color: var(--accent); margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.1rem; color: var(--yellow); margin: 20px 0 8px; }
+h4 { font-size: 0.95rem; color: var(--green); margin: 14px 0 6px; }
+p { color: var(--muted); line-height: 1.7; margin-bottom: 10px; }
+.subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 32px; }
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.card-title { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+.badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-ui { background: rgba(137,180,250,0.2); color: var(--accent); }
+.badge-logic { background: rgba(166,227,161,0.2); color: var(--green); }
+.badge-vtk { background: rgba(249,226,175,0.2); color: var(--yellow); }
+.badge-process { background: rgba(243,139,168,0.2); color: var(--red); }
+.badge-auto { background: rgba(166,173,200,0.2); color: var(--muted); }
+code { background: var(--code-bg); color: var(--green); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; margin: 12px 0; }
+pre code { background: none; padding: 0; color: var(--text); font-size: 13px; line-height: 1.6; }
+.flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.flow-step { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px; font-size: 13px; color: var(--text); }
+.flow-arrow { color: var(--muted); font-size: 18px; }
+.func-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.func-item { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; }
+.func-sig { font-family: 'Fira Code', monospace; font-size: 13px; color: var(--accent); }
+.func-desc { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.tip { background: rgba(137,180,250,0.08); border-left: 3px solid var(--accent); padding: 10px 16px; border-radius: 0 6px 6px 0; margin: 14px 0; color: var(--muted); font-size: 14px; }
+.warn { background: rgba(249,226,175,0.08); border-left: 3px solid var(--yellow); padding: 10px 16px; border-radius: 0 6px 6px 0; margin: 14px 0; color: var(--muted); font-size: 14px; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+th { background: var(--card-bg); color: var(--accent); padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
+td { padding: 8px 12px; border: 1px solid var(--border); color: var(--muted); }
+tr:hover td { background: rgba(137,180,250,0.04); }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <h2>📦 Omni3D</h2>
+  <ul>
+    <li><a href="index.html">🏠 API 首页</a></li>
+  </ul>
+  <h2>根目录模块</h2>
+  <ul>
+    <li class="active"><a href="guide_root_modules.html">📖 使用指南</a></li>
+    <li><a href="logic_mainwindow.html">logic_mainwindow</a></li>
+    <li><a href="MainWindow.html">MainWindow</a></li>
+    <li><a href="VTK_Widget.html">VTK_Widget</a></li>
+    <li><a href="process.html">process</a></li>
+    <li><a href="images_upload_display.html">images_upload_display</a></li>
+  </ul>
+</nav>
+
+<main class="main">
+  <h1>🗂️ 根目录模块使用指南</h1>
+  <p class="subtitle">Omni3D 桌面 GUI 应用的核心模块说明，基于 PyQt5 + VTK + Fast3R 构建。</p>
+
+  <!-- 架构总览 -->
+  <h2>🏗️ 整体架构</h2>
+  <p>根目录下共有 5 个核心 Python 文件，协同构成完整的桌面三维重建应用：</p>
+
+  <table>
+    <thead><tr><th>文件</th><th>职责</th><th>类型</th></tr></thead>
+    <tbody>
+      <tr><td><code>logic_mainwindow.py</code></td><td>主窗口业务逻辑，应用入口</td><td><span class="badge badge-logic">Logic</span></td></tr>
+      <tr><td><code>MainWindow.py</code></td><td>由 Qt Designer 自动生成的 UI 布局代码</td><td><span class="badge badge-auto">Auto-generated</span></td></tr>
+      <tr><td><code>VTK_Widget.py</code></td><td>VTK 三维渲染组件，支持点击交互</td><td><span class="badge badge-vtk">VTK</span></td></tr>
+      <tr><td><code>process.py</code></td><td>点云处理、坐标对齐、可视化渲染核心</td><td><span class="badge badge-process">Processing</span></td></tr>
+      <tr><td><code>images_upload_display.py</code></td><td>图片上传后的缩略图展示工具</td><td><span class="badge badge-ui">UI Helper</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>调用关系</h3>
+  <div class="flow">
+    <div class="flow-step">logic_mainwindow.py<br><small>（入口）</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">MainWindow.py<br><small>（UI 布局）</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">VTK_Widget.py<br><small>（3D 渲染）</small></div>
+  </div>
+  <div class="flow">
+    <div class="flow-step">logic_mainwindow.py</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">process.py<br><small>（点云处理）</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">VTK_Widget.py<br><small>（渲染输出）</small></div>
+  </div>
+  <div class="flow">
+    <div class="flow-step">logic_mainwindow.py</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">images_upload_display.py<br><small>（图片展示）</small></div>
+  </div>
+
+  <!-- 启动方式 -->
+  <h2>🚀 启动方式</h2>
+  <pre><code>cd /path/to/Omni3D
+python logic_mainwindow.py</code></pre>
+  <div class="tip">唯一的入口文件是 <code>logic_mainwindow.py</code>，其他文件均为模块，不可单独作为入口运行。</div>
+
+  <!-- 各文件详解 -->
+  <h2>📄 各文件详解</h2>
+
+  <!-- logic_mainwindow.py -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-logic">Logic</span>
+      <span class="card-title">logic_mainwindow.py — 主窗口逻辑与应用入口</span>
+    </div>
+    <p>继承 <code>QMainWindow</code>，绑定 UI 事件与业务逻辑，并在 <code>__main__</code> 中启动应用。</p>
+
+    <h4>初始化参数（<code>__main__</code> 中修改）</h4>
+    <table>
+      <thead><tr><th>变量</th><th>默认值</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>checkpoint_dir</code></td><td><code>"jedyang97/Fast3R_ViT_Large_512"</code></td><td>Fast3R 模型权重路径（HuggingFace 或本地路径）</td></tr>
+        <tr><td><code>device</code></td><td>自动选择 CUDA / CPU</td><td>推理设备</td></tr>
+        <tr><td><code>image_resolution</code></td><td><code>512</code></td><td>图片处理分辨率（像素）</td></tr>
+      </tbody>
+    </table>
+
+    <h4>核心槽函数</h4>
+    <div class="func-list">
+      <div class="func-item">
+        <div class="func-sig">on_pushButton_clicked()</div>
+        <div class="func-desc">触发图片上传对话框，支持 PNG/JPG/BMP 多选。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">on_pushButton_2_clicked()</div>
+        <div class="func-desc">触发视频上传，自动提取帧并保存到 <code>temp_preview_frames/preview/</code>。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">on_pushButton_3_clicked()</div>
+        <div class="func-desc">执行三维重建，依次调用：图片加载 → Fast3R 推理 → 点云对齐 → VTK 可视化。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">on_radioButton_clicked() / on_radioButton_2_clicked()</div>
+        <div class="func-desc">切换图片处理分辨率（对应 UI 中的两个 RadioButton）。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">on_toolButton_3_clicked()</div>
+        <div class="func-desc">关闭窗口。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">on_toolButton_4_clicked()</div>
+        <div class="func-desc">最小化窗口。</div>
+      </div>
+    </div>
+
+    <h4>推理流程（<code>process_images_wrapper</code>）</h4>
+    <div class="flow">
+      <div class="flow-step">load_images</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Fast3R inference</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">align_local_pts3d_to_global</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">start_visualization</div>
+    </div>
+  </div>
+
+  <!-- MainWindow.py -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-auto">Auto-generated</span>
+      <span class="card-title">MainWindow.py — Qt Designer 自动生成的 UI 布局</span>
+    </div>
+    <p>由 <code>pyuic5 MainWindow.ui -o MainWindow.py</code> 命令自动生成，<strong>不要手动编辑此文件</strong>。</p>
+    <div class="warn">⚠️ 若需修改界面布局，请编辑 <code>MainWindow.ui</code>（使用 Qt Designer 打开），然后重新运行 pyuic5 生成此文件。</div>
+
+    <h4>主要 UI 组件</h4>
+    <table>
+      <thead><tr><th>组件名</th><th>类型</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>widget_2</code></td><td>QWidget</td><td>图片缩略图展示区（上方）</td></tr>
+        <tr><td><code>widget_3</code></td><td>VTKWidget</td><td>三维点云渲染区</td></tr>
+        <tr><td><code>widget</code></td><td>QVideoWidget</td><td>视频预览播放区</td></tr>
+        <tr><td><code>label_3</code></td><td>QLabel</td><td>状态文字提示（进度/耗时）</td></tr>
+        <tr><td><code>pushButton</code></td><td>QPushButton</td><td>上传图片按钮</td></tr>
+        <tr><td><code>pushButton_2</code></td><td>QPushButton</td><td>上传视频按钮</td></tr>
+        <tr><td><code>pushButton_3</code></td><td>QPushButton</td><td>开始重建按钮</td></tr>
+        <tr><td><code>radioButton / radioButton_2</code></td><td>QRadioButton</td><td>分辨率选择（512 / 其他）</td></tr>
+        <tr><td><code>radioButton_3 / radioButton_4</code></td><td>QRadioButton</td><td>点击模式选择（单点标记 / 两点连线）</td></tr>
+        <tr><td><code>toolButton_3</code></td><td>QToolButton</td><td>关闭按钮（红色）</td></tr>
+        <tr><td><code>toolButton_4</code></td><td>QToolButton</td><td>最小化按钮（青色）</td></tr>
+      </tbody>
+    </table>
+
+    <h4>重新生成 UI 代码</h4>
+    <pre><code>pyuic5 MainWindow.ui -o MainWindow.py</code></pre>
+  </div>
+
+  <!-- VTK_Widget.py -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-vtk">VTK</span>
+      <span class="card-title">VTK_Widget.py — 三维点云渲染与交互组件</span>
+    </div>
+    <p>封装 VTK 渲染管线到 PyQt5 的 <code>QWidget</code> 中，支持鼠标点击拾取三维坐标。</p>
+
+    <h4>类：<code>VTKWidget(QWidget)</code></h4>
+    <table>
+      <thead><tr><th>属性/方法</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>self.renderer</code></td><td>VTK 渲染器，背景为白色</td></tr>
+        <tr><td><code>self.render_window</code></td><td>VTK 渲染窗口</td></tr>
+        <tr><td><code>self.vtk_widget</code></td><td>嵌入 Qt 的 VTK 交互窗口</td></tr>
+        <tr><td><code>get_click_position()</code></td><td>将鼠标屏幕坐标转换为三维世界坐标</td></tr>
+        <tr><td><code>find_closest_point(click_pos, points, max_extent)</code></td><td>在点击位置附近的正方体范围内找最近点云点</td></tr>
+      </tbody>
+    </table>
+
+    <h4>相机初始默认值</h4>
+    <table>
+      <thead><tr><th>参数</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>Position</td><td>(-0.00141, -0.01910, -0.06794)</td></tr>
+        <tr><td>FocalPoint</td><td>(-0.00353, -0.01143, 0.01549)</td></tr>
+        <tr><td>ViewUp</td><td>(0, -1, 0)</td></tr>
+        <tr><td>交互模式</td><td>TrackballCamera（拖拽旋转）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- process.py -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-process">Processing</span>
+      <span class="card-title">process.py — 点云处理与可视化渲染核心</span>
+    </div>
+    <p>负责将 Fast3R 模型输出转化为 VTK 可渲染的点云，包含坐标对齐、天空遮罩、颜色映射等处理步骤。</p>
+
+    <h4>主要函数</h4>
+    <div class="func-list">
+      <div class="func-item">
+        <div class="func-sig">start_visualization(window, output_dict, min_conf_thr_percentile, global_conf_thr_value_to_drop_view, point_size)</div>
+        <div class="func-desc">可视化主入口，由 <code>logic_mainwindow.py</code> 调用。调用 <code>frame_processing</code> 再调用 <code>reconstruction</code>。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">align_local_pts3d_to_global(preds, views, min_conf_thr_percentile)</div>
+        <div class="func-desc">将每个视图的局部点云（<code>pts3d_local</code>）通过刚体变换（含缩放）对齐到全局坐标系。使用 <code>roma.rigid_points_registration</code> 求解 R、t、s，并行处理所有视图。结果写入 <code>preds[i]['pts3d_local_aligned_to_global']</code>。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">frame_processing(output, gui_global_conf_threshold)</div>
+        <div class="func-desc">逐帧提取点云、颜色（原始RGB / 置信度热图 / 彩虹色）、天空遮罩，并计算场景空间范围 <code>max_extent</code>。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">reconstruction(window, frame_data_list, max_extent, ...)</div>
+        <div class="func-desc">将处理后的帧数据转换为 VTK Actor 并添加到渲染器。根据 <code>is_outdoor</code> 决定是否启用天空遮罩。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">detect_sky_mask(img_rgb)</div>
+        <div class="func-desc">基于 HSV 颜色空间（蓝天/白云）检测天空像素，使用形态学操作进行区域清理。返回非天空区域的二值掩码。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">is_outdoor_scene(frame_data_list)</div>
+        <div class="func-desc">统计超过 20% 天空像素的帧比例，若超过 25% 则判定为室外场景。</div>
+      </div>
+      <div class="func-item">
+        <div class="func-sig">on_left_click(obj, event, window, points, max_extent)</div>
+        <div class="func-desc">VTK 鼠标点击回调。找到最近点后绘制红色球体标记；若处于两点模式（radioButton_4），则额外绘制两点之间的连线。</div>
+      </div>
+    </div>
+
+    <h4>可调参数（在 <code>logic_mainwindow.py</code> 中传入）</h4>
+    <table>
+      <thead><tr><th>参数</th><th>默认值</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>min_conf_thr_percentile</code></td><td>10</td><td>对齐时使用的最低置信度百分位（越低保留点越多）</td></tr>
+        <tr><td><code>global_conf_thr_value_to_drop_view</code></td><td>1.5</td><td>全局置信度低于此值的视图将被丢弃</td></tr>
+        <tr><td><code>point_size</code></td><td>0.0004</td><td>点云渲染点的大小</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- images_upload_display.py -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-ui">UI Helper</span>
+      <span class="card-title">images_upload_display.py — 图片缩略图展示</span>
+    </div>
+    <p>在 UI 的 <code>widget_2</code> 区域以滚动网格形式展示已上传的图片缩略图（每行 6 张）。</p>
+
+    <h4>函数：<code>display_images(window, image_paths)</code></h4>
+    <table>
+      <thead><tr><th>参数</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>window</code></td><td><code>Ui_MainWindow</code> 实例（即 <code>self.m</code>）</td></tr>
+        <tr><td><code>image_paths</code></td><td>图片路径列表（str）</td></tr>
+      </tbody>
+    </table>
+    <p>调用前会清空 <code>widget_2</code> 中现有内容，然后重新构建 <code>QScrollArea + QGridLayout</code>。</p>
+  </div>
+
+  <!-- 完整工作流 -->
+  <h2>🔄 完整工作流</h2>
+  <div class="flow">
+    <div class="flow-step">① 启动<br><code>python logic_mainwindow.py</code></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">② 上传图片/视频<br>pushButton / pushButton_2</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">③ 选择分辨率<br>radioButton</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">④ 开始重建<br>pushButton_3</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">⑤ 查看三维点云<br>widget_3 (VTK)</div>
+  </div>
+
+  <h3>点云交互（重建完成后）</h3>
+  <table>
+    <thead><tr><th>操作</th><th>效果</th></tr></thead>
+    <tbody>
+      <tr><td>鼠标左键拖拽</td><td>旋转视角</td></tr>
+      <tr><td>鼠标滚轮</td><td>缩放</td></tr>
+      <tr><td>鼠标右键拖拽</td><td>平移视角</td></tr>
+      <tr><td>选中 radioButton_3 + 点击</td><td>标记单个最近点（红色球）</td></tr>
+      <tr><td>选中 radioButton_4 + 点击两次</td><td>在两点之间绘制红色连线</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 常见问题 -->
+  <h2>❓ 常见问题</h2>
+  <div class="card">
+    <h4>Q: 启动时报 ModuleNotFoundError</h4>
+    <p>确保已安装所有依赖并激活正确的 conda 环境，参考项目 <code>requirements.txt</code>：</p>
+    <pre><code>conda activate omni3d
+pip install -r requirements.txt</code></pre>
+  </div>
+  <div class="card">
+    <h4>Q: 重建后点云没有显示</h4>
+    <p>检查 <code>global_conf_thr_value_to_drop_view</code> 参数，若设置过高会丢弃所有视图。默认值 1.5 适合大多数场景，可尝试降低到 1.0。</p>
+  </div>
+  <div class="card">
+    <h4>Q: 视频上传后没有图片预览</h4>
+    <p>视频帧会提取到 <code>temp_preview_frames/preview/</code>，若该目录权限问题可手动创建。视频预览播放依赖 <code>QMediaPlayer</code>，需要系统安装对应解码器。</p>
+  </div>
+  <div class="card">
+    <h4>Q: 不要手动编辑 MainWindow.py</h4>
+    <p>该文件由 <code>pyuic5</code> 自动生成，手动修改会在下次重新生成时被覆盖。界面修改请通过 Qt Designer 编辑 <code>MainWindow.ui</code>。</p>
+  </div>
+
+</main>
+</body>
+</html>
