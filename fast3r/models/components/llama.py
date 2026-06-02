@@ -20,6 +20,34 @@ from torch import nn
 
 @dataclass
 class ModelArgs:
+    """Hyperparameter configuration for the Llama Transformer model.
+
+    Attributes:
+        dim (int): Model (embedding) dimension. Defaults to ``4096``.
+        n_layers (int): Number of Transformer blocks. Defaults to ``32``.
+        n_heads (int): Number of query attention heads. Defaults to ``32``.
+        n_kv_heads (Optional[int]): Number of key/value heads for grouped-
+            query attention (GQA).  If ``None``, falls back to *n_heads*
+            (standard multi-head attention). Defaults to ``None``.
+        vocab_size (int): Vocabulary size (set by the tokenizer).
+            Defaults to ``-1``.
+        multiple_of (int): Hidden dimension of the FFN is rounded up to the
+            nearest multiple of this value. Defaults to ``256``.
+        ffn_dim_multiplier (Optional[float]): Optional custom multiplier
+            applied to the FFN hidden dimension. Defaults to ``None``.
+        norm_eps (float): Epsilon for RMSNorm numerical stability.
+            Defaults to ``1e-5``.
+        rope_theta (float): Base frequency for rotary position embeddings.
+            Defaults to ``10000``.
+        max_batch_size (int): Maximum inference batch size. Defaults to
+            ``32``.
+        max_seq_len (int): Maximum sequence length. Defaults to ``2048``.
+        depth_init (bool): If ``True``, each block's weight init std uses
+            its layer ID; otherwise all blocks use the total layer count.
+            Defaults to ``True``.
+        is_causal (bool): Whether to apply a causal attention mask.
+            Defaults to ``True``.
+    """
     dim: int = 4096
     n_layers: int = 32
     n_heads: int = 32
@@ -153,13 +181,35 @@ class RMSNorm(nn.Module):
         self.weight = nn.Parameter(torch.ones(dim))
 
     def _norm(self, x: torch.Tensor):
+        """Apply the RMS normalization formula without the learnable scale.
+
+        Computes ``x / sqrt(mean(x^2) + eps)``.
+
+        Args:
+            x (torch.Tensor): Input tensor of arbitrary shape.
+
+        Returns:
+            torch.Tensor: Normalized tensor with the same shape as *x*.
+        """
         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
 
     def forward(self, x: torch.Tensor):
+        """Apply RMSNorm to the input tensor.
+
+        Normalizes the input in float32, casts back to the original dtype,
+        and multiplies by the learnable weight vector.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (..., dim).
+
+        Returns:
+            torch.Tensor: Normalized tensor of the same shape as *x*.
+        """
         output = self._norm(x.float()).type_as(x)
         return output * self.weight
 
     def reset_parameters(self):
+        """Reset the learnable scale to all-ones (identity transform)."""
         torch.nn.init.ones_(self.weight)  # type: ignore
 
 
@@ -185,6 +235,20 @@ class Attention(nn.Module):
     """
 
     def __init__(self, n_heads: int, n_kv_heads: Optional[int], dim: int, is_causal: bool):
+        """Initialize the Attention module.
+
+        Creates linear projection layers for queries (wq), keys (wk),
+        values (wv), and output (wo).  When *n_kv_heads* < *n_heads*,
+        grouped-query attention (GQA) is used: keys and values are projected
+        to a smaller dimension and then repeated.
+
+        Args:
+            n_heads (int): Number of query attention heads.
+            n_kv_heads (Optional[int]): Number of key/value heads.  Pass
+                ``None`` to use standard multi-head attention.
+            dim (int): Model embedding dimension.
+            is_causal (bool): Whether to use a causal (autoregressive) mask.
+        """
         super().__init__()
         self.is_causal = is_causal
         self.n_heads = n_heads
@@ -198,6 +262,16 @@ class Attention(nn.Module):
         self.wo = nn.Linear(n_heads * self.head_dim, dim, bias=False)
 
     def init_weights(self, init_std: float):
+        """Initialize projection weights using truncated normal distributions.
+
+        Query, key, and value projections use std ``0.02``; the output
+        projection uses the (typically smaller) *init_std* to implement
+        depth-scaled initialization.
+
+        Args:
+            init_std (float): Standard deviation for the output projection
+                weight initialization.
+        """
         for linear in (self.wq, self.wk, self.wv):
             nn.init.trunc_normal_(linear.weight, mean=0.0, std=0.02)
         nn.init.trunc_normal_(self.wo.weight, mean=0.0, std=init_std)
@@ -282,9 +356,30 @@ class FeedForward(nn.Module):
         self.w3 = nn.Linear(dim, hidden_dim, bias=False)
 
     def forward(self, x):
+        """Apply the SwiGLU feed-forward transformation.
+
+        Computes ``w2(silu(w1(x)) * w3(x))``, a gated activation
+        variant of the standard FFN.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (batch, seq_len, dim).
+
+        Returns:
+            torch.Tensor: Output tensor of the same shape as *x*.
+        """
         return self.w2(F.silu(self.w1(x)) * self.w3(x))
 
     def init_weights(self, init_std: float):
+        """Initialize feed-forward weights using truncated normal distributions.
+
+        The gate projection (w1) uses std ``0.02``; the output projection
+        (w2) and the gating projection (w3) use *init_std* for depth-scaled
+        initialization.
+
+        Args:
+            init_std (float): Standard deviation for w2 and w3 weight
+                initialization.
+        """
         nn.init.trunc_normal_(self.w1.weight, mean=0.0, std=0.02)
         for linear in (self.w2, self.w3):
             nn.init.trunc_normal_(linear.weight, mean=0.0, std=init_std)
@@ -318,6 +413,26 @@ class TransformerBlock(nn.Module):
 
     def __init__(self, layer_id: int, n_heads: int, n_kv_heads: Optional[int], dim: int, multiple_of: int,
                  ffn_dim_multiplier: float, n_layers: int, is_causal: bool, norm_eps: float, depth_init: bool):
+        """Initialize a Transformer block.
+
+        Creates attention and feed-forward sub-modules together with their
+        RMSNorm layers.  The weight initialization std is pre-computed here
+        using either the layer ID or the total number of layers depending on
+        *depth_init*.
+
+        Args:
+            layer_id (int): Zero-based index of this block in the stack.
+            n_heads (int): Number of query attention heads.
+            n_kv_heads (Optional[int]): Number of key/value heads (GQA).
+            dim (int): Model embedding dimension.
+            multiple_of (int): FFN hidden dimension alignment value.
+            ffn_dim_multiplier (float): Multiplier for FFN hidden dimension.
+            n_layers (int): Total number of Transformer blocks.
+            is_causal (bool): Whether to use causal attention.
+            norm_eps (float): Epsilon for RMSNorm.
+            depth_init (bool): If ``True``, use *layer_id* for init std;
+                otherwise use *n_layers*.
+        """
         super().__init__()
         self.n_heads = n_heads
         self.dim = dim
@@ -361,6 +476,11 @@ class TransformerBlock(nn.Module):
         return h + self.feed_forward(self.ffn_norm(h))
 
     def init_weights(self):
+        """Initialize all sub-module weights for this Transformer block.
+
+        Resets both RMSNorm layers and calls the attention and feed-forward
+        ``init_weights`` methods with the pre-computed depth-scaled std.
+        """
         for norm in (self.attention_norm, self.ffn_norm):
             norm.reset_parameters()
         self.attention.init_weights(self.weight_init_std)
@@ -386,6 +506,15 @@ class Transformer(nn.Module):
     """
 
     def __init__(self, model_args: ModelArgs):
+        """Initialize the full Transformer model.
+
+        Creates token embeddings, all Transformer blocks, the final RMSNorm,
+        and the output linear layer.  Also pre-computes and registers the
+        RoPE frequency buffer, then calls :meth:`init_weights`.
+
+        Args:
+            model_args (ModelArgs): Hyperparameter configuration object.
+        """
         super().__init__()
         self.model_args = model_args
         self.vocab_size = model_args.vocab_size
@@ -412,6 +541,11 @@ class Transformer(nn.Module):
         self.init_weights()
 
     def reset_parameters(self):
+        """Re-compute and overwrite the RoPE frequency buffer.
+
+        Should be called after changing ``model_args`` or when restoring
+        from a checkpoint that does not include the non-persistent buffer.
+        """
         with torch.device(self.freqs_cis.device):
             self.freqs_cis = self._precompute_freqs_cis()
 
@@ -446,6 +580,16 @@ class Transformer(nn.Module):
         )
 
     def _precompute_freqs_cis(self) -> torch.Tensor:
+        """Pre-compute the RoPE complex frequency tensor.
+
+        Delegates to the module-level :func:`precompute_freqs_cis` with
+        the per-head dimension and ``2 * max_seq_len`` to ensure sufficient
+        coverage for generation.
+
+        Returns:
+            torch.Tensor: Complex64 frequency tensor of shape
+            ``(max_seq_len * 2, dim // n_heads // 2)``.
+        """
         return precompute_freqs_cis(
             self.model_args.dim // self.model_args.n_heads,
             # Need to compute until at least the max token limit for generation

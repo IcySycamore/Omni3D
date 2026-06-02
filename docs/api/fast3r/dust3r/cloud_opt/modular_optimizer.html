@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 17 方法</span>
-            <span class="warn">
-                ⚠️ 17 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/modular_optimizer.py</div>
@@ -327,7 +327,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ModularPointCloudOptimizer</span>(BasePCOptimizer)
-                <span class="line-no">L22-181</span>
+                <span class="line-no">L22-343</span>
             </h2>
             <div class="docstring"><p>Optimize a global scene, given a list of pairwise observations.</p>
 <p>Unlike PointCloudOptimizer, you can fix parts of the optimization process (partial poses/intrinsics)</p>
@@ -341,153 +341,274 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">optimize_pp</span> = <span class="arg-default">False</span>, <span class="arg-name">fx_and_fy</span> = <span class="arg-default">False</span>, <span class="arg-name">focal_brake</span> = <span class="arg-default">20</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L29-52</span>
+                    <span class="line-no">L29-66</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the modular point cloud optimizer.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    *args: Positional arguments forwarded to :class:`BasePCOptimizer`.</div>
+<div class="doc-detail">    optimize_pp (bool): Whether to optimize the principal point.</div>
+<div class="doc-detail">        Defaults to ``False``.</div>
+<div class="doc-detail">    fx_and_fy (bool): If ``True``, use separate focal parameters</div>
+<div class="doc-detail">        ``[fx, fy]`` per image; otherwise use a single shared focal</div>
+<div class="doc-detail">        ``[f]``. Defaults to ``False``.</div>
+<div class="doc-detail">    focal_brake (float): Scale factor for the log-encoded focal</div>
+<div class="doc-detail">        parameter. Defaults to ``20``.</div>
+<div class="doc-detail">    **kwargs: Additional keyword arguments forwarded to</div>
+<div class="doc-detail">        :class:`BasePCOptimizer`.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-preset_pose">
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_pose</span> (<span class="arg-name">known_poses</span>, <span class="arg-name">pose_msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L54-66</span>
+                    <span class="line-no">L68-92</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Preset (freeze) camera poses for a subset of images.</p>
+<p>Sets the specified cam-to-world poses and disables gradient</p>
+<p>computation for those parameters.  If fewer than 2 poses are frozen,</p>
+<p>scale normalization remains active.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    known_poses (Tensor or list of Tensor): Cam-to-world pose</div>
+<div class="doc-detail">        matrix/matrices of shape (4, 4) or a batch (N, 4, 4).</div>
+<div class="doc-detail">    pose_msk (int, list, ndarray, or None): Indices of the images</div>
+<div class="doc-detail">        whose poses should be set.  Defaults to ``None`` (all images).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-preset_intrinsics">
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_intrinsics</span> (<span class="arg-name">known_intrinsics</span>, <span class="arg-name">msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L68-74</span>
+                    <span class="line-no">L94-112</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Preset (freeze) camera intrinsics for a subset of images.</p>
+<p>Decomposes each 3x3 intrinsic matrix *K* into a focal length</p>
+<p>(mean of diagonal elements) and principal point, then calls</p>
+<p>:meth:`preset_focal` and :meth:`preset_principal_point`.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    known_intrinsics (Tensor or list of Tensor): Intrinsic matrices</div>
+<div class="doc-detail">        of shape (3, 3) or a list thereof.</div>
+<div class="doc-detail">    msk (int, list, ndarray, or None): Indices of the target images.</div>
+<div class="doc-detail">        Defaults to ``None`` (all images).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-preset_focal">
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_focal</span> (<span class="arg-name">known_focals</span>, <span class="arg-name">msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L76-80</span>
+                    <span class="line-no">L114-125</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Preset (freeze) focal lengths for a subset of images.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    known_focals (list of float): Focal length values.</div>
+<div class="doc-detail">    msk (int, list, ndarray, or None): Indices of the target images.</div>
+<div class="doc-detail">        Defaults to ``None`` (all images).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-preset_principal_point">
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_principal_point</span> (<span class="arg-name">known_pp</span>, <span class="arg-name">msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L82-86</span>
+                    <span class="line-no">L127-139</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Preset (freeze) principal points for a subset of images.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    known_pp (list of Tensor): Principal points, each a 2-vector</div>
+<div class="doc-detail">        ``[cx, cy]`` in pixel coordinates.</div>
+<div class="doc-detail">    msk (int, list, ndarray, or None): Indices of the target images.</div>
+<div class="doc-detail">        Defaults to ``None`` (all images).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-_no_grad">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_no_grad</span> (<span class="arg-name">tensor</span>)</code>
-                    <span class="line-no">L88-89</span>
+                    <span class="line-no">L141-151</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Disable gradient computation for a parameter tensor.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    tensor (Tensor): A parameter whose gradient tracking should</div>
+<div class="doc-detail">        be turned off.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: The same tensor with ``requires_grad=False``.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-_get_msk_indices">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_msk_indices</span> (<span class="arg-name">msk</span>)</code>
-                    <span class="line-no">L91-104</span>
+                    <span class="line-no">L153-184</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Convert a mask specification to a list of image indices.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    msk (None, int, list, tuple, ndarray, or BoolTensor): The mask</div>
+<div class="doc-detail">        specification.  Supported types:</div>
+</div>
+<p>        * ``None`` – all image indices ``[0, n_imgs)``.</p>
+<p>        * ``int`` – a single index wrapped in a list.</p>
+<p>        * ``list`` / ``tuple`` – forwarded after conversion to ndarray.</p>
+<p>        * Bool array/tensor of length ``n_imgs`` – non-zero indices.</p>
+<p>        * Integer array – returned as-is.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    range or ndarray: Sequence of image indices.</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    ValueError: If *msk* has an unsupported dtype.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-_set_focal">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_focal</span> (<span class="arg-name">idx</span>, <span class="arg-name">focal</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L106-112</span>
+                    <span class="line-no">L186-202</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Set the log-encoded focal length for image *idx*.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    idx (int): Image index.</div>
+<div class="doc-detail">    focal (float): Focal length in pixels.</div>
+<div class="doc-detail">    force (bool): If ``True``, set even when ``requires_grad=False``.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Parameter: The focal length parameter.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-get_focals">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_focals</span> ()</code>
-                    <span class="line-no">L114-116</span>
+                    <span class="line-no">L204-212</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return per-image focal lengths (decoded from log-space).</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Focal length tensor of shape (n_imgs,) or (n_imgs, 2)</div>
+<div class="doc-detail">    when ``fx_and_fy=True``.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-_set_principal_point">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_principal_point</span> (<span class="arg-name">idx</span>, <span class="arg-name">pp</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L118-125</span>
+                    <span class="line-no">L214-235</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Set the principal point for image *idx*.</p>
+<p>Stores the principal point as a small offset from the image center</p>
+<p>(divided by 10 for numerical stability).</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    idx (int): Image index.</div>
+<div class="doc-detail">    pp (Tensor or array-like): Principal point ``[cx, cy]`` in pixel</div>
+<div class="doc-detail">        coordinates.</div>
+<div class="doc-detail">    force (bool): If ``True``, set even when ``requires_grad=False``.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Parameter: The principal point parameter.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-get_principal_points">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_principal_points</span> ()</code>
-                    <span class="line-no">L127-133</span>
+                    <span class="line-no">L237-251</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return per-image principal points in pixel coordinates.</p>
+<p>Decodes from the stored centered, scaled representation back to</p>
+<p>absolute pixel coordinates ``(cx, cy)``.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Principal point tensor of shape (n_imgs, 2).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-get_intrinsics">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_intrinsics</span> ()</code>
-                    <span class="line-no">L135-142</span>
+                    <span class="line-no">L253-268</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return per-image 3x3 intrinsic (K) matrices.</p>
+<p>Assembles focal lengths and principal points into standard camera</p>
+<p>intrinsic matrices.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Intrinsic matrices of shape (n_imgs, 3, 3).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-get_im_poses">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_im_poses</span> ()</code>
-                    <span class="line-no">L144-146</span>
+                    <span class="line-no">L270-277</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return per-image cam-to-world transformation matrices.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Homogeneous cam-to-world matrices of shape (n_imgs, 4, 4).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-_set_depthmap">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_depthmap</span> (<span class="arg-name">idx</span>, <span class="arg-name">depth</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L148-154</span>
+                    <span class="line-no">L279-296</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Set the log-encoded depth map for image *idx*.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    idx (int): Image index.</div>
+<div class="doc-detail">    depth (Tensor): Depth map of shape (H, W) with positive values.</div>
+<div class="doc-detail">    force (bool): If ``True``, overwrite even when</div>
+<div class="doc-detail">        ``requires_grad=False``.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Parameter: The depth map parameter.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-get_depthmaps">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_depthmaps</span> ()</code>
-                    <span class="line-no">L156-157</span>
+                    <span class="line-no">L298-304</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return optimized depth maps (exponentiated from log-space).</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of Tensor: Per-image depth maps, each of shape (H, W).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-depth_to_pts3d">
                 <div class="method-header">
                     
                     <code><span class="fn-name">depth_to_pts3d</span> ()</code>
-                    <span class="line-no">L159-178</span>
+                    <span class="line-no">L306-335</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Convert depth maps to 3D point maps in world coordinates.</p>
+<p>Projects each pixel through the camera intrinsics to obtain</p>
+<p>3D coordinates in the camera frame, then transforms them to world</p>
+<p>coordinates using the estimated cam-to-world poses.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of Tensor: Per-image 3D point maps, each of shape (H, W, 3)</div>
+<div class="doc-detail">    in world coordinates.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ModularPointCloudOptimizer-get_pts3d">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pts3d</span> ()</code>
-                    <span class="line-no">L180-181</span>
+                    <span class="line-no">L337-343</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return optimized 3D point maps (alias for :meth:`depth_to_pts3d`).</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of Tensor: Per-image 3D point maps of shape (H, W, 3).</div>
+</div></div>
             </div>
             
             </div>
