@@ -313,7 +313,7 @@ td a:hover { text-decoration: underline; }
             <span>⚡ 2 函数</span>
             <span>🔧 18 方法</span>
             <span class="warn">
-                ⚠️ 23 处缺 docstring
+                ⚠️ 1 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/blocks.py</div>
@@ -336,7 +336,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DropPath</span>(nn.Module)
-                <span class="line-no">L61-73</span>
+                <span class="line-no">L72-101</span>
             </h2>
             <div class="docstring"><p>Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).</p></div>
             
@@ -347,25 +347,38 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">drop_prob</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">scale_by_keep</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L64-67</span>
+                    <span class="line-no">L75-87</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize DropPath.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    drop_prob (float): Probability of dropping a path during training.</div>
+<div class="doc-detail">        Defaults to ``0.0`` (no drop).</div>
+<div class="doc-detail">    scale_by_keep (bool): If ``True``, scale surviving paths by</div>
+<div class="doc-detail">        ``1 / keep_prob`` to preserve expected magnitude.</div>
+<div class="doc-detail">        Defaults to ``True``.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-DropPath-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L69-70</span>
+                    <span class="line-no">L89-98</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Apply stochastic depth to *x*.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): Input tensor.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Output tensor with paths randomly dropped during training.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-DropPath-extra_repr">
                 <div class="method-header">
                     
                     <code><span class="fn-name">extra_repr</span> ()</code>
-                    <span class="line-no">L72-73</span>
+                    <span class="line-no">L100-101</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -378,7 +391,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Mlp</span>(nn.Module)
-                <span class="line-no">L76-106</span>
+                <span class="line-no">L104-155</span>
             </h2>
             <div class="docstring"><p>MLP as used in Vision Transformer, MLP-Mixer and related networks</p></div>
             
@@ -389,18 +402,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">in_features</span>, <span class="arg-name">hidden_features</span> = <span class="arg-default">None</span>, <span class="arg-name">out_features</span> = <span class="arg-default">None</span>, <span class="arg-name">act_layer</span> = <span class="arg-default">nn.GELU</span>, <span class="arg-name">bias</span> = <span class="arg-default">True</span>, <span class="arg-name">drop</span> = <span class="arg-default">0.0</span>)</code>
-                    <span class="line-no">L79-98</span>
+                    <span class="line-no">L107-140</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the MLP.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    in_features (int): Number of input features.</div>
+<div class="doc-detail">    hidden_features (int or None): Hidden layer size; defaults to</div>
+<div class="doc-detail">        *in_features*.</div>
+<div class="doc-detail">    out_features (int or None): Output size; defaults to</div>
+<div class="doc-detail">        *in_features*.</div>
+<div class="doc-detail">    act_layer (nn.Module): Activation class. Defaults to</div>
+<div class="doc-detail">        ``nn.GELU``.</div>
+<div class="doc-detail">    bias (bool or tuple): Whether to use bias in linear layers.</div>
+<div class="doc-detail">        Defaults to ``True``.</div>
+<div class="doc-detail">    drop (float or tuple): Dropout probability. Defaults to ``0.0``.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-Mlp-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L100-106</span>
+                    <span class="line-no">L142-155</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Apply the two-layer MLP with activation and dropout.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): Input tensor of shape (..., in_features).</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Output tensor of shape (..., out_features).</div>
+</div></div>
             </div>
             
             </div>
@@ -411,9 +442,26 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Attention</span>(nn.Module)
-                <span class="line-no">L109-194</span>
+                <span class="line-no">L158-291</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Multi-head self-attention with optional RoPE and pluggable backend.</p>
+<p>Supports three attention implementations:</p>
+<p>``&#x27;pytorch_naive&#x27;`` (manual dot-product), ``&#x27;flash_attention&#x27;``,</p>
+<p>and ``&#x27;pytorch_auto&#x27;``.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Input feature dimension.</div>
+<div class="doc-detail">    rope: Optional rotary position embedding module.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads. Defaults to ``8``.</div>
+<div class="doc-detail">    qkv_bias (bool): Add bias to QKV projections. Defaults to ``False``.</div>
+<div class="doc-detail">    attn_drop (float): Attention weight dropout. Defaults to ``0.0``.</div>
+<div class="doc-detail">    proj_drop (float): Output projection dropout. Defaults to ``0.0``.</div>
+<div class="doc-detail">    attn_mask: Optional attention mask tensor.</div>
+<div class="doc-detail">    is_causal (bool): Use causal masking. Defaults to ``False``.</div>
+<div class="doc-detail">    attn_implementation (str): Backend selector. Defaults to</div>
+<div class="doc-detail">        ``&#x27;pytorch_naive&#x27;``.</div>
+<div class="doc-detail">    attn_bias_for_inference_enabled (bool): Scale attention logits for</div>
+<div class="doc-detail">        longer inference sequences. Defaults to ``False``.</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -422,18 +470,41 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">8</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">proj_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_mask</span> = <span class="arg-default">None</span>, <span class="arg-name">is_causal</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">attn_bias_for_inference_enabled</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L110-133</span>
+                    <span class="line-no">L180-221</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the Attention module.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Input feature dimension.</div>
+<div class="doc-detail">    rope: Optional RoPE module applied to Q and K.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads. Defaults to ``8``.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias for QKV projections. Defaults to ``False``.</div>
+<div class="doc-detail">    attn_drop (float): Dropout on attention weights. Defaults to</div>
+<div class="doc-detail">        ``0.0``.</div>
+<div class="doc-detail">    proj_drop (float): Dropout on the output projection. Defaults</div>
+<div class="doc-detail">        to ``0.0``.</div>
+<div class="doc-detail">    attn_mask: Optional attention mask.</div>
+<div class="doc-detail">    is_causal (bool): Enable causal masking. Defaults to ``False``.</div>
+<div class="doc-detail">    attn_implementation (str): One of ``&#x27;pytorch_naive&#x27;``,</div>
+<div class="doc-detail">        ``&#x27;flash_attention&#x27;``, or ``&#x27;pytorch_auto&#x27;``.</div>
+<div class="doc-detail">    attn_bias_for_inference_enabled (bool): Enable inference-time</div>
+<div class="doc-detail">        attention logit scaling. Defaults to ``False``.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-Attention-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">xpos</span>)</code>
-                    <span class="line-no">L135-194</span>
+                    <span class="line-no">L223-291</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Compute multi-head self-attention.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): Input feature tensor of shape (B, N, C).</div>
+<div class="doc-detail">    xpos: Position tensor passed to the optional RoPE module.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Output tensor of shape (B, N, C).</div>
+</div></div>
             </div>
             
             </div>
@@ -444,9 +515,29 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Block</span>(nn.Module)
-                <span class="line-no">L197-239</span>
+                <span class="line-no">L294-385</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Standard Vision Transformer encoder block.</p>
+<p>Combines multi-head self-attention and an MLP with residual connections,</p>
+<p>layer normalization, and optional stochastic depth.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Feature dimension.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads.</div>
+<div class="doc-detail">    mlp_ratio (float): MLP hidden-dim multiplier. Defaults to ``4.0``.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias for QKV projections. Defaults to ``False``.</div>
+<div class="doc-detail">    drop (float): Dropout on MLP and attention output. Defaults to</div>
+<div class="doc-detail">        ``0.0``.</div>
+<div class="doc-detail">    attn_drop (float): Attention weight dropout. Defaults to ``0.0``.</div>
+<div class="doc-detail">    drop_path (float): Stochastic depth rate. Defaults to ``0.0``.</div>
+<div class="doc-detail">    act_layer (nn.Module): Activation class. Defaults to ``nn.GELU``.</div>
+<div class="doc-detail">    norm_layer (nn.Module): Normalization class. Defaults to</div>
+<div class="doc-detail">        ``nn.LayerNorm``.</div>
+<div class="doc-detail">    rope: Optional rotary position embedding module.</div>
+<div class="doc-detail">    attn_implementation (str): Attention backend. Defaults to</div>
+<div class="doc-detail">        ``&#x27;pytorch_naive&#x27;``.</div>
+<div class="doc-detail">    attn_bias_for_inference_enabled (bool): Inference attention bias.</div>
+<div class="doc-detail">        Defaults to ``False``.</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -455,18 +546,39 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">num_heads</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4.0</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">drop_path</span> = <span class="arg-default">0.0</span>, <span class="arg-name">act_layer</span> = <span class="arg-default">nn.GELU</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">nn.LayerNorm</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">attn_bias_for_inference_enabled</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L198-234</span>
+                    <span class="line-no">L319-371</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the Block.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Feature dimension.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads.</div>
+<div class="doc-detail">    mlp_ratio (float): Ratio of MLP hidden dim to *dim*.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias in QKV projections.</div>
+<div class="doc-detail">    drop (float): Dropout rate.</div>
+<div class="doc-detail">    attn_drop (float): Attention dropout rate.</div>
+<div class="doc-detail">    drop_path (float): Stochastic depth probability.</div>
+<div class="doc-detail">    act_layer (type): Activation class.</div>
+<div class="doc-detail">    norm_layer (type): Normalization class.</div>
+<div class="doc-detail">    rope: Optional RoPE module.</div>
+<div class="doc-detail">    attn_implementation (str): Attention backend name.</div>
+<div class="doc-detail">    attn_bias_for_inference_enabled (bool): Inference bias flag.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-Block-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">xpos</span>)</code>
-                    <span class="line-no">L236-239</span>
+                    <span class="line-no">L373-385</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Forward pass through the encoder block.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): Input tensor of shape (B, N, dim).</div>
+<div class="doc-detail">    xpos: Position tensor forwarded to the attention module.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Output tensor of shape (B, N, dim).</div>
+</div></div>
             </div>
             
             </div>
@@ -477,9 +589,22 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CrossAttention</span>(nn.Module)
-                <span class="line-no">L242-316</span>
+                <span class="line-no">L388-504</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Multi-head cross-attention module.</p>
+<p>Used in decoder blocks to let the query attend to key/value from</p>
+<p>another sequence (e.g. the encoder output).</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Feature dimension.</div>
+<div class="doc-detail">    rope: Optional rotary position embedding module.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads. Defaults to ``8``.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias for projections. Defaults to ``False``.</div>
+<div class="doc-detail">    attn_drop (float): Attention weight dropout. Defaults to ``0.0``.</div>
+<div class="doc-detail">    proj_drop (float): Output projection dropout. Defaults to ``0.0``.</div>
+<div class="doc-detail">    attn_mask: Optional attention mask.</div>
+<div class="doc-detail">    is_causal (bool): Causal masking flag. Defaults to ``False``.</div>
+<div class="doc-detail">    attn_implementation (str): Backend. Defaults to ``&#x27;pytorch_naive&#x27;``.</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -488,18 +613,39 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">8</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">proj_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_mask</span> = <span class="arg-default">None</span>, <span class="arg-name">is_causal</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
-                    <span class="line-no">L243-263</span>
+                    <span class="line-no">L406-439</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the CrossAttention module.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Feature dimension.</div>
+<div class="doc-detail">    rope: Optional RoPE module.</div>
+<div class="doc-detail">    num_heads (int): Number of heads. Defaults to ``8``.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias on Q/K/V projections.</div>
+<div class="doc-detail">    attn_drop (float): Attention weight dropout.</div>
+<div class="doc-detail">    proj_drop (float): Output projection dropout.</div>
+<div class="doc-detail">    attn_mask: Optional mask tensor.</div>
+<div class="doc-detail">    is_causal (bool): Causal masking.</div>
+<div class="doc-detail">    attn_implementation (str): Backend name.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CrossAttention-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">query</span>, <span class="arg-name">key</span>, <span class="arg-name">value</span>, <span class="arg-name">qpos</span>, <span class="arg-name">kpos</span>)</code>
-                    <span class="line-no">L265-316</span>
+                    <span class="line-no">L441-504</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Compute cross-attention from query to key/value.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    query (Tensor): Query tensor of shape (B, Nq, C).</div>
+<div class="doc-detail">    key (Tensor): Key tensor of shape (B, Nk, C).</div>
+<div class="doc-detail">    value (Tensor): Value tensor of shape (B, Nv, C).</div>
+<div class="doc-detail">    qpos: Position tensor for queries (passed to RoPE).</div>
+<div class="doc-detail">    kpos: Position tensor for keys (passed to RoPE).</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Output tensor of shape (B, Nq, C).</div>
+</div></div>
             </div>
             
             </div>
@@ -510,9 +656,27 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DecoderBlock</span>(nn.Module)
-                <span class="line-no">L319-372</span>
+                <span class="line-no">L507-610</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Transformer decoder block with self-attention, cross-attention, and MLP.</p>
+<p>Applies self-attention on the query sequence, cross-attention from the</p>
+<p>query to the memory sequence, and a feed-forward MLP, each wrapped with</p>
+<p>residual connections, layer normalization, and stochastic depth.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Feature dimension.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads.</div>
+<div class="doc-detail">    mlp_ratio (float): MLP hidden-dim multiplier. Defaults to ``4.0``.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias for projections. Defaults to ``False``.</div>
+<div class="doc-detail">    drop (float): Dropout rate. Defaults to ``0.0``.</div>
+<div class="doc-detail">    attn_drop (float): Attention dropout. Defaults to ``0.0``.</div>
+<div class="doc-detail">    drop_path (float): Stochastic depth rate. Defaults to ``0.0``.</div>
+<div class="doc-detail">    act_layer (type): Activation class. Defaults to ``nn.GELU``.</div>
+<div class="doc-detail">    norm_layer (type): Normalization class. Defaults to ``nn.LayerNorm``.</div>
+<div class="doc-detail">    norm_mem (bool): Apply layer norm to the memory. Defaults to ``True``.</div>
+<div class="doc-detail">    rope: Optional RoPE module.</div>
+<div class="doc-detail">    attn_implementation (str): Attention backend. Defaults to</div>
+<div class="doc-detail">        ``&#x27;pytorch_naive&#x27;``.</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -521,18 +685,42 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">num_heads</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4.0</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">drop_path</span> = <span class="arg-default">0.0</span>, <span class="arg-name">act_layer</span> = <span class="arg-default">nn.GELU</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">nn.LayerNorm</span>, <span class="arg-name">norm_mem</span> = <span class="arg-default">True</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
-                    <span class="line-no">L320-365</span>
+                    <span class="line-no">L530-591</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the DecoderBlock.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dim (int): Feature dimension.</div>
+<div class="doc-detail">    num_heads (int): Number of attention heads.</div>
+<div class="doc-detail">    mlp_ratio (float): MLP hidden-dim ratio.</div>
+<div class="doc-detail">    qkv_bias (bool): Bias in QKV projections.</div>
+<div class="doc-detail">    drop (float): Dropout rate.</div>
+<div class="doc-detail">    attn_drop (float): Attention weight dropout.</div>
+<div class="doc-detail">    drop_path (float): Stochastic depth probability.</div>
+<div class="doc-detail">    act_layer (type): Activation class.</div>
+<div class="doc-detail">    norm_layer (type): Normalization class.</div>
+<div class="doc-detail">    norm_mem (bool): Whether to normalize the memory sequence.</div>
+<div class="doc-detail">    rope: Optional RoPE module.</div>
+<div class="doc-detail">    attn_implementation (str): Attention backend name.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-DecoderBlock-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">y</span>, <span class="arg-name">xpos</span>, <span class="arg-name">ypos</span>)</code>
-                    <span class="line-no">L367-372</span>
+                    <span class="line-no">L593-610</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Forward pass through the decoder block.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): Query sequence of shape (B, Nq, dim).</div>
+<div class="doc-detail">    y (Tensor): Memory (key/value) sequence of shape (B, Nk, dim).</div>
+<div class="doc-detail">    xpos: Position tensor for the query sequence.</div>
+<div class="doc-detail">    ypos: Position tensor for the memory sequence.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(x, y)`` where *x* is the updated query tensor and</div>
+<div class="doc-detail">    *y* is the unchanged memory tensor.</div>
+</div></div>
             </div>
             
             </div>
@@ -543,9 +731,11 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PositionGetter</span>(object)
-                <span class="line-no">L376-388</span>
+                <span class="line-no">L614-644</span>
             </h2>
-            <div class="docstring"><p>return positions of patches</p></div>
+            <div class="docstring"><p>Return positions of patches.</p>
+<p>Caches patch position grids by (H, W) to avoid redundant computation.</p>
+<p>Positions are returned as (row, col) integer pairs.</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -554,18 +744,28 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L379-380</span>
+                    <span class="line-no">L621-623</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the PositionGetter with an empty cache.</p></div>
             </div>
             
             <div class="method" id="method-PositionGetter-__call__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">b</span>, <span class="arg-name">h</span>, <span class="arg-name">w</span>, <span class="arg-name">device</span>)</code>
-                    <span class="line-no">L382-388</span>
+                    <span class="line-no">L625-644</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return a (b, h*w, 2) tensor of (row, col) positions.</p>
+<p>Results are cached per (h, w) pair.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    b (int): Batch size.</div>
+<div class="doc-detail">    h (int): Number of patch rows.</div>
+<div class="doc-detail">    w (int): Number of patch columns.</div>
+<div class="doc-detail">    device (torch.device): Target device.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Position tensor of shape (b, h*w, 2).</div>
+</div></div>
             </div>
             
             </div>
@@ -576,9 +776,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PatchEmbed</span>(nn.Module)
-                <span class="line-no">L391-438</span>
+                <span class="line-no">L647-728</span>
             </h2>
-            <div class="docstring"><p>just adding _init_weights + position getter compared to timm.models.layers.patch_embed.PatchEmbed</p></div>
+            <div class="docstring"><p>Patch embedding with position getter and weight initialization.</p>
+<p>Extends the standard patch embedding by adding a</p>
+<p>:class:`PositionGetter` and an ``_init_weights`` method.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size (int): Input image size. Defaults to ``224``.</div>
+<div class="doc-detail">    patch_size (int): Patch size. Defaults to ``16``.</div>
+<div class="doc-detail">    in_chans (int): Number of input channels. Defaults to ``3``.</div>
+<div class="doc-detail">    embed_dim (int): Embedding dimension. Defaults to ``768``.</div>
+<div class="doc-detail">    norm_layer (nn.Module or None): Optional normalization layer.</div>
+<div class="doc-detail">    flatten (bool): Flatten spatial dimensions into tokens.</div>
+<div class="doc-detail">        Defaults to ``True``.</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -587,27 +798,43 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">in_chans</span> = <span class="arg-default">3</span>, <span class="arg-name">embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">None</span>, <span class="arg-name">flatten</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L394-417</span>
+                    <span class="line-no">L663-696</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize PatchEmbed.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size (int): Expected input image size.</div>
+<div class="doc-detail">    patch_size (int): Size of each patch.</div>
+<div class="doc-detail">    in_chans (int): Input channels.</div>
+<div class="doc-detail">    embed_dim (int): Embedding dimension.</div>
+<div class="doc-detail">    norm_layer: Optional normalization applied after projection.</div>
+<div class="doc-detail">    flatten (bool): Whether to flatten the spatial grid.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PatchEmbed-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L419-434</span>
+                    <span class="line-no">L698-723</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Embed an image into patch tokens with position codes.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): Input image of shape (B, C, H, W).</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(tokens, pos)`` where *tokens* is of shape</div>
+<div class="doc-detail">    (B, N, embed_dim) and *pos* is the position grid of shape</div>
+<div class="doc-detail">    (B, N, 2).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PatchEmbed-_init_weights">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_init_weights</span> ()</code>
-                    <span class="line-no">L436-438</span>
+                    <span class="line-no">L725-728</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the projection weights with Xavier uniform initialization.</p></div>
             </div>
             
             </div>
@@ -618,9 +845,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_ntuple</span> (<span class="arg-name">n</span>)</code>
-                <span class="line-no">L33-39</span>
+                <span class="line-no">L33-50</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Return a function that converts a scalar to an n-tuple.</p>
+<p>If the input is already an iterable (but not a string), it is returned</p>
+<p>as-is; otherwise it is replicated *n* times.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    n (int): Length of the output tuple.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Callable: Conversion function.</div>
+</div></div>
         </div>
         
 
@@ -628,7 +863,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">drop_path</span> (<span class="arg-name">x</span>, <span class="arg-name">drop_prob</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">training</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">scale_by_keep</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L45-58</span>
+                <span class="line-no">L56-69</span>
             </h2>
             <div class="docstring"><p>Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).</p></div>
         </div>

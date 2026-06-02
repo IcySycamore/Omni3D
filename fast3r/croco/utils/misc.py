@@ -37,6 +37,12 @@ class SmoothedValue(object):
     """
 
     def __init__(self, window_size=20, fmt=None):
+        """初始化 SmoothedValue。
+
+        Args:
+            window_size: 滑动窗口大小，用于计算最近若干值的统计量。
+            fmt: 格式化字符串模板，默认为 "{median:.4f} ({global_avg:.4f})"。
+        """
         if fmt is None:
             fmt = "{median:.4f} ({global_avg:.4f})"
         self.deque = deque(maxlen=window_size)
@@ -45,6 +51,12 @@ class SmoothedValue(object):
         self.fmt = fmt
 
     def update(self, value, n=1):
+        """更新统计值。
+
+        Args:
+            value: 新观测值。
+            n: 该值的权重（即计数增量）。
+        """
         self.deque.append(value)
         self.count += n
         self.total += value * n
@@ -64,24 +76,49 @@ class SmoothedValue(object):
 
     @property
     def median(self):
+        """返回窗口内值的中位数。
+
+        Returns:
+            float: 当前窗口中所有值的中位数。
+        """
         d = torch.tensor(list(self.deque))
         return d.median().item()
 
     @property
     def avg(self):
+        """返回窗口内值的平均数。
+
+        Returns:
+            float: 当前窗口中所有值的算术平均值。
+        """
         d = torch.tensor(list(self.deque), dtype=torch.float32)
         return d.mean().item()
 
     @property
     def global_avg(self):
+        """返回全局平均值（所有历史值的加权平均）。
+
+        Returns:
+            float: 全局加权平均值。
+        """
         return self.total / self.count
 
     @property
     def max(self):
+        """返回窗口内的最大值。
+
+        Returns:
+            float: 当前窗口中的最大值。
+        """
         return max(self.deque)
 
     @property
     def value(self):
+        """返回最近一次更新的值。
+
+        Returns:
+            float: 最后一次添加的观测值。
+        """
         return self.deque[-1]
 
     def __str__(self):
@@ -95,11 +132,23 @@ class SmoothedValue(object):
 
 
 class MetricLogger(object):
+    """训练过程中多指标的日志记录器，支持平滑统计与定期打印。"""
+
     def __init__(self, delimiter="\t"):
+        """初始化 MetricLogger。
+
+        Args:
+            delimiter: 各指标输出时的分隔符，默认为制表符。
+        """
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
 
     def update(self, **kwargs):
+        """以关键字参数方式更新多个指标。
+
+        Args:
+            **kwargs: 指标名称及对应的数值（float 或 int 或标量 Tensor）。
+        """
         for k, v in kwargs.items():
             if v is None:
                 continue
@@ -131,6 +180,17 @@ class MetricLogger(object):
         self.meters[name] = meter
 
     def log_every(self, iterable, print_freq, header=None, max_iter=None):
+        """迭代数据集并定期打印日志。
+
+        Args:
+            iterable: 可迭代对象（如 DataLoader）。
+            print_freq: 每隔多少步打印一次日志。
+            header: 日志行的前缀字符串。
+            max_iter: 最大迭代次数，超出后停止迭代。
+
+        Yields:
+            iterable 中的每个元素。
+        """
         i = 0
         if not header:
             header = ""
@@ -213,6 +273,11 @@ def setup_for_distributed(is_master):
 
 
 def is_dist_avail_and_initialized():
+    """检查分布式训练环境是否可用且已初始化。
+
+    Returns:
+        bool: 若 torch.distributed 可用且已初始化则返回 True，否则返回 False。
+    """
     if not dist.is_available():
         return False
     if not dist.is_initialized():
@@ -221,27 +286,58 @@ def is_dist_avail_and_initialized():
 
 
 def get_world_size():
+    """获取分布式训练的总进程数。
+
+    Returns:
+        int: 进程总数；若未启用分布式则返回 1。
+    """
     if not is_dist_avail_and_initialized():
         return 1
     return dist.get_world_size()
 
 
 def get_rank():
+    """获取当前进程的 rank。
+
+    Returns:
+        int: 当前进程的 rank；若未启用分布式则返回 0。
+    """
     if not is_dist_avail_and_initialized():
         return 0
     return dist.get_rank()
 
 
 def is_main_process():
+    """判断当前进程是否为主进程（rank 0）。
+
+    Returns:
+        bool: 若为主进程则返回 True。
+    """
     return get_rank() == 0
 
 
 def save_on_master(*args, **kwargs):
+    """仅在主进程中调用 torch.save，其他进程跳过。
+
+    Args:
+        *args: 传递给 torch.save 的位置参数。
+        **kwargs: 传递给 torch.save 的关键字参数。
+    """
     if is_main_process():
         torch.save(*args, **kwargs)
 
 
 def init_distributed_mode(args):
+    """初始化分布式训练模式。
+
+    从环境变量 RANK、WORLD_SIZE、LOCAL_RANK 中读取分布式配置，
+    并调用 torch.distributed.init_process_group 完成初始化。
+    若未检测到分布式环境或 args.nodist=True，则以单进程模式运行。
+
+    Args:
+        args: 包含分布式配置的参数对象，需具备 dist_url 属性；
+              可选属性 nodist（bool）用于强制禁用分布式模式。
+    """
     nodist = args.nodist if hasattr(args, "nodist") else False
     if "RANK" in os.environ and "WORLD_SIZE" in os.environ and not nodist:
         args.rank = int(os.environ["RANK"])
@@ -274,9 +370,16 @@ def init_distributed_mode(args):
 
 
 class NativeScalerWithGradNormCount:
+    """封装 PyTorch 原生 AMP GradScaler，并支持梯度范数统计。"""
+
     state_dict_key = "amp_scaler"
 
     def __init__(self, enabled=True):
+        """初始化梯度缩放器。
+
+        Args:
+            enabled: 是否启用混合精度梯度缩放，默认为 True。
+        """
         self._scaler = torch.cuda.amp.GradScaler(enabled=enabled)
 
     def __call__(
@@ -288,6 +391,19 @@ class NativeScalerWithGradNormCount:
         create_graph=False,
         update_grad=True,
     ):
+        """执行反向传播并（可选地）更新梯度。
+
+        Args:
+            loss: 标量损失张量。
+            optimizer: 优化器实例。
+            clip_grad: 梯度裁剪阈值，为 None 时不裁剪。
+            parameters: 需要裁剪的参数列表（clip_grad 不为 None 时必填）。
+            create_graph: 是否在反向传播时创建计算图（用于高阶梯度）。
+            update_grad: 是否在本次调用中执行参数更新步骤。
+
+        Returns:
+            Optional[torch.Tensor]: 梯度的 L2 范数；若未裁剪或未更新梯度则为 None。
+        """
         self._scaler.scale(loss).backward(create_graph=create_graph)
         if update_grad:
             if clip_grad is not None:
@@ -308,13 +424,33 @@ class NativeScalerWithGradNormCount:
         return norm
 
     def state_dict(self):
+        """返回 GradScaler 的状态字典。
+
+        Returns:
+            dict: GradScaler 内部状态，可用于检查点保存。
+        """
         return self._scaler.state_dict()
 
     def load_state_dict(self, state_dict):
+        """从状态字典恢复 GradScaler 状态。
+
+        Args:
+            state_dict: 由 state_dict() 保存的 GradScaler 状态字典。
+        """
         self._scaler.load_state_dict(state_dict)
 
 
 def get_grad_norm_(parameters, norm_type: float = 2.0) -> torch.Tensor:
+    """计算参数梯度的全局范数。
+
+    Args:
+        parameters: 模型参数的可迭代对象，或单个 Tensor。
+        norm_type: 范数阶数，默认为 L2 范数（2.0）；
+                   可设为 float('inf') 以计算无穷范数。
+
+    Returns:
+        torch.Tensor: 所有参数梯度的合并范数（标量 Tensor）。
+    """
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
     parameters = [p for p in parameters if p.grad is not None]
@@ -337,6 +473,17 @@ def get_grad_norm_(parameters, norm_type: float = 2.0) -> torch.Tensor:
 def save_model(
     args, epoch, model_without_ddp, optimizer, loss_scaler, fname=None, best_so_far=None
 ):
+    """保存模型检查点到磁盘。
+
+    Args:
+        args: 训练参数对象，需包含 output_dir 属性。
+        epoch: 当前训练轮次。
+        model_without_ddp: 未经 DDP 封装的原始模型。
+        optimizer: 优化器实例。
+        loss_scaler: 梯度缩放器实例。
+        fname: 检查点文件名后缀，默认使用 epoch 数值。
+        best_so_far: 可选的最优指标值，写入检查点以供恢复。
+    """
     output_dir = Path(args.output_dir)
     if fname is None:
         fname = str(epoch)
@@ -355,6 +502,18 @@ def save_model(
 
 
 def load_model(args, model_without_ddp, optimizer, loss_scaler):
+    """从检查点恢复模型、优化器及缩放器状态。
+
+    Args:
+        args: 训练参数对象，需包含 resume 属性（检查点路径或 URL）；
+              函数会向其写入 start_epoch。
+        model_without_ddp: 未经 DDP 封装的原始模型。
+        optimizer: 优化器实例，将从检查点恢复状态。
+        loss_scaler: 梯度缩放器实例，将从检查点恢复状态。
+
+    Returns:
+        Optional[float]: 检查点中记录的最优指标值，若无则返回 None。
+    """
     args.start_epoch = 0
     best_so_far = None
     if args.resume is not None:
@@ -380,6 +539,14 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
 
 
 def all_reduce_mean(x):
+    """对张量或标量在所有进程间求平均（all-reduce + 除以进程数）。
+
+    Args:
+        x: 需要规约的数值（float 或可转为 CUDA Tensor 的值）。
+
+    Returns:
+        float: 所有进程的平均值；单进程时直接返回 x。
+    """
     world_size = get_world_size()
     if world_size > 1:
         x_reduce = torch.tensor(x).cuda()
@@ -422,6 +589,19 @@ def filename(obj):
 
 
 def _get_num_layer_for_vit(var_name, enc_depth, dec_depth):
+    """根据参数名称推断其在 ViT 中的层编号，用于层级学习率衰减。
+
+    Args:
+        var_name: 模型参数的完整名称字符串。
+        enc_depth: 编码器层数。
+        dec_depth: 解码器层数。
+
+    Returns:
+        int: 该参数对应的层编号（0 为嵌入层，enc_depth+dec_depth+1 为预测头）。
+
+    Raises:
+        NotImplementedError: 若参数名称不匹配任何已知模式则抛出。
+    """
     if var_name in ("cls_token", "mask_token", "pos_embed", "global_tokens"):
         return 0
     elif var_name.startswith("patch_embed"):
@@ -447,6 +627,18 @@ def _get_num_layer_for_vit(var_name, enc_depth, dec_depth):
 def get_parameter_groups(
     model, weight_decay, layer_decay=1.0, skip_list=(), no_lr_scale_list=[]
 ):
+    """按层级学习率衰减和权重衰减将参数分组。
+
+    Args:
+        model: 待分组的 PyTorch 模型。
+        weight_decay: 默认权重衰减值。
+        layer_decay: 层级学习率衰减系数（0<layer_decay<1 时启用）。
+        skip_list: 不施加权重衰减的参数名称集合。
+        no_lr_scale_list: 不施加层级 LR 缩放的参数名称列表。
+
+    Returns:
+        list[dict]: 参数组列表，每组包含 weight_decay、params、lr_scale 字段。
+    """
     parameter_group_names = {}
     parameter_group_vars = {}
     enc_depth, dec_depth = None, None

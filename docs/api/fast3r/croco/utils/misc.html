@@ -313,7 +313,7 @@ td a:hover { text-decoration: underline; }
             <span>⚡ 16 函数</span>
             <span>🔧 20 方法</span>
             <span class="warn">
-                ⚠️ 33 处缺 docstring
+                ⚠️ 5 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/utils/misc.py</div>
@@ -345,7 +345,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SmoothedValue</span>(object)
-                <span class="line-no">L34-94</span>
+                <span class="line-no">L34-131</span>
             </h2>
             <div class="docstring"><p>Track a series of values and provide access to smoothed values over a</p>
 <p>window or the global series average.</p></div>
@@ -357,25 +357,33 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">window_size</span> = <span class="arg-default">20</span>, <span class="arg-name">fmt</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L39-45</span>
+                    <span class="line-no">L39-51</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 SmoothedValue。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    window_size: 滑动窗口大小，用于计算最近若干值的统计量。</div>
+<div class="doc-detail">    fmt: 格式化字符串模板，默认为 &quot;{median:.4f} ({global_avg:.4f})&quot;。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-update">
                 <div class="method-header">
                     
                     <code><span class="fn-name">update</span> (<span class="arg-name">value</span>, <span class="arg-name">n</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L47-50</span>
+                    <span class="line-no">L53-62</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>更新统计值。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    value: 新观测值。</div>
+<div class="doc-detail">    n: 该值的权重（即计数增量）。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-synchronize_between_processes">
                 <div class="method-header">
                     
                     <code><span class="fn-name">synchronize_between_processes</span> ()</code>
-                    <span class="line-no">L52-63</span>
+                    <span class="line-no">L64-75</span>
                 </div>
                 <div class="docstring"><p>Warning: does not synchronize the deque!</p></div>
             </div>
@@ -384,52 +392,67 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">median</span> ()</code>
-                    <span class="line-no">L66-68</span>
+                    <span class="line-no">L78-85</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回窗口内值的中位数。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 当前窗口中所有值的中位数。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-avg">
                 <div class="method-header">
                     
                     <code><span class="fn-name">avg</span> ()</code>
-                    <span class="line-no">L71-73</span>
+                    <span class="line-no">L88-95</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回窗口内值的平均数。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 当前窗口中所有值的算术平均值。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-global_avg">
                 <div class="method-header">
                     
                     <code><span class="fn-name">global_avg</span> ()</code>
-                    <span class="line-no">L76-77</span>
+                    <span class="line-no">L98-104</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回全局平均值（所有历史值的加权平均）。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 全局加权平均值。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-max">
                 <div class="method-header">
                     
                     <code><span class="fn-name">max</span> ()</code>
-                    <span class="line-no">L80-81</span>
+                    <span class="line-no">L107-113</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回窗口内的最大值。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 当前窗口中的最大值。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-value">
                 <div class="method-header">
                     
                     <code><span class="fn-name">value</span> ()</code>
-                    <span class="line-no">L84-85</span>
+                    <span class="line-no">L116-122</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回最近一次更新的值。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 最后一次添加的观测值。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SmoothedValue-__str__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__str__</span> ()</code>
-                    <span class="line-no">L87-94</span>
+                    <span class="line-no">L124-131</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -442,9 +465,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MetricLogger</span>(object)
-                <span class="line-no">L97-195</span>
+                <span class="line-no">L134-255</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>训练过程中多指标的日志记录器，支持平滑统计与定期打印。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -453,25 +476,31 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">delimiter</span> = <span class="arg-default">&#x27;\t&#x27;</span>)</code>
-                    <span class="line-no">L98-100</span>
+                    <span class="line-no">L137-144</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 MetricLogger。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    delimiter: 各指标输出时的分隔符，默认为制表符。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-MetricLogger-update">
                 <div class="method-header">
                     
                     <code><span class="fn-name">update</span> (<span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L102-109</span>
+                    <span class="line-no">L146-158</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>以关键字参数方式更新多个指标。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    **kwargs: 指标名称及对应的数值（float 或 int 或标量 Tensor）。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-MetricLogger-__getattr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getattr__</span> (<span class="arg-name">attr</span>)</code>
-                    <span class="line-no">L111-118</span>
+                    <span class="line-no">L160-167</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -480,7 +509,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__str__</span> ()</code>
-                    <span class="line-no">L120-124</span>
+                    <span class="line-no">L169-173</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -489,7 +518,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">synchronize_between_processes</span> ()</code>
-                    <span class="line-no">L126-128</span>
+                    <span class="line-no">L175-177</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -498,7 +527,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_meter</span> (<span class="arg-name">name</span>, <span class="arg-name">meter</span>)</code>
-                    <span class="line-no">L130-131</span>
+                    <span class="line-no">L179-180</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -507,9 +536,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">log_every</span> (<span class="arg-name">iterable</span>, <span class="arg-name">print_freq</span>, <span class="arg-name">header</span> = <span class="arg-default">None</span>, <span class="arg-name">max_iter</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L133-195</span>
+                    <span class="line-no">L182-255</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>迭代数据集并定期打印日志。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    iterable: 可迭代对象（如 DataLoader）。</div>
+<div class="doc-detail">    print_freq: 每隔多少步打印一次日志。</div>
+<div class="doc-detail">    header: 日志行的前缀字符串。</div>
+<div class="doc-detail">    max_iter: 最大迭代次数，超出后停止迭代。</div>
+</div>
+<div class="doc-section"><strong>Yields:</strong>
+<div class="doc-detail">    iterable 中的每个元素。</div>
+</div></div>
             </div>
             
             </div>
@@ -520,9 +558,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">NativeScalerWithGradNormCount</span>
-                <span class="line-no">L276-314</span>
+                <span class="line-no">L372-440</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>封装 PyTorch 原生 AMP GradScaler，并支持梯度范数统计。</p></div>
             <div class="class-vars"><strong>类变量:</strong> <code>state_dict_key</code></div>
             <div class="methods">
                 <h3>方法</h3>
@@ -531,36 +569,56 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">enabled</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L279-280</span>
+                    <span class="line-no">L377-383</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化梯度缩放器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    enabled: 是否启用混合精度梯度缩放，默认为 True。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-NativeScalerWithGradNormCount-__call__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">loss</span>, <span class="arg-name">optimizer</span>, <span class="arg-name">clip_grad</span> = <span class="arg-default">None</span>, <span class="arg-name">parameters</span> = <span class="arg-default">None</span>, <span class="arg-name">create_graph</span> = <span class="arg-default">False</span>, <span class="arg-name">update_grad</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L282-308</span>
+                    <span class="line-no">L385-424</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>执行反向传播并（可选地）更新梯度。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    loss: 标量损失张量。</div>
+<div class="doc-detail">    optimizer: 优化器实例。</div>
+<div class="doc-detail">    clip_grad: 梯度裁剪阈值，为 None 时不裁剪。</div>
+<div class="doc-detail">    parameters: 需要裁剪的参数列表（clip_grad 不为 None 时必填）。</div>
+<div class="doc-detail">    create_graph: 是否在反向传播时创建计算图（用于高阶梯度）。</div>
+<div class="doc-detail">    update_grad: 是否在本次调用中执行参数更新步骤。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Optional[torch.Tensor]: 梯度的 L2 范数；若未裁剪或未更新梯度则为 None。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-NativeScalerWithGradNormCount-state_dict">
                 <div class="method-header">
                     
                     <code><span class="fn-name">state_dict</span> ()</code>
-                    <span class="line-no">L310-311</span>
+                    <span class="line-no">L426-432</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回 GradScaler 的状态字典。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: GradScaler 内部状态，可用于检查点保存。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-NativeScalerWithGradNormCount-load_state_dict">
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">state_dict</span>)</code>
-                    <span class="line-no">L313-314</span>
+                    <span class="line-no">L434-440</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>从状态字典恢复 GradScaler 状态。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    state_dict: 由 state_dict() 保存的 GradScaler 状态字典。</div>
+</div></div>
             </div>
             
             </div>
@@ -571,7 +629,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">setup_for_distributed</span> (<span class="arg-name">is_master</span>)</code>
-                <span class="line-no">L198-212</span>
+                <span class="line-no">L258-272</span>
             </h2>
             <div class="docstring"><p>This function disables printing when not in master process</p></div>
         </div>
@@ -581,9 +639,12 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_dist_avail_and_initialized</span> ()</code>
-                <span class="line-no">L215-220</span>
+                <span class="line-no">L275-285</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>检查分布式训练环境是否可用且已初始化。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    bool: 若 torch.distributed 可用且已初始化则返回 True，否则返回 False。</div>
+</div></div>
         </div>
         
 
@@ -591,9 +652,12 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_world_size</span> ()</code>
-                <span class="line-no">L223-226</span>
+                <span class="line-no">L288-296</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>获取分布式训练的总进程数。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    int: 进程总数；若未启用分布式则返回 1。</div>
+</div></div>
         </div>
         
 
@@ -601,9 +665,12 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_rank</span> ()</code>
-                <span class="line-no">L229-232</span>
+                <span class="line-no">L299-307</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>获取当前进程的 rank。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    int: 当前进程的 rank；若未启用分布式则返回 0。</div>
+</div></div>
         </div>
         
 
@@ -611,9 +678,12 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_main_process</span> ()</code>
-                <span class="line-no">L235-236</span>
+                <span class="line-no">L310-316</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>判断当前进程是否为主进程（rank 0）。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    bool: 若为主进程则返回 True。</div>
+</div></div>
         </div>
         
 
@@ -621,9 +691,13 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">save_on_master</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                <span class="line-no">L239-241</span>
+                <span class="line-no">L319-327</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>仅在主进程中调用 torch.save，其他进程跳过。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    *args: 传递给 torch.save 的位置参数。</div>
+<div class="doc-detail">    **kwargs: 传递给 torch.save 的关键字参数。</div>
+</div></div>
         </div>
         
 
@@ -631,9 +705,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">init_distributed_mode</span> (<span class="arg-name">args</span>)</code>
-                <span class="line-no">L244-273</span>
+                <span class="line-no">L330-369</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>初始化分布式训练模式。</p>
+<p>从环境变量 RANK、WORLD_SIZE、LOCAL_RANK 中读取分布式配置，</p>
+<p>并调用 torch.distributed.init_process_group 完成初始化。</p>
+<p>若未检测到分布式环境或 args.nodist=True，则以单进程模式运行。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    args: 包含分布式配置的参数对象，需具备 dist_url 属性；</div>
+<div class="doc-detail">          可选属性 nodist（bool）用于强制禁用分布式模式。</div>
+</div></div>
         </div>
         
 
@@ -641,9 +722,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_grad_norm_</span> (<span class="arg-name">parameters</span>, <span class="arg-name">norm_type</span>: <span class="arg-type">float</span> = <span class="arg-default">2.0</span>)  -> <span class="ret-type">torch.Tensor</span></code>
-                <span class="line-no">L317-334</span>
+                <span class="line-no">L443-470</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算参数梯度的全局范数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    parameters: 模型参数的可迭代对象，或单个 Tensor。</div>
+<div class="doc-detail">    norm_type: 范数阶数，默认为 L2 范数（2.0）；</div>
+<div class="doc-detail">               可设为 float(&#x27;inf&#x27;) 以计算无穷范数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 所有参数梯度的合并范数（标量 Tensor）。</div>
+</div></div>
         </div>
         
 
@@ -651,9 +740,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">save_model</span> (<span class="arg-name">args</span>, <span class="arg-name">epoch</span>, <span class="arg-name">model_without_ddp</span>, <span class="arg-name">optimizer</span>, <span class="arg-name">loss_scaler</span>, <span class="arg-name">fname</span> = <span class="arg-default">None</span>, <span class="arg-name">best_so_far</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L337-354</span>
+                <span class="line-no">L473-501</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>保存模型检查点到磁盘。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    args: 训练参数对象，需包含 output_dir 属性。</div>
+<div class="doc-detail">    epoch: 当前训练轮次。</div>
+<div class="doc-detail">    model_without_ddp: 未经 DDP 封装的原始模型。</div>
+<div class="doc-detail">    optimizer: 优化器实例。</div>
+<div class="doc-detail">    loss_scaler: 梯度缩放器实例。</div>
+<div class="doc-detail">    fname: 检查点文件名后缀，默认使用 epoch 数值。</div>
+<div class="doc-detail">    best_so_far: 可选的最优指标值，写入检查点以供恢复。</div>
+</div></div>
         </div>
         
 
@@ -661,9 +759,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_model</span> (<span class="arg-name">args</span>, <span class="arg-name">model_without_ddp</span>, <span class="arg-name">optimizer</span>, <span class="arg-name">loss_scaler</span>)</code>
-                <span class="line-no">L357-379</span>
+                <span class="line-no">L504-538</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>从检查点恢复模型、优化器及缩放器状态。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    args: 训练参数对象，需包含 resume 属性（检查点路径或 URL）；</div>
+<div class="doc-detail">          函数会向其写入 start_epoch。</div>
+<div class="doc-detail">    model_without_ddp: 未经 DDP 封装的原始模型。</div>
+<div class="doc-detail">    optimizer: 优化器实例，将从检查点恢复状态。</div>
+<div class="doc-detail">    loss_scaler: 梯度缩放器实例，将从检查点恢复状态。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Optional[float]: 检查点中记录的最优指标值，若无则返回 None。</div>
+</div></div>
         </div>
         
 
@@ -671,9 +779,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">all_reduce_mean</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L382-390</span>
+                <span class="line-no">L541-557</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>对张量或标量在所有进程间求平均（all-reduce + 除以进程数）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x: 需要规约的数值（float 或可转为 CUDA Tensor 的值）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 所有进程的平均值；单进程时直接返回 x。</div>
+</div></div>
         </div>
         
 
@@ -681,7 +795,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_replace</span> (<span class="arg-name">text</span>, <span class="arg-name">src</span>, <span class="arg-name">tgt</span>, <span class="arg-name">rm</span> = <span class="arg-default">&#x27;&#x27;</span>)</code>
-                <span class="line-no">L393-406</span>
+                <span class="line-no">L560-573</span>
             </h2>
             <div class="docstring"><p>Advanced string replacement.</p>
 <p>Given a text:</p>
@@ -694,7 +808,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">filename</span> (<span class="arg-name">obj</span>)</code>
-                <span class="line-no">L409-421</span>
+                <span class="line-no">L576-588</span>
             </h2>
             <div class="docstring"><p>transform a python obj or cmd into a proper filename.</p>
 <p>-  gets replaced by slash &#x27;/&#x27;</p>
@@ -706,9 +820,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_get_num_layer_for_vit</span> (<span class="arg-name">var_name</span>, <span class="arg-name">enc_depth</span>, <span class="arg-name">dec_depth</span>)</code>
-                <span class="line-no">L424-444</span>
+                <span class="line-no">L591-624</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据参数名称推断其在 ViT 中的层编号，用于层级学习率衰减。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    var_name: 模型参数的完整名称字符串。</div>
+<div class="doc-detail">    enc_depth: 编码器层数。</div>
+<div class="doc-detail">    dec_depth: 解码器层数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    int: 该参数对应的层编号（0 为嵌入层，enc_depth+dec_depth+1 为预测头）。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    NotImplementedError: 若参数名称不匹配任何已知模式则抛出。</div>
+</div></div>
         </div>
         
 
@@ -716,9 +841,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_parameter_groups</span> (<span class="arg-name">model</span>, <span class="arg-name">weight_decay</span>, <span class="arg-name">layer_decay</span> = <span class="arg-default">1.0</span>, <span class="arg-name">skip_list</span> = <span class="arg-default">()</span>, <span class="arg-name">no_lr_scale_list</span> = <span class="arg-default">[]</span>)</code>
-                <span class="line-no">L447-507</span>
+                <span class="line-no">L627-699</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>按层级学习率衰减和权重衰减将参数分组。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    model: 待分组的 PyTorch 模型。</div>
+<div class="doc-detail">    weight_decay: 默认权重衰减值。</div>
+<div class="doc-detail">    layer_decay: 层级学习率衰减系数（0&lt;layer_decay&lt;1 时启用）。</div>
+<div class="doc-detail">    skip_list: 不施加权重衰减的参数名称集合。</div>
+<div class="doc-detail">    no_lr_scale_list: 不施加层级 LR 缩放的参数名称列表。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list[dict]: 参数组列表，每组包含 weight_decay、params、lr_scale 字段。</div>
+</div></div>
         </div>
         
 
@@ -726,7 +861,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">adjust_learning_rate</span> (<span class="arg-name">optimizer</span>, <span class="arg-name">epoch</span>, <span class="arg-name">args</span>)</code>
-                <span class="line-no">L510-531</span>
+                <span class="line-no">L702-723</span>
             </h2>
             <div class="docstring"><p>Decay the learning rate with half-cycle cosine after warmup</p></div>
         </div>

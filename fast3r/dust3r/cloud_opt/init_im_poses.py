@@ -27,6 +27,22 @@ from fast3r.dust3r.viz import to_numpy
 
 @torch.no_grad()
 def init_from_known_poses(self, niter_PnP=10, min_conf_thr=3):
+    """Initialize all pairwise poses when all image poses are known.
+
+    Uses PnP to estimate relative pairwise poses, then aligns them to the
+    known ground-truth poses via rigid similarity transformation.
+    Also initializes per-image depth maps from the best-confidence pairwise
+    prediction.
+
+    Args:
+        self (BasePCOptimizer): The optimizer instance.
+        niter_PnP (int): Number of RANSAC-PnP iterations. Defaults to ``10``.
+        min_conf_thr (float): Minimum confidence threshold for PnP masking.
+            Defaults to ``3``.
+
+    Raises:
+        AssertionError: If not all image poses are known.
+    """
     device = self.device
 
     # indices of known poses
@@ -99,6 +115,20 @@ def init_minimum_spanning_tree(self, **kw):
 
 
 def init_from_pts3d(self, pts3d, im_focals, im_poses):
+    """Initialize optimizer parameters from pre-computed 3D point maps.
+
+    If some camera poses are already known, aligns the provided poses to
+    them via a global similarity transform.  Then sets pairwise poses,
+    depth maps, per-image poses, and focal lengths.
+
+    Args:
+        self (BasePCOptimizer): The optimizer instance.
+        pts3d (list of Tensor): Per-image 3D point maps of shape (H, W, 3).
+        im_focals (list of float or None): Per-image focal length estimates;
+            ``None`` entries are skipped.
+        im_poses (Tensor): Per-image cam-to-world matrices of shape
+            (n_imgs, 4, 4).
+    """
     # init poses
     nkp, known_poses_msk, known_poses = get_known_poses(self)
     if nkp == 1:
@@ -161,6 +191,37 @@ def minimum_spanning_tree(
     niter_PnP=10,
     verbose=True,
 ):
+    """Build a consistent 3D scene by traversing the minimum spanning tree of the pairwise graph.
+
+    Constructs a confidence-weighted graph over all image pairs, computes
+    its minimum spanning tree, and propagates 3D point maps along tree
+    edges starting from the most-confident pair.  Optionally estimates
+    camera poses via PnP for images not covered by the tree.
+
+    Args:
+        imshapes (list of tuple): Per-image (H, W) shapes.
+        edges (list of tuple): List of (i, j) edge pairs.
+        pred_i (dict): Per-edge source 3D point predictions.
+        pred_j (dict): Per-edge target 3D point predictions.
+        conf_i (dict): Per-edge source confidence maps.
+        conf_j (dict): Per-edge target confidence maps.
+        im_conf (list of Tensor): Per-image aggregated confidence maps.
+        min_conf_thr (float): Confidence threshold for PnP masking.
+        device (torch.device): Compute device.
+        has_im_poses (bool): Whether to estimate per-image poses.
+            Defaults to ``True``.
+        niter_PnP (int): RANSAC-PnP iteration count. Defaults to ``10``.
+        verbose (bool): Print progress messages. Defaults to ``True``.
+
+    Returns:
+        tuple: ``(pts3d, msp_edges, im_focals, im_poses)`` where
+
+        - *pts3d* – list of per-image (H, W, 3) point maps;
+        - *msp_edges* – list of (i, j) tuples for MST edges used;
+        - *im_focals* – list of estimated focal lengths (or ``None`` each);
+        - *im_poses* – stacked (n_imgs, 4, 4) cam-to-world matrices,
+          or ``None`` when *has_im_poses* is ``False``.
+    """
     n_imgs = len(imshapes)
     sparse_graph = -dict_to_sparse_graph(
         compute_edge_scores(map(i_j_ij, edges), conf_i, conf_j)
@@ -257,6 +318,14 @@ def minimum_spanning_tree(
 
 
 def dict_to_sparse_graph(dic):
+    """Convert an edge-score dictionary to a sparse adjacency matrix.
+
+    Args:
+        dic (dict): Mapping from (i, j) edge tuple to scalar score value.
+
+    Returns:
+        scipy.sparse.dok_array: Sparse (n_imgs, n_imgs) matrix.
+    """
     n_imgs = max(max(e) for e in dic) + 1
     res = sp.dok_array((n_imgs, n_imgs))
     for edge, value in dic.items():
@@ -265,6 +334,20 @@ def dict_to_sparse_graph(dic):
 
 
 def rigid_points_registration(pts1, pts2, conf):
+    """Estimate a weighted rigid similarity transform (sRT) between two point sets.
+
+    Wraps ``roma.rigid_points_registration`` with confidence-based weighting
+    and returns scale, rotation, and translation separately.
+
+    Args:
+        pts1 (Tensor): Source points of shape (H, W, 3) or (N, 3).
+        pts2 (Tensor): Target points with the same shape as *pts1*.
+        conf (Tensor): Per-point confidence weights, same leading shape.
+
+    Returns:
+        tuple: ``(s, R, T)`` where *s* is the scalar scale, *R* is the
+        (3, 3) rotation matrix, and *T* is the (3,) translation vector.
+    """
     R, T, s = roma.rigid_points_registration(
         pts1.reshape(-1, 3),
         pts2.reshape(-1, 3),
@@ -275,6 +358,19 @@ def rigid_points_registration(pts1, pts2, conf):
 
 
 def sRT_to_4x4(scale, R, T, device):
+    """Compose a similarity transform into a 4x4 homogeneous matrix.
+
+    Constructs ``[[s*R, T], [0, 0, 0, 1]]``.
+
+    Args:
+        scale (float): Scalar scale factor.
+        R (Tensor): (3, 3) rotation matrix.
+        T (Tensor): (3,) or (3, 1) translation vector.
+        device (torch.device): Target device.
+
+    Returns:
+        Tensor: (4, 4) homogeneous transformation matrix.
+    """
     trf = torch.eye(4, device=device)
     trf[:3, :3] = R * scale
     trf[:3, 3] = T.ravel()  # doesn't need scaling
@@ -282,6 +378,17 @@ def sRT_to_4x4(scale, R, T, device):
 
 
 def estimate_focal(pts3d_i, pp=None):
+    """Estimate focal length from a 3D point map using the Weiszfeld algorithm.
+
+    Args:
+        pts3d_i (Tensor): Per-pixel 3D point map of shape (H, W, 3) in
+            camera coordinates.
+        pp (Tensor or None): Principal point (cx, cy).  If ``None``,
+            defaults to the image centre.
+
+    Returns:
+        float: Estimated focal length in pixels.
+    """
     if pp is None:
         H, W, THREE = pts3d_i.shape
         assert THREE == 3
@@ -294,10 +401,45 @@ def estimate_focal(pts3d_i, pp=None):
 
 @cache
 def pixel_grid(H, W):
+    """Return a (H, W, 2) pixel coordinate grid (cached).
+
+    Args:
+        H (int): Image height.
+        W (int): Image width.
+
+    Returns:
+        np.ndarray: Float32 array of shape (H, W, 2) containing (x, y)
+        pixel coordinates.
+    """
     return np.mgrid[:W, :H].T.astype(np.float32)
 
 
 def fast_pnp(pts3d, focal, msk, device, pp=None, niter_PnP=10, num_guessed_focals=100):
+    """Estimate camera pose (and optionally focal length) from a 3D point map using RANSAC-PnP.
+
+    If *focal* is ``None``, tries ``num_guessed_focals`` logarithmically
+    spaced focal values and selects the one with the most PnP inliers.
+
+    Args:
+        pts3d (Tensor): Per-pixel 3D point map of shape (H, W, 3) in
+            camera coordinates.
+        focal (float or None): Known focal length.  Pass ``None`` to
+            estimate it automatically.
+        msk (BoolTensor): Confidence mask of shape (H, W); only masked
+            pixels are used for PnP.
+        device (torch.device): Target device for the output pose.
+        pp (Tensor or None): Principal point (cx, cy).  Defaults to image
+            centre.
+        niter_PnP (int): ``iterationsCount`` passed to
+            ``cv2.solvePnPRansac``. Defaults to ``10``.
+        num_guessed_focals (int): Number of focal length candidates when
+            *focal* is ``None``. Defaults to ``100``.
+
+    Returns:
+        tuple: ``(best_focal, cam2world)`` where *best_focal* is the
+        estimated focal (float) and *cam2world* is a (4, 4) tensor,
+        or ``(None, None)`` if PnP fails.
+    """
     # extract camera poses and focals with RANSAC-PnP
     if msk.sum() < 4:
         return None, None  # we need at least 4 points for PnP
@@ -351,6 +493,17 @@ def fast_pnp(pts3d, focal, msk, device, pp=None, niter_PnP=10, num_guessed_focal
 
 
 def get_known_poses(self):
+    """Return the known (frozen) camera poses and their mask.
+
+    Args:
+        self (BasePCOptimizer): The optimizer instance.
+
+    Returns:
+        tuple: ``(nkp, known_poses_msk, known_poses)`` where *nkp* is the
+        count of known poses (int/Tensor), *known_poses_msk* is a bool
+        tensor of length ``n_imgs``, and *known_poses* is a (n_imgs, 4, 4)
+        tensor, or ``(0, None, None)`` when no image poses exist.
+    """
     if self.has_im_poses:
         known_poses_msk = torch.tensor([not (p.requires_grad) for p in self.im_poses])
         known_poses = self.get_im_poses()
@@ -360,6 +513,17 @@ def get_known_poses(self):
 
 
 def get_known_focals(self):
+    """Return the known (frozen) focal lengths and their mask.
+
+    Args:
+        self (BasePCOptimizer): The optimizer instance.
+
+    Returns:
+        tuple: ``(nkf, known_focal_msk, known_focals)`` where *nkf* is the
+        count of known focals, *known_focal_msk* is a bool tensor, and
+        *known_focals* is a tensor of focal lengths, or
+        ``(0, None, None)`` when no image poses exist.
+    """
     if self.has_im_poses:
         known_focal_msk = self.get_known_focal_mask()
         known_focals = self.get_focals()
@@ -369,6 +533,20 @@ def get_known_focals(self):
 
 
 def align_multiple_poses(src_poses, target_poses):
+    """Align a set of source poses to target poses via weighted rigid registration.
+
+    Uses the camera centres and forward-direction points as correspondence
+    set for ``roma.rigid_points_registration``.
+
+    Args:
+        src_poses (Tensor): Source cam-to-world matrices of shape (N, 4, 4).
+        target_poses (Tensor): Target cam-to-world matrices of shape (N, 4, 4).
+
+    Returns:
+        tuple: ``(s, R, T)`` – scalar scale, (3, 3) rotation matrix,
+        (3,) translation vector of the similarity transform that maps
+        *src_poses* to *target_poses*.
+    """
     N = len(src_poses)
     assert src_poses.shape == target_poses.shape == (N, 4, 4)
 

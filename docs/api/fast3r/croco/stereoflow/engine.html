@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 8 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 8 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/engine.py</div>
@@ -334,9 +334,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">split_prediction_conf</span> (<span class="arg-name">predictions</span>, <span class="arg-name">with_conf</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L24-29</span>
+                <span class="line-no">L24-40</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>从预测张量中分离预测层和置信度层。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    predictions: 模型输出张量，形状 (B, C+1, H, W)。</div>
+<div class="doc-detail">    with_conf: 是否包含置信度通道，默认 False。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (predictions, conf)</div>
+<div class="doc-detail">        - predictions: 主预测，形状 (B, C, H, W)</div>
+<div class="doc-detail">        - conf: 置信度通道，形状 (B, 1, H, W)； with_conf=False 时为 None</div>
+</div></div>
         </div>
         
 
@@ -344,9 +353,25 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">train_one_epoch</span> (<span class="arg-name">model</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">criterion</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">metrics</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">data_loader</span>: <span class="arg-type">Iterable</span>, <span class="arg-name">optimizer</span>: <span class="arg-type">torch.optim.Optimizer</span>, <span class="arg-name">device</span>: <span class="arg-type">torch.device</span>, <span class="arg-name">epoch</span>: <span class="arg-type">int</span>, <span class="arg-name">loss_scaler</span>, <span class="arg-name">log_writer</span> = <span class="arg-default">None</span>, <span class="arg-name">print_freq</span> = <span class="arg-default">20</span>, <span class="arg-name">args</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L32-134</span>
+                <span class="line-no">L43-163</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>训练模型一个完整 epoch。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    model: 待训练的模型。</div>
+<div class="doc-detail">    criterion: 损失函数。</div>
+<div class="doc-detail">    metrics: 评估指标计算器。</div>
+<div class="doc-detail">    data_loader: 训练数据加载器。</div>
+<div class="doc-detail">    optimizer: 优化器。</div>
+<div class="doc-detail">    device: 目标设备。</div>
+<div class="doc-detail">    epoch: 当前训练轮次。</div>
+<div class="doc-detail">    loss_scaler: 混合精度梯度缩放器。</div>
+<div class="doc-detail">    log_writer: TensorBoard 日志写入器，可为 None。</div>
+<div class="doc-detail">    print_freq: 每隔多少步打印日志，默认 20。</div>
+<div class="doc-detail">    args: 训练参数对象。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: 训练指标字典，包含 loss、lr 等全局平均。</div>
+</div></div>
         </div>
         
 
@@ -355,9 +380,22 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">validate_one_epoch</span> (<span class="arg-name">model</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">criterion</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">metrics</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">data_loaders</span>: <span class="arg-type">list[Iterable]</span>, <span class="arg-name">device</span>: <span class="arg-type">torch.device</span>, <span class="arg-name">epoch</span>: <span class="arg-type">int</span>, <span class="arg-name">log_writer</span> = <span class="arg-default">None</span>, <span class="arg-name">args</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L138-223</span>
+                <span class="line-no">L167-267</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>验证模型一个完整 epoch，使用使用应置预测（tiled prediction）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    model: 待验证的模型。</div>
+<div class="doc-detail">    criterion: 损失函数。</div>
+<div class="doc-detail">    metrics: 评估指标计算器。</div>
+<div class="doc-detail">    data_loaders: 验证数据加载器列表。</div>
+<div class="doc-detail">    device: 目标设备。</div>
+<div class="doc-detail">    epoch: 当前训练轮次。</div>
+<div class="doc-detail">    log_writer: TensorBoard 日志写入器，可为 None。</div>
+<div class="doc-detail">    args: 训练参数对象。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: 各数据集上的指标平均字典。</div>
+</div></div>
         </div>
         
 
@@ -365,9 +403,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_resize_img</span> (<span class="arg-name">img</span>, <span class="arg-name">new_size</span>)</code>
-                <span class="line-no">L229-230</span>
+                <span class="line-no">L273-283</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>使用双三次插帧调整图像尺寸。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img: 输入图像张量，形状 (B, C, H, W)。</div>
+<div class="doc-detail">    new_size: 目标尺寸 (H&#x27;, W&#x27;)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 调整后的图像张量。</div>
+</div></div>
         </div>
         
 
@@ -375,9 +420,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_resize_stereo_or_flow</span> (<span class="arg-name">data</span>, <span class="arg-name">new_size</span>)</code>
-                <span class="line-no">L233-243</span>
+                <span class="line-no">L286-305</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>调整视差图或光流图，并根据缩放比例校正小数值。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    data: 视差/光流张量，形状 (B, 1 or 2, H, W)。</div>
+<div class="doc-detail">    new_size: 目标尺寸 (H&#x27;, W&#x27;)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 调整并缩放校正后的张量。</div>
+</div></div>
         </div>
         
 
@@ -386,9 +438,31 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">tiled_pred</span> (<span class="arg-name">model</span>, <span class="arg-name">criterion</span>, <span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">gt</span>, <span class="arg-name">overlap</span> = <span class="arg-default">0.5</span>, <span class="arg-name">bad_crop_thr</span> = <span class="arg-default">0.05</span>, <span class="arg-name">downscale</span> = <span class="arg-default">False</span>, <span class="arg-name">crop</span> = <span class="arg-default">512</span>, <span class="arg-name">ret</span> = <span class="arg-default">&#x27;loss&#x27;</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">&#x27;conf_expsigmoid_10_5&#x27;</span>, <span class="arg-name">with_conf</span> = <span class="arg-default">False</span>, <span class="arg-name">return_time</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L247-353</span>
+                <span class="line-no">L309-439</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>使用重叠裁剪片进行拼接预测，然后加权平均合并全图预测。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    model: 待推理的模型。</div>
+<div class="doc-detail">    criterion: 损失函数（可为 None）。</div>
+<div class="doc-detail">    img1: 第一张图像，形状 (B, 3, H, W)。</div>
+<div class="doc-detail">    img2: 第二张图像，形状 (B, 3, H, W)。</div>
+<div class="doc-detail">    gt: 真实标注张量，可为 None。</div>
+<div class="doc-detail">    overlap: 裁剪片之间的重叠率，默认 0.5。</div>
+<div class="doc-detail">    bad_crop_thr: 差正裁剪系数阈值，不涉及过滤（保留参数）。</div>
+<div class="doc-detail">    downscale: 是否下采样（保留参数）。</div>
+<div class="doc-detail">    crop: 裁剪尺寸，可为整数或元组 (H, W)。</div>
+<div class="doc-detail">    ret: 返回类型标志（保留参数）。</div>
+<div class="doc-detail">    conf_mode: 置信度函数模式，支持 &quot;conf_expsigmoid_beta_betasigmoid&quot; 等。</div>
+<div class="doc-detail">    with_conf: 模型输出是否包含置信度通道。</div>
+<div class="doc-detail">    return_time: 是否返回推理时间。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (pred, tiled_loss, c[, time])</div>
+<div class="doc-detail">        - pred: 全图加权平均预测</div>
+<div class="doc-detail">        - tiled_loss: 裁剪损失均値</div>
+<div class="doc-detail">        - c: 加权平均置信度</div>
+<div class="doc-detail">        - time: 推理时间（秒），仅当 return_time=True 时返回</div>
+</div></div>
         </div>
         
 
@@ -396,9 +470,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_overlapping</span> (<span class="arg-name">total</span>, <span class="arg-name">window</span>, <span class="arg-name">overlap</span> = <span class="arg-default">0.5</span>)</code>
-                <span class="line-no">L356-360</span>
+                <span class="line-no">L442-456</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>生成指定重叠率的滑动窗口切片建生器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    total: 维度总长度。</div>
+<div class="doc-detail">    window: 窗口大小。</div>
+<div class="doc-detail">    overlap: 相邻窗口的重叠率，默认 0.5。</div>
+</div>
+<div class="doc-section"><strong>Yields:</strong>
+<div class="doc-detail">    slice: 下一个窗口对应的 Python slice 对象。</div>
+</div></div>
         </div>
         
 
@@ -406,9 +488,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_crop</span> (<span class="arg-name">img</span>, <span class="arg-name">sy</span>, <span class="arg-name">sx</span>)</code>
-                <span class="line-no">L363-370</span>
+                <span class="line-no">L459-476</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>从图像中裁剪指定窗口，超边界部分自动填充。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img: 输入图像张量，形状 (B, C, H, W)。</div>
+<div class="doc-detail">    sy: 高度方向的 slice。</div>
+<div class="doc-detail">    sx: 宽度方向的 slice。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.Tensor: 裁剪并填充后的子图像。</div>
+</div></div>
         </div>
         
 </main>

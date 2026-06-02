@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 13 方法</span>
-            <span class="warn">
-                ⚠️ 9 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/croco.py</div>
@@ -327,9 +327,10 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CroCoNet</span>(nn.Module)
-                <span class="line-no">L27-307</span>
+                <span class="line-no">L27-378</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>CroCo 预训练网络，基于交叉视图完成任务训练。</p>
+<p>采用 ViT 编码器 + 交叉注意力解码器的架构，输入一对图像，对第一张图像进行随机遮罩后利用第二张图像的上下文完成重建。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,79 +339,127 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">mask_ratio</span> = <span class="arg-default">0.9</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">enc_depth</span> = <span class="arg-default">12</span>, <span class="arg-name">enc_num_heads</span> = <span class="arg-default">12</span>, <span class="arg-name">dec_embed_dim</span> = <span class="arg-default">512</span>, <span class="arg-name">dec_depth</span> = <span class="arg-default">8</span>, <span class="arg-name">dec_num_heads</span> = <span class="arg-default">16</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">partial(nn.LayerNorm, eps=1e-06)</span>, <span class="arg-name">norm_im2_in_dec</span> = <span class="arg-default">True</span>, <span class="arg-name">pos_embed</span> = <span class="arg-default">&#x27;cosine&#x27;</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
-                    <span class="line-no">L28-121</span>
+                    <span class="line-no">L33-144</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 CroCoNet。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size: 输入图像尺寸（正方形）。</div>
+<div class="doc-detail">    patch_size: 分块大小。</div>
+<div class="doc-detail">    mask_ratio: 编码器随机遮罩的 patch 比例。</div>
+<div class="doc-detail">    enc_embed_dim: 编码器特征维度。</div>
+<div class="doc-detail">    enc_depth: 编码器 Transformer 层数。</div>
+<div class="doc-detail">    enc_num_heads: 编码器多头注意力头数。</div>
+<div class="doc-detail">    dec_embed_dim: 解码器特征维度。</div>
+<div class="doc-detail">    dec_depth: 解码器 Transformer 层数。</div>
+<div class="doc-detail">    dec_num_heads: 解码器多头注意力头数。</div>
+<div class="doc-detail">    mlp_ratio: MLP 隱层维度与 Embedding 维度的比值。</div>
+<div class="doc-detail">    norm_layer: 归一化层类型。</div>
+<div class="doc-detail">    norm_im2_in_dec: 解码器中是否对第二张图像的深度特征施加归一化。</div>
+<div class="doc-detail">    pos_embed: 位置编码类型，支持 &quot;cosine&quot; 或 &quot;RoPE{freq}&quot;（如 &quot;RoPE100&quot;）。</div>
+<div class="doc-detail">    attn_implementation: 注意力实现方式，支持 &quot;pytorch_naive&quot; 或 &quot;flash_attention&quot;。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_set_patch_embed">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
-                    <span class="line-no">L123-124</span>
+                    <span class="line-no">L146-154</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 patch 嵌入层。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size: 输入图像尺寸。</div>
+<div class="doc-detail">    patch_size: 分块大小。</div>
+<div class="doc-detail">    enc_embed_dim: 编码器嵌入维度。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_set_mask_generator">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_generator</span> (<span class="arg-name">num_patches</span>, <span class="arg-name">mask_ratio</span>)</code>
-                    <span class="line-no">L126-127</span>
+                    <span class="line-no">L156-163</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化随机遮罩生成器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_patches: patch 总数。</div>
+<div class="doc-detail">    mask_ratio: 遮罩比例（0~1）。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_set_mask_token">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_token</span> (<span class="arg-name">dec_embed_dim</span>)</code>
-                    <span class="line-no">L129-130</span>
+                    <span class="line-no">L165-171</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化解码器的遮罩 token 参数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dec_embed_dim: 解码器嵌入维度，决定 mask token 大小。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_set_decoder">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_decoder</span> (<span class="arg-name">enc_embed_dim</span>, <span class="arg-name">dec_embed_dim</span>, <span class="arg-name">dec_num_heads</span>, <span class="arg-name">dec_depth</span>, <span class="arg-name">mlp_ratio</span>, <span class="arg-name">norm_layer</span>, <span class="arg-name">norm_im2_in_dec</span>)</code>
-                    <span class="line-no">L132-163</span>
+                    <span class="line-no">L173-215</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化解码器组件，包括编解码投影层、DecoderBlock 列表和最终归一化层。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    enc_embed_dim: 编码器嵌入维度，用于 decoder_embed 输入维度。</div>
+<div class="doc-detail">    dec_embed_dim: 解码器嵌入维度。</div>
+<div class="doc-detail">    dec_num_heads: 解码器注意力头数。</div>
+<div class="doc-detail">    dec_depth: 解码器层数。</div>
+<div class="doc-detail">    mlp_ratio: MLP 隐层维度比例。</div>
+<div class="doc-detail">    norm_layer: 归一化层类型。</div>
+<div class="doc-detail">    norm_im2_in_dec: 是否对第二张图像特征施加归一化。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_set_prediction_head">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">dec_embed_dim</span>, <span class="arg-name">patch_size</span>)</code>
-                    <span class="line-no">L165-166</span>
+                    <span class="line-no">L217-224</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化像素预测头。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dec_embed_dim: 解码器嵌入维度，作为线性层输入。</div>
+<div class="doc-detail">    patch_size: 分块大小，输出维度为 patch_size**2 * 3。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-initialize_weights">
                 <div class="method-header">
                     
                     <code><span class="fn-name">initialize_weights</span> ()</code>
-                    <span class="line-no">L168-175</span>
+                    <span class="line-no">L226-238</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化模型所有可学参数的权重。</p>
+<p>对 patch_embed 调用其自定义初始化方法，使用正态分布初始化 mask_token，</p>
+<p>并对其他线性层和 LayerNorm 层应用标准初始化。</p></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_init_weights">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_init_weights</span> (<span class="arg-name">m</span>)</code>
-                    <span class="line-no">L177-185</span>
+                    <span class="line-no">L240-256</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>对单个子模块施加标准权重初始化。</p>
+<p>线性层使用 Xavier Uniform 初始化权重，偏置置零；</p>
+<p>LayerNorm 层偏置置零、权重置一。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    m: 待初始化的子模块（通常由 self.apply() 递归调用）。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CroCoNet-_encode_image">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_image</span> (<span class="arg-name">image</span>, <span class="arg-name">do_mask</span> = <span class="arg-default">False</span>, <span class="arg-name">return_all_blocks</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L187-222</span>
+                    <span class="line-no">L258-293</span>
                 </div>
                 <div class="docstring"><p>image has B x 3 x img_size x img_size</p>
 <p>do_mask: whether to perform masking or not</p>
@@ -422,7 +471,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_decoder</span> (<span class="arg-name">feat1</span>, <span class="arg-name">pos1</span>, <span class="arg-name">masks1</span>, <span class="arg-name">feat2</span>, <span class="arg-name">pos2</span>, <span class="arg-name">return_all_blocks</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L224-259</span>
+                    <span class="line-no">L295-330</span>
                 </div>
                 <div class="docstring"><p>return_all_blocks: if True, return the features at the end of every block</p>
 <p>                   instead of just the features from the last block (eg for some prediction heads)</p>
@@ -433,7 +482,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">patchify</span> (<span class="arg-name">imgs</span>)</code>
-                    <span class="line-no">L261-274</span>
+                    <span class="line-no">L332-345</span>
                 </div>
                 <div class="docstring"><p>imgs: (B, 3, H, W)</p>
 <p>x: (B, L, patch_size**2 *3)</p></div>
@@ -443,7 +492,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">unpatchify</span> (<span class="arg-name">x</span>, <span class="arg-name">channels</span> = <span class="arg-default">3</span>)</code>
-                    <span class="line-no">L276-287</span>
+                    <span class="line-no">L347-358</span>
                 </div>
                 <div class="docstring"><p>x: (N, L, patch_size**2 *channels)</p>
 <p>imgs: (N, 3, H, W)</p></div>
@@ -453,7 +502,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L289-307</span>
+                    <span class="line-no">L360-378</span>
                 </div>
                 <div class="docstring"><p>img1: tensor of size B x 3 x img_size x img_size</p>
 <p>img2: tensor of size B x 3 x img_size x img_size</p>
