@@ -200,6 +200,20 @@ class AsymmetricCroCo3DStereo(
         img_size,
         **kw,
     ):
+        """初始化双视图的下游预测头。
+
+        创建两个独立的预测头（分别对应两个视图），并可选地包装为横屏模式。
+
+        Args:
+            output_mode: 输出模式（'pts3d'）。
+            head_type: 预测头类型。
+            landscape_only: 是否仅支持横屏模式。
+            depth_mode: 深度模式元组。
+            conf_mode: 置信度模式元组。
+            patch_size: 分块大小。
+            img_size: 图像尺寸元组 (H, W)。
+            **kw: 其他参数。
+        """
         assert (
             img_size[0] % patch_size == 0 and img_size[1] % patch_size == 0
         ), f"{img_size} must be multiple of {patch_size}"
@@ -223,6 +237,18 @@ class AsymmetricCroCo3DStereo(
         )
 
     def _encode_image(self, image, true_shape):
+        """编码单张图像为 patch 序列特征。
+
+        Args:
+            image: 输入图像张量，形状 (B, 3, H, W)。
+            true_shape: 图像的真实尺寸，形状 (B, 2)。
+
+        Returns:
+            tuple: (x, pos, None)
+                - x: 编码后的特征，形状 (B, N, C)。
+                - pos: 位置编码，形状 (B, N, 2)。
+                - None: 占位返回值（兼容接口）。
+        """
         # embed the image into patches  (x has size B x Npatches x C)
         x, pos = self.patch_embed(image, true_shape=true_shape)
 

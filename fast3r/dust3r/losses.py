@@ -480,6 +480,13 @@ class Regr3DMultiviewV2(Criterion, MultiLoss):
     """
 
     def __init__(self, criterion, norm_mode="avg_dis", gt_scale=False):
+        """初始化 Regr3DMultiviewV2 损失函数。
+
+        Args:
+            criterion: 基础回归损失函数（如 L1Loss）。
+            norm_mode (str): 点云归一化模式，可选 'avg_dis'、'avg'、'median'。
+            gt_scale (bool): 是否对 GT 点云进行归一化。默认 False。
+        """
         super().__init__(criterion)
         self.norm_mode = norm_mode
         self.gt_scale = gt_scale
@@ -590,6 +597,15 @@ class Regr3DMultiviewV3(Criterion, MultiLoss):
     """
 
     def __init__(self, criterion, norm_mode="avg_dis", gt_scale=False):
+        """初始化 Regr3DMultiviewV3 损失函数。
+
+        支持全局坐标系和局部坐标系的双重建模。
+
+        Args:
+            criterion: 基础回归损失函数（如 L1Loss）。
+            norm_mode (str): 点云归一化模式，可选 'avg_dis'、'avg'、'median'。
+            gt_scale (bool): 是否对 GT 点云进行归一化。默认 False。
+        """
         super().__init__(criterion)
         self.norm_mode = norm_mode
         self.gt_scale = gt_scale
@@ -712,6 +728,21 @@ class Regr3DMultiviewV3(Criterion, MultiLoss):
         return normed_pts_list
 
     def compute_loss(self, gts, preds, **kw):
+        """计算 Regr3DMultiviewV3 的多视图回归损失。
+
+        同时计算全局坐标系和局部坐标系下的 3D 点云回归损失，
+        并支持按视图分别归一化。
+
+        Args:
+            gts (list[dict]): 真值视图列表。
+            preds (list[dict]): 预测视图列表。
+            **kw: 额外参数，传递给 get_pts3d_from_views。
+
+        Returns:
+            tuple: (loss_sum, details)
+                - loss_sum: 加权总损失（Sum 对象）。
+                - details: 包含各视图各损失分量的字典。
+        """
         total_loss = []
         details = {}
         self_name = "Regr3DMultiviewV3"

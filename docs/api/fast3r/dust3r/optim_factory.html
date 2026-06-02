@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 1 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/optim_factory.py</div>
@@ -327,9 +327,14 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">adjust_learning_rate_by_lr</span> (<span class="arg-name">optimizer</span>, <span class="arg-name">lr</span>)</code>
-                <span class="line-no">L15-20</span>
+                <span class="line-no">L15-28</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据基准学习率调整优化器中所有参数组的学习率。</p>
+<p>支持按参数组的 lr_scale 进行缩放，未设置 lr_scale 的参数组直接使用基准学习率。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    optimizer (torch.optim.Optimizer): 目标优化器。</div>
+<div class="doc-detail">    lr (float): 基准学习率。</div>
+</div></div>
         </div>
         
 </main>

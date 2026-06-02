@@ -16,13 +16,36 @@ from fast3r.croco.models.blocks import PatchEmbed
 
 
 def get_patch_embed(patch_embed_cls, img_size, patch_size, enc_embed_dim):
+    """根据类名实例化对应的 PatchEmbed 模块。
+
+    Args:
+        patch_embed_cls (str): 类名，可选 ``"PatchEmbedDust3R"`` 或 ``"ManyAR_PatchEmbed"``。
+        img_size (int): 输入图像尺寸。
+        patch_size (int): Patch 大小。
+        enc_embed_dim (int): 编码器嵌入维度。
+
+    Returns:
+        PatchEmbed: 实例化的 PatchEmbed 模块。
+    """
     assert patch_embed_cls in ["PatchEmbedDust3R", "ManyAR_PatchEmbed"]
     patch_embed = eval(patch_embed_cls)(img_size, patch_size, 3, enc_embed_dim)
     return patch_embed
 
 
 class PatchEmbedDust3R(PatchEmbed):
+    """DUSt3R 的 PatchEmbed 实现，支持标准正方形图像分块。"""
+
     def forward(self, x, **kw):
+        """前向传播：将图像划分为 patch 并投影到嵌入空间。
+
+        Args:
+            x (Tensor): 输入图像，形状 (B, C, H, W)。
+            **kw: 额外参数（兼容性保留）。
+
+        Returns:
+            tuple: (x, pos)，其中 x 为嵌入后的 patch 序列 (B, N, C)，
+            pos 为二维位置编码 (B, N, 2)。
+        """
         B, C, H, W = x.shape
         assert (
             H % self.patch_size[0] == 0
@@ -53,10 +76,30 @@ class ManyAR_PatchEmbed(PatchEmbed):
         norm_layer=None,
         flatten=True,
     ):
+        """初始化 ManyAR_PatchEmbed。
+
+        Args:
+            img_size: 默认图像尺寸。
+            patch_size: Patch 大小。
+            in_chans: 输入通道数。
+            embed_dim: 嵌入维度。
+            norm_layer: 归一化层。
+            flatten: 是否将空间维度展平。
+        """
         self.embed_dim = embed_dim
         super().__init__(img_size, patch_size, in_chans, embed_dim, norm_layer, flatten)
 
     def forward(self, img, true_shape):
+        """前向传播，处理包含横屏和竖屏图像的批次。
+
+        Args:
+            img (Tensor): 输入图像，形状 (B, C, H, W)，其中 W >= H（已填充）。
+            true_shape (Tensor): 每张图像的真实尺寸，形状 (B, 2)。
+
+        Returns:
+            tuple: (x, pos)，其中 x 为嵌入后的 patch 序列 (B, N, C)，
+            pos 为二维位置编码 (B, N, 2)。
+        """
         B, C, H, W = img.shape
         assert W >= H, f"img should be in landscape mode, but got {W=} {H=}"
         assert (

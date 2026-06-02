@@ -44,6 +44,16 @@ from fast3r.utils import (
 log = RankedLogger(__name__, rank_zero_only=True)
 
 def python_eval_resolver(code: str):
+    """OmegaConf 自定义解析器：执行 Python 代码字符串并返回结果。
+
+    在 YAML 配置中可通过 ${python_eval: ...} 使用。
+
+    Args:
+        code (str): 要执行的 Python 代码字符串。
+
+    Returns:
+        Any: 代码执行结果。
+    """
     return eval(code)
 
 
@@ -71,6 +81,16 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     # replace all occurances of "dust3r." in cfg.model.net with "fast3r.dust3r." (this is due to relocation of our code)
 
     def replace_dust3r_in_config(cfg):
+        """递归替换配置中的 'dust3r.' 为 'fast3r.dust3r.'。
+
+        用于兼容从旧版检查点加载的模型配置。
+
+        Args:
+            cfg (DictConfig): 配置对象。
+
+        Returns:
+            DictConfig: 替换后的配置对象。
+        """
         for key, value in cfg.items():
             if isinstance(value, dict):
                 replace_dust3r_in_config(value)

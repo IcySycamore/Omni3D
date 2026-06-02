@@ -409,6 +409,11 @@ class MultiViewDUSt3RLitModule(LightningModule):
     #     pass
 
     def aggregate_and_log_reconstruction_detail_losses(self):
+        """聚合并记录非均匀视图数据集的详细损失。
+
+        在分布式训练环境下，从所有 rank 收集详细损失，
+        在 rank 0 上计算均值并记录到日志，然后清空缓存。
+        """
         # log the detailes loss for uneven view datasets
         # Gather and aggregate detailed losses for uneven-view datasets across all ranks
         if torch.distributed.is_initialized():
@@ -460,6 +465,12 @@ class MultiViewDUSt3RLitModule(LightningModule):
             # self.uneven_view_detailed_losses.clear()
 
     def aggregate_and_log_reconstruction_metrics(self):
+        """聚合并记录 3D 重建评估指标。
+
+        在分布式环境下收集并去重各数据集的场景级指标，
+        记录每个场景的详细指标以及数据集级别的平均指标，
+        最后清空 epoch 指标缓存。
+        """
         # Gather and deduplicate metrics by dataset across all ranks after all batches
         if torch.distributed.is_initialized():
             self.reconstruction_metrics_per_epoch = gather_deduplicated_scene_metrics(self.reconstruction_metrics_per_epoch)

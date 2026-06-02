@@ -13,6 +13,14 @@
 
 
 def adjust_learning_rate_by_lr(optimizer, lr):
+    """根据基准学习率调整优化器中所有参数组的学习率。
+
+    支持按参数组的 lr_scale 进行缩放，未设置 lr_scale 的参数组直接使用基准学习率。
+
+    Args:
+        optimizer (torch.optim.Optimizer): 目标优化器。
+        lr (float): 基准学习率。
+    """
     for param_group in optimizer.param_groups:
         if "lr_scale" in param_group:
             param_group["lr"] = lr * param_group["lr_scale"]

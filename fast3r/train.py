@@ -46,6 +46,16 @@ from fast3r.utils import (
 log = RankedLogger(__name__, rank_zero_only=True)
 
 def python_eval_resolver(code: str):
+    """OmegaConf 自定义解析器：执行 Python 代码字符串并返回结果。
+
+    在 YAML 配置中可通过 ${python_eval: ...} 使用。
+
+    Args:
+        code (str): 要执行的 Python 代码字符串。
+
+    Returns:
+        Any: 代码执行结果。
+    """
     return eval(code)
 
 
