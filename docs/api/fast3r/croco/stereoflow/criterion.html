@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 8 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 23 方法</span>
-            <span class="warn">
-                ⚠️ 7 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/criterion.py</div>
@@ -416,7 +416,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">LaplacianLossBounded</span>(nn.Module)
-                <span class="line-no">L87-115</span>
+                <span class="line-no">L87-116</span>
             </h2>
             <div class="docstring"><p>有界拉普拉斯损失（sigmoid 参数化），用于 CroCo-Flow。</p></div>
             
@@ -441,9 +441,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">predictions</span>, <span class="arg-name">gt</span>, <span class="arg-name">conf</span>)</code>
-                    <span class="line-no">L105-115</span>
+                    <span class="line-no">L105-116</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>前向传播，计算带置信度的有界拉普拉斯损失。使用 sigmoid 参数化置信度到 [a, b] 区间。</p></div>
             </div>
             
             </div>
@@ -454,7 +454,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">LaplacianLossBounded2</span>(nn.Module)
-                <span class="line-no">L118-146</span>
+                <span class="line-no">L119-148</span>
             </h2>
             <div class="docstring"><p>有界拉普拉斯损失2（sigmoid/exp 混合参数化），用于 CroCo-Stereo。</p></div>
             
@@ -465,7 +465,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">max_gtnorm</span> = <span class="arg-default">None</span>, <span class="arg-name">a</span> = <span class="arg-default">3.0</span>, <span class="arg-name">b</span> = <span class="arg-default">3.0</span>)</code>
-                    <span class="line-no">L123-134</span>
+                    <span class="line-no">L124-135</span>
                 </div>
                 <div class="docstring"><p>初始化有界拉普拉斯损失2。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -479,9 +479,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">predictions</span>, <span class="arg-name">gt</span>, <span class="arg-name">conf</span>)</code>
-                    <span class="line-no">L136-146</span>
+                    <span class="line-no">L137-148</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>前向传播，计算带置信度的有界拉普拉斯损失2。使用 sigmoid/exp 混合参数化。</p></div>
             </div>
             
             </div>
@@ -492,7 +492,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">StereoMetrics</span>(nn.Module)
-                <span class="line-no">L152-185</span>
+                <span class="line-no">L154-188</span>
             </h2>
             <div class="docstring"><p>立体匹配批量评估指标（平均误差、RMSE、bad@t）。</p></div>
             
@@ -503,7 +503,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">do_quantile</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L155-163</span>
+                    <span class="line-no">L157-165</span>
                 </div>
                 <div class="docstring"><p>初始化立体匹配指标。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -515,9 +515,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">predictions</span>, <span class="arg-name">gt</span>)</code>
-                    <span class="line-no">L165-185</span>
+                    <span class="line-no">L167-188</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>计算立体匹配批量指标：平均误差、RMSE 和 bad@t 百分比。</p></div>
             </div>
             
             </div>
@@ -528,7 +528,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlowMetrics</span>(nn.Module)
-                <span class="line-no">L188-216</span>
+                <span class="line-no">L191-220</span>
             </h2>
             <div class="docstring"><p>光流批量评估指标（L1err、EPE、bad@t）。</p></div>
             
@@ -539,7 +539,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L191-194</span>
+                    <span class="line-no">L194-197</span>
                 </div>
                 <div class="docstring"><p>初始化光流指标。</p></div>
             </div>
@@ -548,9 +548,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">predictions</span>, <span class="arg-name">gt</span>)</code>
-                    <span class="line-no">L196-216</span>
+                    <span class="line-no">L199-220</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>计算光流批量指标：L1 误差、EPE 和 bad@t 百分比。</p></div>
             </div>
             
             </div>
@@ -561,7 +561,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">StereoDatasetMetrics</span>(nn.Module)
-                <span class="line-no">L226-286</span>
+                <span class="line-no">L230-292</span>
             </h2>
             <div class="docstring"><p>立体匹配数据集级累积评估指标。</p></div>
             
@@ -572,7 +572,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L229-232</span>
+                    <span class="line-no">L233-236</span>
                 </div>
                 <div class="docstring"><p>初始化立体匹配数据集指标。</p></div>
             </div>
@@ -581,7 +581,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">reset</span> ()</code>
-                    <span class="line-no">L234-239</span>
+                    <span class="line-no">L238-243</span>
                 </div>
                 <div class="docstring"><p>重置所有累积统计量。</p></div>
             </div>
@@ -590,7 +590,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_batch</span> (<span class="arg-name">predictions</span>, <span class="arg-name">gt</span>)</code>
-                    <span class="line-no">L241-271</span>
+                    <span class="line-no">L245-275</span>
                 </div>
                 <div class="docstring"><p>累积一批预测结果的统计量。</p></div>
             </div>
@@ -599,18 +599,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_compute_metrics</span> ()</code>
-                    <span class="line-no">L273-282</span>
+                    <span class="line-no">L277-287</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>从累积统计量计算最终立体匹配指标。</p></div>
             </div>
             
             <div class="method" id="method-StereoDatasetMetrics-get_results">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_results</span> ()</code>
-                    <span class="line-no">L284-286</span>
+                    <span class="line-no">L289-292</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回立体匹配数据集级指标的最终结果。</p></div>
             </div>
             
             </div>
@@ -621,7 +621,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlowDatasetMetrics</span>(nn.Module)
-                <span class="line-no">L289-409</span>
+                <span class="line-no">L295-416</span>
             </h2>
             <div class="docstring"><p>光流数据集级累积评估指标（含速度区间 EPE）。</p></div>
             
@@ -632,7 +632,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L292-296</span>
+                    <span class="line-no">L298-302</span>
                 </div>
                 <div class="docstring"><p>初始化光流数据集指标。</p></div>
             </div>
@@ -641,7 +641,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">reset</span> ()</code>
-                    <span class="line-no">L298-309</span>
+                    <span class="line-no">L304-315</span>
                 </div>
                 <div class="docstring"><p>重置所有累积统计量。</p></div>
             </div>
@@ -650,7 +650,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_batch</span> (<span class="arg-name">predictions</span>, <span class="arg-name">gt</span>)</code>
-                    <span class="line-no">L311-388</span>
+                    <span class="line-no">L317-394</span>
                 </div>
                 <div class="docstring"><p>累积一批光流预测结果的统计量。</p></div>
             </div>
@@ -659,7 +659,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_compute_metrics</span> ()</code>
-                    <span class="line-no">L390-405</span>
+                    <span class="line-no">L396-411</span>
                 </div>
                 <div class="docstring"><p>从累积统计量计算最终光流指标。</p></div>
             </div>
@@ -668,9 +668,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_results</span> ()</code>
-                    <span class="line-no">L407-409</span>
+                    <span class="line-no">L413-416</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回光流数据集级指标的最终结果。</p></div>
             </div>
             
             </div>

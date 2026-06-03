@@ -97,9 +97,11 @@ class MegaDepth_Multiview(BaseStereoViewDataset):
         self.combinations = sorted(set(self.combinations))
 
     def __len__(self):
+        """返回组合数（视图组数）的总数。"""
         return len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):
+        """根据索引获取 MegaDepth 多视图数据，支持随机偏移。"""
         image_indices = self.combinations[idx]
 
         # Ensure the indices stay within the scene boundaries

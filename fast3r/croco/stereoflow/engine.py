@@ -375,6 +375,7 @@ def tiled_pred(
         raise NotImplementedError(f"conf_mode {conf_mode} is not implemented")
 
     def crop_generator():
+        """生成重叠裁剪区域的坐标序列，用于分块推理。"""
         for sy in _overlapping(H, win_height, overlap):
             for sx in _overlapping(W, win_width, overlap):
                 yield sy, sx, sy, sx, True

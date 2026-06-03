@@ -715,6 +715,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
     # ----------------- GUI Callback Updates -----------------
     @gui_timestep.on_update
     def _(_):
+        """时间步滑块更新回调：控制帧/视锥/点云的可见性。"""
         current = int(gui_timestep.value)
         with server.atomic():
             for i in range(num_frames):
@@ -737,6 +738,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_point_size.on_update
     def _(_):
+        """点大小滑块更新回调：调整全局和局部点云的渲染点尺寸。"""
         with server.atomic():
             for fd in frame_data_list:
                 fd['point_node_global'].point_size = gui_point_size.value
@@ -745,6 +747,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_frustum_size_percent.on_update
     def _(_):
+        """视锥大小滑块更新回调：缩放所有相机视锥的显示尺寸。"""
         frustum_scale = max_extent * (gui_frustum_size_percent.value / 100.0)
         with server.atomic():
             for fd in frame_data_list:
@@ -753,6 +756,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_confidence_color.on_update
     def _(_):
+        """置信度着色开关回调：切换置信度颜色模式并更新点云颜色。"""
         # Make options mutually exclusive
         if gui_show_confidence_color.value and gui_rainbow_color_option.value:
             gui_rainbow_color_option.value = False
@@ -763,6 +767,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_rainbow_color_option.on_update
     def _(_):
+        """彩虹着色开关回调：切换彩虹颜色模式并更新点云颜色。"""
         # Make options mutually exclusive
         if gui_rainbow_color_option.value and gui_show_confidence_color.value:
             gui_show_confidence_color.value = False
@@ -773,17 +778,20 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_min_conf_percentile.on_update
     def _(_):
+        """最小置信度分位数滑块回调：更新点云过滤阈值。"""
         update_points_filtering(server, frame_data_list, gui_timestep, gui_min_conf_percentile, 
                                gui_mask_sky, gui_show_confidence_color, gui_rainbow_color_option)
 
     @gui_mask_sky.on_update
     def _(_):
+        """天空遮罩开关回调：切换天空区域过滤并更新点云显示。"""
         # For each visible frame, update filtering if mask sky changes.
         update_points_filtering(server, frame_data_list, gui_timestep, gui_min_conf_percentile, 
                                gui_mask_sky, gui_show_confidence_color, gui_rainbow_color_option)
 
     @gui_show_global.on_update
     def _(_):
+        """全局点云可见性开关回调：控制当前时间步内全局点云的显示。"""
         with server.atomic():
             for i in range(int(gui_timestep.value)+1):
                 frame_data_list[i]['point_node_global'].visible = gui_show_global.value
@@ -791,6 +799,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_local.on_update
     def _(_):
+        """局部点云可见性开关回调：控制当前时间步内局部点云的显示。"""
         with server.atomic():
             for i in range(int(gui_timestep.value)+1):
                 frame_data_list[i]['point_node_local'].visible = gui_show_local.value
@@ -798,6 +807,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_high_conf.on_update
     def _(_):
+        """高置信度视图开关回调：控制高置信度视图的视锥和点云可见性。"""
         with server.atomic():
             for i in range(num_frames):
                 fd = frame_data_list[i]
@@ -815,6 +825,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_low_conf.on_update
     def _(_):
+        """低置信度视图开关回调：控制低置信度视图的视锥和点云可见性。"""
         with server.atomic():
             for i in range(num_frames):
                 fd = frame_data_list[i]
@@ -832,6 +843,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_global_conf_threshold.on_update
     def _(_):
+        """全局置信度阈值滑块回调：重新计算各帧的高低置信度标记。"""
         for fd in frame_data_list:
             fd['is_high_confidence'] = fd['max_conf_global'] >= gui_global_conf_threshold.value
         server.flush()
@@ -848,6 +860,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @button_render_gif.on_click
     def _(event: viser.GuiEvent) -> None:
+        """渲染 GIF 按钮回调：逐帧截图并生成 GIF 动画发送给客户端下载。"""
         client = event.client
         if client is None:
             print("Error: No client connected.")
@@ -871,6 +884,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @button_download_ply.on_click
     def _(event: viser.GuiEvent):
+        """下载 PLY 按钮回调：收集可见点云并生成 PLY 文件发送给客户端下载。"""
         client = event.client
         if client is None:
             print("No client connected; skipping download.")

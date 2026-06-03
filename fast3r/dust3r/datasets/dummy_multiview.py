@@ -26,6 +26,7 @@ class DummyMultiview(BaseStereoViewDataset):
         self.combinations = [(i,) * num_views for i in range(dataset_size)]
 
     def __len__(self):
+        """返回数据集大小。"""
         return self.dataset_size
 
     def _get_views(self, idx, resolution, rng):

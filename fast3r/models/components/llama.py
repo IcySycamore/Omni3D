@@ -176,6 +176,7 @@ class RMSNorm(nn.Module):
     """
 
     def __init__(self, dim: int, eps: float = 1e-6):
+        """初始化 RMS 归一化层。"""
         super().__init__()
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
@@ -344,6 +345,7 @@ class FeedForward(nn.Module):
         multiple_of: int,
         ffn_dim_multiplier: Optional[float],
     ):
+        """初始化 SwiGLU 前馈网络层。"""
         super().__init__()
         hidden_dim = int(2 * hidden_dim / 3)
         # custom dim factor multiplier

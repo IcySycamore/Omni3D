@@ -92,6 +92,7 @@ class ArkitScene(BaseManyViewDataset):
         return intrinsic
     
     def get_pose(self, frame_id, poses_from_traj):
+        """根据帧 ID 从轨迹数据获取相机位姿矩阵，并转换为 OpenCV 坐标系。"""
         frame_pose = None
         if str(frame_id) in poses_from_traj:
             frame_pose = np.array(poses_from_traj[str(frame_id)])
@@ -138,6 +139,7 @@ class ArkitScene(BaseManyViewDataset):
         return (ts, Rt)
     
     def _get_views(self, idx, resolution, rng, attempts=0): 
+        """根据索引获取 ARKit 场景的多视图数据。"""
         scene_id = self.scene_list[idx // self.num_seq]
 
         image_path = osp.join(self.scene_path, scene_id, 'lowres_wide')

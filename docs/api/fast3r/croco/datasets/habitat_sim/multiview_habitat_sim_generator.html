@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 9 函数</span>
             <span>🔧 13 方法</span>
-            <span class="warn">
-                ⚠️ 7 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/habitat_sim/multiview_habitat_sim_generator.py</div>
@@ -361,7 +361,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MultiviewHabitatSimGenerator</span>
-                <span class="line-no">L192-569</span>
+                <span class="line-no">L192-576</span>
             </h2>
             <div class="docstring"><p>基于 Habitat-Sim 的多视图数据生成器。</p>
 <p>在指定场景中随机采样共视的多相机位姿，渲染 RGB 和深度图，</p>
@@ -386,52 +386,52 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">scene</span>, <span class="arg-name">navmesh</span>, <span class="arg-name">scene_dataset_config_file</span>, <span class="arg-name">resolution</span> = <span class="arg-default">(240, 320)</span>, <span class="arg-name">views_count</span> = <span class="arg-default">2</span>, <span class="arg-name">hfov</span> = <span class="arg-default">60</span>, <span class="arg-name">gpu_id</span> = <span class="arg-default">0</span>, <span class="arg-name">size</span> = <span class="arg-default">10000</span>, <span class="arg-name">minimum_covisibility</span> = <span class="arg-default">0.5</span>, <span class="arg-name">transform</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L211-259</span>
+                    <span class="line-no">L211-260</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化多视图 Habitat-Sim 数据生成器。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-_lazy_initialization">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_lazy_initialization</span> ()</code>
-                    <span class="line-no">L261-314</span>
+                    <span class="line-no">L262-316</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>延迟初始化：设置随机种子、Habitat 仿真器和导航网格。仅在首次访问时执行，以支持多进程。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-close">
                 <div class="method-header">
                     
                     <code><span class="fn-name">close</span> ()</code>
-                    <span class="line-no">L316-317</span>
+                    <span class="line-no">L318-320</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>关闭 Habitat 仿真器，释放资源。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-__del__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__del__</span> ()</code>
-                    <span class="line-no">L319-320</span>
+                    <span class="line-no">L322-324</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>析构时自动关闭仿真器。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L322-323</span>
+                    <span class="line-no">L326-328</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-sample_random_viewpoint">
                 <div class="method-header">
                     
                     <code><span class="fn-name">sample_random_viewpoint</span> ()</code>
-                    <span class="line-no">L325-335</span>
+                    <span class="line-no">L330-340</span>
                 </div>
                 <div class="docstring"><p>Sample a random viewpoint using the navmesh</p></div>
             </div>
@@ -440,7 +440,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">sample_other_random_viewpoint</span> (<span class="arg-name">observed_point</span>, <span class="arg-name">nav_point</span>)</code>
-                    <span class="line-no">L337-365</span>
+                    <span class="line-no">L342-370</span>
                 </div>
                 <div class="docstring"><p>Sample a random viewpoint close to an existing one, using the navmesh and a reference observed point.</p></div>
             </div>
@@ -449,7 +449,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">is_other_pointcloud_overlapping</span> (<span class="arg-name">ref_pointcloud</span>, <span class="arg-name">other_pointcloud</span>)</code>
-                    <span class="line-no">L367-386</span>
+                    <span class="line-no">L372-391</span>
                 </div>
                 <div class="docstring"><p>Check if a viewpoint is valid and overlaps significantly with a reference one.</p></div>
             </div>
@@ -458,7 +458,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">is_other_viewpoint_overlapping</span> (<span class="arg-name">ref_pointcloud</span>, <span class="arg-name">observation</span>, <span class="arg-name">position</span>, <span class="arg-name">rotation</span>)</code>
-                    <span class="line-no">L388-396</span>
+                    <span class="line-no">L393-401</span>
                 </div>
                 <div class="docstring"><p>Check if a viewpoint is valid and overlaps significantly with a reference one.</p></div>
             </div>
@@ -467,25 +467,25 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">render_viewpoint</span> (<span class="arg-name">viewpoint_position</span>, <span class="arg-name">viewpoint_orientation</span>)</code>
-                    <span class="line-no">L398-407</span>
+                    <span class="line-no">L403-413</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>在指定相机位姿渲染一帧 RGB 和深度观测。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">useless_idx</span>)</code>
-                    <span class="line-no">L409-507</span>
+                    <span class="line-no">L415-514</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>采样并返回一个多视图样本，包含共视的 RGB/深度图及相机参数。</p></div>
             </div>
             
             <div class="method" id="method-MultiviewHabitatSimGenerator-generate_random_spiral_trajectory">
                 <div class="method-header">
                     
                     <code><span class="fn-name">generate_random_spiral_trajectory</span> (<span class="arg-name">images_count</span> = <span class="arg-default">100</span>, <span class="arg-name">max_radius</span> = <span class="arg-default">0.5</span>, <span class="arg-name">half_turns</span> = <span class="arg-default">5</span>, <span class="arg-name">use_constant_orientation</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L509-569</span>
+                    <span class="line-no">L516-576</span>
                 </div>
                 <div class="docstring"><p>Return a list of images corresponding to a spiral trajectory from a random starting point.</p>
 <p>Useful to generate nice visualisations.</p>

@@ -30,6 +30,7 @@ from tqdm import tqdm
 
 
 def get_args_parser():
+    """创建立体/光流测试命令行参数解析器。"""
     parser = argparse.ArgumentParser("Test CroCo models on stereo/flow", add_help=False)
     # important argument
     parser.add_argument(
@@ -70,6 +71,7 @@ def get_args_parser():
 
 
 def _load_model_and_criterion(model_path, do_load_metrics, device):
+    """加载预训练模型和评估指标，返回模型及相关配置。"""
     print("loading model from", model_path)
     assert os.path.isfile(model_path)
     ckpt = torch.load(model_path, "cpu")
@@ -104,6 +106,7 @@ def _load_model_and_criterion(model_path, do_load_metrics, device):
 def _save_batch(
     pred, gt, pairnames, dataset, task, save, outdir, time, submission_dir=None
 ):
+    """保存一批预测结果：可选保存预测值、可视化、误差图或提交文件。"""
     for i in range(len(pairnames)):
         pairname = (
             eval(pairnames[i]) if pairnames[i].startswith("(") else pairnames[i]
@@ -162,6 +165,7 @@ def _save_batch(
 
 
 def main(args):
+    """测试主函数：加载数据集和模型，逐批推理并保存评估指标。"""
     # load the pretrained model and metrics
     device = (
         torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")

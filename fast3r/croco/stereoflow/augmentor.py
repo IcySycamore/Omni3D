@@ -65,6 +65,7 @@ class StereoAugmentor(object):
         color_aug_asym=True,
         color_choice_prob=0.5,
     ):
+        """初始化立体匹配数据增广器。"""
         self.crop_size = crop_size
         self.scale_prob = scale_prob
         self.scale_xonly = scale_xonly
@@ -392,6 +393,7 @@ class FlowAugmentor:
         v_flip_prob=0.1,
         asymmetric_color_aug_prob=0.2,
     ):
+        """初始化光流数据增广器。"""
         # spatial augmentation params
         self.crop_size = crop_size
         self.min_scale = min_scale

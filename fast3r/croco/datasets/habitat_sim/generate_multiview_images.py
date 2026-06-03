@@ -169,6 +169,7 @@ def create_commandline(scene_data, generate_depth, exist_ok=False):
     """
 
     def my_formatting(val):
+        """格式化命令行参数值：空值或 None 返回空字符串引号，否则原样返回。"""
         if val is None or val == "":
             return '""'
         else:

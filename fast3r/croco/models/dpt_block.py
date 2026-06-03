@@ -23,6 +23,7 @@ from einops import rearrange, repeat
 
 
 def pair(t):
+    """将标量转换为二元组：若已是 tuple 则原样返回，否则复制为 (t, t)。"""
     return t if isinstance(t, tuple) else (t, t)
 
 
@@ -348,6 +349,7 @@ class DPTOutputAdapter(nn.Module):
         output_width_ratio=1,
         **kwargs
     ):
+        """初始化 DPT 输出适配器，配置特征提取和融合参数。"""
         super().__init__()
         self.num_channels = num_channels
         self.stride_level = stride_level

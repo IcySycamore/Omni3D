@@ -122,6 +122,7 @@ class SmoothedValue(object):
         return self.deque[-1]
 
     def __str__(self):
+        """返回格式化的统计信息字符串。"""
         return self.fmt.format(
             median=self.median,
             avg=self.avg,
@@ -158,6 +159,7 @@ class MetricLogger(object):
             self.meters[k].update(v)
 
     def __getattr__(self, attr):
+        """通过属性名访问对应的 SmoothedValue 指标。"""
         if attr in self.meters:
             return self.meters[attr]
         if attr in self.__dict__:
@@ -167,16 +169,19 @@ class MetricLogger(object):
         )
 
     def __str__(self):
+        """返回所有指标的格式化字符串。"""
         loss_str = []
         for name, meter in self.meters.items():
             loss_str.append("{}: {}".format(name, str(meter)))
         return self.delimiter.join(loss_str)
 
     def synchronize_between_processes(self):
+        """在分布式进程间同步所有指标的统计量。"""
         for meter in self.meters.values():
             meter.synchronize_between_processes()
 
     def add_meter(self, name, meter):
+        """添加一个自定义名称的 SmoothedValue 指标。"""
         self.meters[name] = meter
 
     def log_every(self, iterable, print_freq, header=None, max_iter=None):
@@ -262,6 +267,7 @@ def setup_for_distributed(is_master):
     builtin_print = builtins.print
 
     def print(*args, **kwargs):
+        """分布式打印：仅在主进程输出日志，非主进程静默。"""
         force = kwargs.pop("force", False)
         force = force or (get_world_size() > 8)
         if is_master or force:

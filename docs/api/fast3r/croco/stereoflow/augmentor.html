@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 17 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/augmentor.py</div>
@@ -328,7 +328,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">StereoAugmentor</span>(object)
-                <span class="line-no">L33-365</span>
+                <span class="line-no">L33-366</span>
             </h2>
             <div class="docstring"><p>立体匹配数据增广器，依次执行缩放、裁剪、垂直翻转、右视图旋转抖动和颜色增广。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -354,16 +354,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">crop_size</span>, <span class="arg-name">scale_prob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">scale_xonly</span> = <span class="arg-default">True</span>, <span class="arg-name">lhth</span> = <span class="arg-default">800.0</span>, <span class="arg-name">lminscale</span> = <span class="arg-default">0.0</span>, <span class="arg-name">lmaxscale</span> = <span class="arg-default">1.0</span>, <span class="arg-name">hminscale</span> = <span class="arg-default">-0.2</span>, <span class="arg-name">hmaxscale</span> = <span class="arg-default">0.4</span>, <span class="arg-name">scale_interp_nearest</span> = <span class="arg-default">True</span>, <span class="arg-name">rightjitterprob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">v_flip_prob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">color_aug_asym</span> = <span class="arg-default">True</span>, <span class="arg-name">color_choice_prob</span> = <span class="arg-default">0.5</span>)</code>
-                    <span class="line-no">L52-80</span>
+                    <span class="line-no">L52-81</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化立体匹配数据增广器。</p></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_scale">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_scale</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>)</code>
-                    <span class="line-no">L82-152</span>
+                    <span class="line-no">L83-153</span>
                 </div>
                 <div class="docstring"><p>随机缩放图像和视差图，并根据阈值选择缩放范围。</p>
 <p>当图像较短边小于 :attr:`lhth` 时使用低分辨率缩放范围，否则使用高分辨率范围。</p>
@@ -382,7 +382,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_crop</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>)</code>
-                    <span class="line-no">L154-173</span>
+                    <span class="line-no">L155-174</span>
                 </div>
                 <div class="docstring"><p>随机裁剪图像和视差图到 :attr:`crop_size` 指定的大小。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -399,7 +399,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_vflip</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>)</code>
-                    <span class="line-no">L175-191</span>
+                    <span class="line-no">L176-192</span>
                 </div>
                 <div class="docstring"><p>以概率 :attr:`v_flip_prob` 垂直翻转图像和视差图。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -416,7 +416,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_rotate_shift_right</span> (<span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L193-218</span>
+                    <span class="line-no">L194-219</span>
                 </div>
                 <div class="docstring"><p>以概率 :attr:`rightjitterprob` 对右视图施加微小旋转和垂直平移。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -431,7 +431,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_contrast</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L220-236</span>
+                    <span class="line-no">L221-237</span>
                 </div>
                 <div class="docstring"><p>随机调整对比度，可非对称作用于左右图。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -447,7 +447,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_gamma</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L238-254</span>
+                    <span class="line-no">L239-255</span>
                 </div>
                 <div class="docstring"><p>随机调整伽马值，可非对称作用于左右图。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -463,7 +463,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_brightness</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L256-272</span>
+                    <span class="line-no">L257-273</span>
                 </div>
                 <div class="docstring"><p>随机调整亮度，可非对称作用于左右图。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -479,7 +479,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_hue</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L274-290</span>
+                    <span class="line-no">L275-291</span>
                 </div>
                 <div class="docstring"><p>随机调整色调，可非对称作用于左右图。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -495,7 +495,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_saturation</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L292-308</span>
+                    <span class="line-no">L293-309</span>
                 </div>
                 <div class="docstring"><p>随机调整饱和度，可非对称作用于左右图。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -511,7 +511,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L310-344</span>
+                    <span class="line-no">L311-345</span>
                 </div>
                 <div class="docstring"><p>随机应用一种或一组颜色增广变换。</p>
 <p>以 :attr:`color_choice_prob` 的概率选取单一变换，否则以随机顺序依次应用</p>
@@ -529,7 +529,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>, <span class="arg-name">dataset_name</span>)</code>
-                    <span class="line-no">L346-365</span>
+                    <span class="line-no">L347-366</span>
                 </div>
                 <div class="docstring"><p>执行完整的立体匹配增广流水线。</p>
 <p>依次调用：随机缩放 → 随机裁剪 → 随机垂直翻转 → 右视图旋转抖动 → 颜色增广。</p>
@@ -552,7 +552,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlowAugmentor</span>
-                <span class="line-no">L368-583</span>
+                <span class="line-no">L369-585</span>
             </h2>
             <div class="docstring"><p>光流数据增广器，依次执行空间增广（缩放/翻转/裁剪）和颜色增广。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -574,16 +574,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">crop_size</span>, <span class="arg-name">min_scale</span> = <span class="arg-default">-0.2</span>, <span class="arg-name">max_scale</span> = <span class="arg-default">0.5</span>, <span class="arg-name">spatial_aug_prob</span> = <span class="arg-default">0.8</span>, <span class="arg-name">stretch_prob</span> = <span class="arg-default">0.8</span>, <span class="arg-name">max_stretch</span> = <span class="arg-default">0.2</span>, <span class="arg-name">h_flip_prob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">v_flip_prob</span> = <span class="arg-default">0.1</span>, <span class="arg-name">asymmetric_color_aug_prob</span> = <span class="arg-default">0.2</span>)</code>
-                    <span class="line-no">L383-412</span>
+                    <span class="line-no">L384-414</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化光流数据增广器。</p></div>
             </div>
             
             <div class="method" id="method-FlowAugmentor-color_transform">
                 <div class="method-header">
                     
                     <code><span class="fn-name">color_transform</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L414-440</span>
+                    <span class="line-no">L416-442</span>
                 </div>
                 <div class="docstring"><p>颜色增广：以一定概率非对称或对称地应用 ColorJitter。</p>
 <p>非对称模式下左右图独立扰动；对称模式下先拼接再扰动以保证一致性。</p>
@@ -600,7 +600,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resize_flow</span> (<span class="arg-name">flow</span>, <span class="arg-name">scale_x</span>, <span class="arg-name">scale_y</span>, <span class="arg-name">factor</span> = <span class="arg-default">1.0</span>)</code>
-                    <span class="line-no">L442-498</span>
+                    <span class="line-no">L444-500</span>
                 </div>
                 <div class="docstring"><p>缩放光流场，同步调整像素位置和位移量。</p>
 <p>对稠密光流直接 ``cv2.resize`` 并乘以缩放因子；对稀疏光流（含 ``inf``）</p>
@@ -620,7 +620,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">spatial_transform</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">flow</span>, <span class="arg-name">dname</span>)</code>
-                    <span class="line-no">L500-564</span>
+                    <span class="line-no">L502-566</span>
                 </div>
                 <div class="docstring"><p>空间增广：随机缩放、水平/垂直翻转和随机裁剪。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -638,7 +638,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">flow</span>, <span class="arg-name">dname</span>)</code>
-                    <span class="line-no">L566-583</span>
+                    <span class="line-no">L568-585</span>
                 </div>
                 <div class="docstring"><p>执行完整的光流增广流水线：空间增广 → 颜色增广 → 连续内存对齐。</p>
 <div class="doc-section"><strong>Args:</strong>

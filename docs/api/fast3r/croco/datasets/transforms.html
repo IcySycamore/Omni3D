@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 5 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 7 方法</span>
-            <span class="warn">
-                ⚠️ 1 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/transforms.py</div>
@@ -457,7 +457,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ColorJitterPair</span>(torchvision.transforms.ColorJitter)
-                <span class="line-no">L94-187</span>
+                <span class="line-no">L94-188</span>
             </h2>
             <div class="docstring"><p>成对颜色抖动，可对称或非对称地扰动两张图像。</p>
 <p>以 ``assymetric_prob`` 的概率为第二张图重新采样抖动参数。</p>
@@ -473,16 +473,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">assymetric_prob</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L104-106</span>
+                    <span class="line-no">L104-107</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化成对颜色抖动，设置非对称抖动概率。</p></div>
             </div>
             
             <div class="method" id="method-ColorJitterPair-jitter_one">
                 <div class="method-header">
                     
                     <code><span class="fn-name">jitter_one</span> (<span class="arg-name">img</span>, <span class="arg-name">fn_idx</span>, <span class="arg-name">brightness_factor</span>, <span class="arg-name">contrast_factor</span>, <span class="arg-name">saturation_factor</span>, <span class="arg-name">hue_factor</span>)</code>
-                    <span class="line-no">L108-139</span>
+                    <span class="line-no">L109-140</span>
                 </div>
                 <div class="docstring"><p>对单张图像按给定的抖动参数和函数顺序执行颜色变换。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -502,7 +502,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L141-187</span>
+                    <span class="line-no">L142-188</span>
                 </div>
                 <div class="docstring"><p>对两张图像执行颜色抖动。</p>
 <p>以 ``assymetric_prob`` 的概率为第二张图重新采样抖动参数，</p>
@@ -524,7 +524,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_pair_transforms</span> (<span class="arg-name">transform_str</span>, <span class="arg-name">totensor</span> = <span class="arg-default">True</span>, <span class="arg-name">normalize</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L190-241</span>
+                <span class="line-no">L191-242</span>
             </h2>
             <div class="docstring"><p>根据字符串描述构建成对变换流水线。</p>
 <p>支持的变换关键字（用 ``+`` 拼接）：</p>

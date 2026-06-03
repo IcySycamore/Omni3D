@@ -103,6 +103,7 @@ class LaplacianLossBounded(
         self.a, self.b = a, b
 
     def forward(self, predictions, gt, conf):
+        """前向传播，计算带置信度的有界拉普拉斯损失。使用 sigmoid 参数化置信度到 [a, b] 区间。"""
         mask = torch.isfinite(gt)
         mask = mask[:, 0, :, :]
         if self.max_gtnorm is not None:
@@ -134,6 +135,7 @@ class LaplacianLossBounded2(
         self.a, self.b = a, b
 
     def forward(self, predictions, gt, conf):
+        """前向传播，计算带置信度的有界拉普拉斯损失2。使用 sigmoid/exp 混合参数化。"""
         mask = torch.isfinite(gt)
         mask = mask[:, 0, :, :]
         if self.max_gtnorm is not None:
@@ -163,6 +165,7 @@ class StereoMetrics(nn.Module):
         self.do_quantile = do_quantile
 
     def forward(self, predictions, gt):
+        """计算立体匹配批量指标：平均误差、RMSE 和 bad@t 百分比。"""
         B = predictions.size(0)
         metrics = {}
         gtcopy = gt.clone()
@@ -194,6 +197,7 @@ class FlowMetrics(nn.Module):
         self.bad_ths = [1, 3, 5]
 
     def forward(self, predictions, gt):
+        """计算光流批量指标：L1 误差、EPE 和 bad@t 百分比。"""
         B = predictions.size(0)
         metrics = {}
         mask = torch.isfinite(gt[:, 0, :, :])  # both x and y would be infinite
@@ -271,6 +275,7 @@ class StereoDatasetMetrics(nn.Module):
             self.agg_Nbad[i] += (L1err[valid] > th).sum().cpu()
 
     def _compute_metrics(self):
+        """从累积统计量计算最终立体匹配指标。"""
         if self._metrics is not None:
             return
         out = {}
@@ -282,6 +287,7 @@ class StereoDatasetMetrics(nn.Module):
         self._metrics = out
 
     def get_results(self):
+        """返回立体匹配数据集级指标的最终结果。"""
         self._compute_metrics()  # to avoid recompute them multiple times
         return self._metrics
 
@@ -405,5 +411,6 @@ class FlowDatasetMetrics(nn.Module):
         self._metrics = out
 
     def get_results(self):
+        """返回光流数据集级指标的最终结果。"""
         self._compute_metrics()  # to avoid recompute them multiple times
         return self._metrics

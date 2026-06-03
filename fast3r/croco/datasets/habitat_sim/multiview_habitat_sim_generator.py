@@ -221,6 +221,7 @@ class MultiviewHabitatSimGenerator:
         minimum_covisibility=0.5,
         transform=None,
     ):
+        """初始化多视图 Habitat-Sim 数据生成器。"""
         self.scene = scene
         self.navmesh = navmesh
         self.scene_dataset_config_file = scene_dataset_config_file
@@ -259,6 +260,7 @@ class MultiviewHabitatSimGenerator:
         self._lazy_initialization()
 
     def _lazy_initialization(self):
+        """延迟初始化：设置随机种子、Habitat 仿真器和导航网格。仅在首次访问时执行，以支持多进程。"""
         # Lazy random seeding and instantiation of the simulator to deal with multiprocessing properly
         if self.seed == None:
             # Re-seed numpy generator
@@ -314,12 +316,15 @@ class MultiviewHabitatSimGenerator:
             self.agent = self.sim.initialize_agent(agent_id=0)
 
     def close(self):
+        """关闭 Habitat 仿真器，释放资源。"""
         self.sim.close()
 
     def __del__(self):
+        """析构时自动关闭仿真器。"""
         self.sim.close()
 
     def __len__(self):
+        """返回数据集大小。"""
         return self.size
 
     def sample_random_viewpoint(self):
@@ -396,6 +401,7 @@ class MultiviewHabitatSimGenerator:
         return self.is_other_pointcloud_overlapping(ref_pointcloud, other_pointcloud)
 
     def render_viewpoint(self, viewpoint_position, viewpoint_orientation):
+        """在指定相机位姿渲染一帧 RGB 和深度观测。"""
         agent_state = habitat_sim.AgentState()
         agent_state.position = viewpoint_position
         agent_state.rotation = viewpoint_orientation
@@ -407,6 +413,7 @@ class MultiviewHabitatSimGenerator:
         return viewpoint_observations
 
     def __getitem__(self, useless_idx):
+        """采样并返回一个多视图样本，包含共视的 RGB/深度图及相机参数。"""
         ref_position, ref_orientation, nav_point = self.sample_random_viewpoint()
         ref_observations = self.render_viewpoint(ref_position, ref_orientation)
         # Extract point cloud

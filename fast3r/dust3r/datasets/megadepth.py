@@ -79,6 +79,7 @@ class MegaDepth(BaseStereoViewDataset):
         self.pairs = self.pairs[valid]
 
     def _get_views(self, pair_idx, resolution, rng):
+        """根据索引获取 MegaDepth 双视图数据。"""
         scene_id, im1_id, im2_id, score = self.pairs[pair_idx]
 
         scene, subscene = self.all_scenes[scene_id].split()

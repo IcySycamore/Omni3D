@@ -184,6 +184,7 @@ class Co3d_Multiview(BaseStereoViewDataset):
             return None
 
     def __len__(self):
+        """返回数据集大小（场景数 × 每场景组合数）。"""
         return len(self.scene_list) * len(self.combinations)
 
 

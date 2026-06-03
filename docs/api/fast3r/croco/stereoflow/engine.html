@@ -438,7 +438,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">tiled_pred</span> (<span class="arg-name">model</span>, <span class="arg-name">criterion</span>, <span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">gt</span>, <span class="arg-name">overlap</span> = <span class="arg-default">0.5</span>, <span class="arg-name">bad_crop_thr</span> = <span class="arg-default">0.05</span>, <span class="arg-name">downscale</span> = <span class="arg-default">False</span>, <span class="arg-name">crop</span> = <span class="arg-default">512</span>, <span class="arg-name">ret</span> = <span class="arg-default">&#x27;loss&#x27;</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">&#x27;conf_expsigmoid_10_5&#x27;</span>, <span class="arg-name">with_conf</span> = <span class="arg-default">False</span>, <span class="arg-name">return_time</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L309-439</span>
+                <span class="line-no">L309-440</span>
             </h2>
             <div class="docstring"><p>使用重叠裁剪片进行拼接预测，然后加权平均合并全图预测。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -470,7 +470,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_overlapping</span> (<span class="arg-name">total</span>, <span class="arg-name">window</span>, <span class="arg-name">overlap</span> = <span class="arg-default">0.5</span>)</code>
-                <span class="line-no">L442-456</span>
+                <span class="line-no">L443-457</span>
             </h2>
             <div class="docstring"><p>生成指定重叠率的滑动窗口切片建生器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -488,7 +488,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_crop</span> (<span class="arg-name">img</span>, <span class="arg-name">sy</span>, <span class="arg-name">sx</span>)</code>
-                <span class="line-no">L459-476</span>
+                <span class="line-no">L460-477</span>
             </h2>
             <div class="docstring"><p>从图像中裁剪指定窗口，超边界部分自动填充。</p>
 <div class="doc-section"><strong>Args:</strong>

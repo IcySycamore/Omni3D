@@ -102,6 +102,7 @@ class ColorJitterPair(torchvision.transforms.ColorJitter):
     """
 
     def __init__(self, assymetric_prob, **kwargs):
+        """初始化成对颜色抖动，设置非对称抖动概率。"""
         super().__init__(**kwargs)
         self.assymetric_prob = assymetric_prob
 

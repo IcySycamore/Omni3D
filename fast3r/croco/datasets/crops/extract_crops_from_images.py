@@ -132,6 +132,7 @@ def prepare_jobs(pairs, num_levels, num_pairs_in_dir):
     powers = [num_pairs_in_dir**level for level in reversed(range(num_levels))]
 
     def get_path(idx):
+        """根据索引生成层次化的路径字符串。"""
         idx_array = []
         d = idx
         for level in range(num_levels - 1):
@@ -198,6 +199,7 @@ def save_image_crops(args, data):
     tgt_size = (args.imsize, args.imsize)
 
     def prepare_crop(img, rect, rot=0):
+        """对图像执行裁剪、缩放和旋转，输出指定尺寸的图像。"""
         # actual crop
         img = img.crop(rect)
 
