@@ -379,7 +379,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MultiViewDUSt3RLitModule</span>(LightningModule)
-                <span class="line-no">L78-1171</span>
+                <span class="line-no">L78-1172</span>
             </h2>
             <div class="docstring"><p>Fast3R 的 PyTorch Lightning 训练模块。</p>
 <p>封装了 Fast3R 模型的训练、验证、评估流程，包括：</p>
@@ -606,7 +606,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">evaluate_camera_poses</span> (<span class="arg-name">views</span>, <span class="arg-name">preds</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">focal_length_estimation_method</span> = <span class="arg-default">&#x27;individual&#x27;</span>)</code>
-                    <span class="line-no">L846-913</span>
+                    <span class="line-no">L846-914</span>
                 </div>
                 <div class="docstring"><p>Evaluate camera poses and focal lengths using fast_pnp in parallel.</p>
 <p>Focal_length_estimation_method can be &#x27;individual&#x27; or &#x27;first_view_from_local_head&#x27; or &#x27;first_view_from_global_head&#x27;.</p></div>
@@ -616,7 +616,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">estimate_camera_poses</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span> = <span class="arg-default">None</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">focal_length_estimation_method</span> = <span class="arg-default">&#x27;individual&#x27;</span>)</code>
-                    <span class="line-no">L917-978</span>
+                    <span class="line-no">L918-979</span>
                 </div>
                 <div class="docstring"><p>Estimate camera poses and focal lengths using fast_pnp in parallel.</p></div>
             </div>
@@ -625,7 +625,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">correct_preds_orientation</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span>)</code>
-                    <span class="line-no">L981-1055</span>
+                    <span class="line-no">L982-1056</span>
                 </div>
                 <div class="docstring"><p>原位修正预测点和置信度图的方向。</p>
 <p>当视图为竖屏时，数据加载器会将图像转置为横屏格式。</p>
@@ -640,7 +640,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">configure_optimizers</span> ()  -> <span class="ret-type">Dict[str, Any]</span></code>
-                    <span class="line-no">L1057-1111</span>
+                    <span class="line-no">L1058-1112</span>
                 </div>
                 <div class="docstring"><p>配置优化器和学习率调度器。</p>
 <p>支持 LinearWarmupCosineAnnealingLR 调度器，自动将 warmup_epochs 和 max_epochs</p>
@@ -654,7 +654,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">setup</span> (<span class="arg-name">stage</span>: <span class="arg-type">str</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L1113-1126</span>
+                    <span class="line-no">L1114-1127</span>
                 </div>
                 <div class="docstring"><p>Lightning setup 回调，在训练前加载预训练权重和可选的模型编译。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -666,7 +666,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_pretrained_weights</span> ()  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L1128-1153</span>
+                    <span class="line-no">L1129-1154</span>
                 </div>
                 <div class="docstring"><p>加载预训练权重。</p>
 <p>支持从 DUSt3R 或 Fast3R 检查点加载权重。</p>
@@ -678,7 +678,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">_update_ckpt_keys</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">new_head_name</span> = <span class="arg-default">&#x27;downstream_head&#x27;</span>, <span class="arg-name">head_to_keep</span> = <span class="arg-default">&#x27;downstream_head1&#x27;</span>, <span class="arg-name">head_to_discard</span> = <span class="arg-default">&#x27;downstream_head2&#x27;</span>)</code>
-                    <span class="line-no">L1156-1171</span>
+                    <span class="line-no">L1157-1172</span>
                 </div>
                 <div class="docstring"><p>Helper function to use the weights of a model with multiple heads in a model with a single head.</p>
 <p>specifically, keep only the weights of the first head and delete the weights of the second head.</p></div>
@@ -702,7 +702,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">estimate_cam_pose_one_sample</span> (<span class="arg-name">sample_preds</span>, <span class="arg-name">device</span> = <span class="arg-default">&#x27;cpu&#x27;</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">0</span>)</code>
-                <span class="line-no">L1174-1229</span>
+                <span class="line-no">L1175-1231</span>
             </h2>
             <div class="docstring"><p>估计单个样本的所有视图相机位姿和焦距。</p>
 <p>使用 fast_pnp 并行估计每个视图的相机到世界 (c2w) 变换矩阵和焦距。</p>
@@ -724,7 +724,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">estimate_focal</span> (<span class="arg-name">pts3d_i</span>, <span class="arg-name">conf_i</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">10</span>)</code>
-                <span class="line-no">L1232-1273</span>
+                <span class="line-no">L1234-1275</span>
             </h2>
             <div class="docstring"><p>估计相机焦距。</p>
 <p>使用 Weiszfeld 算法从 3D 点和置信度掩码估计焦距。</p>

@@ -18,16 +18,33 @@ import torch
 
 
 class MaskedMSE(torch.nn.Module):
+    """带掩码的 MSE 损失函数，用于 CroCo 预训练。
+
+    支持对被掩码的 patch 计算损失，并可选地按 patch 像素均值/方差归一化。
+    """
+
     def __init__(self, norm_pix_loss=False, masked=True):
-        """
-        norm_pix_loss: normalize each patch by their pixel mean and variance
-        masked: compute loss over the masked patches only
+        """初始化 MaskedMSE。
+
+        Args:
+            norm_pix_loss (bool): 是否按 patch 像素均值/方差归一化。默认 False。
+            masked (bool): 是否仅在被掩码的 patch 上计算损失。默认 True。
         """
         super().__init__()
         self.norm_pix_loss = norm_pix_loss
         self.masked = masked
 
     def forward(self, pred, mask, target):
+        """计算带掩码的 MSE 损失。
+
+        Args:
+            pred (Tensor): 预测值。
+            mask (BoolTensor): 掩码，True 表示被掩码的位置。
+            target (Tensor): 目标值。
+
+        Returns:
+            Tensor: 标量损失值。
+        """
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)

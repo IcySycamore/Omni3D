@@ -551,7 +551,7 @@ def align_multiple_poses(src_poses, target_poses):
     assert src_poses.shape == target_poses.shape == (N, 4, 4)
 
     def center_and_z(poses):
-        eps = get_med_dist_between_poses(poses) / 100
+        """提取位姿的中心点和 Z 轴方向点，用于相似变换对齐。"""
         return torch.cat((poses[:, :3, 3], poses[:, :3, 3] + eps * poses[:, :3, 2]))
 
     R, T, s = roma.rigid_points_registration(

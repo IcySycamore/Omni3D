@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 3 方法</span>
-            <span class="warn">
-                ⚠️ 3 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/heads/linear_head.py</div>
@@ -327,7 +327,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">LinearPts3d</span>(nn.Module)
-                <span class="line-no">L19-50</span>
+                <span class="line-no">L19-66</span>
             </h2>
             <div class="docstring"><p>Linear head for dust3r</p>
 <p>Each token outputs: - 16x16 3D points (+ confidence)</p></div>
@@ -339,27 +339,38 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">net</span>, <span class="arg-name">has_conf</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L25-32</span>
+                    <span class="line-no">L25-38</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化线性预测头。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    net: 父模型，用于获取 patch_size、dec_embed_dim 等参数。</div>
+<div class="doc-detail">    has_conf (bool): 是否输出置信度通道。默认 False。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-LinearPts3d-setup">
                 <div class="method-header">
                     
                     <code><span class="fn-name">setup</span> (<span class="arg-name">croconet</span>)</code>
-                    <span class="line-no">L34-35</span>
+                    <span class="line-no">L40-42</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置函数（当前为空实现，保留接口兼容性）。</p></div>
             </div>
             
             <div class="method" id="method-LinearPts3d-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">decout</span>, <span class="arg-name">img_shape</span>)</code>
-                    <span class="line-no">L37-50</span>
+                    <span class="line-no">L44-66</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>线性前向传播，将解码器输出映射为像素级 3D 点和可选置信度。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    decout (list[Tensor]): 解码器各层输出，使用最后一层。</div>
+<div class="doc-detail">    img_shape (tuple): 图像尺寸 (H, W)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: 包含 &#x27;pts3d&#x27; 和可选 &#x27;conf&#x27; 的预测结果。</div>
+</div></div>
             </div>
             
             </div>

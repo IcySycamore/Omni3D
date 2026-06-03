@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 4 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/image.py</div>
@@ -340,9 +340,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rgb</span> (<span class="arg-name">ftensor</span>, <span class="arg-name">true_shape</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L47-63</span>
+                <span class="line-no">L47-75</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将张量转换为 RGB numpy 数组（值域 [0, 1]）。</p>
+<p>支持 (3,H,W)、(B,3,H,W)、(H,W,3) 等多种输入格式，</p>
+<p>并根据归一化方式自动还原到 [0, 1] 范围。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    ftensor (Tensor | ndarray | list): 输入张量或列表。</div>
+<div class="doc-detail">    true_shape (tuple | None): 如果提供，裁剪到 (H, W) 尺寸。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    ndarray: 形状为 (H, W, 3) 的 RGB 数组，值域 [0, 1]。</div>
+</div></div>
         </div>
         
 
@@ -350,9 +359,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_resize_pil_image</span> (<span class="arg-name">img</span>, <span class="arg-name">long_edge_size</span>)</code>
-                <span class="line-no">L66-73</span>
+                <span class="line-no">L78-98</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>按长边等比缩放 PIL 图像。</p>
+<p>缩放时根据目标大小自动选择插值方法：</p>
+<p>- 缩小使用 LANCZOS（高质量）</p>
+<p>- 放大使用 BICUBIC</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img (PIL.Image): 输入图像。</div>
+<div class="doc-detail">    long_edge_size (int): 长边的目标像素数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    PIL.Image: 缩放后的图像。</div>
+</div></div>
         </div>
         
 
@@ -360,7 +379,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_images</span> (<span class="arg-name">folder_or_list</span>, <span class="arg-name">size</span>, <span class="arg-name">square_ok</span> = <span class="arg-default">False</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>, <span class="arg-name">rotate_clockwise_90</span> = <span class="arg-default">False</span>, <span class="arg-name">crop_to_landscape</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L76-159</span>
+                <span class="line-no">L101-184</span>
             </h2>
             <div class="docstring"><p>open and convert all images in a list or folder to proper input format for DUSt3R</p></div>
         </div>

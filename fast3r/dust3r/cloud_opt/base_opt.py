@@ -44,8 +44,16 @@ class BasePCOptimizer(nn.Module):
     """
 
     def __init__(self, *args, **kwargs):
+        """初始化 BasePCOptimizer，支持从视图对或深拷贝构造。
+
+        如果只传入一个位置参数且无关键字参数，则执行深拷贝；
+        否则从视图对初始化。
+
+        Args:
+            *args: 单个 BasePCOptimizer 实例（深拷贝）或视图对参数。
+            **kwargs: 传递给 _init_from_views 的关键字参数。
+        """
         if len(args) == 1 and len(kwargs) == 0:
-            other = deepcopy(args[0])
             attrs = """edges is_symmetrized dist n_imgs pred_i pred_j imshapes
                         min_conf_thr conf_thr conf_i conf_j im_conf
                         base_scale norm_pw_scale POSE_DIM pw_poses

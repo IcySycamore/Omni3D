@@ -313,7 +313,7 @@ td a:hover { text-decoration: underline; }
             <span>⚡ 3 函数</span>
             <span>🔧 10 方法</span>
             <span class="warn">
-                ⚠️ 6 处缺 docstring
+                ⚠️ 2 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/dpt_block.py</div>
@@ -333,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ResidualConvUnit_custom</span>(nn.Module)
-                <span class="line-no">L91-154</span>
+                <span class="line-no">L102-165</span>
             </h2>
             <div class="docstring"><p>Residual convolution module.</p></div>
             
@@ -344,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">features</span>, <span class="arg-name">activation</span>, <span class="arg-name">bn</span>)</code>
-                    <span class="line-no">L94-131</span>
+                    <span class="line-no">L105-142</span>
                 </div>
                 <div class="docstring"><p>Init.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -356,7 +356,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L133-154</span>
+                    <span class="line-no">L144-165</span>
                 </div>
                 <div class="docstring"><p>Forward pass.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -375,7 +375,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FeatureFusionBlock_custom</span>(nn.Module)
-                <span class="line-no">L157-250</span>
+                <span class="line-no">L168-261</span>
             </h2>
             <div class="docstring"><p>Feature fusion block.</p></div>
             
@@ -386,7 +386,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">features</span>, <span class="arg-name">activation</span>, <span class="arg-name">deconv</span> = <span class="arg-default">False</span>, <span class="arg-name">bn</span> = <span class="arg-default">False</span>, <span class="arg-name">expand</span> = <span class="arg-default">False</span>, <span class="arg-name">align_corners</span> = <span class="arg-default">True</span>, <span class="arg-name">width_ratio</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L160-200</span>
+                    <span class="line-no">L171-211</span>
                 </div>
                 <div class="docstring"><p>Init.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -398,7 +398,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">*xs</span>, <span class="arg-name">max_chunk_size</span> = <span class="arg-default">100</span>)</code>
-                    <span class="line-no">L202-250</span>
+                    <span class="line-no">L213-261</span>
                 </div>
                 <div class="docstring"><p>Forward pass.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -414,7 +414,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Interpolate</span>(nn.Module)
-                <span class="line-no">L265-296</span>
+                <span class="line-no">L285-316</span>
             </h2>
             <div class="docstring"><p>Interpolation module.</p></div>
             
@@ -425,7 +425,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">scale_factor</span>, <span class="arg-name">mode</span>, <span class="arg-name">align_corners</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L268-279</span>
+                    <span class="line-no">L288-299</span>
                 </div>
                 <div class="docstring"><p>Init.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -438,7 +438,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L281-296</span>
+                    <span class="line-no">L301-316</span>
                 </div>
                 <div class="docstring"><p>Forward pass.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -457,7 +457,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DPTOutputAdapter</span>(nn.Module)
-                <span class="line-no">L299-534</span>
+                <span class="line-no">L319-554</span>
             </h2>
             <div class="docstring"><p>DPT output adapter.</p>
 <p>:param num_cahnnels: Number of output channels</p>
@@ -479,7 +479,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_channels</span>: <span class="arg-type">int</span> = <span class="arg-default">1</span>, <span class="arg-name">stride_level</span>: <span class="arg-type">int</span> = <span class="arg-default">1</span>, <span class="arg-name">patch_size</span>: <span class="arg-type">Union[int, Tuple[int, int]]</span> = <span class="arg-default">16</span>, <span class="arg-name">main_tasks</span>: <span class="arg-type">Iterable[str]</span> = <span class="arg-default">(&#x27;rgb&#x27;,)</span>, <span class="arg-name">hooks</span>: <span class="arg-type">List[int]</span> = <span class="arg-default">[2, 5, 8, 11]</span>, <span class="arg-name">layer_dims</span>: <span class="arg-type">List[int]</span> = <span class="arg-default">[96, 192, 384, 768]</span>, <span class="arg-name">feature_dim</span>: <span class="arg-type">int</span> = <span class="arg-default">256</span>, <span class="arg-name">last_dim</span>: <span class="arg-type">int</span> = <span class="arg-default">32</span>, <span class="arg-name">use_bn</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">dim_tokens_enc</span>: <span class="arg-type">Optional[int]</span> = <span class="arg-default">None</span>, <span class="arg-name">head_type</span>: <span class="arg-type">str</span> = <span class="arg-default">&#x27;regression&#x27;</span>, <span class="arg-name">output_width_ratio</span> = <span class="arg-default">1</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L315-399</span>
+                    <span class="line-no">L335-419</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -488,7 +488,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">init</span> (<span class="arg-name">dim_tokens_enc</span> = <span class="arg-default">768</span>)</code>
-                    <span class="line-no">L401-490</span>
+                    <span class="line-no">L421-510</span>
                 </div>
                 <div class="docstring"><p>Initialize parts of decoder that are dependent on dimension of encoder tokens.</p>
 <p>Should be called when setting up MultiMAE.</p>
@@ -499,18 +499,31 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">adapt_tokens</span> (<span class="arg-name">encoder_tokens</span>)</code>
-                    <span class="line-no">L492-497</span>
+                    <span class="line-no">L512-517</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>适配编码器 token，去除全局 token 并保留任务相关 token。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoder_tokens (Tensor): 编码器输出 token。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 适配后的 token。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-DPTOutputAdapter-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">encoder_tokens</span>: <span class="arg-type">List[torch.Tensor]</span>, <span class="arg-name">image_size</span>)</code>
-                    <span class="line-no">L499-534</span>
+                    <span class="line-no">L519-554</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>DPT 前向传播，从编码器多层特征生成密集预测。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    encoder_tokens (List[Tensor]): 编码器各层输出的 token 列表。</div>
+<div class="doc-detail">    image_size (tuple): 图像尺寸 (H, W)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 密集预测输出。</div>
+</div></div>
             </div>
             
             </div>
@@ -531,9 +544,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">make_scratch</span> (<span class="arg-name">in_shape</span>, <span class="arg-name">out_shape</span>, <span class="arg-name">groups</span> = <span class="arg-default">1</span>, <span class="arg-name">expand</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L29-88</span>
+                <span class="line-no">L29-99</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>构建 DPT 的特征提取模块，包含4层卷积和归一化。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    in_shape (list[int]): 各层输入通道数。</div>
+<div class="doc-detail">    out_shape (int): 基础输出通道数。</div>
+<div class="doc-detail">    groups (int): 卷积分组数。默认 1。</div>
+<div class="doc-detail">    expand (bool): 是否逐层扩展通道数。默认 False。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Module: 包含 layer_rn 的特征提取模块。</div>
+</div></div>
         </div>
         
 
@@ -541,9 +563,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">make_fusion_block</span> (<span class="arg-name">features</span>, <span class="arg-name">use_bn</span>, <span class="arg-name">width_ratio</span> = <span class="arg-default">1</span>)</code>
-                <span class="line-no">L253-262</span>
+                <span class="line-no">L264-282</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>构建特征融合块。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    features (int): 特征通道数。</div>
+<div class="doc-detail">    use_bn (bool): 是否使用批归一化。</div>
+<div class="doc-detail">    width_ratio (int): 输出宽度比例。默认 1。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    FeatureFusionBlock_custom: 特征融合块实例。</div>
+</div></div>
         </div>
         
 </main>

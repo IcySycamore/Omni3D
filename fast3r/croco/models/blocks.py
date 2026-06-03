@@ -43,6 +43,7 @@ def _ntuple(n):
         Callable: Conversion function.
     """
     def parse(x):
+        """将输入转换为指定长度的元组。"""
         if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
             return x
         return tuple(repeat(x, n))
@@ -98,6 +99,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
 
     def extra_repr(self):
+        """返回 DropPath 的可读表示字符串。"""
         return f"drop_prob={round(self.drop_prob,3):0.3f}"
 
 

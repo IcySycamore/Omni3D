@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 2 函数</span>
             <span>🔧 32 方法</span>
-            <span class="warn">
-                ⚠️ 1 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/base_opt.py</div>
@@ -329,7 +329,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BasePCOptimizer</span>(nn.Module)
-                <span class="line-no">L40-729</span>
+                <span class="line-no">L40-737</span>
             </h2>
             <div class="docstring"><p>Optimize a global scene, given a list of pairwise observations.</p>
 <p>Graph node: images</p>
@@ -342,16 +342,22 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L46-55</span>
+                    <span class="line-no">L46-63</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 BasePCOptimizer，支持从视图对或深拷贝构造。</p>
+<p>如果只传入一个位置参数且无关键字参数，则执行深拷贝；</p>
+<p>否则从视图对初始化。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    *args: 单个 BasePCOptimizer 实例（深拷贝）或视图对参数。</div>
+<div class="doc-detail">    **kwargs: 传递给 _init_from_views 的关键字参数。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-BasePCOptimizer-_init_from_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_init_from_views</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">dist</span> = <span class="arg-default">&#x27;l1&#x27;</span>, <span class="arg-name">conf</span> = <span class="arg-default">&#x27;log&#x27;</span>, <span class="arg-name">min_conf_thr</span> = <span class="arg-default">3</span>, <span class="arg-name">base_scale</span> = <span class="arg-default">0.5</span>, <span class="arg-name">allow_pw_adaptors</span> = <span class="arg-default">False</span>, <span class="arg-name">pw_break</span> = <span class="arg-default">20</span>, <span class="arg-name">rand_pose</span> = <span class="arg-default">torch.randn</span>, <span class="arg-name">iterationsCount</span> = <span class="arg-default">None</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L57-168</span>
+                    <span class="line-no">L65-176</span>
                 </div>
                 <div class="docstring"><p>Initialize the optimizer from pairwise view observations.</p>
 <p>Builds the pose graph, stores prediction tensors, computes per-image</p>
@@ -390,7 +396,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">n_edges</span> ()</code>
-                    <span class="line-no">L171-177</span>
+                    <span class="line-no">L179-185</span>
                 </div>
                 <div class="docstring"><p>Total number of directed edges (pairwise observations) in the graph.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -402,7 +408,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">str_edges</span> ()</code>
-                    <span class="line-no">L180-186</span>
+                    <span class="line-no">L188-194</span>
                 </div>
                 <div class="docstring"><p>List of edge string keys in the format ``&quot;i_j&quot;`` for all edges.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -414,7 +420,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">imsizes</span> ()</code>
-                    <span class="line-no">L189-195</span>
+                    <span class="line-no">L197-203</span>
                 </div>
                 <div class="docstring"><p>List of image sizes as (W, H) tuples for all images.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -426,7 +432,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">device</span> ()</code>
-                    <span class="line-no">L198-204</span>
+                    <span class="line-no">L206-212</span>
                 </div>
                 <div class="docstring"><p>Device of the first trainable parameter.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -438,7 +444,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">state_dict</span> (<span class="arg-name">trainable</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L206-224</span>
+                    <span class="line-no">L214-232</span>
                 </div>
                 <div class="docstring"><p>Return a state dict containing either trainable or frozen parameters.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -456,7 +462,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">data</span>)</code>
-                    <span class="line-no">L226-236</span>
+                    <span class="line-no">L234-244</span>
                 </div>
                 <div class="docstring"><p>Load a state dict, merging frozen input data with the provided trainable weights.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -472,7 +478,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_check_edges</span> ()</code>
-                    <span class="line-no">L238-249</span>
+                    <span class="line-no">L246-257</span>
                 </div>
                 <div class="docstring"><p>Validate that edge indices cover a contiguous range [0, n_imgs).</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -487,7 +493,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_compute_img_conf</span> (<span class="arg-name">pred1_conf</span>, <span class="arg-name">pred2_conf</span>)</code>
-                    <span class="line-no">L252-271</span>
+                    <span class="line-no">L260-279</span>
                 </div>
                 <div class="docstring"><p>Compute per-image confidence maps as the element-wise maximum over all edges.</p>
 <p>For each image, the confidence is the pixel-wise maximum of all</p>
@@ -505,7 +511,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_adaptors</span> ()</code>
-                    <span class="line-no">L273-288</span>
+                    <span class="line-no">L281-296</span>
                 </div>
                 <div class="docstring"><p>Compute normalized per-edge XY/Z scale adaptors.</p>
 <p>The raw 2-D adaptor parameters are expanded to (scale_xy, scale_xy, scale_z),</p>
@@ -519,7 +525,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_poses</span> (<span class="arg-name">poses</span>)</code>
-                    <span class="line-no">L290-308</span>
+                    <span class="line-no">L298-316</span>
                 </div>
                 <div class="docstring"><p>Convert raw pose parameters to homogeneous rigid transformation matrices.</p>
 <p>Normalizes the quaternion component and applies :func:`signed_expm1`</p>
@@ -538,7 +544,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_pose</span> (<span class="arg-name">poses</span>, <span class="arg-name">idx</span>, <span class="arg-name">R</span>, <span class="arg-name">T</span> = <span class="arg-default">None</span>, <span class="arg-name">scale</span> = <span class="arg-default">None</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L310-350</span>
+                    <span class="line-no">L318-358</span>
                 </div>
                 <div class="docstring"><p>Set the rotation, translation, and optionally scale for a pose parameter.</p>
 <p>Only modifies the parameter if it currently requires a gradient or</p>
@@ -563,7 +569,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pw_norm_scale_factor</span> ()</code>
-                    <span class="line-no">L352-367</span>
+                    <span class="line-no">L360-375</span>
                 </div>
                 <div class="docstring"><p>Compute the global scale normalization factor for pairwise poses.</p>
 <p>When scale normalization is enabled, returns ``exp(log(base_scale)</p>
@@ -578,7 +584,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pw_scale</span> ()</code>
-                    <span class="line-no">L369-377</span>
+                    <span class="line-no">L377-385</span>
                 </div>
                 <div class="docstring"><p>Return per-edge scale values (exponentiated and normalized).</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -590,7 +596,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pw_poses</span> ()</code>
-                    <span class="line-no">L379-393</span>
+                    <span class="line-no">L387-401</span>
                 </div>
                 <div class="docstring"><p>Return scaled pairwise cam-to-world transformation matrices.</p>
 <p>The rotation and translation columns are multiplied by the per-edge</p>
@@ -604,7 +610,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_masks</span> ()</code>
-                    <span class="line-no">L395-404</span>
+                    <span class="line-no">L403-412</span>
                 </div>
                 <div class="docstring"><p>Return per-image binary confidence masks.</p>
 <p>A pixel is included (True) when its confidence exceeds</p>
@@ -618,7 +624,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">depth_to_pts3d</span> ()</code>
-                    <span class="line-no">L406-414</span>
+                    <span class="line-no">L414-422</span>
                 </div>
                 <div class="docstring"><p>Convert depth maps to 3D point maps in world coordinates.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -631,7 +637,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pts3d</span> (<span class="arg-name">raw</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L416-431</span>
+                    <span class="line-no">L424-439</span>
                 </div>
                 <div class="docstring"><p>Return optimized 3D point maps.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -649,7 +655,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_focal</span> (<span class="arg-name">idx</span>, <span class="arg-name">focal</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L433-446</span>
+                    <span class="line-no">L441-454</span>
                 </div>
                 <div class="docstring"><p>Set the focal length for a specific image.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -667,7 +673,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_focals</span> ()</code>
-                    <span class="line-no">L448-456</span>
+                    <span class="line-no">L456-464</span>
                 </div>
                 <div class="docstring"><p>Return per-image focal lengths.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -680,7 +686,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_known_focal_mask</span> ()</code>
-                    <span class="line-no">L458-466</span>
+                    <span class="line-no">L466-474</span>
                 </div>
                 <div class="docstring"><p>Return a boolean mask indicating which images have known (frozen) focal lengths.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -693,7 +699,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_principal_points</span> ()</code>
-                    <span class="line-no">L468-476</span>
+                    <span class="line-no">L476-484</span>
                 </div>
                 <div class="docstring"><p>Return per-image principal points (cx, cy) in pixel coordinates.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -706,7 +712,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_conf</span> (<span class="arg-name">mode</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L478-490</span>
+                    <span class="line-no">L486-498</span>
                 </div>
                 <div class="docstring"><p>Return per-image confidence maps after applying a transformation.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -723,7 +729,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_im_poses</span> ()</code>
-                    <span class="line-no">L492-500</span>
+                    <span class="line-no">L500-508</span>
                 </div>
                 <div class="docstring"><p>Return per-image cam-to-world transformation matrices.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -736,7 +742,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_depthmap</span> (<span class="arg-name">idx</span>, <span class="arg-name">depth</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L502-515</span>
+                    <span class="line-no">L510-523</span>
                 </div>
                 <div class="docstring"><p>Set the depth map for a specific image.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -754,7 +760,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_depthmaps</span> (<span class="arg-name">raw</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L517-529</span>
+                    <span class="line-no">L525-537</span>
                 </div>
                 <div class="docstring"><p>Return optimized depth maps for all images.</p>
 <p>Must be implemented by concrete subclasses.</p>
@@ -771,7 +777,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">clean_pointcloud</span> (<span class="arg-name">tol</span> = <span class="arg-default">0.001</span>, <span class="arg-name">max_bad_conf</span> = <span class="arg-default">0</span>)</code>
-                    <span class="line-no">L532-570</span>
+                    <span class="line-no">L540-578</span>
                 </div>
                 <div class="docstring"><div class="doc-section"><strong>Method:</strong>
 <div class="doc-detail">1) express all 3d points in each camera coordinate frame</div>
@@ -783,7 +789,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">ret_details</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L572-616</span>
+                    <span class="line-no">L580-624</span>
                 </div>
                 <div class="docstring"><p>Compute the global alignment loss over all pairwise edges.</p>
 <p>For each edge (i, j), the predicted 3D points from both views are</p>
@@ -806,7 +812,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_global_alignment</span> (<span class="arg-name">init</span> = <span class="arg-default">None</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L619-653</span>
+                    <span class="line-no">L627-661</span>
                 </div>
                 <div class="docstring"><p>Run the full global alignment pipeline.</p>
 <p>Optionally initializes poses using a minimum spanning tree or known</p>
@@ -834,7 +840,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">mask_sky</span> ()</code>
-                    <span class="line-no">L656-672</span>
+                    <span class="line-no">L664-680</span>
                 </div>
                 <div class="docstring"><p>Return a copy of this optimizer with sky pixels zeroed out in confidence maps.</p>
 <p>Uses :func:`~fast3r.dust3r.viz.segment_sky` to detect sky regions in</p>
@@ -851,7 +857,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">show</span> (<span class="arg-name">show_pw_cams</span> = <span class="arg-default">False</span>, <span class="arg-name">show_pw_pts3d</span> = <span class="arg-default">False</span>, <span class="arg-name">cam_size</span> = <span class="arg-default">None</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L674-729</span>
+                    <span class="line-no">L682-737</span>
                 </div>
                 <div class="docstring"><p>Visualize the optimized scene in a 3D viewer.</p>
 <p>Renders the reconstructed point cloud, camera frustums, and</p>
@@ -881,7 +887,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">global_alignment_loop</span> (<span class="arg-name">net</span>, <span class="arg-name">lr</span> = <span class="arg-default">0.01</span>, <span class="arg-name">niter</span> = <span class="arg-default">300</span>, <span class="arg-name">schedule</span> = <span class="arg-default">&#x27;cosine&#x27;</span>, <span class="arg-name">lr_min</span> = <span class="arg-default">1e-06</span>)</code>
-                <span class="line-no">L732-779</span>
+                <span class="line-no">L740-787</span>
             </h2>
             <div class="docstring"><p>Run the Adam optimization loop for global scene alignment.</p>
 <p>Iterates for *niter* steps, adjusting the learning rate according to</p>
@@ -908,7 +914,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">global_alignment_iter</span> (<span class="arg-name">net</span>, <span class="arg-name">cur_iter</span>, <span class="arg-name">niter</span>, <span class="arg-name">lr_base</span>, <span class="arg-name">lr_min</span>, <span class="arg-name">optimizer</span>, <span class="arg-name">schedule</span>)</code>
-                <span class="line-no">L782-817</span>
+                <span class="line-no">L790-825</span>
             </h2>
             <div class="docstring"><p>Execute a single optimization iteration for global scene alignment.</p>
 <p>Adjusts the learning rate, zeroes gradients, computes the forward loss,</p>

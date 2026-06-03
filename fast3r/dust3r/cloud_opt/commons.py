@@ -132,21 +132,25 @@ def get_conf_trf(mode):
     if mode == "log":
 
         def conf_trf(x):
+            """log 置信度变换。"""
             return x.log()
 
     elif mode == "sqrt":
 
         def conf_trf(x):
+            """sqrt 置信度变换。"""
             return x.sqrt()
 
     elif mode == "m1":
 
         def conf_trf(x):
+            """减 1 置信度变换。"""
             return x - 1
 
     elif mode in ("id", "none"):
 
         def conf_trf(x):
+            """恒等置信度变换（不做变换）。"""
             return x
 
     else:

@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 6 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 5 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/device.py</div>
@@ -345,9 +345,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">to_numpy</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L48-49</span>
+                <span class="line-no">L48-57</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将张量或嵌套结构转换为 numpy 数组。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x: 张量、numpy 数组或嵌套结构（dict/list/tuple）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    转换后的 numpy 数组或嵌套结构。</div>
+</div></div>
         </div>
         
 
@@ -355,9 +361,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">to_cpu</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L52-53</span>
+                <span class="line-no">L60-69</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将张量或嵌套结构转移到 CPU。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x: 张量、numpy 数组或嵌套结构。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    CPU 上的张量或嵌套结构。</div>
+</div></div>
         </div>
         
 
@@ -365,9 +377,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">to_cuda</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L56-57</span>
+                <span class="line-no">L72-81</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将张量或嵌套结构转移到 CUDA GPU。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x: 张量、numpy 数组或嵌套结构。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    CUDA 上的张量或嵌套结构。</div>
+</div></div>
         </div>
         
 
@@ -375,9 +393,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">collate_with_cat</span> (<span class="arg-name">whatever</span>, <span class="arg-name">lists</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L60-91</span>
+                <span class="line-no">L84-124</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>递归地拼接批量数据，对张量使用 torch.cat，对字典和元组递归处理。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    whatever: 批量数据，可以是 dict、list、tuple 或张量。</div>
+<div class="doc-detail">    lists (bool): 如果为 True，对张量返回列表而非拼接。默认 False。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    拼接后的批量数据。</div>
+</div></div>
         </div>
         
 
@@ -385,9 +410,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">listify</span> (<span class="arg-name">elems</span>)</code>
-                <span class="line-no">L94-95</span>
+                <span class="line-no">L127-136</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将嵌套列表展平为单层列表。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    elems: 嵌套的可迭代对象。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list: 展平后的列表。</div>
+</div></div>
         </div>
         
 </main>

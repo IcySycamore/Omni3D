@@ -322,6 +322,7 @@ class ModularPointCloudOptimizer(BasePCOptimizer):
 
         # convert focal to (1,2,H,W) constant field
         def focal_ex(i):
+            """将焦距扩展为 (1, 2, H, W) 的常量场。"""
             return focals[i][..., None, None].expand(
                 1, *focals[i].shape, *self.imshapes[i]
             )

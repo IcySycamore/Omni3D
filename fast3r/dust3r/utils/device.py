@@ -46,18 +46,51 @@ to_device = todevice  # alias
 
 
 def to_numpy(x):
+    """将张量或嵌套结构转换为 numpy 数组。
+
+    Args:
+        x: 张量、numpy 数组或嵌套结构（dict/list/tuple）。
+
+    Returns:
+        转换后的 numpy 数组或嵌套结构。
+    """
     return todevice(x, "numpy")
 
 
 def to_cpu(x):
+    """将张量或嵌套结构转移到 CPU。
+
+    Args:
+        x: 张量、numpy 数组或嵌套结构。
+
+    Returns:
+        CPU 上的张量或嵌套结构。
+    """
     return todevice(x, "cpu")
 
 
 def to_cuda(x):
+    """将张量或嵌套结构转移到 CUDA GPU。
+
+    Args:
+        x: 张量、numpy 数组或嵌套结构。
+
+    Returns:
+        CUDA 上的张量或嵌套结构。
+    """
     return todevice(x, "cuda")
 
 
 def collate_with_cat(whatever, lists=False):
+    """递归地拼接批量数据，对张量使用 torch.cat，对字典和元组递归处理。
+
+    Args:
+        whatever: 批量数据，可以是 dict、list、tuple 或张量。
+        lists (bool): 如果为 True，对张量返回列表而非拼接。默认 False。
+
+    Returns:
+        拼接后的批量数据。
+    """
     if isinstance(whatever, dict):
         return {k: collate_with_cat(vals, lists=lists) for k, vals in whatever.items()}
 
@@ -92,4 +125,12 @@ def collate_with_cat(whatever, lists=False):
 
 
 def listify(elems):
+    """将嵌套列表展平为单层列表。
+
+    Args:
+        elems: 嵌套的可迭代对象。
+
+    Returns:
+        list: 展平后的列表。
+    """
     return [x for e in elems for x in e]

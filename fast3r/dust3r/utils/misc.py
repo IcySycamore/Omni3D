@@ -104,6 +104,7 @@ def transpose_to_landscape(head, activate=True):
     """
 
     def wrapper_no(decout, true_shape):
+        """不进行横竖屏转置的包装器，直接调用预测头。"""
         B = len(true_shape)
         assert true_shape[0:1].allclose(true_shape), "true_shape must be all identical"
         H, W = true_shape[0].cpu().tolist()
@@ -111,6 +112,7 @@ def transpose_to_landscape(head, activate=True):
         return res
 
     def wrapper_yes(decout, true_shape):
+        """横竖屏转置包装器，自动检测并处理横屏/竖屏混合批次。"""
         B = len(true_shape)
         # by definition, the batch is in landscape mode so W >= H
         H, W = int(true_shape.min()), int(true_shape.max())
@@ -127,6 +129,7 @@ def transpose_to_landscape(head, activate=True):
 
         # batch is a mix of both portraint & landscape
         def selout(ar):
+            """根据布尔掩码从解码器输出中选取对应元素。"""
             return [d[ar] for d in decout]
 
         l_result = head(selout(is_landscape), (H, W))
