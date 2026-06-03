@@ -443,6 +443,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @server.on_client_connect
     def on_client_connect(client: viser.ClientHandle) -> None:
+        """客户端连接时设置初始相机位置。"""
         with client.atomic():
             client.camera.position = (-0.00141163, -0.01910395, -0.06794288)
             client.camera.look_at = (-0.00352821, -0.01143425, 0.0154939)
@@ -492,14 +493,17 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_next_frame.on_click
     def next_frame(_):
+        """切换到下一帧。"""
         gui_timestep.value = (gui_timestep.value + 1) % num_frames
 
     @gui_prev_frame.on_click
     def prev_frame(_):
+        """切换到上一帧。"""
         gui_timestep.value = (gui_timestep.value - 1) % num_frames
 
     @gui_playing.on_update
     def playing_update(_):
+        """播放状态切换时更新控件禁用状态。"""
         state = gui_playing.value
         gui_timestep.disabled = state
         gui_next_frame.disabled = state
@@ -507,6 +511,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_framerate_options.on_click
     def fps_options(_):
+        """帧率选项点击回调。"""
         gui_framerate.value = float(gui_framerate_options.value)
 
     server.scene.add_frame("/cams", show_axes=False)
@@ -550,6 +555,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
         colors_confidence_local = colormap(conf_norm_local)[:, :3]
 
         def rainbow_color(n, total):
+            """生成彩虹色调颜色。"""
             import colorsys
             hue = n / total
             return colorsys.hsv_to_rgb(hue, 1.0, 1.0)

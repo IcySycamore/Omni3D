@@ -17,6 +17,7 @@ from torch import nn
 
 
 def _get_gtnorm(gt):
+    """计算 GT 的范数：立体视差直接返回，光流返回 L2 范数。"""
     if gt.size(1) == 1:  # stereo
         return gt
     # flow
@@ -27,15 +28,24 @@ def _get_gtnorm(gt):
 
 
 class L1Loss(nn.Module):
+    """L1 损失函数，用于立体匹配和光流。"""
+
     def __init__(self, max_gtnorm=None):
+        """初始化 L1 损失。
+
+        Args:
+            max_gtnorm (float | None): GT 范数阈值，超过的像素被忽略。默认 None。
+        """
         super().__init__()
         self.max_gtnorm = max_gtnorm
         self.with_conf = False
 
     def _error(self, gt, predictions):
+        """计算逐像素绝对误差。"""
         return torch.abs(gt - predictions)
 
     def forward(self, predictions, gt, inspect=False):
+        """前向传播，计算掩码后的平均 L1 误差。"""
         mask = torch.isfinite(gt)
         if self.max_gtnorm is not None:
             mask *= _get_gtnorm(gt).expand(-1, gt.size(1), -1, -1) < self.max_gtnorm
@@ -49,12 +59,20 @@ class L1Loss(nn.Module):
 
 
 class LaplacianLoss(nn.Module):  # used for CroCo-Stereo on ETH3D, d'=exp(d)
+    """带置信度的拉普拉斯损失（exp 参数化），用于 CroCo-Stereo。"""
+
     def __init__(self, max_gtnorm=None):
+        """初始化拉普拉斯损失。
+
+        Args:
+            max_gtnorm (float | None): GT 范数阈值。默认 None。
+        """
         super().__init__()
         self.max_gtnorm = max_gtnorm
         self.with_conf = True
 
     def forward(self, predictions, gt, conf):
+        """前向传播，计算带置信度的拉普拉斯损失。"""
         mask = torch.isfinite(gt)
         mask = mask[:, 0, :, :]
         if self.max_gtnorm is not None:
@@ -69,7 +87,16 @@ class LaplacianLoss(nn.Module):  # used for CroCo-Stereo on ETH3D, d'=exp(d)
 class LaplacianLossBounded(
     nn.Module
 ):  # used for CroCo-Flow ; in the equation of the paper, we have a=1/b
+    """有界拉普拉斯损失（sigmoid 参数化），用于 CroCo-Flow。"""
+
     def __init__(self, max_gtnorm=10000.0, a=0.25, b=4.0):
+        """初始化有界拉普拉斯损失。
+
+        Args:
+            max_gtnorm (float): GT 范数阈值。默认 10000.0。
+            a (float): 置信度下界。默认 0.25。
+            b (float): 置信度上界。默认 4.0。
+        """
         super().__init__()
         self.max_gtnorm = max_gtnorm
         self.with_conf = True
@@ -91,7 +118,16 @@ class LaplacianLossBounded(
 class LaplacianLossBounded2(
     nn.Module
 ):  # used for CroCo-Stereo (except for ETH3D) ; in the equation of the paper, we have a=b
+    """有界拉普拉斯损失2（sigmoid/exp 混合参数化），用于 CroCo-Stereo。"""
+
     def __init__(self, max_gtnorm=None, a=3.0, b=3.0):
+        """初始化有界拉普拉斯损失2。
+
+        Args:
+            max_gtnorm (float | None): GT 范数阈值。默认 None。
+            a (float): 置信度缩放参数。默认 3.0。
+            b (float): sigmoid 缩放参数。默认 3.0。
+        """
         super().__init__()
         self.max_gtnorm = max_gtnorm
         self.with_conf = True
@@ -114,7 +150,14 @@ class LaplacianLossBounded2(
 
 
 class StereoMetrics(nn.Module):
+    """立体匹配批量评估指标（平均误差、RMSE、bad@t）。"""
+
     def __init__(self, do_quantile=False):
+        """初始化立体匹配指标。
+
+        Args:
+            do_quantile (bool): 是否计算分位数。默认 False。
+        """
         super().__init__()
         self.bad_ths = [0.5, 1, 2, 3]
         self.do_quantile = do_quantile
@@ -143,7 +186,10 @@ class StereoMetrics(nn.Module):
 
 
 class FlowMetrics(nn.Module):
+    """光流批量评估指标（L1err、EPE、bad@t）。"""
+
     def __init__(self):
+        """初始化光流指标。"""
         super().__init__()
         self.bad_ths = [1, 3, 5]
 
@@ -178,17 +224,22 @@ class FlowMetrics(nn.Module):
 
 
 class StereoDatasetMetrics(nn.Module):
+    """立体匹配数据集级累积评估指标。"""
+
     def __init__(self):
+        """初始化立体匹配数据集指标。"""
         super().__init__()
         self.bad_ths = [0.5, 1, 2, 3]
 
     def reset(self):
+        """重置所有累积统计量。"""
         self.agg_N = 0  # number of pixels so far
         self.agg_L1err = torch.tensor(0.0)  # L1 error so far
         self.agg_Nbad = [0 for _ in self.bad_ths]  # counter of bad pixels
         self._metrics = None
 
     def add_batch(self, predictions, gt):
+        """累积一批预测结果的统计量。"""
         assert predictions.size(1) == 1, predictions.size()
         assert gt.size(1) == 1, gt.size()
         if (
@@ -236,12 +287,16 @@ class StereoDatasetMetrics(nn.Module):
 
 
 class FlowDatasetMetrics(nn.Module):
+    """光流数据集级累积评估指标（含速度区间 EPE）。"""
+
     def __init__(self):
+        """初始化光流数据集指标。"""
         super().__init__()
         self.bad_ths = [0.5, 1, 3, 5]
         self.speed_ths = [(0, 10), (10, 40), (40, torch.inf)]
 
     def reset(self):
+        """重置所有累积统计量。"""
         self.agg_N = 0  # number of pixels so far
         self.agg_L1err = torch.tensor(0.0)  # L1 error so far
         self.agg_L2err = torch.tensor(0.0)  # L2 (=EPE) error so far
@@ -254,6 +309,7 @@ class FlowDatasetMetrics(nn.Module):
         self.pairname_results = {}
 
     def add_batch(self, predictions, gt):
+        """累积一批光流预测结果的统计量。"""
         assert predictions.size(1) == 2, predictions.size()
         assert gt.size(1) == 2, gt.size()
         if (
@@ -332,6 +388,7 @@ class FlowDatasetMetrics(nn.Module):
             self.agg_Nspeed[i] = iNnew
 
     def _compute_metrics(self):
+        """从累积统计量计算最终光流指标。"""
         if self._metrics is not None:
             return
         out = {}
