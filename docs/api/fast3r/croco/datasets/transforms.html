@@ -313,7 +313,7 @@ td a:hover { text-decoration: underline; }
             <span>⚡ 1 函数</span>
             <span>🔧 7 方法</span>
             <span class="warn">
-                ⚠️ 13 处缺 docstring
+                ⚠️ 1 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/transforms.py</div>
@@ -332,9 +332,10 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ComposePair</span>(torchvision.transforms.Compose)
-                <span class="line-no">L18-22</span>
+                <span class="line-no">L18-36</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将多个成对变换按顺序组合。</p>
+<p>与 ``Compose`` 类似，但每个变换接收并返回 ``(img1, img2)`` 元组。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -343,9 +344,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L19-22</span>
+                    <span class="line-no">L24-36</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>依次应用所有变换。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1: 第一张图像。</div>
+<div class="doc-detail">    img2: 第二张图像。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 变换后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             </div>
@@ -356,9 +364,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">NormalizeBoth</span>(torchvision.transforms.Normalize)
-                <span class="line-no">L25-29</span>
+                <span class="line-no">L39-54</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>对两张图像分别执行相同的标准化（减均值除标准差）。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -367,9 +375,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L26-29</span>
+                    <span class="line-no">L42-54</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>分别标准化两张图像。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Tensor): 第一张图像张量。</div>
+<div class="doc-detail">    img2 (Tensor): 第二张图像张量。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 标准化后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             </div>
@@ -380,9 +395,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ToTensorBoth</span>(torchvision.transforms.ToTensor)
-                <span class="line-no">L32-36</span>
+                <span class="line-no">L57-72</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将两张 PIL 图像分别转换为张量。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -391,9 +406,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L33-36</span>
+                    <span class="line-no">L60-72</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>分别将 PIL Image 转为 Tensor。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (PIL.Image): 第一张图像。</div>
+<div class="doc-detail">    img2 (PIL.Image): 第二张图像。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 转换后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             </div>
@@ -404,9 +426,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">RandomCropPair</span>(torchvision.transforms.RandomCrop)
-                <span class="line-no">L39-44</span>
+                <span class="line-no">L75-91</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>对两张图像分别执行随机裁剪（裁剪位置不同）.</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -415,9 +437,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L41-44</span>
+                    <span class="line-no">L79-91</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>分别随机裁剪两张图像。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (PIL.Image | Tensor): 第一张图像。</div>
+<div class="doc-detail">    img2 (PIL.Image | Tensor): 第二张图像。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 裁剪后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             </div>
@@ -428,9 +457,14 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ColorJitterPair</span>(torchvision.transforms.ColorJitter)
-                <span class="line-no">L47-107</span>
+                <span class="line-no">L94-187</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>成对颜色抖动，可对称或非对称地扰动两张图像。</p>
+<p>以 ``assymetric_prob`` 的概率为第二张图重新采样抖动参数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    assymetric_prob (float): 非对称抖动概率。</div>
+<div class="doc-detail">    **kwargs: 传递给 ``ColorJitter`` 的参数（brightness, contrast 等）。</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -439,7 +473,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">assymetric_prob</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L49-51</span>
+                    <span class="line-no">L104-106</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -448,18 +482,38 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">jitter_one</span> (<span class="arg-name">img</span>, <span class="arg-name">fn_idx</span>, <span class="arg-name">brightness_factor</span>, <span class="arg-name">contrast_factor</span>, <span class="arg-name">saturation_factor</span>, <span class="arg-name">hue_factor</span>)</code>
-                    <span class="line-no">L53-71</span>
+                    <span class="line-no">L108-139</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>对单张图像按给定的抖动参数和函数顺序执行颜色变换。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img (Tensor): 输入图像。</div>
+<div class="doc-detail">    fn_idx (list of int): 变换执行顺序索引列表。</div>
+<div class="doc-detail">    brightness_factor (float | None): 亮度因子。</div>
+<div class="doc-detail">    contrast_factor (float | None): 对比度因子。</div>
+<div class="doc-detail">    saturation_factor (float | None): 饱和度因子。</div>
+<div class="doc-detail">    hue_factor (float | None): 色调因子。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 抖动后的图像。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ColorJitterPair-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L73-107</span>
+                    <span class="line-no">L141-187</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>对两张图像执行颜色抖动。</p>
+<p>以 ``assymetric_prob`` 的概率为第二张图重新采样抖动参数，</p>
+<p>否则使用与第一张图相同的参数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Tensor): 第一张图像。</div>
+<div class="doc-detail">    img2 (Tensor): 第二张图像。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 抖动后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             </div>
@@ -470,9 +524,21 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_pair_transforms</span> (<span class="arg-name">transform_str</span>, <span class="arg-name">totensor</span> = <span class="arg-default">True</span>, <span class="arg-name">normalize</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L110-144</span>
+                <span class="line-no">L190-241</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据字符串描述构建成对变换流水线。</p>
+<p>支持的变换关键字（用 ``+`` 拼接）：</p>
+<p>* ``crop224`` — 随机裁剪到 224×224</p>
+<p>* ``acolor`` — 非对称颜色抖动</p>
+<p>最后可选地追加 ``ToTensorBoth`` 和 ``NormalizeBoth``。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    transform_str (str): 变换描述字符串，如 ``&quot;crop224+acolor&quot;``。</div>
+<div class="doc-detail">    totensor (bool): 是否追加 ToTensor 变换。默认 ``True``。</div>
+<div class="doc-detail">    normalize (bool): 是否追加 Normalize 变换。默认 ``True``。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    ComposePair | list | None: 变换组合。</div>
+</div></div>
         </div>
         
 </main>

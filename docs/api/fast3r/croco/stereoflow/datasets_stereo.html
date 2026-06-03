@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 13 类</span>
             <span>⚡ 17 函数</span>
             <span>🔧 43 方法</span>
-            <span class="warn">
-                ⚠️ 72 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/datasets_stereo.py</div>
@@ -356,9 +356,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">StereoDataset</span>(data.Dataset)
-                <span class="line-no">L60-158</span>
+                <span class="line-no">L62-169</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>立体匹配数据集基类，提供通用的数据加载、增广、缓存机制。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -367,16 +367,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">split</span>, <span class="arg-name">augmentor</span> = <span class="arg-default">False</span>, <span class="arg-name">crop_size</span> = <span class="arg-default">None</span>, <span class="arg-name">totensor</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L61-74</span>
+                    <span class="line-no">L64-78</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-prepare_data">
                 <div class="method-header">
                     
                     <code><span class="fn-name">prepare_data</span> ()</code>
-                    <span class="line-no">L76-80</span>
+                    <span class="line-no">L80-84</span>
                 </div>
                 <div class="docstring"><p>to be defined for each dataset</p></div>
             </div>
@@ -385,63 +385,63 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L82-83</span>
+                    <span class="line-no">L86-88</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">index</span>)</code>
-                    <span class="line-no">L85-124</span>
+                    <span class="line-no">L90-130</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的数据。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-__rmul__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__rmul__</span> (<span class="arg-name">v</span>)</code>
-                    <span class="line-no">L126-129</span>
+                    <span class="line-no">L132-136</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>将数据集重复 v 倍。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-__str__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__str__</span> ()</code>
-                    <span class="line-no">L131-132</span>
+                    <span class="line-no">L138-140</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回字符串表示。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-__repr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L134-140</span>
+                    <span class="line-no">L142-149</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回详细描述。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-_set_root">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_root</span> ()</code>
-                    <span class="line-no">L142-146</span>
+                    <span class="line-no">L151-156</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集根目录。</p></div>
             </div>
             
             <div class="method" id="method-StereoDataset-_load_or_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_or_build_cache</span> ()</code>
-                    <span class="line-no">L148-158</span>
+                    <span class="line-no">L158-169</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载或构建缓存。</p></div>
             </div>
             
             </div>
@@ -452,9 +452,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CREStereoDataset</span>(StereoDataset)
-                <span class="line-no">L161-187</span>
+                <span class="line-no">L172-201</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>CREStereo 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -463,18 +463,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L162-176</span>
+                    <span class="line-no">L174-189</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-CREStereoDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L178-187</span>
+                    <span class="line-no">L191-201</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -485,9 +485,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SceneFlowDataset</span>(StereoDataset)
-                <span class="line-no">L190-270</span>
+                <span class="line-no">L204-287</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>SceneFlow 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -496,18 +496,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L191-215</span>
+                    <span class="line-no">L206-231</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-SceneFlowDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L217-270</span>
+                    <span class="line-no">L233-287</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -518,9 +518,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Md21Dataset</span>(StereoDataset)
-                <span class="line-no">L273-310</span>
+                <span class="line-no">L290-330</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Middlebury 2021 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -529,18 +529,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L274-286</span>
+                    <span class="line-no">L292-305</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Md21Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L288-310</span>
+                    <span class="line-no">L307-330</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -551,9 +551,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Md14Dataset</span>(StereoDataset)
-                <span class="line-no">L313-347</span>
+                <span class="line-no">L333-370</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Middlebury 2014 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -562,18 +562,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L314-327</span>
+                    <span class="line-no">L335-349</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Md14Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L329-347</span>
+                    <span class="line-no">L351-370</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -584,9 +584,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Md06Dataset</span>(StereoDataset)
-                <span class="line-no">L350-385</span>
+                <span class="line-no">L373-411</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Middlebury 2006 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -595,18 +595,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L351-363</span>
+                    <span class="line-no">L375-388</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Md06Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L365-385</span>
+                    <span class="line-no">L390-411</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -617,9 +617,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Md05Dataset</span>(StereoDataset)
-                <span class="line-no">L388-423</span>
+                <span class="line-no">L414-452</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Middlebury 2005 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -628,18 +628,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L389-401</span>
+                    <span class="line-no">L416-429</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Md05Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L403-423</span>
+                    <span class="line-no">L431-452</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -650,9 +650,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MdEval3Dataset</span>(StereoDataset)
-                <span class="line-no">L426-510</span>
+                <span class="line-no">L455-544</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Middlebury Eval v3 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -661,36 +661,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L427-460</span>
+                    <span class="line-no">L457-491</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-MdEval3Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L462-486</span>
+                    <span class="line-no">L493-518</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-MdEval3Dataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L488-504</span>
+                    <span class="line-no">L520-537</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-MdEval3Dataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L506-510</span>
+                    <span class="line-no">L539-544</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -701,9 +701,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ETH3DLowResDataset</span>(StereoDataset)
-                <span class="line-no">L513-578</span>
+                <span class="line-no">L547-617</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>ETH3D Low-Res 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -712,36 +712,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L514-535</span>
+                    <span class="line-no">L549-571</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-ETH3DLowResDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L537-560</span>
+                    <span class="line-no">L573-597</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-ETH3DLowResDataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L562-572</span>
+                    <span class="line-no">L599-610</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-ETH3DLowResDataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L574-578</span>
+                    <span class="line-no">L612-617</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -752,9 +752,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BoosterDataset</span>(StereoDataset)
-                <span class="line-no">L581-629</span>
+                <span class="line-no">L620-671</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Booster 高分辨率立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -763,18 +763,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L582-601</span>
+                    <span class="line-no">L622-642</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-BoosterDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L603-629</span>
+                    <span class="line-no">L644-671</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -785,9 +785,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SpringDataset</span>(StereoDataset)
-                <span class="line-no">L632-708</span>
+                <span class="line-no">L674-755</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Spring 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -796,36 +796,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L633-654</span>
+                    <span class="line-no">L676-698</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-SpringDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L656-685</span>
+                    <span class="line-no">L700-730</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-SpringDataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L687-696</span>
+                    <span class="line-no">L732-742</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-SpringDataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L698-708</span>
+                    <span class="line-no">L744-755</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -836,9 +836,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Kitti12Dataset</span>(StereoDataset)
-                <span class="line-no">L711-754</span>
+                <span class="line-no">L758-806</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>KITTI 2012 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -847,36 +847,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L712-730</span>
+                    <span class="line-no">L760-779</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Kitti12Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L732-739</span>
+                    <span class="line-no">L781-789</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-Kitti12Dataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L741-747</span>
+                    <span class="line-no">L791-798</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-Kitti12Dataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L749-754</span>
+                    <span class="line-no">L800-806</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -887,9 +887,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Kitti15Dataset</span>(StereoDataset)
-                <span class="line-no">L757-810</span>
+                <span class="line-no">L809-867</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>KITTI 2015 立体匹配数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -898,36 +898,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L758-776</span>
+                    <span class="line-no">L811-830</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Kitti15Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L778-795</span>
+                    <span class="line-no">L832-850</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-Kitti15Dataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L797-803</span>
+                    <span class="line-no">L852-859</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-Kitti15Dataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L805-810</span>
+                    <span class="line-no">L861-867</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -938,9 +938,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">img_to_tensor</span> (<span class="arg-name">img</span>)</code>
-                <span class="line-no">L50-53</span>
+                <span class="line-no">L50-54</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将 RGB 图像转为 ImageNet 标准化张量。</p></div>
         </div>
         
 
@@ -948,9 +948,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">disp_to_tensor</span> (<span class="arg-name">disp</span>)</code>
-                <span class="line-no">L56-57</span>
+                <span class="line-no">L57-59</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将视差图转为张量。</p></div>
         </div>
         
 
@@ -958,9 +958,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_img</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L816-819</span>
+                <span class="line-no">L873-877</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取图像文件并转为 RGB numpy 数组。</p></div>
         </div>
         
 
@@ -968,9 +968,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_booster_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L822-825</span>
+                <span class="line-no">L880-884</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 Booster npy 格式视差图。</p></div>
         </div>
         
 
@@ -978,9 +978,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_png_disp</span> (<span class="arg-name">filename</span>, <span class="arg-name">coef</span> = <span class="arg-default">1.0</span>)</code>
-                <span class="line-no">L828-832</span>
+                <span class="line-no">L887-892</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 PNG 格式视差图。</p></div>
         </div>
         
 
@@ -988,9 +988,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_pfm_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L835-842</span>
+                <span class="line-no">L895-903</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 PFM 格式视差图。</p></div>
         </div>
         
 
@@ -998,9 +998,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_npy_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L845-846</span>
+                <span class="line-no">L906-908</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 npy 格式视差图。</p></div>
         </div>
         
 
@@ -1008,9 +1008,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_crestereo_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L849-850</span>
+                <span class="line-no">L911-913</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 CREStereo PNG 视差图。</p></div>
         </div>
         
 
@@ -1018,9 +1018,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_middlebury20052006_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L853-854</span>
+                <span class="line-no">L916-918</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 Middlebury 2005/2006 PNG 视差图。</p></div>
         </div>
         
 
@@ -1028,9 +1028,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_kitti_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L857-858</span>
+                <span class="line-no">L921-923</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 KITTI PNG 视差图。</p></div>
         </div>
         
 
@@ -1038,9 +1038,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_hdf5_disp</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L868-872</span>
+                <span class="line-no">L933-938</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 HDF5 格式视差图。</p></div>
         </div>
         
 
@@ -1048,9 +1048,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_pfm</span> (<span class="arg-name">file</span>)</code>
-                <span class="line-no">L878-913</span>
+                <span class="line-no">L944-980</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>解析 PFM 文件，返回数据和缩放因子。</p></div>
         </div>
         
 
@@ -1058,9 +1058,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">writePFM</span> (<span class="arg-name">file</span>, <span class="arg-name">image</span>, <span class="arg-name">scale</span> = <span class="arg-default">1</span>)</code>
-                <span class="line-no">L916-945</span>
+                <span class="line-no">L983-1013</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将视差图写入 PFM 文件。</p></div>
         </div>
         
 
@@ -1068,9 +1068,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">writeDsp5File</span> (<span class="arg-name">disp</span>, <span class="arg-name">filename</span>)</code>
-                <span class="line-no">L948-950</span>
+                <span class="line-no">L1016-1019</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将视差图写入 DSP5 (HDF5) 文件。</p></div>
         </div>
         
 
@@ -1078,9 +1078,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">vis_disparity</span> (<span class="arg-name">disp</span>, <span class="arg-name">m</span> = <span class="arg-default">None</span>, <span class="arg-name">M</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L956-964</span>
+                <span class="line-no">L1025-1034</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将视差图可视化为伪彩色图。</p></div>
         </div>
         
 
@@ -1088,9 +1088,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_train_dataset_stereo</span> (<span class="arg-name">dataset_str</span>, <span class="arg-name">augmentor</span> = <span class="arg-default">True</span>, <span class="arg-name">crop_size</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L970-978</span>
+                <span class="line-no">L1040-1049</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据字符串描述创建训练数据集。</p></div>
         </div>
         
 
@@ -1098,9 +1098,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_test_datasets_stereo</span> (<span class="arg-name">dataset_str</span>)</code>
-                <span class="line-no">L981-983</span>
+                <span class="line-no">L1052-1055</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据字符串描述创建测试数据集列表。</p></div>
         </div>
         
 </main>

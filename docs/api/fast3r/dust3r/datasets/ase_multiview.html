@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 5 函数</span>
             <span>🔧 8 方法</span>
-            <span class="warn">
-                ⚠️ 7 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/ase_multiview.py</div>
@@ -333,9 +333,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ASE_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L171-309</span>
+                <span class="line-no">L171-314</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>多视图 ASE 数据集，加载多视角图像和相机参数。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -344,36 +344,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">ROOT</span>, <span class="arg-name">split</span> = <span class="arg-default">&#x27;train&#x27;</span>, <span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">window_size</span> = <span class="arg-default">10</span>, <span class="arg-name">num_samples_per_window</span> = <span class="arg-default">10</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">ordered</span> = <span class="arg-default">False</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L172-221</span>
+                    <span class="line-no">L173-223</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化。</p></div>
             </div>
             
             <div class="method" id="method-ASE_Multiview-_generate_combinations">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_combinations</span> ()</code>
-                    <span class="line-no">L223-242</span>
+                    <span class="line-no">L225-245</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>生成视图索引组合。</p></div>
             </div>
             
             <div class="method" id="method-ASE_Multiview-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L244-245</span>
+                    <span class="line-no">L247-249</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-ASE_Multiview-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L247-309</span>
+                    <span class="line-no">L251-314</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的多视图数据。</p></div>
             </div>
             
             </div>
@@ -384,7 +384,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ASE_Multiview_Simple</span>(BaseStereoViewDataset)
-                <span class="line-no">L315-453</span>
+                <span class="line-no">L320-460</span>
             </h2>
             <div class="docstring"><p>A simplified version that:</p>
 <p>  - Finds the first scene in ROOT</p>
@@ -400,25 +400,25 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">ROOT</span>, <span class="arg-name">split</span> = <span class="arg-default">&#x27;train&#x27;</span>, <span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L324-377</span>
+                    <span class="line-no">L329-383</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化。</p></div>
             </div>
             
             <div class="method" id="method-ASE_Multiview_Simple-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L379-380</span>
+                    <span class="line-no">L385-387</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-ASE_Multiview_Simple-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L382-445</span>
+                    <span class="line-no">L389-452</span>
                 </div>
                 <div class="docstring"><p>Implements the base class method for obtaining a list of views.</p></div>
             </div>
@@ -427,7 +427,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">index</span>)</code>
-                    <span class="line-no">L447-453</span>
+                    <span class="line-no">L454-460</span>
                 </div>
                 <div class="docstring"><p>The base class calls _get_views(self, idx, resolution, rng).</p>
 <p>The base class might handle some extra logic for augmentations, etc.</p></div>

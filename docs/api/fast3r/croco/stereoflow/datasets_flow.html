@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 8 类</span>
             <span>⚡ 15 函数</span>
             <span>🔧 31 方法</span>
-            <span class="warn">
-                ⚠️ 47 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/datasets_flow.py</div>
@@ -349,9 +349,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlowDataset</span>(data.Dataset)
-                <span class="line-no">L46-141</span>
+                <span class="line-no">L47-151</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>光流数据集基类，提供通用的数据加载、增广、缓存机制。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -360,16 +360,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">split</span>, <span class="arg-name">augmentor</span> = <span class="arg-default">False</span>, <span class="arg-name">crop_size</span> = <span class="arg-default">None</span>, <span class="arg-name">totensor</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L47-60</span>
+                    <span class="line-no">L49-63</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-prepare_data">
                 <div class="method-header">
                     
                     <code><span class="fn-name">prepare_data</span> ()</code>
-                    <span class="line-no">L62-66</span>
+                    <span class="line-no">L65-69</span>
                 </div>
                 <div class="docstring"><p>to be defined for each dataset</p></div>
             </div>
@@ -378,63 +378,63 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L68-71</span>
+                    <span class="line-no">L71-75</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">index</span>)</code>
-                    <span class="line-no">L73-107</span>
+                    <span class="line-no">L77-112</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的数据。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-__rmul__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__rmul__</span> (<span class="arg-name">v</span>)</code>
-                    <span class="line-no">L109-112</span>
+                    <span class="line-no">L114-118</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>将数据集重复 v 倍。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-__str__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__str__</span> ()</code>
-                    <span class="line-no">L114-115</span>
+                    <span class="line-no">L120-122</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回字符串表示。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-__repr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L117-123</span>
+                    <span class="line-no">L124-131</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回详细描述。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-_set_root">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_root</span> ()</code>
-                    <span class="line-no">L125-129</span>
+                    <span class="line-no">L133-138</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集根目录。</p></div>
             </div>
             
             <div class="method" id="method-FlowDataset-_load_or_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_or_build_cache</span> ()</code>
-                    <span class="line-no">L131-141</span>
+                    <span class="line-no">L140-151</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载或构建缓存。</p></div>
             </div>
             
             </div>
@@ -445,9 +445,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">TartanAirDataset</span>(FlowDataset)
-                <span class="line-no">L144-179</span>
+                <span class="line-no">L154-192</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>TartanAir 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -456,18 +456,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L145-164</span>
+                    <span class="line-no">L156-176</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-TartanAirDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L166-179</span>
+                    <span class="line-no">L178-192</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -478,9 +478,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlyingChairsDataset</span>(FlowDataset)
-                <span class="line-no">L182-208</span>
+                <span class="line-no">L195-224</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>FlyingChairs 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -489,18 +489,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L183-197</span>
+                    <span class="line-no">L197-212</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-FlyingChairsDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L199-208</span>
+                    <span class="line-no">L214-224</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -511,9 +511,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlyingThingsDataset</span>(FlowDataset)
-                <span class="line-no">L211-306</span>
+                <span class="line-no">L227-325</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>FlyingThings3D 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -522,18 +522,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L212-252</span>
+                    <span class="line-no">L229-270</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-FlyingThingsDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L254-306</span>
+                    <span class="line-no">L272-325</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             </div>
@@ -544,9 +544,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MPISintelDataset</span>(FlowDataset)
-                <span class="line-no">L309-397</span>
+                <span class="line-no">L328-421</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>MPI Sintel 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -555,36 +555,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L310-336</span>
+                    <span class="line-no">L330-357</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-MPISintelDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L338-374</span>
+                    <span class="line-no">L359-396</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-MPISintelDataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">_time</span>)</code>
-                    <span class="line-no">L376-382</span>
+                    <span class="line-no">L398-405</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-MPISintelDataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L384-397</span>
+                    <span class="line-no">L407-421</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -595,9 +595,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SpringDataset</span>(FlowDataset)
-                <span class="line-no">L400-533</span>
+                <span class="line-no">L424-562</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Spring 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -606,36 +606,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L401-438</span>
+                    <span class="line-no">L426-464</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-SpringDataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L440-506</span>
+                    <span class="line-no">L466-533</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-SpringDataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L508-520</span>
+                    <span class="line-no">L535-548</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-SpringDataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L522-533</span>
+                    <span class="line-no">L550-562</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -646,9 +646,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Kitti12Dataset</span>(FlowDataset)
-                <span class="line-no">L536-578</span>
+                <span class="line-no">L565-612</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>KITTI 2012 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -657,36 +657,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L537-555</span>
+                    <span class="line-no">L567-586</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Kitti12Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L557-564</span>
+                    <span class="line-no">L588-596</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-Kitti12Dataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L566-571</span>
+                    <span class="line-no">L598-604</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-Kitti12Dataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L573-578</span>
+                    <span class="line-no">L606-612</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -697,9 +697,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Kitti15Dataset</span>(FlowDataset)
-                <span class="line-no">L581-633</span>
+                <span class="line-no">L615-672</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>KITTI 2015 光流数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -708,36 +708,36 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_prepare_data</span> ()</code>
-                    <span class="line-no">L582-600</span>
+                    <span class="line-no">L617-636</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置数据集名称、路径映射和读取函数。</p></div>
             </div>
             
             <div class="method" id="method-Kitti15Dataset-_build_cache">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_build_cache</span> ()</code>
-                    <span class="line-no">L602-619</span>
+                    <span class="line-no">L638-656</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>扫描文件系统构建缓存字典。</p></div>
             </div>
             
             <div class="method" id="method-Kitti15Dataset-submission_save_pairname">
                 <div class="method-header">
                     
                     <code><span class="fn-name">submission_save_pairname</span> (<span class="arg-name">pairname</span>, <span class="arg-name">prediction</span>, <span class="arg-name">outdir</span>, <span class="arg-name">time</span>)</code>
-                    <span class="line-no">L621-626</span>
+                    <span class="line-no">L658-664</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>保存单个图像对的预测结果。</p></div>
             </div>
             
             <div class="method" id="method-Kitti15Dataset-finalize_submission">
                 <div class="method-header">
                     
                     <code><span class="fn-name">finalize_submission</span> (<span class="arg-name">outdir</span>)</code>
-                    <span class="line-no">L628-633</span>
+                    <span class="line-no">L666-672</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>打包提交文件。</p></div>
             </div>
             
             </div>
@@ -748,9 +748,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">flow_to_tensor</span> (<span class="arg-name">disp</span>)</code>
-                <span class="line-no">L42-43</span>
+                <span class="line-no">L42-44</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将光流转为张量。</p></div>
         </div>
         
 
@@ -758,9 +758,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_numpy_flow</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L639-640</span>
+                <span class="line-no">L678-680</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 numpy 格式光流。</p></div>
         </div>
         
 
@@ -768,9 +768,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_pfm_flow</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L643-646</span>
+                <span class="line-no">L683-687</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 PFM 格式光流。</p></div>
         </div>
         
 
@@ -778,7 +778,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">readFlowFile</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L657-698</span>
+                <span class="line-no">L698-739</span>
             </h2>
             <div class="docstring"><p>readFlowFile(&lt;FILENAME&gt;) reads a flow file &lt;FILENAME&gt; into a 2-band np.array.</p>
 <p>if &lt;FILENAME&gt; does not exist, an IOError is raised.</p>
@@ -794,7 +794,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">writeFlowFile</span> (<span class="arg-name">flow</span>, <span class="arg-name">filename</span>)</code>
-                <span class="line-no">L701-734</span>
+                <span class="line-no">L742-775</span>
             </h2>
             <div class="docstring"><p>writeFlowFile(flow,&lt;FILENAME&gt;) write flow to the file &lt;FILENAME&gt;.</p>
 <p>if &lt;FILENAME&gt; does not exist, an IOError is raised.</p>
@@ -809,9 +809,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_kitti_flow</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L740-748</span>
+                <span class="line-no">L781-790</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 KITTI 格式光流。</p></div>
         </div>
         
 
@@ -819,9 +819,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">writeFlowKitti</span> (<span class="arg-name">filename</span>, <span class="arg-name">uv</span>)</code>
-                <span class="line-no">L754-758</span>
+                <span class="line-no">L796-801</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将光流写入 KITTI 格式文件。</p></div>
         </div>
         
 
@@ -829,9 +829,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">writeFlo5File</span> (<span class="arg-name">flow</span>, <span class="arg-name">filename</span>)</code>
-                <span class="line-no">L761-763</span>
+                <span class="line-no">L804-807</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将光流写入 FLO5 (HDF5) 文件。</p></div>
         </div>
         
 
@@ -839,9 +839,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_read_hdf5_flow</span> (<span class="arg-name">filename</span>)</code>
-                <span class="line-no">L766-769</span>
+                <span class="line-no">L810-814</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>读取 HDF5 格式光流。</p></div>
         </div>
         
 
@@ -849,7 +849,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">colorTest</span> ()</code>
-                <span class="line-no">L782-803</span>
+                <span class="line-no">L827-848</span>
             </h2>
             <div class="docstring"><p>flow_utils.colorTest(): display an example of image showing the color encoding scheme</p></div>
         </div>
@@ -859,7 +859,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">flowToColor</span> (<span class="arg-name">flow</span>, <span class="arg-name">maxflow</span> = <span class="arg-default">None</span>, <span class="arg-name">maxmaxflow</span> = <span class="arg-default">None</span>, <span class="arg-name">saturate</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L806-834</span>
+                <span class="line-no">L851-879</span>
             </h2>
             <div class="docstring"><p>flow_utils.flowToColor(flow): return a color code flow field, normalized based on the maximum l2-norm of the flow</p>
 <p>flow_utils.flowToColor(flow,maxflow): return a color code flow field, normalized by maxflow</p>
@@ -876,7 +876,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">flowMaxNorm</span> (<span class="arg-name">flow</span>)</code>
-                <span class="line-no">L837-846</span>
+                <span class="line-no">L882-891</span>
             </h2>
             <div class="docstring"><p>flow_utils.flowMaxNorm(flow): return the maximum of the l2-norm of the given flow</p>
 <p>---- PARAMETERS ----</p>
@@ -890,7 +890,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_computeColor</span> (<span class="arg-name">flow</span>, <span class="arg-name">saturate</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L849-915</span>
+                <span class="line-no">L894-960</span>
             </h2>
             <div class="docstring"><p>flow_utils._computeColor(flow): compute color codes for the flow field flow</p>
 <p>---- PARAMETERS ----</p>
@@ -904,9 +904,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_train_dataset_flow</span> (<span class="arg-name">dataset_str</span>, <span class="arg-name">augmentor</span> = <span class="arg-default">True</span>, <span class="arg-name">crop_size</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L921-929</span>
+                <span class="line-no">L966-975</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据字符串描述创建训练数据集。</p></div>
         </div>
         
 
@@ -914,9 +914,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_test_datasets_flow</span> (<span class="arg-name">dataset_str</span>)</code>
-                <span class="line-no">L932-934</span>
+                <span class="line-no">L978-981</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据字符串描述创建测试数据集列表。</p></div>
         </div>
         
 </main>

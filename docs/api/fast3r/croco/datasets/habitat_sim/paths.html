@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 5 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 4 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/habitat_sim/paths.py</div>
@@ -337,9 +337,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">list_replicacad_scenes</span> (<span class="arg-name">base_output_dir</span>, <span class="arg-name">base_path</span> = <span class="arg-default">SCENES_DATASET[&#x27;replica_cad&#x27;]</span>)</code>
-                <span class="line-no">L35-54</span>
+                <span class="line-no">L35-63</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>列出所有 ReplicaCAD 场景的数据路径。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    base_output_dir (str): 输出根目录。</div>
+<div class="doc-detail">    base_path (str): ReplicaCAD 数据集根目录。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of SceneData: 场景数据列表。</div>
+</div></div>
         </div>
         
 
@@ -347,9 +354,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">list_replica_cad_baked_lighting_scenes</span> (<span class="arg-name">base_output_dir</span>, <span class="arg-name">base_path</span> = <span class="arg-default">SCENES_DATASET[&#x27;replica_cad_baked_lighting&#x27;]</span>)</code>
-                <span class="line-no">L57-79</span>
+                <span class="line-no">L66-97</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>列出所有 ReplicaCAD Baked Lighting 场景的数据路径。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    base_output_dir (str): 输出根目录。</div>
+<div class="doc-detail">    base_path (str): Baked Lighting 数据集根目录。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of SceneData: 场景数据列表。</div>
+</div></div>
         </div>
         
 
@@ -357,9 +371,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">list_replica_scenes</span> (<span class="arg-name">base_output_dir</span>, <span class="arg-name">base_path</span>)</code>
-                <span class="line-no">L82-99</span>
+                <span class="line-no">L100-126</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>列出所有 Replica 场景的数据路径。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    base_output_dir (str): 输出根目录。</div>
+<div class="doc-detail">    base_path (str): Replica 数据集根目录。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of SceneData: 场景数据列表。</div>
+</div></div>
         </div>
         
 
@@ -367,7 +388,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">list_scenes</span> (<span class="arg-name">base_output_dir</span>, <span class="arg-name">base_path</span>)</code>
-                <span class="line-no">L102-143</span>
+                <span class="line-no">L129-170</span>
             </h2>
             <div class="docstring"><p>Generic method iterating through a base_path folder to find scenes.</p></div>
         </div>
@@ -377,9 +398,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">list_scenes_available</span> (<span class="arg-name">base_output_dir</span>, <span class="arg-name">scenes_dataset_paths</span> = <span class="arg-default">SCENES_DATASET</span>)</code>
-                <span class="line-no">L146-184</span>
+                <span class="line-no">L173-222</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>列出所有可用场景数据集的路径信息。</p>
+<p>遍历 HM3D、Gibson、Habitat test scenes、ReplicaCAD、ScanNet 和 Replica。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    base_output_dir (str): 输出根目录。</div>
+<div class="doc-detail">    scenes_dataset_paths (dict): 场景数据集路径字典。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of SceneData: 所有可用场景的数据列表。</div>
+</div></div>
         </div>
         
 </main>
