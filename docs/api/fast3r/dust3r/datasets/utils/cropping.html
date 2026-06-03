@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 4 函数</span>
             <span>🔧 7 方法</span>
-            <span class="warn">
-                ⚠️ 9 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/utils/cropping.py</div>
@@ -331,7 +331,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ImageList</span>
-                <span class="line-no">L27-59</span>
+                <span class="line-no">L27-69</span>
             </h2>
             <div class="docstring"><p>Convenience class to aply the same operation to a whole set of images.</p></div>
             
@@ -342,63 +342,66 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">images</span>)</code>
-                    <span class="line-no">L31-38</span>
+                    <span class="line-no">L31-43</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 ImageList。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    images: 单个或多个 PIL Image / numpy 数组。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ImageList-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L40-41</span>
+                    <span class="line-no">L45-47</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回图像数量。</p></div>
             </div>
             
             <div class="method" id="method-ImageList-to_pil">
                 <div class="method-header">
                     
                     <code><span class="fn-name">to_pil</span> ()</code>
-                    <span class="line-no">L43-44</span>
+                    <span class="line-no">L49-51</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回 PIL Image 元组或单个 Image。</p></div>
             </div>
             
             <div class="method" id="method-ImageList-size">
                 <div class="method-header">
                     
                     <code><span class="fn-name">size</span> ()</code>
-                    <span class="line-no">L47-50</span>
+                    <span class="line-no">L54-57</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回所有图像的统一尺寸 (W, H)。</p></div>
             </div>
             
             <div class="method" id="method-ImageList-resize">
                 <div class="method-header">
                     
                     <code><span class="fn-name">resize</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L52-53</span>
+                    <span class="line-no">L59-61</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>批量调整图像大小。</p></div>
             </div>
             
             <div class="method" id="method-ImageList-crop">
                 <div class="method-header">
                     
                     <code><span class="fn-name">crop</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L55-56</span>
+                    <span class="line-no">L63-65</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>批量裁剪图像。</p></div>
             </div>
             
             <div class="method" id="method-ImageList-_dispatch">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_dispatch</span> (<span class="arg-name">func</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L58-59</span>
+                    <span class="line-no">L67-69</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>将方法调用分发到所有图像。</p></div>
             </div>
             
             </div>
@@ -409,7 +412,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rescale_image_depthmap</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">camera_intrinsics</span>, <span class="arg-name">output_resolution</span>, <span class="arg-name">force</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L62-90</span>
+                <span class="line-no">L72-100</span>
             </h2>
             <div class="docstring"><p>Jointly rescale a (image, depthmap) </p>
 <p>so that (out_width, out_height) &gt;= output_res</p></div>
@@ -420,9 +423,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">camera_matrix_of_crop</span> (<span class="arg-name">input_camera_matrix</span>, <span class="arg-name">input_resolution</span>, <span class="arg-name">output_resolution</span>, <span class="arg-name">scaling</span> = <span class="arg-default">1</span>, <span class="arg-name">offset_factor</span> = <span class="arg-default">0.5</span>, <span class="arg-name">offset</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L93-106</span>
+                <span class="line-no">L103-128</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据裁剪参数计算新的相机内参矩阵。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    input_camera_matrix (ndarray): 输入相机内参 (3x3)。</div>
+<div class="doc-detail">    input_resolution (ndarray): 输入分辨率 (W, H)。</div>
+<div class="doc-detail">    output_resolution (ndarray): 输出分辨率 (W, H)。</div>
+<div class="doc-detail">    scaling (float): 缩放比例。默认 1。</div>
+<div class="doc-detail">    offset_factor (float): 偏移因子。默认 0.5。</div>
+<div class="doc-detail">    offset (ndarray | None): 显式偏移。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    ndarray: 裁剪后的相机内参矩阵 (3x3)。</div>
+</div></div>
         </div>
         
 
@@ -430,7 +444,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">crop_image_depthmap</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">camera_intrinsics</span>, <span class="arg-name">crop_bbox</span>)</code>
-                <span class="line-no">L109-124</span>
+                <span class="line-no">L131-146</span>
             </h2>
             <div class="docstring"><p>Return a crop of the input view.</p></div>
         </div>
@@ -440,9 +454,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">bbox_from_intrinsics_in_out</span> (<span class="arg-name">input_camera_matrix</span>, <span class="arg-name">output_camera_matrix</span>, <span class="arg-name">output_resolution</span>)</code>
-                <span class="line-no">L127-131</span>
+                <span class="line-no">L149-163</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据输入输出相机内参计算裁剪边界框。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    input_camera_matrix (ndarray): 输入相机内参 (3x3)。</div>
+<div class="doc-detail">    output_camera_matrix (ndarray): 输出相机内参 (3x3)。</div>
+<div class="doc-detail">    output_resolution (tuple): 输出分辨率 (W, H)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 裁剪边界框 (left, top, right, bottom)。</div>
+</div></div>
         </div>
         
 </main>

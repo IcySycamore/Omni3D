@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 12 方法</span>
-            <span class="warn">
-                ⚠️ 4 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/croco_downstream.py</div>
@@ -329,9 +329,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CroCoDownstreamMonocularEncoder</span>(CroCoNet)
-                <span class="line-no">L36-78</span>
+                <span class="line-no">L49-92</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>单目下游任务编码器，仅使用 CroCo 的编码器部分。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -340,7 +340,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">head</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L37-47</span>
+                    <span class="line-no">L51-61</span>
                 </div>
                 <div class="docstring"><p>Build network for monocular downstream task, only using the encoder.</p>
 <p>It takes an extra argument head, that is called with the features</p>
@@ -353,7 +353,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_generator</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L49-51</span>
+                    <span class="line-no">L63-65</span>
                 </div>
                 <div class="docstring"><p>No mask generator</p></div>
             </div>
@@ -362,7 +362,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_token</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L53-56</span>
+                    <span class="line-no">L67-70</span>
                 </div>
                 <div class="docstring"><p>No mask token</p></div>
             </div>
@@ -371,7 +371,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_decoder</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L58-60</span>
+                    <span class="line-no">L72-74</span>
                 </div>
                 <div class="docstring"><p>No decoder</p></div>
             </div>
@@ -380,7 +380,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L62-64</span>
+                    <span class="line-no">L76-78</span>
                 </div>
                 <div class="docstring"><p>No &#x27;prediction head&#x27; for downstream tasks.</p></div>
             </div>
@@ -389,7 +389,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img</span>)</code>
-                    <span class="line-no">L66-78</span>
+                    <span class="line-no">L80-92</span>
                 </div>
                 <div class="docstring"><p>img if of size batch_size x 3 x h x w</p></div>
             </div>
@@ -402,9 +402,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CroCoDownstreamBinocular</span>(CroCoNet)
-                <span class="line-no">L81-145</span>
+                <span class="line-no">L95-161</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>双目下游任务模型，使用 CroCo 的编码器+解码器。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -413,7 +413,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">head</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L82-90</span>
+                    <span class="line-no">L97-105</span>
                 </div>
                 <div class="docstring"><p>Build network for binocular downstream task</p>
 <p>It takes an extra argument head, that is called with the features</p>
@@ -425,7 +425,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_generator</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L92-94</span>
+                    <span class="line-no">L107-109</span>
                 </div>
                 <div class="docstring"><p>No mask generator</p></div>
             </div>
@@ -434,7 +434,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_token</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L96-99</span>
+                    <span class="line-no">L111-114</span>
                 </div>
                 <div class="docstring"><p>No mask token</p></div>
             </div>
@@ -443,7 +443,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L101-103</span>
+                    <span class="line-no">L116-118</span>
                 </div>
                 <div class="docstring"><p>No prediction head for downstream tasks, define your own head</p></div>
             </div>
@@ -452,7 +452,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">encode_image_pairs</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">return_all_blocks</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L105-125</span>
+                    <span class="line-no">L120-140</span>
                 </div>
                 <div class="docstring"><p>run encoder for a pair of images</p>
 <p>it is actually ~5% faster to concatenate the images along the batch dimension</p>
@@ -463,9 +463,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L127-145</span>
+                    <span class="line-no">L142-161</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>双目前向传播，编码图像对并通过解码器和预测头。</p></div>
             </div>
             
             </div>
@@ -476,9 +476,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">croco_args_from_ckpt</span> (<span class="arg-name">ckpt</span>)</code>
-                <span class="line-no">L19-33</span>
+                <span class="line-no">L19-46</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>从检查点中提取 CroCo 模型参数。</p>
+<p>支持三种格式的检查点：</p>
+<p>- CroCo v2: 直接存储 croco_kwargs</p>
+<p>- 官方预训练: 从 args.model 字符串解析</p>
+<p>- CroCo v1: 返回空字典</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    ckpt (dict): 模型检查点字典。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict: CroCo 模型参数。</div>
+</div></div>
         </div>
         
 </main>

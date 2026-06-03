@@ -15,6 +15,16 @@ class BlendedMVS_Multiview(BaseStereoViewDataset):
     """Multi-view Dataset of BlendedMVS scenes."""
 
     def __init__(self, num_views=4, num_samples_per_window=10, window_size=6, ordered=False, *args, ROOT, split=None, **kwargs):
+        """初始化 BlendedMVS 多视图数据集。
+
+        Args:
+            num_views (int): 每个样本的视图数量。默认 4。
+            num_samples_per_window (int): 每个窗口的采样数。默认 10。
+            window_size (int): 时间窗口大小。默认 6。
+            ordered (bool): 是否有序采样。默认 False。
+            ROOT (str): 数据集根目录。
+            split (str | None): 数据集分割。默认 None。
+        """
         self.ROOT = ROOT
         self.num_views = num_views
         self.num_samples_per_window = num_samples_per_window
@@ -25,6 +35,7 @@ class BlendedMVS_Multiview(BaseStereoViewDataset):
         self._generate_combinations()
 
     def _load_data(self, split):
+        """加载预处理后的图像对数据。"""
         pairs = np.load(osp.join(self.ROOT, 'blendedmvs_pairs.npy'))
         if split is None:
             selection = slice(None)
@@ -78,9 +89,11 @@ class BlendedMVS_Multiview(BaseStereoViewDataset):
         self.combinations = sorted(set(self.combinations))
 
     def __len__(self):
+        """返回组合数量。"""
         return len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的多个视图。"""
         scene_id, image_indices = self.combinations[idx]
         seq_path = osp.join(self.ROOT, scene_id)
 

@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 5 方法</span>
-            <span class="warn">
-                ⚠️ 5 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/blendedmvs.py</div>
@@ -327,7 +327,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BlendedMVS</span>(BaseStereoViewDataset)
-                <span class="line-no">L22-83</span>
+                <span class="line-no">L22-93</span>
             </h2>
             <div class="docstring"><p>Dataset of outdoor street scenes, 5 images each time</p></div>
             
@@ -338,45 +338,49 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">split</span> = <span class="arg-default">None</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L26-29</span>
+                    <span class="line-no">L26-35</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 BlendedMVS 数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+<div class="doc-detail">    split (str | None): 数据集分割。默认 None。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-BlendedMVS-_load_data">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_data</span> (<span class="arg-name">split</span>)</code>
-                    <span class="line-no">L31-44</span>
+                    <span class="line-no">L37-51</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载预处理后的图像对数据。</p></div>
             </div>
             
             <div class="method" id="method-BlendedMVS-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L46-47</span>
+                    <span class="line-no">L53-55</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回图像对数量。</p></div>
             </div>
             
             <div class="method" id="method-BlendedMVS-get_stats">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_stats</span> ()</code>
-                    <span class="line-no">L49-50</span>
+                    <span class="line-no">L57-59</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集统计信息字符串。</p></div>
             </div>
             
             <div class="method" id="method-BlendedMVS-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">pair_idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L52-83</span>
+                    <span class="line-no">L61-93</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的两个视图。</p></div>
             </div>
             
             </div>

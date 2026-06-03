@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 3 方法</span>
-            <span class="warn">
-                ⚠️ 3 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/head_downstream.py</div>
@@ -335,7 +335,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PixelwiseTaskWithDPT</span>(nn.Module)
-                <span class="line-no">L26-88</span>
+                <span class="line-no">L26-113</span>
             </h2>
             <div class="docstring"><p>DPT module for CroCo.</p>
 <p>by default, hooks_idx will be equal to:</p>
@@ -349,27 +349,45 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">hooks_idx</span> = <span class="arg-default">None</span>, <span class="arg-name">layer_dims</span> = <span class="arg-default">[96, 192, 384, 768]</span>, <span class="arg-name">output_width_ratio</span> = <span class="arg-default">1</span>, <span class="arg-name">num_channels</span> = <span class="arg-default">1</span>, <span class="arg-name">postprocess</span> = <span class="arg-default">None</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L33-49</span>
+                    <span class="line-no">L33-58</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化基于 DPT 的像素级预测头。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    hooks_idx (list | None): 选取的 Transformer 层索引。默认自动计算。</div>
+<div class="doc-detail">    layer_dims (list): 各层输出维度。默认 [96, 192, 384, 768]。</div>
+<div class="doc-detail">    output_width_ratio (int): 输出宽度比例。默认 1。</div>
+<div class="doc-detail">    num_channels (int): 输出通道数。默认 1。</div>
+<div class="doc-detail">    postprocess: 后处理函数。默认 None。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PixelwiseTaskWithDPT-setup">
                 <div class="method-header">
                     
                     <code><span class="fn-name">setup</span> (<span class="arg-name">croconet</span>)</code>
-                    <span class="line-no">L51-82</span>
+                    <span class="line-no">L60-98</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>根据 CroCoNet 的参数配置 DPT 适配器。</p>
+<p>自动计算 hook 索引并初始化 DPT 输出适配器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    croconet (CroCoNet): CroCo 模型实例。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PixelwiseTaskWithDPT-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">img_info</span>)</code>
-                    <span class="line-no">L84-88</span>
+                    <span class="line-no">L100-113</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>前向传播，通过 DPT 生成像素级预测。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x: 编码器/解码器输出的特征。</div>
+<div class="doc-detail">    img_info (dict): 包含 &#x27;height&#x27; 和 &#x27;width&#x27; 的图像信息。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 像素级预测输出。</div>
+</div></div>
             </div>
             
             </div>

@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 4 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 25 方法</span>
-            <span class="warn">
-                ⚠️ 25 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/easy_dataset.py</div>
@@ -330,7 +330,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">EasyDataset</span>
-                <span class="line-no">L18-57</span>
+                <span class="line-no">L18-74</span>
             </h2>
             <div class="docstring"><p>a dataset that you can easily resize and combine.</p>
 <div class="doc-section"><strong>Examples:</strong>
@@ -347,54 +347,64 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__add__</span> (<span class="arg-name">other</span>)</code>
-                    <span class="line-no">L29-30</span>
+                    <span class="line-no">L29-31</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>拼接两个数据集。</p></div>
             </div>
             
             <div class="method" id="method-EasyDataset-__rmul__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__rmul__</span> (<span class="arg-name">factor</span>)</code>
-                    <span class="line-no">L32-33</span>
+                    <span class="line-no">L33-35</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>重复数据集 factor 次（如 2 * dataset）。</p></div>
             </div>
             
             <div class="method" id="method-EasyDataset-__rmatmul__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__rmatmul__</span> (<span class="arg-name">factor</span>)</code>
-                    <span class="line-no">L35-36</span>
+                    <span class="line-no">L37-39</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>调整数据集大小为 factor（如 10 @ dataset）。</p></div>
             </div>
             
             <div class="method" id="method-EasyDataset-set_epoch">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L38-39</span>
+                    <span class="line-no">L41-43</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置当前 epoch（用于随机种子控制）。</p></div>
             </div>
             
             <div class="method" id="method-EasyDataset-set_ratio">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_ratio</span> (<span class="arg-name">train_ratio</span>)</code>
-                    <span class="line-no">L41-42</span>
+                    <span class="line-no">L45-47</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置训练比例。</p></div>
             </div>
             
             <div class="method" id="method-EasyDataset-make_sampler">
                 <div class="method-header">
                     
                     <code><span class="fn-name">make_sampler</span> (<span class="arg-name">batch_size</span>, <span class="arg-name">shuffle</span> = <span class="arg-default">True</span>, <span class="arg-name">world_size</span> = <span class="arg-default">1</span>, <span class="arg-name">rank</span> = <span class="arg-default">0</span>, <span class="arg-name">drop_last</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L44-57</span>
+                    <span class="line-no">L49-74</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>创建按宽高比分批的随机采样器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    batch_size (int): 批次大小。</div>
+<div class="doc-detail">    shuffle (bool): 是否打乱。默认 True。</div>
+<div class="doc-detail">    world_size (int): 分布式训练的进程数。默认 1。</div>
+<div class="doc-detail">    rank (int): 当前进程的 rank。默认 0。</div>
+<div class="doc-detail">    drop_last (bool): 是否丢弃不完整的批次。默认 True。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    BatchedRandomSampler: 采样器实例。</div>
+</div></div>
             </div>
             
             </div>
@@ -405,7 +415,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MulDataset</span>(EasyDataset)
-                <span class="line-no">L60-85</span>
+                <span class="line-no">L77-112</span>
             </h2>
             <div class="docstring"><p>Artifically augmenting the size of a dataset.</p></div>
             <div class="class-vars"><strong>类变量:</strong> <code>multiplicator</code></div>
@@ -416,45 +426,49 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">multiplicator</span>, <span class="arg-name">dataset</span>)</code>
-                    <span class="line-no">L65-68</span>
+                    <span class="line-no">L82-91</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化重复数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    multiplicator (int): 重复倍数。</div>
+<div class="doc-detail">    dataset (EasyDataset): 原始数据集。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-MulDataset-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L70-71</span>
+                    <span class="line-no">L93-95</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小（原始大小 × 倍数）。</p></div>
             </div>
             
             <div class="method" id="method-MulDataset-__repr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L73-74</span>
+                    <span class="line-no">L97-99</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
             
             <div class="method" id="method-MulDataset-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L76-81</span>
+                    <span class="line-no">L101-107</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>根据索引获取数据（取模映射回原始数据集）。</p></div>
             </div>
             
             <div class="method" id="method-MulDataset-_resolutions">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resolutions</span> ()</code>
-                    <span class="line-no">L84-85</span>
+                    <span class="line-no">L110-112</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回原始数据集的分辨率列表。</p></div>
             </div>
             
             </div>
@@ -465,7 +479,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ResizedDataset</span>(EasyDataset)
-                <span class="line-no">L88-138</span>
+                <span class="line-no">L115-177</span>
             </h2>
             <div class="docstring"><p>Artifically changing the size of a dataset.</p></div>
             <div class="class-vars"><strong>类变量:</strong> <code>new_size</code></div>
@@ -476,63 +490,67 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">new_size</span>, <span class="arg-name">dataset</span>)</code>
-                    <span class="line-no">L93-96</span>
+                    <span class="line-no">L120-129</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化调整大小数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    new_size (int): 新的数据集大小。</div>
+<div class="doc-detail">    dataset (EasyDataset): 原始数据集。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ResizedDataset-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L98-99</span>
+                    <span class="line-no">L131-133</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回调整后的数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-ResizedDataset-__repr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L101-106</span>
+                    <span class="line-no">L135-141</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
             
             <div class="method" id="method-ResizedDataset-set_epoch">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L108-121</span>
+                    <span class="line-no">L143-157</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置 epoch，生成确定性随机索引映射。</p></div>
             </div>
             
             <div class="method" id="method-ResizedDataset-set_ratio">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_ratio</span> (<span class="arg-name">train_ratio</span>)</code>
-                    <span class="line-no">L123-124</span>
+                    <span class="line-no">L159-161</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置训练比例，传递给原始数据集。</p></div>
             </div>
             
             <div class="method" id="method-ResizedDataset-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L126-134</span>
+                    <span class="line-no">L163-172</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>根据索引映射获取数据。</p></div>
             </div>
             
             <div class="method" id="method-ResizedDataset-_resolutions">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resolutions</span> ()</code>
-                    <span class="line-no">L137-138</span>
+                    <span class="line-no">L175-177</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回原始数据集的分辨率列表。</p></div>
             </div>
             
             </div>
@@ -543,7 +561,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CatDataset</span>(EasyDataset)
-                <span class="line-no">L141-192</span>
+                <span class="line-no">L180-242</span>
             </h2>
             <div class="docstring"><p>Concatenation of several datasets</p></div>
             
@@ -554,63 +572,66 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">datasets</span>)</code>
-                    <span class="line-no">L144-148</span>
+                    <span class="line-no">L183-192</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化拼接数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    datasets (list[EasyDataset]): 要拼接的数据集列表。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-CatDataset-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L150-151</span>
+                    <span class="line-no">L194-196</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回拼接后的数据集总大小。</p></div>
             </div>
             
             <div class="method" id="method-CatDataset-__repr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L153-161</span>
+                    <span class="line-no">L198-207</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
             
             <div class="method" id="method-CatDataset-set_epoch">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L163-165</span>
+                    <span class="line-no">L209-212</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置 epoch，传递给所有子数据集。</p></div>
             </div>
             
             <div class="method" id="method-CatDataset-set_ratio">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_ratio</span> (<span class="arg-name">train_ratio</span>)</code>
-                    <span class="line-no">L167-169</span>
+                    <span class="line-no">L214-217</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置训练比例，传递给所有子数据集。</p></div>
             </div>
             
             <div class="method" id="method-CatDataset-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L171-185</span>
+                    <span class="line-no">L219-234</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>根据索引获取数据，自动路由到对应的子数据集。</p></div>
             </div>
             
             <div class="method" id="method-CatDataset-_resolutions">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resolutions</span> ()</code>
-                    <span class="line-no">L188-192</span>
+                    <span class="line-no">L237-242</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回所有子数据集的统一分辨率列表。</p></div>
             </div>
             
             </div>

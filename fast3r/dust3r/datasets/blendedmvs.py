@@ -24,11 +24,18 @@ class BlendedMVS (BaseStereoViewDataset):
     """
 
     def __init__(self, *args, ROOT, split=None, **kwargs):
+        """初始化 BlendedMVS 数据集。
+
+        Args:
+            ROOT (str): 数据集根目录。
+            split (str | None): 数据集分割。默认 None。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         self._load_data(split)
 
     def _load_data(self, split):
+        """加载预处理后的图像对数据。"""
         pairs = np.load(osp.join(self.ROOT, 'blendedmvs_pairs.npy'))
         if split is None:
             selection = slice(None)
@@ -44,12 +51,15 @@ class BlendedMVS (BaseStereoViewDataset):
         self.scenes = np.unique(self.pairs['seq_low'])  # low is unique enough
 
     def __len__(self):
+        """返回图像对数量。"""
         return len(self.pairs)
 
     def get_stats(self):
+        """返回数据集统计信息字符串。"""
         return f'{len(self)} pairs from {len(self.scenes)} scenes'
 
     def _get_views(self, pair_idx, resolution, rng):
+        """获取指定索引的两个视图。"""
         seqh, seql, img1, img2, score = self.pairs[pair_idx]
 
         seq = f"{seqh:08x}{seql:016x}"

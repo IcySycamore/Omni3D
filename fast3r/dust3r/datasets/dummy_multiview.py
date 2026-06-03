@@ -9,6 +9,7 @@ import random
 from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewDataset
 
 class DummyMultiview(BaseStereoViewDataset):
+    """虚拟多视图数据集，生成随机张量用于测试和调试。"""
     def __init__(self, num_views=4, dataset_size=1000, *args, split=None, ROOT=None, **kwargs):
         """
         Args:

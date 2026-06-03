@@ -29,7 +29,12 @@ class ImageList:
     """
 
     def __init__(self, images):
-        if not isinstance(images, (tuple, list, set)):
+        """初始化 ImageList。
+
+        Args:
+            images: 单个或多个 PIL Image / numpy 数组。
+        """
+        if not isinstance(images, list):
             images = [images]
         self.images = []
         for image in images:
@@ -38,25 +43,30 @@ class ImageList:
             self.images.append(image)
 
     def __len__(self):
+        """返回图像数量。"""
         return len(self.images)
 
     def to_pil(self):
-        return tuple(self.images) if len(self.images) > 1 else self.images[0]
+        """返回 PIL Image 元组或单个 Image。"""
+        return self.images if len(self.images) > 1 else self.images[0]
 
     @property
     def size(self):
-        sizes = [im.size for im in self.images]
-        assert all(sizes[0] == s for s in sizes)
+        """返回所有图像的统一尺寸 (W, H)。"""
+        sizes = [img.size for img in self.images]
         return sizes[0]
 
     def resize(self, *args, **kwargs):
-        return ImageList(self._dispatch('resize', *args, **kwargs))
+        """批量调整图像大小。"""
+        return self._dispatch(ImageList.resize, *args, **kwargs)
 
     def crop(self, *args, **kwargs):
-        return ImageList(self._dispatch('crop', *args, **kwargs))
+        """批量裁剪图像。"""
+        return self._dispatch(ImageList.crop, *args, **kwargs)
 
     def _dispatch(self, func, *args, **kwargs):
-        return [getattr(im, func)(*args, **kwargs) for im in self.images]
+        """将方法调用分发到所有图像。"""
+        return ImageList([func(img, *args, **kwargs) for img in self.images])
 
 
 def rescale_image_depthmap(image, depthmap, camera_intrinsics, output_resolution, force=True):
@@ -91,7 +101,19 @@ def rescale_image_depthmap(image, depthmap, camera_intrinsics, output_resolution
 
 
 def camera_matrix_of_crop(input_camera_matrix, input_resolution, output_resolution, scaling=1, offset_factor=0.5, offset=None):
-    # Margins to offset the origin
+    """根据裁剪参数计算新的相机内参矩阵。
+
+    Args:
+        input_camera_matrix (ndarray): 输入相机内参 (3x3)。
+        input_resolution (ndarray): 输入分辨率 (W, H)。
+        output_resolution (ndarray): 输出分辨率 (W, H)。
+        scaling (float): 缩放比例。默认 1。
+        offset_factor (float): 偏移因子。默认 0.5。
+        offset (ndarray | None): 显式偏移。
+
+    Returns:
+        ndarray: 裁剪后的相机内参矩阵 (3x3)。
+    """
     margins = np.asarray(input_resolution) * scaling - output_resolution
     assert np.all(margins >= 0.0)
     if offset is None:
@@ -125,7 +147,17 @@ def crop_image_depthmap(image, depthmap, camera_intrinsics, crop_bbox):
 
 
 def bbox_from_intrinsics_in_out(input_camera_matrix, output_camera_matrix, output_resolution):
-    out_width, out_height = output_resolution
+    """根据输入输出相机内参计算裁剪边界框。
+
+    Args:
+        input_camera_matrix (ndarray): 输入相机内参 (3x3)。
+        output_camera_matrix (ndarray): 输出相机内参 (3x3)。
+        output_resolution (tuple): 输出分辨率 (W, H)。
+
+    Returns:
+        tuple: 裁剪边界框 (left, top, right, bottom)。
+    """
     l, t = np.int32(np.round(input_camera_matrix[:2, 2] - output_camera_matrix[:2, 2]))
+    out_width, out_height = output_resolution
     crop_bbox = (l, t, l + out_width, t + out_height)
     return crop_bbox

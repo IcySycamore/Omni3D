@@ -24,7 +24,15 @@ from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewD
 
 
 class Habitat(BaseStereoViewDataset):
+    """Habitat-Sim 合成室内场景数据集，用于双视图 3D 重建。"""
+
     def __init__(self, size, *args, ROOT, **kwargs):
+        """初始化 Habitat 数据集。
+
+        Args:
+            size (str): 场景规模（如 'small'、'medium'、'large'、'xlarge'）。
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         assert self.split is not None
@@ -34,6 +42,7 @@ class Habitat(BaseStereoViewDataset):
         self.instances = list(range(1, 5))
 
     def filter_scene(self, label, instance=None):
+        """按标签和实例过滤场景列表。"""
         if instance:
             subscene, instance = instance.split('_')
             label += '/' + subscene
@@ -43,6 +52,7 @@ class Habitat(BaseStereoViewDataset):
         self.scenes = [scene for i, scene in enumerate(self.scenes) if valid[i]]
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的两个随机视图。"""
         scene = self.scenes[idx]
         data_path, key = osp.split(osp.join(self.ROOT, scene))
         views = []
@@ -67,6 +77,7 @@ class Habitat(BaseStereoViewDataset):
         return views
 
     def _load_one_view(self, data_path, key, view_index, resolution, rng):
+        """加载单个视图的图像、深度图、内参和位姿。"""
         view_index += 1  # file indices starts at 1
         impath = osp.join(data_path, f"{key}_{view_index}.jpeg")
         image = Image.open(impath)

@@ -21,7 +21,15 @@ from fast3r.dust3r.utils.image import imread_cv2
 
 
 class ARKitScenes(BaseStereoViewDataset):
+    """ARKitScenes 室内场景数据集，用于双视图 3D 重建。"""
+
     def __init__(self, *args, split, ROOT, **kwargs):
+        """初始化 ARKitScenes 数据集。
+
+        Args:
+            split (str): 数据集分割（'train'/'test'）。
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         if split == "train":
@@ -34,6 +42,7 @@ class ARKitScenes(BaseStereoViewDataset):
         self.loaded_data = self._load_data(self.split)
 
     def _load_data(self, split):
+        """加载预处理后的元数据。"""
         with np.load(osp.join(self.ROOT, split, 'all_metadata.npz')) as data:
             self.scenes = data['scenes']
             self.sceneids = data['sceneids']
@@ -43,9 +52,11 @@ class ARKitScenes(BaseStereoViewDataset):
             self.pairs = data['pairs'][:, :2].astype(int)
 
     def __len__(self):
+        """返回图像对数量。"""
         return len(self.pairs)
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的两个视图。"""
 
         image_idx1, image_idx2 = self.pairs[idx]
 

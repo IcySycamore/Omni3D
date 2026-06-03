@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 2 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/perceiver_block.py</div>
@@ -327,9 +327,11 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PerceiverCompressor</span>(nn.Module)
-                <span class="line-no">L14-82</span>
+                <span class="line-no">L14-99</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Perceiver 压缩器，将多个图像的视觉 token 压缩为固定数量的潜在表示。</p>
+<p>使用交叉注意力机制将可变长度的视觉 token 序列压缩为固定长度的潜在表示，</p>
+<p>并添加图像级别的位置编码来区分不同图像来源。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,16 +340,26 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">token_dim</span>, <span class="arg-name">latent_dim</span>, <span class="arg-name">num_latents</span>, <span class="arg-name">num_cross_layers</span>, <span class="arg-name">num_latent_transformer_layers</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">8</span>, <span class="arg-name">dropout</span> = <span class="arg-default">0.0</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">nn.LayerNorm</span>)</code>
-                    <span class="line-no">L15-43</span>
+                    <span class="line-no">L20-60</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 Perceiver 压缩器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    token_dim (int): 输入 token 维度。</div>
+<div class="doc-detail">    latent_dim (int): 潜在表示维度。</div>
+<div class="doc-detail">    num_latents (int): 潜在表示数量。</div>
+<div class="doc-detail">    num_cross_layers (int): 交叉注意力层数。</div>
+<div class="doc-detail">    num_latent_transformer_layers (int): 每层潜在 Transformer 的自注意力层数。</div>
+<div class="doc-detail">    num_heads (int): 注意力头数。默认 8。</div>
+<div class="doc-detail">    dropout (float): Dropout 概率。默认 0.0。</div>
+<div class="doc-detail">    norm_layer: 归一化层类型。默认 LayerNorm。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PerceiverCompressor-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">pos</span>, <span class="arg-name">image_ids</span>)</code>
-                    <span class="line-no">L45-82</span>
+                    <span class="line-no">L62-99</span>
                 </div>
                 <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    x (torch.Tensor): Input tensor of shape [B, P, C] where</div>

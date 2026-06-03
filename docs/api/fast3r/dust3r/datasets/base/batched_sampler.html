@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 4 方法</span>
-            <span class="warn">
-                ⚠️ 5 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/batched_sampler.py</div>
@@ -328,7 +328,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BatchedRandomSampler</span>
-                <span class="line-no">L17-82</span>
+                <span class="line-no">L17-94</span>
             </h2>
             <div class="docstring"><p>Random sampling under a constraint: each sample in the batch has the same feature,</p>
 <p>which is chosen randomly from a known pool of &#x27;features&#x27; for each batch.</p>
@@ -343,36 +343,44 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dataset</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">pool_size</span>, <span class="arg-name">world_size</span> = <span class="arg-default">1</span>, <span class="arg-name">rank</span> = <span class="arg-default">0</span>, <span class="arg-name">drop_last</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L27-42</span>
+                    <span class="line-no">L27-52</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化分批随机采样器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dataset: 数据集实例。</div>
+<div class="doc-detail">    batch_size (int): 批次大小。</div>
+<div class="doc-detail">    pool_size (int): 特征池大小（如宽高比数量）。</div>
+<div class="doc-detail">    world_size (int): 分布式进程数。默认 1。</div>
+<div class="doc-detail">    rank (int): 当前进程 rank。默认 0。</div>
+<div class="doc-detail">    drop_last (bool): 是否丢弃不完整批次。默认 True。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-BatchedRandomSampler-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L44-45</span>
+                    <span class="line-no">L54-56</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回每个进程的采样数量。</p></div>
             </div>
             
             <div class="method" id="method-BatchedRandomSampler-set_epoch">
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L47-48</span>
+                    <span class="line-no">L58-60</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置当前 epoch，用于确定性随机采样。</p></div>
             </div>
             
             <div class="method" id="method-BatchedRandomSampler-__iter__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__iter__</span> ()</code>
-                    <span class="line-no">L50-82</span>
+                    <span class="line-no">L62-94</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>迭代生成 (sample_idx, feat_idx) 索引元组。</p></div>
             </div>
             
             </div>
@@ -383,9 +391,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">round_by</span> (<span class="arg-name">total</span>, <span class="arg-name">multiple</span>, <span class="arg-name">up</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L85-88</span>
+                <span class="line-no">L97-110</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将 total 向下取整为 multiple 的倍数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    total (int): 总数。</div>
+<div class="doc-detail">    multiple (int): 取整基数。</div>
+<div class="doc-detail">    up (bool): 是否向上取整。默认 False。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    int: 取整后的值。</div>
+</div></div>
         </div>
         
 </main>
