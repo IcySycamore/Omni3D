@@ -40,6 +40,7 @@ from utils.misc import NativeScalerWithGradNormCount as NativeScaler
 
 
 def get_args_parser():
+    """创建 CroCo 预训练命令行参数解析器。"""
     parser = argparse.ArgumentParser("CroCo pre-training", add_help=False)
     # model and criterion
     parser.add_argument(
@@ -159,7 +160,7 @@ def get_args_parser():
 
 
 def main(args):
-    misc.init_distributed_mode(args)
+    """预训练主函数：初始化分布式环境、数据集、模型、优化器，执行训练循环。"""
     global_rank = misc.get_rank()
     world_size = misc.get_world_size()
 
@@ -324,6 +325,7 @@ def train_one_epoch(
     log_writer=None,
     args=None,
 ):
+    """执行一个训练 epoch，包含前向计算、梯度累积和日志记录。"""
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter("lr", misc.SmoothedValue(window_size=1, fmt="{value:.6f}"))

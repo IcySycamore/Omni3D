@@ -114,6 +114,7 @@ class DTU(BaseManyViewDataset):
         return intrinsic, extrinsic
     
     def sample_pairs(self, pairs_path, seq_id):
+        """采样图像对。"""
         
         cluster_lines = open(pairs_path).read().splitlines()
         ref_idx = int(cluster_lines[2 * seq_id + 1])
@@ -132,6 +133,7 @@ class DTU(BaseManyViewDataset):
         return list_idx
  
     def _get_views(self, idx, resolution, rng): 
+        """获取指定索引的多视图数据。"""
         scene_id = self.scene_list[idx // self.num_seq]
         seq_id = idx % self.num_seq
 

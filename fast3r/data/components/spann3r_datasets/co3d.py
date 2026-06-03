@@ -81,6 +81,7 @@ class Co3d(BaseManyViewDataset):
     
 
     def load_scene(self, scene_class=None, scene_id=None):
+        """加载场景数据。"""
         print('Loading scenes')
         with open(osp.join(self.ROOT, f'selected_seqs_{self.split}.json'), 'r') as f:
             scenes = json.load(f)
@@ -104,6 +105,7 @@ class Co3d(BaseManyViewDataset):
         return len(self.scene_list) * self.num_seq
     
     def _get_views(self, idx, resolution, rng, attempts=0):
+        """获取指定索引的多视图数据。"""
         obj, instance = self.scene_list[idx // self.num_seq]
         image_pool = self.scenes[obj, instance]
 
@@ -210,5 +212,4 @@ class Co3d(BaseManyViewDataset):
 
 
     
-
 

@@ -169,6 +169,7 @@ def adjust_intrinsics_for_90_clockwise_rotation(K, original_width, original_heig
 # ASE_Multiview dataset
 ##########################################
 class ASE_Multiview(BaseStereoViewDataset):
+    """多视图 ASE 数据集，加载多视角图像和相机参数。"""
     def __init__(
         self,
         ROOT,
@@ -181,6 +182,7 @@ class ASE_Multiview(BaseStereoViewDataset):
         *args,
         **kwargs
     ):
+        """初始化。"""
         super().__init__(*args, split=split, **kwargs)
         self.ROOT = ROOT
         self.split = split
@@ -221,6 +223,7 @@ class ASE_Multiview(BaseStereoViewDataset):
         self.vignette_corrector = VignetteCorrector()
 
     def _generate_combinations(self):
+        """生成视图索引组合。"""
         self.combinations = []
         for scene_id, indices in self.scene_to_indices.items():
             if len(indices) < self.num_views:
@@ -242,9 +245,11 @@ class ASE_Multiview(BaseStereoViewDataset):
         self.combinations = sorted(set(self.combinations))
 
     def __len__(self):
+        """返回数据集大小。"""
         return len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的多视图数据。"""
         start_time = time.time()
         image_indices = self.combinations[idx]
         views = []
@@ -330,6 +335,7 @@ class ASE_Multiview_Simple(BaseStereoViewDataset):
         *args,
         **kwargs
     ):
+        """初始化。"""
         super().__init__(*args, split=split, **kwargs)
         self.ROOT = ROOT
         self.split = split
@@ -377,6 +383,7 @@ class ASE_Multiview_Simple(BaseStereoViewDataset):
         self.vignette_corrector = VignetteCorrector()
 
     def __len__(self):
+        """返回数据集大小。"""
         return len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):

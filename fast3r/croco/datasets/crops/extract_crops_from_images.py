@@ -22,6 +22,11 @@ from tqdm import tqdm
 
 
 def arg_parser():
+    """创建命令行参数解析器。
+
+    Returns:
+        argparse.ArgumentParser: 参数解析器。
+    """
     parser = argparse.ArgumentParser(
         "Generate cropped image pairs from image crop list"
     )
@@ -51,6 +56,11 @@ def arg_parser():
 
 
 def main(args):
+    """主流程：加载裁剪列表、准备任务、多线程生成裁剪图像并写入 listing 文件。
+
+    Args:
+        args (argparse.Namespace): 命令行参数。
+    """
     listing_path = os.path.join(args.output_dir, "listing.txt")
 
     print(f"Loading list of crops ... ({args.nthread} threads)")
@@ -80,6 +90,15 @@ def main(args):
 
 
 def load_crop_file(path):
+    """加载裁剪文件，解析图像对及其裁剪区域。
+
+    Args:
+        path (str): 裁剪文件路径。
+
+    Returns:
+        tuple: ``(pairs, num_crops_to_generate)`` 其中 pairs 为图像对列表，
+            num_crops_to_generate 为待生成的裁剪对总数。
+    """
     data = open(path).read().splitlines()
     pairs = []
     num_crops_to_generate = 0
@@ -99,6 +118,16 @@ def load_crop_file(path):
 
 
 def prepare_jobs(pairs, num_levels, num_pairs_in_dir):
+    """根据层次目录结构准备裁剪任务。
+
+    Args:
+        pairs (list): 图像对及裁剪区域数据。
+        num_levels (int): 子目录层数。
+        num_pairs_in_dir (int): 每个目录的图像对数。
+
+    Returns:
+        list: 任务列表，每项为 ``((img1, img2), rotation, crops, paths)``。
+    """
     jobs = []
     powers = [num_pairs_in_dir**level for level in reversed(range(num_levels))]
 
@@ -123,6 +152,17 @@ def prepare_jobs(pairs, num_levels, num_pairs_in_dir):
 
 
 def load_image(path):
+    """加载图像并转换为 RGB 模式。
+
+    Args:
+        path (str): 图像文件路径。
+
+    Returns:
+        PIL.Image: RGB 图像。
+
+    Raises:
+        OSError: 加载失败时抛出。
+    """
     try:
         return Image.open(path).convert("RGB")
     except Exception as e:
@@ -131,6 +171,17 @@ def load_image(path):
 
 
 def save_image_crops(args, data):
+    """加载图像对并保存裁剪后的图像。
+
+    对每对图像执行裁剪、缩放和旋转，保存为 JPEG 文件。
+
+    Args:
+        args (argparse.Namespace): 命令行参数（root_dir, output_dir, imsize）。
+        data (tuple): ``((img1_path, img2_path), rotation, crops, paths)``。
+
+    Returns:
+        list: 成功保存的路径列表。
+    """
     # load images
     img_pair, rot, crops, paths = data
     try:
@@ -141,6 +192,7 @@ def save_image_crops(args, data):
         return []
 
     def area(sz):
+        """计算像素面积。"""
         return sz[0] * sz[1]
 
     tgt_size = (args.imsize, args.imsize)

@@ -1026,6 +1026,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
         just_uploaded_video = gr.State(value=True)
 
         def update_gallery_upload(gallery_images, video, just_uploaded_video):
+            """更新图库上传控件的回调。"""
             if gallery_images:
                 if video and just_uploaded_video:
                     return video, False
@@ -1035,6 +1036,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
                 return None, just_uploaded_video
 
         def update_video_upload(gallery_images, video, just_uploaded_video, state):
+            """更新视频上传控件的回调。"""
             if video:
                 # Check if this is an example video by comparing basename
                 video_filename = os.path.basename(video)
@@ -1074,6 +1076,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
             raise gr.Error("Failed to handle feedback")
 
         def process_images_wrapper(uploaded_files, video_file, state, image_resolution):
+            """图像处理流程的包装函数。"""
             # Reset is_example flag for direct uploads
             if not state.get("is_example", False):
                 state = state.copy()

@@ -838,6 +838,7 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     # ----------------- Start Playback Loop -----------------
     def local_playback_loop():
+        """本地回放循环：在后台线程中持续推进时间步。"""
         while True:
             if gui_playing.value:
                 gui_timestep.value = (int(gui_timestep.value) + 1) % num_frames

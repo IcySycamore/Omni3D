@@ -16,36 +16,91 @@ import torchvision.transforms.functional as F
 
 
 class ComposePair(torchvision.transforms.Compose):
+    """将多个成对变换按顺序组合。
+
+    与 ``Compose`` 类似，但每个变换接收并返回 ``(img1, img2)`` 元组。
+    """
+
     def __call__(self, img1, img2):
+        """依次应用所有变换。
+
+        Args:
+            img1: 第一张图像。
+            img2: 第二张图像。
+
+        Returns:
+            tuple: 变换后的 ``(img1, img2)``。
+        """
         for t in self.transforms:
             img1, img2 = t(img1, img2)
         return img1, img2
 
 
 class NormalizeBoth(torchvision.transforms.Normalize):
+    """对两张图像分别执行相同的标准化（减均值除标准差）。"""
+
     def forward(self, img1, img2):
+        """分别标准化两张图像。
+
+        Args:
+            img1 (Tensor): 第一张图像张量。
+            img2 (Tensor): 第二张图像张量。
+
+        Returns:
+            tuple: 标准化后的 ``(img1, img2)``。
+        """
         img1 = super().forward(img1)
         img2 = super().forward(img2)
         return img1, img2
 
 
 class ToTensorBoth(torchvision.transforms.ToTensor):
+    """将两张 PIL 图像分别转换为张量。"""
+
     def __call__(self, img1, img2):
+        """分别将 PIL Image 转为 Tensor。
+
+        Args:
+            img1 (PIL.Image): 第一张图像。
+            img2 (PIL.Image): 第二张图像。
+
+        Returns:
+            tuple: 转换后的 ``(img1, img2)``。
+        """
         img1 = super().__call__(img1)
         img2 = super().__call__(img2)
         return img1, img2
 
 
 class RandomCropPair(torchvision.transforms.RandomCrop):
+    """对两张图像分别执行随机裁剪（裁剪位置不同）."""
+
     # the crop will be intentionally different for the two images with this class
     def forward(self, img1, img2):
+        """分别随机裁剪两张图像。
+
+        Args:
+            img1 (PIL.Image | Tensor): 第一张图像。
+            img2 (PIL.Image | Tensor): 第二张图像。
+
+        Returns:
+            tuple: 裁剪后的 ``(img1, img2)``。
+        """
         img1 = super().forward(img1)
         img2 = super().forward(img2)
         return img1, img2
 
 
 class ColorJitterPair(torchvision.transforms.ColorJitter):
-    # can be symmetric (same for both images) or assymetric (different jitter params for each image) depending on assymetric_prob
+    """成对颜色抖动，可对称或非对称地扰动两张图像。
+
+    以 ``assymetric_prob`` 的概率为第二张图重新采样抖动参数。
+
+    Args:
+        assymetric_prob (float): 非对称抖动概率。
+        **kwargs: 传递给 ``ColorJitter`` 的参数（brightness, contrast 等）。
+    """
+
     def __init__(self, assymetric_prob, **kwargs):
         super().__init__(**kwargs)
         self.assymetric_prob = assymetric_prob
@@ -59,6 +114,19 @@ class ColorJitterPair(torchvision.transforms.ColorJitter):
         saturation_factor,
         hue_factor,
     ):
+        """对单张图像按给定的抖动参数和函数顺序执行颜色变换。
+
+        Args:
+            img (Tensor): 输入图像。
+            fn_idx (list of int): 变换执行顺序索引列表。
+            brightness_factor (float | None): 亮度因子。
+            contrast_factor (float | None): 对比度因子。
+            saturation_factor (float | None): 饱和度因子。
+            hue_factor (float | None): 色调因子。
+
+        Returns:
+            Tensor: 抖动后的图像。
+        """
         for fn_id in fn_idx:
             if fn_id == 0 and brightness_factor is not None:
                 img = F.adjust_brightness(img, brightness_factor)
@@ -71,6 +139,18 @@ class ColorJitterPair(torchvision.transforms.ColorJitter):
         return img
 
     def forward(self, img1, img2):
+        """对两张图像执行颜色抖动。
+
+        以 ``assymetric_prob`` 的概率为第二张图重新采样抖动参数，
+        否则使用与第一张图相同的参数。
+
+        Args:
+            img1 (Tensor): 第一张图像。
+            img2 (Tensor): 第二张图像。
+
+        Returns:
+            tuple: 抖动后的 ``(img1, img2)``。
+        """
         (
             fn_idx,
             brightness_factor,
@@ -108,6 +188,23 @@ class ColorJitterPair(torchvision.transforms.ColorJitter):
 
 
 def get_pair_transforms(transform_str, totensor=True, normalize=True):
+    """根据字符串描述构建成对变换流水线。
+
+    支持的变换关键字（用 ``+`` 拼接）：
+
+    * ``crop224`` — 随机裁剪到 224×224
+    * ``acolor`` — 非对称颜色抖动
+
+    最后可选地追加 ``ToTensorBoth`` 和 ``NormalizeBoth``。
+
+    Args:
+        transform_str (str): 变换描述字符串，如 ``"crop224+acolor"``。
+        totensor (bool): 是否追加 ToTensor 变换。默认 ``True``。
+        normalize (bool): 是否追加 Normalize 变换。默认 ``True``。
+
+    Returns:
+        ComposePair | list | None: 变换组合。
+    """
     # transform_str is eg    crop224+color
     trfs = []
     for s in transform_str.split("+"):

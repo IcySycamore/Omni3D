@@ -82,6 +82,7 @@ class NRGBD(BaseManyViewDataset):
         print(f"Found {len(self.scene_list)} sequences in split {self.split}")
     
     def load_poses(self, path):
+        """加载相机位姿文件。"""
         file = open(path, "r")
         lines = file.readlines()
         file.close()
@@ -102,6 +103,7 @@ class NRGBD(BaseManyViewDataset):
 
     
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的多视图数据。"""
 
         if self.tuple_list is not None:
             line = self.tuple_list[idx].split(" ")

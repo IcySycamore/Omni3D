@@ -110,6 +110,7 @@ class SevenScenes(BaseManyViewDataset):
     
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的多视图数据。"""
 
 
         if self.tuple_list is not None:
@@ -174,6 +175,5 @@ class SevenScenes(BaseManyViewDataset):
 
 
                     
-
 
 

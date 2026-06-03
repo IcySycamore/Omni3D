@@ -84,6 +84,7 @@ class BlendMVS(BaseManyViewDataset):
     #     return None
 
     def sample_pairs(self, pairs_path, rng, max_trials=10):
+        """采样图像对。"""
         # Read the pair.txt file and build a graph
         cluster_lines = open(pairs_path).read().splitlines()
         image_num = int(cluster_lines[0])
@@ -170,6 +171,7 @@ class BlendMVS(BaseManyViewDataset):
     
 
     def _get_views(self, idx, resolution, rng, attempts=0):
+        """获取指定索引的多视图数据。"""
         scene_id = self.scene_list[idx // self.num_seq]
 
         image_path = osp.join(self.ROOT, scene_id, 'blended_images')
@@ -264,7 +266,6 @@ class BlendMVS(BaseManyViewDataset):
         return views
 
             
-
 
 
 
