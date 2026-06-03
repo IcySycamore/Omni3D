@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 8 函数</span>
             <span>🔧 2 方法</span>
-            <span class="warn">
-                ⚠️ 3 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/viz/demo.py</div>
@@ -344,7 +344,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ViserServerManager</span>
-                <span class="line-no">L64-231</span>
+                <span class="line-no">L64-237</span>
             </h2>
             <div class="docstring"><p>Manages visualization servers launched as separate processes.</p></div>
             
@@ -355,18 +355,22 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">req_queue</span>, <span class="arg-name">resp_queue</span>)</code>
-                    <span class="line-no">L68-74</span>
+                    <span class="line-no">L68-79</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 ViserServerManager。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    req_queue: 请求队列。</div>
+<div class="doc-detail">    resp_queue: 响应队列。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ViserServerManager-run">
                 <div class="method-header">
                     
                     <code><span class="fn-name">run</span> ()</code>
-                    <span class="line-no">L76-231</span>
+                    <span class="line-no">L81-237</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>启动管理器主循环，处理请求并管理可视化服务器。</p></div>
             </div>
             
             </div>
@@ -387,7 +391,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">start_manager</span> ()</code>
-                <span class="line-no">L237-247</span>
+                <span class="line-no">L243-253</span>
             </h2>
             <div class="docstring"><p>Starts the ViserServerManager.</p>
 <p>Returns: req_queue, resp_queue, manager_process.</p></div>
@@ -398,7 +402,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">update_gallery</span> (<span class="arg-name">files</span>)</code>
-                <span class="line-no">L253-265</span>
+                <span class="line-no">L259-271</span>
             </h2>
             <div class="docstring"><p>Returns a list of file paths for gallery preview.</p></div>
         </div>
@@ -408,7 +412,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">process_images</span> (<span class="arg-name">uploaded_files</span>, <span class="arg-name">video_file</span>, <span class="arg-name">state</span>, <span class="arg-name">model</span>, <span class="arg-name">lit_module</span>, <span class="arg-name">device</span>, <span class="arg-name">global_manager_req_queue</span>, <span class="arg-name">global_manager_resp_queue</span>, <span class="arg-name">output_dir</span>, <span class="arg-name">examples_dir</span>, <span class="arg-name">image_size</span> = <span class="arg-default">512</span>, <span class="arg-name">rotate_clockwise_90</span> = <span class="arg-default">False</span>, <span class="arg-name">crop_to_landscape</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L271-644</span>
+                <span class="line-no">L277-650</span>
             </h2>
             <div class="docstring"><p>Processes input images/video:</p>
 <p>  - Saves files to the output directory (unless it&#x27;s an example)</p>
@@ -433,7 +437,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">delete_visers_callback</span> (<span class="arg-name">state</span>)</code>
-                <span class="line-no">L650-691</span>
+                <span class="line-no">L656-697</span>
             </h2>
             <div class="docstring"><p>Cleans up visualization servers when the session ends.</p></div>
         </div>
@@ -443,7 +447,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">handle_feedback</span> (<span class="arg-name">feedback_type</span>, <span class="arg-name">timestamp</span>, <span class="arg-name">output_dir</span>)</code>
-                <span class="line-no">L696-735</span>
+                <span class="line-no">L702-741</span>
             </h2>
             <div class="docstring"><p>Move data from no_feedback to the appropriate feedback folder.</p></div>
         </div>
@@ -453,7 +457,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">create_demo</span> (<span class="arg-name">checkpoint_dir</span>, <span class="arg-name">examples_dir</span>, <span class="arg-name">output_dir</span>, <span class="arg-name">device</span>: <span class="arg-type">torch.device</span>, <span class="arg-name">is_lightning_checkpoint</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L741-1108</span>
+                <span class="line-no">L747-1114</span>
             </h2>
             <div class="docstring"><p>Creates the Gradio demo interface.</p>
 <div class="doc-section"><strong>Layout:</strong>
@@ -474,9 +478,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">main</span> ()</code>
-                <span class="line-no">L1110-1128</span>
+                <span class="line-no">L1116-1135</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Demo 主函数，启动 Gradio 界面进行多视图 3D 重建。</p></div>
         </div>
         
 </main>

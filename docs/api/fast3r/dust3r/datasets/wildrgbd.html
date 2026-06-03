@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 6 方法</span>
-            <span class="warn">
-                ⚠️ 7 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/wildrgbd.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">WildRGBD</span>(Co3d)
-                <span class="line-no">L24-46</span>
+                <span class="line-no">L24-59</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>WildRGB-D 真实世界 RGB-D 数据集，继承自 Co3d。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,54 +338,58 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">mask_bg</span> = <span class="arg-default">True</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L25-27</span>
+                    <span class="line-no">L27-35</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 WildRGBD 数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    mask_bg (bool | str): 是否掩码背景。默认 True。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-WildRGBD-_get_metadatapath">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_metadatapath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L29-30</span>
+                    <span class="line-no">L37-39</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回元数据文件路径。</p></div>
             </div>
             
             <div class="method" id="method-WildRGBD-_get_impath">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_impath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L32-33</span>
+                    <span class="line-no">L41-43</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回 RGB 图像文件路径。</p></div>
             </div>
             
             <div class="method" id="method-WildRGBD-_get_depthpath">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_depthpath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L35-36</span>
+                    <span class="line-no">L45-47</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回深度图文件路径。</p></div>
             </div>
             
             <div class="method" id="method-WildRGBD-_get_maskpath">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_maskpath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L38-39</span>
+                    <span class="line-no">L49-51</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回掩码文件路径。</p></div>
             </div>
             
             <div class="method" id="method-WildRGBD-_read_depthmap">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_read_depthmap</span> (<span class="arg-name">depthpath</span>, <span class="arg-name">input_metadata</span>)</code>
-                    <span class="line-no">L41-46</span>
+                    <span class="line-no">L53-59</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>读取深度图并转换为米制单位（除以1000）。</p></div>
             </div>
             
             </div>

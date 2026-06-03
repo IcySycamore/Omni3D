@@ -16,11 +16,27 @@ from .base_many_view_dataset import BaseManyViewDataset
 
 
 class NRGBD(BaseManyViewDataset):
+    """NRGBD 多视图室内场景数据集，基于 SPlan3R 序列采样。"""
+
     def __init__(self, num_seq=1, num_frames=5, 
                  min_thresh=10, max_thresh=100, 
                  test_id=None, full_video=False, 
                  tuple_path=None, seq_id=None,
                  kf_every=1, *args, ROOT, **kwargs):
+        """初始化 NRGBD 数据集。
+
+        Args:
+            num_seq (int): 每个场景的序列数。默认 1。
+            num_frames (int): 每个序列的帧数。默认 5。
+            min_thresh (int): 帧间距最小阈值。默认 10。
+            max_thresh (int): 帧间距最大阈值。默认 100。
+            test_id: 测试场景 ID。默认 None。
+            full_video (bool): 是否使用完整视频。默认 False。
+            tuple_path (str | None): 预定义元组文件路径。默认 None。
+            seq_id: 序列 ID。默认 None。
+            kf_every (int): 关键帧间隔。默认 1。
+            ROOT (str): 数据集根目录。
+        """
         
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
@@ -38,11 +54,13 @@ class NRGBD(BaseManyViewDataset):
         self.load_all_scenes(ROOT)
     
     def __len__(self):
+        """返回数据集大小。"""
         if self.tuple_list is not None:
             return len(self.tuple_list)
         return len(self.scene_list) * self.num_seq
 
     def load_all_tuples(self, tuple_path):
+        """加载预定义的图像元组列表。"""
         if tuple_path is not None:
             with open(tuple_path) as f:
                 self.tuple_list = f.read().splitlines()
@@ -51,6 +69,7 @@ class NRGBD(BaseManyViewDataset):
             self.tuple_list = None
     
     def load_all_scenes(self, base_dir):
+        """加载所有场景列表。"""
         
         scenes = os.listdir(base_dir)
         

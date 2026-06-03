@@ -313,7 +313,7 @@ td a:hover { text-decoration: underline; }
             <span>⚡ 0 函数</span>
             <span>🔧 6 方法</span>
             <span class="warn">
-                ⚠️ 7 处缺 docstring
+                ⚠️ 1 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/megadepth.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MegaDepth</span>(BaseStereoViewDataset)
-                <span class="line-no">L22-102</span>
+                <span class="line-no">L22-113</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>MegaDepth 大规模互联网照片数据集，用于双视图 3D 重建。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,52 +338,55 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L23-35</span>
+                    <span class="line-no">L25-42</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 MegaDepth 数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-MegaDepth-_load_data">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_data</span> (<span class="arg-name">split</span>)</code>
-                    <span class="line-no">L37-41</span>
+                    <span class="line-no">L44-49</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载预处理后的元数据。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L43-44</span>
+                    <span class="line-no">L51-53</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回图像对数量。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth-get_stats">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_stats</span> ()</code>
-                    <span class="line-no">L46-47</span>
+                    <span class="line-no">L55-57</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集统计信息字符串。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth-select_scene">
                 <div class="method-header">
                     
                     <code><span class="fn-name">select_scene</span> (<span class="arg-name">scene</span>, <span class="arg-name">*instances</span>, <span class="arg-name">opposite</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L49-68</span>
+                    <span class="line-no">L59-79</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>按场景名选择或排除特定场景的数据。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">pair_idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L70-102</span>
+                    <span class="line-no">L81-113</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>

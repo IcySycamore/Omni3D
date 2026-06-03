@@ -66,7 +66,12 @@ class ViserServerManager:
     Manages visualization servers launched as separate processes.
     """
     def __init__(self, req_queue, resp_queue):
-        self.req_queue = req_queue
+        """初始化 ViserServerManager。
+
+        Args:
+            req_queue: 请求队列。
+            resp_queue: 响应队列。
+        """
         self.resp_queue = resp_queue
         self.servers = {}  # server_id -> server info
         self.session_servers = {}  # session_id -> list of server_ids
@@ -74,6 +79,7 @@ class ViserServerManager:
         self.next_server_id = 1
 
     def run(self):
+        """启动管理器主循环，处理请求并管理可视化服务器。"""
         self.console.log("[bold green]ViserServerManager started[/bold green]")
         while True:
             try:
@@ -1108,6 +1114,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
     return demo
 
 def main():
+    """Demo 主函数，启动 Gradio 界面进行多视图 3D 重建。"""
     os.environ["GRADIO_TEMP_DIR"] = "./gradio_tmp_dir"
     parser = argparse.ArgumentParser(description="Fast3R 3D Reconstruction Demo...")
     parser.add_argument("--checkpoint_dir", type=str, default="jedyang97/Fast3R_ViT_Large_512")

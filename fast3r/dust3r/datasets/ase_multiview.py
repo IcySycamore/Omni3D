@@ -70,12 +70,14 @@ T_DEVICE_FROM_CAMERA = torch.tensor(
 )
 
 def imread_cv2(path, flags=cv2.IMREAD_COLOR):
+    """读取图像文件，如未找到则抛出 FileNotFoundError。"""
     img = cv2.imread(path, flags)
     if img is None:
         raise FileNotFoundError(f"Image at {path} not found.")
     return img
 
 def read_trajectory_file(filepath):
+    """读取 Aria 设备的轨迹文件，返回位姿和旋转矩阵。"""
     assert osp.exists(filepath), f"Could not find trajectory file: {filepath}"
     with open(filepath, "r") as f:
         header = f.readline()
@@ -108,6 +110,7 @@ def read_trajectory_file(filepath):
 # Rotation about camera Z-axis
 ##########################################
 def get_rotation_matrix_z(k):
+    """生成绕 Z 轴旋转 k*90 度的 4x4 变换矩阵。"""
     # k times 90 degrees clockwise about Z
     # For k=1 (90 deg cw): Rz = [[0,1,0],[-1,0,0],[0,0,1]]
     # For k=2 (180 deg): Rz = [[-1,0,0],[0,-1,0],[0,0,1]]
@@ -132,9 +135,11 @@ def get_rotation_matrix_z(k):
     return Rt
 
 def rotate_image_90_clockwise(img):
+    """将图像顺时针旋转 90 度。"""
     return cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
 
 def adjust_intrinsics_for_90_clockwise_rotation(K, original_width, original_height):
+    """调整相机内参矩阵以适应顺时针 90 度旋转。"""
     fx = K[0,0]
     fy = K[1,1]
     cx = K[0,2]

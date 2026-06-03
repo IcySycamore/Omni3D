@@ -162,6 +162,7 @@ class BaseStereoViewDataset(EasyDataset):
         return views
 
     def _set_resolutions(self, resolutions):
+        """设置并验证图像分辨率列表。"""
         assert resolutions is not None, "undefined resolution"
 
         if not isinstance(resolutions, list):
@@ -251,7 +252,9 @@ def is_good_type(key, v):
 
 
 def view_name(view, batch_index=None):
+    """返回视图的标识字符串（数据集/标签/实例）。"""
     def sel(x):
+        """辅助函数，根据 batch_index 选取元素。"""
         return x[batch_index] if batch_index not in (None, slice(None)) else x
 
     db = sel(view["dataset"])
@@ -261,6 +264,7 @@ def view_name(view, batch_index=None):
 
 
 def transpose_to_landscape(view):
+    """将竖屏视图转置为横屏，同步交换所有相关数组。"""
     height, width = view["true_shape"]
 
     if width < height:

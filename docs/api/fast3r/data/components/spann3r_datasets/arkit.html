@@ -313,7 +313,7 @@ td a:hover { text-decoration: underline; }
             <span>⚡ 0 函数</span>
             <span>🔧 7 方法</span>
             <span class="warn">
-                ⚠️ 6 处缺 docstring
+                ⚠️ 2 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/components/spann3r_datasets/arkit.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ArkitScene</span>(BaseManyViewDataset)
-                <span class="line-no">L17-207</span>
+                <span class="line-no">L17-223</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>ARKitScenes 多视图数据集，基于 SPlan3R 序列采样。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,34 +338,44 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_seq</span> = <span class="arg-default">100</span>, <span class="arg-name">num_frames</span> = <span class="arg-default">5</span>, <span class="arg-name">min_thresh</span> = <span class="arg-default">10</span>, <span class="arg-name">max_thresh</span> = <span class="arg-default">100</span>, <span class="arg-name">test_id</span> = <span class="arg-default">None</span>, <span class="arg-name">full_video</span> = <span class="arg-default">False</span>, <span class="arg-name">kf_every</span> = <span class="arg-default">1</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L18-34</span>
+                    <span class="line-no">L20-48</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 ARKitScenes 数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_seq (int): 每个场景的序列数。默认 100。</div>
+<div class="doc-detail">    num_frames (int): 每个序列的帧数。默认 5。</div>
+<div class="doc-detail">    min_thresh (int): 帧间距最小阈值。默认 10。</div>
+<div class="doc-detail">    max_thresh (int): 帧间距最大阈值。默认 100。</div>
+<div class="doc-detail">    test_id: 测试场景 ID。默认 None。</div>
+<div class="doc-detail">    full_video (bool): 是否使用完整视频。默认 False。</div>
+<div class="doc-detail">    kf_every (int): 关键帧间隔。默认 1。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ArkitScene-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L36-37</span>
+                    <span class="line-no">L50-52</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回场景数与序列数的乘积。</p></div>
             </div>
             
             <div class="method" id="method-ArkitScene-load_all_scenes">
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_all_scenes</span> (<span class="arg-name">base_dir</span>, <span class="arg-name">num_seq</span> = <span class="arg-default">200</span>)</code>
-                    <span class="line-no">L39-60</span>
+                    <span class="line-no">L54-76</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载所有场景列表。</p></div>
             </div>
             
             <div class="method" id="method-ArkitScene-get_intrinsic">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_intrinsic</span> (<span class="arg-name">intrinsics_dir</span>, <span class="arg-name">frame_id</span>, <span class="arg-name">video_id</span>)</code>
-                    <span class="line-no">L62-76</span>
+                    <span class="line-no">L78-92</span>
                 </div>
                 <div class="docstring"><p>Nerfstudio</p></div>
             </div>
@@ -374,7 +384,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pose</span> (<span class="arg-name">frame_id</span>, <span class="arg-name">poses_from_traj</span>)</code>
-                    <span class="line-no">L78-96</span>
+                    <span class="line-no">L94-112</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>
@@ -383,7 +393,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">traj_string_to_matrix</span> (<span class="arg-name">traj_string</span>)</code>
-                    <span class="line-no">L98-122</span>
+                    <span class="line-no">L114-138</span>
                 </div>
                 <div class="docstring"><p>convert traj_string into translation and rotation matrices</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -403,7 +413,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>, <span class="arg-name">attempts</span> = <span class="arg-default">0</span>)</code>
-                    <span class="line-no">L124-207</span>
+                    <span class="line-no">L140-223</span>
                 </div>
                 <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
             </div>

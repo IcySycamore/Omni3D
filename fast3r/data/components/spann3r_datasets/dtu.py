@@ -16,11 +16,26 @@ from .base_many_view_dataset import BaseManyViewDataset
 
 
 class DTU(BaseManyViewDataset):
+    """DTU 多视图物体扫描数据集，基于 SPlan3R 序列采样。"""
+
     def __init__(self, num_seq=49, num_frames=5, 
                  min_thresh=10, max_thresh=30, 
                  test_id=None, full_video=False, 
                  sample_pairs=False, kf_every=1, 
                  *args, ROOT, **kwargs):
+        """初始化 DTU 数据集。
+
+        Args:
+            num_seq (int): 每个场景的序列数。默认 49。
+            num_frames (int): 每个序列的帧数。默认 5。
+            min_thresh (int): 帧间距最小阈值。默认 10。
+            max_thresh (int): 帧间距最大阈值。默认 30。
+            test_id: 测试场景 ID。默认 None。
+            full_video (bool): 是否使用完整视频。默认 False。
+            sample_pairs (bool): 是否采样配对。默认 False。
+            kf_every (int): 关键帧间隔。默认 1。
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         
@@ -37,9 +52,11 @@ class DTU(BaseManyViewDataset):
         self.load_all_scenes(ROOT)
     
     def __len__(self):
+        """返回场景数与序列数的乘积。"""
         return len(self.scene_list) * self.num_seq
 
     def load_all_scenes(self, base_dir):
+        """加载所有场景列表。"""
         
         if self.test_id is None:
             self.scene_list = os.listdir(osp.join(base_dir))

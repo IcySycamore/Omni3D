@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 3 函数</span>
             <span>🔧 8 方法</span>
-            <span class="warn">
-                ⚠️ 3 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/base_stereo_view_dataset.py</div>
@@ -330,7 +330,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BaseStereoViewDataset</span>(EasyDataset)
-                <span class="line-no">L23-241</span>
+                <span class="line-no">L23-242</span>
             </h2>
             <div class="docstring"><p>Define all basic options.</p>
 <div class="doc-section"><strong>Usage:</strong>
@@ -418,16 +418,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_resolutions</span> (<span class="arg-name">resolutions</span>)</code>
-                    <span class="line-no">L164-183</span>
+                    <span class="line-no">L164-184</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置并验证图像分辨率列表。</p></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-_crop_resize_if_necessary">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_crop_resize_if_necessary</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">intrinsics</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span> = <span class="arg-default">None</span>, <span class="arg-name">info</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L185-241</span>
+                    <span class="line-no">L186-242</span>
                 </div>
                 <div class="docstring"><p>This function:</p>
 <p>- first downsizes the image with LANCZOS inteprolation,</p>
@@ -442,7 +442,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_good_type</span> (<span class="arg-name">key</span>, <span class="arg-name">v</span>)</code>
-                <span class="line-no">L244-250</span>
+                <span class="line-no">L245-251</span>
             </h2>
             <div class="docstring"><p>returns (is_good, err_msg)</p></div>
         </div>
@@ -452,9 +452,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">view_name</span> (<span class="arg-name">view</span>, <span class="arg-name">batch_index</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L253-260</span>
+                <span class="line-no">L254-263</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>返回视图的标识字符串（数据集/标签/实例）。</p></div>
         </div>
         
 
@@ -462,9 +462,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">transpose_to_landscape</span> (<span class="arg-name">view</span>)</code>
-                <span class="line-no">L263-281</span>
+                <span class="line-no">L266-285</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将竖屏视图转置为横屏，同步交换所有相关数组。</p></div>
         </div>
         
 </main>
