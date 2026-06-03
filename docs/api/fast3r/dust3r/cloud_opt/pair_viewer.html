@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 11 方法</span>
-            <span class="warn">
-                ⚠️ 11 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/pair_viewer.py</div>
@@ -327,7 +327,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PairViewer</span>(BasePCOptimizer)
-                <span class="line-no">L24-155</span>
+                <span class="line-no">L24-229</span>
             </h2>
             <div class="docstring"><p>This a Dummy Optimizer.</p>
 <p>To use only when the goal is to visualize the results for a pair of images (with is_symmetrized)</p></div>
@@ -339,99 +339,149 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L30-107</span>
+                    <span class="line-no">L30-121</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Initialize the PairViewer by estimating focal lengths and relative poses.</p>
+<p>Computes focal lengths via the Weiszfeld algorithm, estimates the</p>
+<p>relative camera pose for each direction using RANSAC-PnP, and</p>
+<p>stores the depth maps derived from the higher-confidence pair.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    *args: Positional arguments forwarded to :class:`BasePCOptimizer`.</div>
+<div class="doc-detail">    **kwargs: Keyword arguments forwarded to :class:`BasePCOptimizer`.</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    AssertionError: If the graph is not symmetrized or does not</div>
+<div class="doc-detail">        have exactly 2 edges.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-_set_depthmap">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_depthmap</span> (<span class="arg-name">idx</span>, <span class="arg-name">depth</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L109-112</span>
+                    <span class="line-no">L123-133</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>No-op: depth maps are fixed in PairViewer and cannot be overwritten.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    idx (int): Image index (ignored).</div>
+<div class="doc-detail">    depth (Tensor): Depth map (ignored).</div>
+<div class="doc-detail">    force (bool): Ignored.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-get_depthmaps">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_depthmaps</span> (<span class="arg-name">raw</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L114-116</span>
+                    <span class="line-no">L135-145</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return the fixed depth maps stored during initialization.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    raw (bool): Unused; included for API compatibility.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of Tensor: Per-image depth tensors moved to ``self.device``.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-_set_focal">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_focal</span> (<span class="arg-name">idx</span>, <span class="arg-name">focal</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L118-119</span>
+                    <span class="line-no">L147-155</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Set the focal length for image *idx*.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    idx (int): Image index.</div>
+<div class="doc-detail">    focal (float): Focal length value to store.</div>
+<div class="doc-detail">    force (bool): Unused; always overwrites.</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-get_focals">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_focals</span> ()</code>
-                    <span class="line-no">L121-122</span>
+                    <span class="line-no">L157-163</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return the stored focal lengths.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Parameter: Focal length tensor of shape (n_imgs,).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-get_known_focal_mask">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_known_focal_mask</span> ()</code>
-                    <span class="line-no">L124-125</span>
+                    <span class="line-no">L165-171</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return a boolean mask indicating which focals are frozen.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    BoolTensor: Always all-True for PairViewer (all focals fixed).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-get_principal_points">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_principal_points</span> ()</code>
-                    <span class="line-no">L127-128</span>
+                    <span class="line-no">L173-179</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return the stored principal points.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Parameter: Principal point tensor of shape (n_imgs, 2).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-get_intrinsics">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_intrinsics</span> ()</code>
-                    <span class="line-no">L130-138</span>
+                    <span class="line-no">L181-194</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return per-image 3x3 intrinsic (K) matrices.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: Intrinsic matrices of shape (n_imgs, 3, 3).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-get_im_poses">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_im_poses</span> ()</code>
-                    <span class="line-no">L140-141</span>
+                    <span class="line-no">L196-202</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return the stored cam-to-world pose matrices.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    nn.Parameter: Pose tensor of shape (n_imgs, 4, 4).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-depth_to_pts3d">
                 <div class="method-header">
                     
                     <code><span class="fn-name">depth_to_pts3d</span> ()</code>
-                    <span class="line-no">L143-152</span>
+                    <span class="line-no">L204-221</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Convert fixed depth maps to 3D point maps in world coordinates.</p>
+<p>Projects each pixel through the camera intrinsics and applies the</p>
+<p>cam-to-world pose to obtain world-space 3D points.</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list of Tensor: Per-image point maps of shape (H, W, 3).</div>
+</div></div>
             </div>
             
             <div class="method" id="method-PairViewer-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> ()</code>
-                    <span class="line-no">L154-155</span>
+                    <span class="line-no">L223-229</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>Return NaN as the alignment loss (PairViewer does not optimize).</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: Always ``float(&#x27;nan&#x27;)``.</div>
+</div></div>
             </div>
             
             </div>

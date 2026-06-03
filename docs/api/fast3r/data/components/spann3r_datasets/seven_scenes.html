@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 5 方法</span>
-            <span class="warn">
-                ⚠️ 6 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/components/spann3r_datasets/seven_scenes.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SevenScenes</span>(BaseManyViewDataset)
-                <span class="line-no">L18-149</span>
+                <span class="line-no">L18-169</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>7-Scenes 多视图室内场景数据集，基于 SPlan3R 序列采样。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,45 +338,57 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_seq</span> = <span class="arg-default">1</span>, <span class="arg-name">num_frames</span> = <span class="arg-default">5</span>, <span class="arg-name">min_thresh</span> = <span class="arg-default">10</span>, <span class="arg-name">max_thresh</span> = <span class="arg-default">100</span>, <span class="arg-name">test_id</span> = <span class="arg-default">None</span>, <span class="arg-name">full_video</span> = <span class="arg-default">False</span>, <span class="arg-name">tuple_path</span> = <span class="arg-default">None</span>, <span class="arg-name">seq_id</span> = <span class="arg-default">None</span>, <span class="arg-name">kf_every</span> = <span class="arg-default">1</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L19-38</span>
+                    <span class="line-no">L21-54</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 7-Scenes 数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_seq (int): 每个场景的序列数。默认 1。</div>
+<div class="doc-detail">    num_frames (int): 每个序列的帧数。默认 5。</div>
+<div class="doc-detail">    min_thresh (int): 帧间距最小阈值。默认 10。</div>
+<div class="doc-detail">    max_thresh (int): 帧间距最大阈值。默认 100。</div>
+<div class="doc-detail">    test_id: 测试场景 ID。默认 None。</div>
+<div class="doc-detail">    full_video (bool): 是否使用完整视频。默认 False。</div>
+<div class="doc-detail">    tuple_path (str | None): 预定义元组文件路径。默认 None。</div>
+<div class="doc-detail">    seq_id: 序列 ID。默认 None。</div>
+<div class="doc-detail">    kf_every (int): 关键帧间隔。默认 1。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-SevenScenes-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L40-43</span>
+                    <span class="line-no">L56-60</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-SevenScenes-load_all_tuples">
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_all_tuples</span> (<span class="arg-name">tuple_path</span>)</code>
-                    <span class="line-no">L45-51</span>
+                    <span class="line-no">L62-69</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载预定义的图像元组列表。</p></div>
             </div>
             
             <div class="method" id="method-SevenScenes-load_all_scenes">
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_all_scenes</span> (<span class="arg-name">base_dir</span>)</code>
-                    <span class="line-no">L53-90</span>
+                    <span class="line-no">L71-109</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载所有场景列表。</p></div>
             </div>
             
             <div class="method" id="method-SevenScenes-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L93-149</span>
+                    <span class="line-no">L112-169</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的多视图数据。</p></div>
             </div>
             
             </div>

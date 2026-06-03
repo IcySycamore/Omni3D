@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 6 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 6 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/crops/extract_crops_from_images.py</div>
@@ -332,9 +332,12 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">arg_parser</span> ()</code>
-                <span class="line-no">L24-50</span>
+                <span class="line-no">L24-55</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>创建命令行参数解析器。</p>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    argparse.ArgumentParser: 参数解析器。</div>
+</div></div>
         </div>
         
 
@@ -342,9 +345,12 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">main</span> (<span class="arg-name">args</span>)</code>
-                <span class="line-no">L53-79</span>
+                <span class="line-no">L58-89</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>主流程：加载裁剪列表、准备任务、多线程生成裁剪图像并写入 listing 文件。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    args (argparse.Namespace): 命令行参数。</div>
+</div></div>
         </div>
         
 
@@ -352,9 +358,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_crop_file</span> (<span class="arg-name">path</span>)</code>
-                <span class="line-no">L82-98</span>
+                <span class="line-no">L92-117</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>加载裁剪文件，解析图像对及其裁剪区域。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    path (str): 裁剪文件路径。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(pairs, num_crops_to_generate)`` 其中 pairs 为图像对列表，</div>
+<div class="doc-detail">        num_crops_to_generate 为待生成的裁剪对总数。</div>
+</div></div>
         </div>
         
 
@@ -362,9 +375,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">prepare_jobs</span> (<span class="arg-name">pairs</span>, <span class="arg-name">num_levels</span>, <span class="arg-name">num_pairs_in_dir</span>)</code>
-                <span class="line-no">L101-122</span>
+                <span class="line-no">L120-152</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据层次目录结构准备裁剪任务。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pairs (list): 图像对及裁剪区域数据。</div>
+<div class="doc-detail">    num_levels (int): 子目录层数。</div>
+<div class="doc-detail">    num_pairs_in_dir (int): 每个目录的图像对数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list: 任务列表，每项为 ``((img1, img2), rotation, crops, paths)``。</div>
+</div></div>
         </div>
         
 
@@ -372,9 +393,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_image</span> (<span class="arg-name">path</span>)</code>
-                <span class="line-no">L125-130</span>
+                <span class="line-no">L155-171</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>加载图像并转换为 RGB 模式。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    path (str): 图像文件路径。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    PIL.Image: RGB 图像。</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    OSError: 加载失败时抛出。</div>
+</div></div>
         </div>
         
 
@@ -382,9 +412,17 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">save_image_crops</span> (<span class="arg-name">args</span>, <span class="arg-name">data</span>)</code>
-                <span class="line-no">L133-185</span>
+                <span class="line-no">L174-239</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>加载图像对并保存裁剪后的图像。</p>
+<p>对每对图像执行裁剪、缩放和旋转，保存为 JPEG 文件。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    args (argparse.Namespace): 命令行参数（root_dir, output_dir, imsize）。</div>
+<div class="doc-detail">    data (tuple): ``((img1_path, img2_path), rotation, crops, paths)``。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list: 成功保存的路径列表。</div>
+</div></div>
         </div>
         
 </main>

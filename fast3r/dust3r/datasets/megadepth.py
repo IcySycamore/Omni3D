@@ -20,7 +20,14 @@ from fast3r.dust3r.utils.image import imread_cv2
 
 
 class MegaDepth(BaseStereoViewDataset):
+    """MegaDepth 大规模互联网照片数据集，用于双视图 3D 重建。"""
+
     def __init__(self, *args, ROOT, **kwargs):
+        """初始化 MegaDepth 数据集。
+
+        Args:
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         self.loaded_data = self._load_data(self.split)
@@ -35,18 +42,22 @@ class MegaDepth(BaseStereoViewDataset):
             raise ValueError(f'bad {self.split=}')
 
     def _load_data(self, split):
+        """加载预处理后的元数据。"""
         with np.load(osp.join(self.ROOT, 'all_metadata.npz')) as data:
             self.all_scenes = data['scenes']
             self.all_images = data['images']
             self.pairs = data['pairs']
 
     def __len__(self):
+        """返回图像对数量。"""
         return len(self.pairs)
 
     def get_stats(self):
+        """返回数据集统计信息字符串。"""
         return f'{len(self)} pairs from {len(self.all_scenes)} scenes'
 
     def select_scene(self, scene, *instances, opposite=False):
+        """按场景名选择或排除特定场景的数据。"""
         scenes = (scene,) if isinstance(scene, str) else tuple(scene)
         scene_id = [s.startswith(scenes) for s in self.all_scenes]
         assert any(scene_id), 'no scene found'
@@ -68,6 +79,7 @@ class MegaDepth(BaseStereoViewDataset):
         self.pairs = self.pairs[valid]
 
     def _get_views(self, pair_idx, resolution, rng):
+        """根据索引获取 MegaDepth 双视图数据。"""
         scene_id, im1_id, im2_id, score = self.pairs[pair_idx]
 
         scene, subscene = self.all_scenes[scene_id].split()

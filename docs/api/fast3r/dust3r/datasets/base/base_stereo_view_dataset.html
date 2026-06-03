@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 3 函数</span>
             <span>🔧 8 方法</span>
-            <span class="warn">
-                ⚠️ 9 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/base_stereo_view_dataset.py</div>
@@ -330,7 +330,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BaseStereoViewDataset</span>(EasyDataset)
-                <span class="line-no">L23-221</span>
+                <span class="line-no">L23-242</span>
             </h2>
             <div class="docstring"><p>Define all basic options.</p>
 <div class="doc-section"><strong>Usage:</strong>
@@ -349,70 +349,85 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">split</span> = <span class="arg-default">None</span>, <span class="arg-name">resolution</span> = <span class="arg-default">None</span>, <span class="arg-name">transform</span> = <span class="arg-default">ImgNorm</span>, <span class="arg-name">aug_crop</span> = <span class="arg-default">False</span>, <span class="arg-name">seed</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L35-53</span>
+                    <span class="line-no">L35-61</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 BaseStereoViewDataset。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    split (str | None): 数据集分割（&#x27;train&#x27;/&#x27;test&#x27;）。</div>
+<div class="doc-detail">    resolution: 图像分辨率，可为整数、(W,H) 或列表。</div>
+<div class="doc-detail">    transform: 图像变换。默认 ImgNorm。</div>
+<div class="doc-detail">    aug_crop (bool): 是否使用数据增强裁剪。默认 False。</div>
+<div class="doc-detail">    seed (int | None): 随机种子。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L55-56</span>
+                    <span class="line-no">L63-65</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回场景数量。</p></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-get_stats">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_stats</span> ()</code>
-                    <span class="line-no">L58-59</span>
+                    <span class="line-no">L67-68</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集统计信息字符串。</p></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-__repr__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L61-73</span>
+                    <span class="line-no">L70-82</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L75-76</span>
+                    <span class="line-no">L84-95</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的视图数据（需子类实现）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    idx (int): 数据索引。</div>
+<div class="doc-detail">    resolution (tuple): 目标分辨率 (W, H)。</div>
+<div class="doc-detail">    rng: 随机数生成器。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    list[dict]: 视图字典列表。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-__getitem__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L78-142</span>
+                    <span class="line-no">L97-162</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的数据，支持 (idx, aspect_ratio_idx) 元组索引。</p></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-_set_resolutions">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_resolutions</span> (<span class="arg-name">resolutions</span>)</code>
-                    <span class="line-no">L144-163</span>
+                    <span class="line-no">L164-184</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>设置并验证图像分辨率列表。</p></div>
             </div>
             
             <div class="method" id="method-BaseStereoViewDataset-_crop_resize_if_necessary">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_crop_resize_if_necessary</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">intrinsics</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span> = <span class="arg-default">None</span>, <span class="arg-name">info</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L165-221</span>
+                    <span class="line-no">L186-242</span>
                 </div>
                 <div class="docstring"><p>This function:</p>
 <p>- first downsizes the image with LANCZOS inteprolation,</p>
@@ -427,7 +442,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_good_type</span> (<span class="arg-name">key</span>, <span class="arg-name">v</span>)</code>
-                <span class="line-no">L224-230</span>
+                <span class="line-no">L245-251</span>
             </h2>
             <div class="docstring"><p>returns (is_good, err_msg)</p></div>
         </div>
@@ -437,9 +452,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">view_name</span> (<span class="arg-name">view</span>, <span class="arg-name">batch_index</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L233-240</span>
+                <span class="line-no">L254-263</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>返回视图的标识字符串（数据集/标签/实例）。</p></div>
         </div>
         
 
@@ -447,9 +462,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">transpose_to_landscape</span> (<span class="arg-name">view</span>)</code>
-                <span class="line-no">L243-261</span>
+                <span class="line-no">L266-285</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将竖屏视图转置为横屏，同步交换所有相关数组。</p></div>
         </div>
         
 </main>

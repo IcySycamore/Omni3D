@@ -15,6 +15,7 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 
 
 def main():
+    """CroCo 模型演示：加载图像对，执行交叉注意力推理，保存可视化结果。"""
     device = torch.device(
         "cuda:0"
         if torch.cuda.is_available() and torch.cuda.device_count() > 0

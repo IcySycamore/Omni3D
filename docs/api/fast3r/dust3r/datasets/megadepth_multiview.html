@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 7 方法</span>
-            <span class="warn">
-                ⚠️ 7 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/megadepth_multiview.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MegaDepth_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L14-129</span>
+                <span class="line-no">L14-144</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>MegaDepth 多视图互联网照片数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,43 +338,49 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">window_size</span> = <span class="arg-default">60</span>, <span class="arg-name">num_samples_per_window</span> = <span class="arg-default">100</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L15-33</span>
+                    <span class="line-no">L17-43</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 MegaDepth 多视图数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_views (int): 每个样本的视图数量。默认 4。</div>
+<div class="doc-detail">    window_size (int): 时间窗口大小。默认 60。</div>
+<div class="doc-detail">    num_samples_per_window (int): 每个窗口的采样数。默认 100。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-MegaDepth_Multiview-select_scene">
                 <div class="method-header">
                     
                     <code><span class="fn-name">select_scene</span> (<span class="arg-name">scene</span>, <span class="arg-name">opposite</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L35-46</span>
+                    <span class="line-no">L45-57</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>按场景名选择或排除特定场景。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth_Multiview-_load_data">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_data</span> ()</code>
-                    <span class="line-no">L48-52</span>
+                    <span class="line-no">L59-64</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载预处理后的元数据。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth_Multiview-_generate_scene_to_images_mapping">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_scene_to_images_mapping</span> ()</code>
-                    <span class="line-no">L54-62</span>
+                    <span class="line-no">L66-75</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>构建场景到图像索引的映射。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth_Multiview-_generate_combinations">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_combinations</span> ()</code>
-                    <span class="line-no">L64-84</span>
+                    <span class="line-no">L77-97</span>
                 </div>
                 <div class="docstring"><p>Generate combinations of image indices for multiview.</p></div>
             </div>
@@ -383,18 +389,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L86-87</span>
+                    <span class="line-no">L99-101</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回组合数（视图组数）的总数。</p></div>
             </div>
             
             <div class="method" id="method-MegaDepth_Multiview-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L89-129</span>
+                    <span class="line-no">L103-144</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>根据索引获取 MegaDepth 多视图数据，支持随机偏移。</p></div>
             </div>
             
             </div>

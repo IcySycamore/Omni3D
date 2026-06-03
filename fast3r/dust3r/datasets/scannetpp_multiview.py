@@ -13,7 +13,19 @@ from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewD
 from fast3r.dust3r.utils.image import imread_cv2
 
 class ScanNetpp_Multiview(BaseStereoViewDataset):
+    """ScanNet++ 多视图高精度室内场景数据集。"""
+
     def __init__(self, num_views=4, window_size=60, num_samples_per_window=100, ordered=False, data_scaling=1.0, *args, ROOT, **kwargs):
+        """初始化 ScanNet++ 多视图数据集。
+
+        Args:
+            num_views (int): 每个样本的视图数量。默认 4。
+            window_size (int): 时间窗口大小。默认 60。
+            num_samples_per_window (int): 每个窗口的采样数。默认 100。
+            ordered (bool): 是否有序采样。默认 False。
+            data_scaling (float): 数据缩放比例。默认 1.0。
+            ROOT (str): 数据集根目录。
+        """
         super().__init__(*args, **kwargs)
         self.ROOT = ROOT
         self.num_views = num_views
@@ -26,6 +38,7 @@ class ScanNetpp_Multiview(BaseStereoViewDataset):
         self._generate_combinations()
 
     def _load_data(self):
+        """加载预处理后的元数据。"""
         with np.load(osp.join(self.ROOT, 'all_metadata.npz')) as data:
             self.scenes = data['scenes']
             self.sceneids = data['sceneids']
@@ -89,9 +102,11 @@ class ScanNetpp_Multiview(BaseStereoViewDataset):
         self.combinations = sorted(set(self.combinations))
 
     def __len__(self):
+        """返回组合数量。"""
         return len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的多个视图。"""
         image_indices = self.combinations[idx]
 
         # Determine device type based on the first index in image_indices

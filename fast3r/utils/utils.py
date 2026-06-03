@@ -69,7 +69,7 @@ def task_wrapper(task_func: Callable) -> Callable:
     """
 
     def wrap(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        # execute the task
+        """任务包装函数，执行任务并处理异常和日志关闭。"""
         try:
             metric_dict, object_dict = task_func(cfg=cfg)
 

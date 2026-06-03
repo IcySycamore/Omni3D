@@ -12,6 +12,19 @@ from sklearn.neighbors import NearestNeighbors
 # import faiss
 
 def completion_ratio(gt_points, rec_points, dist_th=0.05):
+    """计算重建点云对真实点云的完成度比例（Completion Ratio）。
+
+    对真实点云中的每个点，在重建点云中查找最近邻，统计距离小于
+    ``dist_th`` 的比例。
+
+    Args:
+        gt_points (ndarray): 真实点云，形状 (N, 3)。
+        rec_points (ndarray): 重建点云，形状 (M, 3)。
+        dist_th (float): 距离阈值，默认 0.05。
+
+    Returns:
+        float: 完成度比例，范围 [0, 1]。
+    """
     gen_points_kd_tree = KDTree(rec_points)
     distances, _ = gen_points_kd_tree.query(gt_points, workers=24)
     comp_ratio = np.mean((distances < dist_th).astype(np.float32))
@@ -19,6 +32,21 @@ def completion_ratio(gt_points, rec_points, dist_th=0.05):
 
 
 def accuracy(gt_points, rec_points, gt_normals=None, rec_normals=None, device=None):
+    """计算重建点云对真实点云的精度（Accuracy）。
+
+    对重建点云中的每个点，在真实点云中查找最近邻，返回平均距离、
+    中位距离，以及可选的法向量一致性。
+
+    Args:
+        gt_points (ndarray): 真实点云，形状 (N, 3)。
+        rec_points (ndarray): 重建点云，形状 (M, 3)。
+        gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。
+        rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。
+        device: 未使用，保留兼容性。
+
+    Returns:
+        tuple: (acc, acc_median) 或 (acc, acc_median, nc_mean, nc_median)。
+    """
     gt_points_kd_tree = KDTree(gt_points)
     distances, idx = gt_points_kd_tree.query(rec_points, workers=24)
     acc = np.mean(distances)
@@ -35,6 +63,21 @@ def accuracy(gt_points, rec_points, gt_normals=None, rec_normals=None, device=No
 
 
 def completion(gt_points, rec_points, gt_normals=None, rec_normals=None, device=None):
+    """计算重建点云对真实点云的完成度（Completion）。
+
+    对真实点云中的每个点，在重建点云中查找最近邻，返回平均距离、
+    中位距离，以及可选的法向量一致性。
+
+    Args:
+        gt_points (ndarray): 真实点云，形状 (N, 3)。
+        rec_points (ndarray): 重建点云，形状 (M, 3)。
+        gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。
+        rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。
+        device: 未使用，保留兼容性。
+
+    Returns:
+        tuple: (comp, comp_median) 或 (comp, comp_median, nc_mean, nc_median)。
+    """
     gt_points_kd_tree = KDTree(rec_points)
     distances, idx = gt_points_kd_tree.query(gt_points, workers=24)
     comp = np.mean(distances)
@@ -121,6 +164,20 @@ def downsample_point_cloud(points, thresh):
 
 
 def accuracy_fast(gt_points, rec_points, gt_normals=None, rec_normals=None):
+    """快速计算重建点云对真实点云的精度（带下采样优化）。
+
+    先对重建点云进行半径下采样，再计算到真实点云的最近邻距离，
+    以加速大规模点云的评估。
+
+    Args:
+        gt_points (ndarray): 真实点云，形状 (N, 3)。
+        rec_points (ndarray): 重建点云，形状 (M, 3)。
+        gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。
+        rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。
+
+    Returns:
+        tuple: (acc, acc_median) 或 (acc, acc_median, nc_mean, nc_median)。
+    """
     # Parameters for optimization
     thresh = 0.01   # Adjust based on your dataset scale
     max_dist = 0.1  # Maximum distance to consider in metric computation
@@ -163,6 +220,20 @@ def accuracy_fast(gt_points, rec_points, gt_normals=None, rec_normals=None):
 
 
 def completion_fast(gt_points, rec_points, gt_normals=None, rec_normals=None):
+    """快速计算重建点云对真实点云的完成度（带下采样优化）。
+
+    先对真实点云进行半径下采样，再计算到重建点云的最近邻距离，
+    以加速大规模点云的评估。
+
+    Args:
+        gt_points (ndarray): 真实点云，形状 (N, 3)。
+        rec_points (ndarray): 重建点云，形状 (M, 3)。
+        gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。
+        rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。
+
+    Returns:
+        tuple: (comp, comp_median) 或 (comp, comp_median, nc_mean, nc_median)。
+    """
     # Parameters for optimization
     thresh = 0.01   # Adjust based on your dataset scale
     max_dist = 0.1  # Maximum distance to consider in metric computation
@@ -208,6 +279,15 @@ def completion_fast(gt_points, rec_points, gt_normals=None, rec_normals=None):
 
 
 def compute_iou(pred_vox, target_vox):
+    """计算两个体素网格之间的交并比（IoU）。
+
+    Args:
+        pred_vox (o3d.geometry.VoxelGrid): 预测体素网格。
+        target_vox (o3d.geometry.VoxelGrid): 真实体素网格。
+
+    Returns:
+        float: IoU 值，范围 [0, 1]。
+    """
     # Get voxel indices
     v_pred_indices = [voxel.grid_index for voxel in pred_vox.get_voxels()]
     v_target_indices = [voxel.grid_index for voxel in target_vox.get_voxels()]

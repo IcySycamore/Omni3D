@@ -337,6 +337,20 @@ def normalize_pointcloud(pts1, pts2, norm_mode="avg_dis", valid1=None, valid2=No
 
 @torch.no_grad()
 def get_joint_pointcloud_depth(z1, z2, valid_mask1, valid_mask2=None, quantile=0.5):
+    """计算联合点云的深度中位数（或分位数）。
+
+    将两个视图的深度值合并后计算分位数，用于全局尺度对齐。
+
+    Args:
+        z1 (Tensor): 视图1的深度图，形状 (B, H, W)。
+        z2 (Tensor | None): 视图2的深度图。
+        valid_mask1 (BoolTensor): 视图1的有效掩码。
+        valid_mask2 (BoolTensor | None): 视图2的有效掩码。
+        quantile (float): 分位数，0.5 表示中位数。默认 0.5。
+
+    Returns:
+        Tensor: 形状 (B,) 的深度分位数值。
+    """
     # set invalid points to NaN
     _z1 = invalid_to_nans(z1, valid_mask1).reshape(len(z1), -1)
     _z2 = (
@@ -358,6 +372,23 @@ def get_joint_pointcloud_depth(z1, z2, valid_mask1, valid_mask2=None, quantile=0
 def get_joint_pointcloud_center_scale(
     pts1, pts2, valid_mask1=None, valid_mask2=None, z_only=False, center=True
 ):
+    """计算联合点云的中心和缩放因子。
+
+    基于中位数计算点云中心和尺度，用于归一化。
+
+    Args:
+        pts1 (Tensor): 视图1的3D点，形状 (B, H, W, 3)。
+        pts2 (Tensor | None): 视图2的3D点。
+        valid_mask1 (BoolTensor | None): 视图1的有效掩码。
+        valid_mask2 (BoolTensor | None): 视图2的有效掩码。
+        z_only (bool): 是否仅对 Z 轴做中心化。默认 False。
+        center (bool): 是否先中心化再计算尺度。默认 True。
+
+    Returns:
+        tuple: (_center, scale)
+            - _center: 形状 (B, 1, 1, 3) 的中心坐标。
+            - scale: 形状 (B, 1, 1, 1) 的缩放因子。
+    """
     # set invalid points to NaN
     _pts1 = invalid_to_nans(pts1, valid_mask1).reshape(len(pts1), -1, 3)
     _pts2 = (
@@ -398,6 +429,14 @@ def find_reciprocal_matches(P1, P2):
 
 
 def get_med_dist_between_poses(poses):
+    """计算多个相机位姿之间平移距离的中位数。
+
+    Args:
+        poses (list[ndarray | Tensor]): 相机位姿列表，每个为 (4, 4) 矩阵。
+
+    Returns:
+        float: 平移距离的中位数。
+    """
     from scipy.spatial.distance import pdist
 
     return np.median(pdist([to_numpy(p[:3, 3]) for p in poses]))

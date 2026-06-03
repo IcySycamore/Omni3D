@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 7 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 6 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/eval/recon_metric.py</div>
@@ -333,9 +333,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">completion_ratio</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">dist_th</span> = <span class="arg-default">0.05</span>)</code>
-                <span class="line-no">L14-18</span>
+                <span class="line-no">L14-31</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算重建点云对真实点云的完成度比例（Completion Ratio）。</p>
+<p>对真实点云中的每个点，在重建点云中查找最近邻，统计距离小于</p>
+<p>``dist_th`` 的比例。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_points (ndarray): 真实点云，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_points (ndarray): 重建点云，形状 (M, 3)。</div>
+<div class="doc-detail">    dist_th (float): 距离阈值，默认 0.05。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 完成度比例，范围 [0, 1]。</div>
+</div></div>
         </div>
         
 
@@ -343,9 +353,21 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">accuracy</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">device</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L21-34</span>
+                <span class="line-no">L34-62</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算重建点云对真实点云的精度（Accuracy）。</p>
+<p>对重建点云中的每个点，在真实点云中查找最近邻，返回平均距离、</p>
+<p>中位距离，以及可选的法向量一致性。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_points (ndarray): 真实点云，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_points (ndarray): 重建点云，形状 (M, 3)。</div>
+<div class="doc-detail">    gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。</div>
+<div class="doc-detail">    device: 未使用，保留兼容性。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (acc, acc_median) 或 (acc, acc_median, nc_mean, nc_median)。</div>
+</div></div>
         </div>
         
 
@@ -353,9 +375,21 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">completion</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">device</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L37-49</span>
+                <span class="line-no">L65-92</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算重建点云对真实点云的完成度（Completion）。</p>
+<p>对真实点云中的每个点，在重建点云中查找最近邻，返回平均距离、</p>
+<p>中位距离，以及可选的法向量一致性。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_points (ndarray): 真实点云，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_points (ndarray): 重建点云，形状 (M, 3)。</div>
+<div class="doc-detail">    gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。</div>
+<div class="doc-detail">    device: 未使用，保留兼容性。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (comp, comp_median) 或 (comp, comp_median, nc_mean, nc_median)。</div>
+</div></div>
         </div>
         
 
@@ -363,7 +397,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">downsample_point_cloud</span> (<span class="arg-name">points</span>, <span class="arg-name">thresh</span>)</code>
-                <span class="line-no">L96-120</span>
+                <span class="line-no">L139-163</span>
             </h2>
             <div class="docstring"><p>Downsamples the point cloud so that no two points are closer than &#x27;thresh&#x27;.</p>
 <p>Returns the downsampled points and indices of the points that were kept.</p></div>
@@ -374,9 +408,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">accuracy_fast</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L123-162</span>
+                <span class="line-no">L166-219</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>快速计算重建点云对真实点云的精度（带下采样优化）。</p>
+<p>先对重建点云进行半径下采样，再计算到真实点云的最近邻距离，</p>
+<p>以加速大规模点云的评估。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_points (ndarray): 真实点云，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_points (ndarray): 重建点云，形状 (M, 3)。</div>
+<div class="doc-detail">    gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (acc, acc_median) 或 (acc, acc_median, nc_mean, nc_median)。</div>
+</div></div>
         </div>
         
 
@@ -384,9 +429,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">completion_fast</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L165-205</span>
+                <span class="line-no">L222-276</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>快速计算重建点云对真实点云的完成度（带下采样优化）。</p>
+<p>先对真实点云进行半径下采样，再计算到重建点云的最近邻距离，</p>
+<p>以加速大规模点云的评估。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_points (ndarray): 真实点云，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_points (ndarray): 重建点云，形状 (M, 3)。</div>
+<div class="doc-detail">    gt_normals (ndarray | None): 真实点云法向量，形状 (N, 3)。</div>
+<div class="doc-detail">    rec_normals (ndarray | None): 重建点云法向量，形状 (M, 3)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (comp, comp_median) 或 (comp, comp_median, nc_mean, nc_median)。</div>
+</div></div>
         </div>
         
 
@@ -394,9 +450,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">compute_iou</span> (<span class="arg-name">pred_vox</span>, <span class="arg-name">target_vox</span>)</code>
-                <span class="line-no">L210-225</span>
+                <span class="line-no">L281-305</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算两个体素网格之间的交并比（IoU）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pred_vox (o3d.geometry.VoxelGrid): 预测体素网格。</div>
+<div class="doc-detail">    target_vox (o3d.geometry.VoxelGrid): 真实体素网格。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: IoU 值，范围 [0, 1]。</div>
+</div></div>
         </div>
         
 </main>

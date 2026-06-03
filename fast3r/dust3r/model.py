@@ -144,6 +144,7 @@ class AsymmetricCroCo3DStereo(
             )
 
     def _set_patch_embed(self, img_size=224, patch_size=16, enc_embed_dim=768):
+        """设置 Patch 嵌入层（AsymmetricCroCo3DStereo 版本），支持多种嵌入层类型。"""
         self.patch_embed = get_patch_embed(
             self.patch_embed_cls, img_size, patch_size, enc_embed_dim
         )
@@ -199,6 +200,20 @@ class AsymmetricCroCo3DStereo(
         img_size,
         **kw,
     ):
+        """初始化双视图的下游预测头。
+
+        创建两个独立的预测头（分别对应两个视图），并可选地包装为横屏模式。
+
+        Args:
+            output_mode: 输出模式（'pts3d'）。
+            head_type: 预测头类型。
+            landscape_only: 是否仅支持横屏模式。
+            depth_mode: 深度模式元组。
+            conf_mode: 置信度模式元组。
+            patch_size: 分块大小。
+            img_size: 图像尺寸元组 (H, W)。
+            **kw: 其他参数。
+        """
         assert (
             img_size[0] % patch_size == 0 and img_size[1] % patch_size == 0
         ), f"{img_size} must be multiple of {patch_size}"
@@ -222,6 +237,18 @@ class AsymmetricCroCo3DStereo(
         )
 
     def _encode_image(self, image, true_shape):
+        """编码单张图像为 patch 序列特征。
+
+        Args:
+            image: 输入图像张量，形状 (B, 3, H, W)。
+            true_shape: 图像的真实尺寸，形状 (B, 2)。
+
+        Returns:
+            tuple: (x, pos, None)
+                - x: 编码后的特征，形状 (B, N, C)。
+                - pos: 位置编码，形状 (B, N, 2)。
+                - None: 占位返回值（兼容接口）。
+        """
         # embed the image into patches  (x has size B x Npatches x C)
         x, pos = self.patch_embed(image, true_shape=true_shape)
 
@@ -483,6 +510,15 @@ class FlashDUSt3R(
         """加载状态字典。"""
 
     def set_freeze(self, freeze):  # this is for use by downstream models
+        """设置 FlashDUSt3R 模型的冻结策略。
+
+        Args:
+            freeze: 冻结策略，可选值：
+                - 'none': 不冻结
+                - 'mask': 仅冻结 mask_token
+                - 'encoder': 冻结 mask_token、patch_embed 和 enc_blocks
+                - 'sandwich': 在 encoder 基础上追加冻结 downstream_head
+        """
         self.freeze = freeze
         to_be_frozen = {
             "none": [],
@@ -507,6 +543,18 @@ class FlashDUSt3R(
         img_size,
         **kw,
     ):
+        """初始化 FlashDUSt3R 的单一预测头和包装层。
+
+        Args:
+            output_mode: 输出模式（'pts3d'）。
+            head_type: 预测头类型。
+            landscape_only: 是否仅支持横屏模式。
+            depth_mode: 深度模式元组。
+            conf_mode: 置信度模式元组。
+            patch_size: 分块大小。
+            img_size: 图像尺寸元组 (H, W)。
+            **kw: 其他参数。
+        """
         assert (
             img_size[0] % patch_size == 0 and img_size[1] % patch_size == 0
         ), f"{img_size} must be multiple of {patch_size}"
@@ -524,6 +572,17 @@ class FlashDUSt3R(
         )
 
     def _encode_image(self, image, true_shape):
+        """编码单张图像为 patch 序列特征（FlashDUSt3R 版本）。
+
+        Args:
+            image: 输入图像张量，形状 (B, 3, H, W)。
+            true_shape: 图像的真实尺寸，形状 (B, 2)。
+
+        Returns:
+            tuple: (x, pos)
+                - x: 编码后的特征，形状 (B, N, C)
+                - pos: 位置编码，形状 (B, N, 2)
+        """
         # embed the image into patches  (x has size B x Npatches x C)
         x, pos = self.patch_embed(image, true_shape=true_shape)
 
@@ -538,6 +597,17 @@ class FlashDUSt3R(
         return x, pos
 
     def _encode_images(self, views):
+        """对所有输入视图进行编码。
+
+        Args:
+            views: 视图字典列表，每个包含 'img' 等键。
+
+        Returns:
+            tuple: (encoded_feats, positions, shapes)
+                - encoded_feats: 每个视图的编码特征列表
+                - positions: 每个视图的位置编码列表
+                - shapes: 每个视图的真实尺寸列表
+        """
         B = views[0]["img"].shape[0]
         encoded_feats, positions, shapes = [], [], []
 
@@ -555,6 +625,13 @@ class FlashDUSt3R(
         return encoded_feats, positions, shapes
 
     def _generate_per_rank_generator(self):
+        """生成每个分布式 rank 独立且确定性的随机生成器。
+
+        每个 rank 生成不同的随机排列，但对于固定的前向传播次数确定。
+
+        Returns:
+            torch.Generator: 配置好种子的随机生成器。
+        """
         # this way, the randperm will be different for each rank, but deterministic given a fixed number of forward passes (tracked by self.random_generator)
         # and to ensure determinism when resuming from a checkpoint, we only need to save self.random_generator to state_dict
         # generate a per-rank random seed
@@ -621,6 +698,19 @@ class FlashDUSt3R(
         return image_pos
 
     def _decoder(self, encoded_feats, positions, image_ids):
+        """多视图全局解码器前向传播。
+
+        将所有视图特征拼接后经过多视图 Transformer 块处理，
+        返回每层的输出用于 DPT 头。
+
+        Args:
+            encoded_feats: 每个视图的编码特征列表。
+            positions: 每个视图的位置编码列表。
+            image_ids: patch 级别的图像 ID，形状 (B, N_total)。
+
+        Returns:
+            list[torch.Tensor]: 每层解码器输出的列表，最后一个为经归一化的结果。
+        """
         x = torch.cat(encoded_feats, dim=1)  # concate along the patch dimension
         pos = torch.cat(positions, dim=1)
 

@@ -338,7 +338,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SceneViz</span>
-                <span class="line-no">L190-296</span>
+                <span class="line-no">L190-297</span>
             </h2>
             <div class="docstring"><p>基于 trimesh 的 3D 场景可视化工具类。</p>
 <p>提供添加点云、相机的接口，并支持交互式显示。</p></div>
@@ -396,7 +396,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_cameras</span> (<span class="arg-name">poses</span>, <span class="arg-name">focals</span> = <span class="arg-default">None</span>, <span class="arg-name">images</span> = <span class="arg-default">None</span>, <span class="arg-name">imsizes</span> = <span class="arg-default">None</span>, <span class="arg-name">colors</span> = <span class="arg-default">None</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L256-284</span>
+                    <span class="line-no">L256-285</span>
                 </div>
                 <div class="docstring"><p>批量向场景中添加多个相机。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -416,7 +416,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">show</span> (<span class="arg-name">point_size</span> = <span class="arg-default">2</span>, <span class="arg-name">viewer</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L286-296</span>
+                    <span class="line-no">L287-297</span>
                 </div>
                 <div class="docstring"><p>显示场景。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -535,7 +535,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">show_raw_pointcloud_with_cams</span> (<span class="arg-name">imgs</span>, <span class="arg-name">pts3d</span>, <span class="arg-name">mask</span>, <span class="arg-name">focals</span>, <span class="arg-name">cams2world</span>, <span class="arg-name">point_size</span> = <span class="arg-default">2</span>, <span class="arg-name">cam_size</span> = <span class="arg-default">0.05</span>, <span class="arg-name">cam_color</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L299-337</span>
+                <span class="line-no">L300-338</span>
             </h2>
             <div class="docstring"><p>Visualization of a pointcloud with cameras</p>
 <p>imgs = (N, H, W, 3) or N-size list of [(H,W,3), ...]</p>
@@ -549,7 +549,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">add_scene_cam</span> (<span class="arg-name">scene</span>, <span class="arg-name">pose_c2w</span>, <span class="arg-name">edge_color</span>, <span class="arg-name">image</span> = <span class="arg-default">None</span>, <span class="arg-name">focal</span> = <span class="arg-default">None</span>, <span class="arg-name">imsize</span> = <span class="arg-default">None</span>, <span class="arg-name">screen_width</span> = <span class="arg-default">0.03</span>)</code>
-                <span class="line-no">L340-420</span>
+                <span class="line-no">L341-421</span>
             </h2>
             <div class="docstring"><p>向 trimesh 场景中添加相机几何体（锥体）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -568,7 +568,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">cat</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
-                <span class="line-no">L423-433</span>
+                <span class="line-no">L424-434</span>
             </h2>
             <div class="docstring"><p>将两个点云数组拼接为 (N, 3) 的数组。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -585,7 +585,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">uint8</span> (<span class="arg-name">colors</span>)</code>
-                <span class="line-no">L454-468</span>
+                <span class="line-no">L455-469</span>
             </h2>
             <div class="docstring"><p>将颜色数据转换为 uint8 格式。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -601,7 +601,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">segment_sky</span> (<span class="arg-name">image</span>)</code>
-                <span class="line-no">L471-520</span>
+                <span class="line-no">L472-521</span>
             </h2>
             <div class="docstring"><p>基于颜色分割天空区域，返回布尔掩码。</p>
 <p>使用 HSV 颜色空间识别蓝色和高亮灰色区域，通过形态学操作和连通分量分析</p>

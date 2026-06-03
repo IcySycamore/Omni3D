@@ -22,13 +22,21 @@ from fast3r.dust3r.utils.image import imread_cv2
 
 
 class ScanNetpp(BaseStereoViewDataset):
+    """ScanNet++ 高精度室内场景数据集，用于双视图 3D 重建。"""
+
     def __init__(self, *args, ROOT, **kwargs):
+        """初始化 ScanNet++ 数据集。
+
+        Args:
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         assert self.split == 'train'
         self.loaded_data = self._load_data()
 
     def _load_data(self):
+        """加载预处理后的元数据。"""
         with np.load(osp.join(self.ROOT, 'all_metadata.npz')) as data:
             self.scenes = data['scenes']
             self.sceneids = data['sceneids']
@@ -38,9 +46,11 @@ class ScanNetpp(BaseStereoViewDataset):
             self.pairs = data['pairs'][:, :2].astype(int)
 
     def __len__(self):
+        """返回图像对数量。"""
         return len(self.pairs)
 
     def _get_views(self, idx, resolution, rng):
+        """获取指定索引的两个视图。"""
 
         image_idx1, image_idx2 = self.pairs[idx]
 

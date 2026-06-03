@@ -17,7 +17,19 @@ from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewD
 from fast3r.dust3r.utils.image import imread_cv2
 
 class Co3d_Multiview(BaseStereoViewDataset):
+    """Co3D_v2 多视图物体类别数据集。"""
+
     def __init__(self, num_views=4, window_degree_range=360, num_samples_per_window=100, data_scaling=1.0, mask_bg=True, *args, ROOT, **kwargs):
+        """初始化 Co3D 多视图数据集。
+
+        Args:
+            num_views (int): 每个样本的视图数量。默认 4。
+            window_degree_range (int): 视角窗口的度数范围。默认 360。
+            num_samples_per_window (int): 每个窗口的采样数。默认 100。
+            data_scaling (float): 数据缩放比例。默认 1.0。
+            mask_bg (bool | str): 是否掩码背景。默认 True。
+            ROOT (str): 数据集根目录。
+        """
         super().__init__(*args, **kwargs)
         self.ROOT = ROOT
         self.num_views = num_views
@@ -172,6 +184,7 @@ class Co3d_Multiview(BaseStereoViewDataset):
             return None
 
     def __len__(self):
+        """返回数据集大小（场景数 × 每场景组合数）。"""
         return len(self.scene_list) * len(self.combinations)
 
 

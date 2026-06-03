@@ -48,17 +48,21 @@ in1k_std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
 
 
 def img_to_tensor(img):
+    """将 RGB 图像转为 ImageNet 标准化张量。"""
     img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
     img = (img - in1k_mean) / in1k_std
     return img
 
 
 def disp_to_tensor(disp):
+    """将视差图转为张量。"""
     return torch.from_numpy(disp)[None, :, :]
 
 
 class StereoDataset(data.Dataset):
+    """立体匹配数据集基类，提供通用的数据加载、增广、缓存机制。"""
     def __init__(self, split, augmentor=False, crop_size=None, totensor=True):
+        """初始化。"""
         self.split = split
         if not augmentor:
             assert crop_size is None
@@ -80,9 +84,11 @@ class StereoDataset(data.Dataset):
         raise NotImplementedError
 
     def __len__(self):
+        """返回数据集大小。"""
         return len(self.pairnames)
 
     def __getitem__(self, index):
+        """获取指定索引的数据。"""
         pairname = self.pairnames[index]
 
         # get filenames
@@ -124,14 +130,17 @@ class StereoDataset(data.Dataset):
         return Limg, Rimg, disp, str(pairname)
 
     def __rmul__(self, v):
+        """将数据集重复 v 倍。"""
         self.rmul *= v
         self.pairnames = v * self.pairnames
         return self
 
     def __str__(self):
+        """返回字符串表示。"""
         return f"{self.__class__.__name__}_{self.split}"
 
     def __repr__(self):
+        """返回详细描述。"""
         s = f"{self.__class__.__name__}(split={self.split}, augmentor={self.augmentor_str}, crop_size={str(self.crop_size)}, totensor={self.totensor})"
         if self.rmul == 1:
             s += f"\n\tnum pairs: {len(self.pairnames)}"
@@ -140,12 +149,14 @@ class StereoDataset(data.Dataset):
         return s
 
     def _set_root(self):
+        """设置数据集根目录。"""
         self.root = dataset_to_root[self.name]
         assert os.path.isdir(
             self.root
         ), f"could not find root directory for dataset {self.name}: {self.root}"
 
     def _load_or_build_cache(self):
+        """加载或构建缓存。"""
         cache_file = osp.join(cache_dir, self.name + ".pkl")
         if osp.isfile(cache_file):
             with open(cache_file, "rb") as fid:
@@ -159,7 +170,9 @@ class StereoDataset(data.Dataset):
 
 
 class CREStereoDataset(StereoDataset):
+    """CREStereo 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "CREStereo"
         self._set_root()
         assert self.split in ["train"]
@@ -176,6 +189,7 @@ class CREStereoDataset(StereoDataset):
         self.load_disparity = _read_crestereo_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         allpairs = [
             s + "/" + f[: -len("_left.jpg")]
             for s in sorted(os.listdir(self.root))
@@ -188,7 +202,9 @@ class CREStereoDataset(StereoDataset):
 
 
 class SceneFlowDataset(StereoDataset):
+    """SceneFlow 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "SceneFlow"
         self._set_root()
         assert self.split in [
@@ -215,6 +231,7 @@ class SceneFlowDataset(StereoDataset):
         self.load_disparity = _read_sceneflow_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainpairs = []
         # driving
         pairs = sorted(glob(self.root + "Driving/frames_finalpass/*/*/*/left/*.png"))
@@ -271,7 +288,9 @@ class SceneFlowDataset(StereoDataset):
 
 
 class Md21Dataset(StereoDataset):
+    """Middlebury 2021 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Middlebury2021"
         self._set_root()
         assert self.split in ["train", "subtrain", "subval"]
@@ -286,6 +305,7 @@ class Md21Dataset(StereoDataset):
         self.load_disparity = _read_middlebury_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         seqs = sorted(os.listdir(self.root))
         trainpairs = []
         for s in seqs:
@@ -311,7 +331,9 @@ class Md21Dataset(StereoDataset):
 
 
 class Md14Dataset(StereoDataset):
+    """Middlebury 2014 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Middlebury2014"
         self._set_root()
         assert self.split in ["train", "subtrain", "subval"]
@@ -327,6 +349,7 @@ class Md14Dataset(StereoDataset):
         self.has_constant_resolution = False
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         seqs = sorted(os.listdir(self.root))
         trainpairs = []
         for s in seqs:
@@ -348,7 +371,9 @@ class Md14Dataset(StereoDataset):
 
 
 class Md06Dataset(StereoDataset):
+    """Middlebury 2006 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Middlebury2006"
         self._set_root()
         assert self.split in ["train", "subtrain", "subval"]
@@ -363,6 +388,7 @@ class Md06Dataset(StereoDataset):
         self.has_constant_resolution = False
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         seqs = sorted(os.listdir(self.root))
         trainpairs = []
         for s in seqs:
@@ -386,7 +412,9 @@ class Md06Dataset(StereoDataset):
 
 
 class Md05Dataset(StereoDataset):
+    """Middlebury 2005 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Middlebury2005"
         self._set_root()
         assert self.split in ["train", "subtrain", "subval"]
@@ -401,6 +429,7 @@ class Md05Dataset(StereoDataset):
         self.load_disparity = _read_middlebury20052006_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         seqs = sorted(os.listdir(self.root))
         trainpairs = []
         for s in seqs:
@@ -424,7 +453,9 @@ class Md05Dataset(StereoDataset):
 
 
 class MdEval3Dataset(StereoDataset):
+    """Middlebury Eval v3 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "MiddleburyEval3"
         self._set_root()
         assert self.split in [
@@ -460,6 +491,7 @@ class MdEval3Dataset(StereoDataset):
         )
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainpairs = ["train/" + s for s in sorted(os.listdir(self.root + "train/"))]
         testpairs = ["test/" + s for s in sorted(os.listdir(self.root + "test/"))]
         subvalpairs = trainpairs[-1:]
@@ -486,6 +518,7 @@ class MdEval3Dataset(StereoDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
+        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 2
         assert prediction.dtype == np.float32
         outfile = os.path.join(
@@ -504,6 +537,7 @@ class MdEval3Dataset(StereoDataset):
             fid.write(str(time))
 
     def finalize_submission(self, outdir):
+        """打包提交文件。"""
         cmd = f'cd {outdir}/; zip -r "{self.submission_methodname}.zip" .'
         print(cmd)
         os.system(cmd)
@@ -511,7 +545,9 @@ class MdEval3Dataset(StereoDataset):
 
 
 class ETH3DLowResDataset(StereoDataset):
+    """ETH3D Low-Res 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "ETH3DLowRes"
         self._set_root()
         assert self.split in ["train", "test", "subtrain", "subval", "all"]
@@ -535,6 +571,7 @@ class ETH3DLowResDataset(StereoDataset):
         self.has_constant_resolution = False
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainpairs = ["train/" + s for s in sorted(os.listdir(self.root + "train/"))]
         testpairs = ["test/" + s for s in sorted(os.listdir(self.root + "test/"))]
         assert (
@@ -560,6 +597,7 @@ class ETH3DLowResDataset(StereoDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
+        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 2
         assert prediction.dtype == np.float32
         outfile = os.path.join(
@@ -572,6 +610,7 @@ class ETH3DLowResDataset(StereoDataset):
             fid.write("runtime " + str(time))
 
     def finalize_submission(self, outdir):
+        """打包提交文件。"""
         cmd = f'cd {outdir}/; zip -r "eth3d_low_res_two_view_results.zip" low_res_two_view'
         print(cmd)
         os.system(cmd)
@@ -579,7 +618,9 @@ class ETH3DLowResDataset(StereoDataset):
 
 
 class BoosterDataset(StereoDataset):
+    """Booster 高分辨率立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Booster"
         self._set_root()
         assert self.split in [
@@ -601,6 +642,7 @@ class BoosterDataset(StereoDataset):
         self.load_disparity = _read_booster_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainseqs = sorted(os.listdir(self.root + "train/balanced"))
         trainpairs = [
             "train/balanced/" + s + "/camera_00/" + imname
@@ -630,7 +672,9 @@ class BoosterDataset(StereoDataset):
 
 
 class SpringDataset(StereoDataset):
+    """Spring 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Spring"
         self._set_root()
         assert self.split in ["train", "test", "subtrain", "subval"]
@@ -654,6 +698,7 @@ class SpringDataset(StereoDataset):
         self.load_disparity = _read_hdf5_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainseqs = sorted(os.listdir(osp.join(self.root, "train")))
         trainpairs = [
             osp.join("train", s, "frame_left", f[:-4])
@@ -685,6 +730,7 @@ class SpringDataset(StereoDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
+        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 2
         assert prediction.dtype == np.float32
         outfile = (
@@ -696,6 +742,7 @@ class SpringDataset(StereoDataset):
         writeDsp5File(prediction, outfile)
 
     def finalize_submission(self, outdir):
+        """打包提交文件。"""
         assert self.split == "test"
         exe = "{self.root}/disp1_subsampling"
         if os.path.isfile(exe):
@@ -709,7 +756,9 @@ class SpringDataset(StereoDataset):
 
 
 class Kitti12Dataset(StereoDataset):
+    """KITTI 2012 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Kitti12"
         self._set_root()
         assert self.split in ["train", "test"]
@@ -730,6 +779,7 @@ class Kitti12Dataset(StereoDataset):
         self.load_disparity = _read_kitti_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainseqs = ["training/colored_0/%06d" % (i) for i in range(194)]
         testseqs = ["testing/colored_0/%06d" % (i) for i in range(195)]
         assert (
@@ -739,6 +789,7 @@ class Kitti12Dataset(StereoDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
+        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 2
         assert prediction.dtype == np.float32
         outfile = os.path.join(outdir, pairname.split("/")[-1] + "_10.png")
@@ -747,6 +798,7 @@ class Kitti12Dataset(StereoDataset):
         Image.fromarray(img).save(outfile)
 
     def finalize_submission(self, outdir):
+        """打包提交文件。"""
         assert self.split == "test"
         cmd = f'cd {outdir}/; zip -r "kitti12_results.zip" .'
         print(cmd)
@@ -755,7 +807,9 @@ class Kitti12Dataset(StereoDataset):
 
 
 class Kitti15Dataset(StereoDataset):
+    """KITTI 2015 立体匹配数据集。"""
     def _prepare_data(self):
+        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Kitti15"
         self._set_root()
         assert self.split in ["train", "subtrain", "subval", "test"]
@@ -776,6 +830,7 @@ class Kitti15Dataset(StereoDataset):
         self.load_disparity = _read_kitti_disp
 
     def _build_cache(self):
+        """扫描文件系统构建缓存字典。"""
         trainseqs = ["training/image_2/%06d" % (i) for i in range(200)]
         subtrainseqs = trainseqs[:-5]
         subvalseqs = trainseqs[-5:]
@@ -795,6 +850,7 @@ class Kitti15Dataset(StereoDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
+        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 2
         assert prediction.dtype == np.float32
         outfile = os.path.join(outdir, "disp_0", pairname.split("/")[-1] + "_10.png")
@@ -803,6 +859,7 @@ class Kitti15Dataset(StereoDataset):
         Image.fromarray(img).save(outfile)
 
     def finalize_submission(self, outdir):
+        """打包提交文件。"""
         assert self.split == "test"
         cmd = f'cd {outdir}/; zip -r "kitti15_results.zip" disp_0'
         print(cmd)
@@ -814,18 +871,21 @@ class Kitti15Dataset(StereoDataset):
 
 
 def _read_img(filename):
+    """读取图像文件并转为 RGB numpy 数组。"""
     # convert to RGB for scene flow finalpass data
     img = np.asarray(Image.open(filename).convert("RGB"))
     return img
 
 
 def _read_booster_disp(filename):
+    """读取 Booster npy 格式视差图。"""
     disp = np.load(filename)
     disp[disp == 0.0] = np.inf
     return disp
 
 
 def _read_png_disp(filename, coef=1.0):
+    """读取 PNG 格式视差图。"""
     disp = np.asarray(Image.open(filename))
     disp = disp.astype(np.float32) / coef
     disp[disp == 0.0] = np.inf
@@ -833,6 +893,7 @@ def _read_png_disp(filename, coef=1.0):
 
 
 def _read_pfm_disp(filename):
+    """读取 PFM 格式视差图。"""
     disp = np.ascontiguousarray(_read_pfm(filename)[0])
     disp[
         disp <= 0
@@ -843,18 +904,22 @@ def _read_pfm_disp(filename):
 
 
 def _read_npy_disp(filename):
+    """读取 npy 格式视差图。"""
     return np.load(filename)
 
 
 def _read_crestereo_disp(filename):
+    """读取 CREStereo PNG 视差图。"""
     return _read_png_disp(filename, coef=32.0)
 
 
 def _read_middlebury20052006_disp(filename):
+    """读取 Middlebury 2005/2006 PNG 视差图。"""
     return _read_png_disp(filename, coef=1.0)
 
 
 def _read_kitti_disp(filename):
+    """读取 KITTI PNG 视差图。"""
     return _read_png_disp(filename, coef=256.0)
 
 
@@ -866,6 +931,7 @@ _read_tartanair_disp = _read_npy_disp
 
 
 def _read_hdf5_disp(filename):
+    """读取 HDF5 格式视差图。"""
     disp = np.asarray(h5py.File(filename)["disparity"])
     disp[np.isnan(disp)] = np.inf  # make invalid values as +inf
     # disp[disp==0.0] = np.inf # make invalid values as +inf
@@ -876,6 +942,7 @@ import re
 
 
 def _read_pfm(file):
+    """解析 PFM 文件，返回数据和缩放因子。"""
     file = open(file, "rb")
 
     color = None
@@ -914,6 +981,7 @@ def _read_pfm(file):
 
 
 def writePFM(file, image, scale=1):
+    """将视差图写入 PFM 文件。"""
     file = open(file, "wb")
 
     color = None
@@ -946,6 +1014,7 @@ def writePFM(file, image, scale=1):
 
 
 def writeDsp5File(disp, filename):
+    """将视差图写入 DSP5 (HDF5) 文件。"""
     with h5py.File(filename, "w") as f:
         f.create_dataset("disparity", data=disp, compression="gzip", compression_opts=5)
 
@@ -954,6 +1023,7 @@ def writeDsp5File(disp, filename):
 
 
 def vis_disparity(disp, m=None, M=None):
+    """将视差图可视化为伪彩色图。"""
     if m is None:
         m = disp.min()
     if M is None:
@@ -968,6 +1038,7 @@ def vis_disparity(disp, m=None, M=None):
 
 
 def get_train_dataset_stereo(dataset_str, augmentor=True, crop_size=None):
+    """根据字符串描述创建训练数据集。"""
     dataset_str = dataset_str.replace("(", "Dataset(")
     if augmentor:
         dataset_str = dataset_str.replace(")", ", augmentor=True)")
@@ -979,5 +1050,6 @@ def get_train_dataset_stereo(dataset_str, augmentor=True, crop_size=None):
 
 
 def get_test_datasets_stereo(dataset_str):
+    """根据字符串描述创建测试数据集列表。"""
     dataset_str = dataset_str.replace("(", "Dataset(")
     return [eval(s) for s in dataset_str.split("+")]

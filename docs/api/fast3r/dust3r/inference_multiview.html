@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 5 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 4 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/inference_multiview.py</div>
@@ -344,9 +344,22 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">inference</span> (<span class="arg-name">multiple_views_in_one_sample</span>, <span class="arg-name">model</span>, <span class="arg-name">device</span>, <span class="arg-name">dtype</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>, <span class="arg-name">profiling</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L65-93</span>
+                <span class="line-no">L65-109</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>对多视角图像进行模型推理。</p>
+<p>将同一组视图送入模型前向传播，返回预测结果。</p>
+<p>若视图像素尺寸不一致，则强制逐张推理（batch_size=1）。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    multiple_views_in_one_sample (list[dict]): 同一组的多视角图像字典列表。</div>
+<div class="doc-detail">    model (nn.Module): Fast3R 模型。</div>
+<div class="doc-detail">    device (torch.device): 推理设备。</div>
+<div class="doc-detail">    dtype (str | torch.dtype): 精度模式，如 &quot;32&quot;、&quot;bf16-mixed&quot; 等。</div>
+<div class="doc-detail">    verbose (bool): 是否打印日志。</div>
+<div class="doc-detail">    profiling (bool): 是否返回性能分析信息。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    dict | tuple: 推理结果字典，或在 ``profiling=True`` 时返回 (result, profiling_info)。</div>
+</div></div>
         </div>
         
 
@@ -354,9 +367,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">check_if_same_size</span> (<span class="arg-name">imgs</span>)</code>
-                <span class="line-no">L96-98</span>
+                <span class="line-no">L112-122</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>检查一组图像是否具有相同的像素尺寸。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    imgs (list[dict]): 图像字典列表，每个字典包含 ``img`` 张量。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    bool: 若所有图像尺寸相同则返回 ``True``。</div>
+</div></div>
         </div>
         
 
@@ -364,9 +383,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_pred_pts3d</span> (<span class="arg-name">gt</span>, <span class="arg-name">pred</span>, <span class="arg-name">use_pose</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L101-123</span>
+                <span class="line-no">L125-160</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>从模型预测结果中提取 3D 点坐标。</p>
+<p>支持从 depth + pseudo_focal、pts3d 或 pts3d_in_other_view 三种模式提取。</p>
+<p>若 ``use_pose=True``，则使用预测的相机位姿对点云进行变换。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt (dict): 真实视图字典，可能包含 ``camera_intrinsics``。</div>
+<div class="doc-detail">    pred (dict): 模型预测结果字典。</div>
+<div class="doc-detail">    use_pose (bool): 是否应用预测的相机位姿变换。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 3D 点云张量，形状 (B, H, W, 3)。</div>
+</div></div>
         </div>
         
 
@@ -374,9 +403,23 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">find_opt_scaling</span> (<span class="arg-name">gt_pts1</span>, <span class="arg-name">gt_pts2</span>, <span class="arg-name">pr_pts1</span>, <span class="arg-name">pr_pts2</span> = <span class="arg-default">None</span>, <span class="arg-name">fit_mode</span> = <span class="arg-default">&#x27;weiszfeld_stop_grad&#x27;</span>, <span class="arg-name">valid1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid2</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L126-186</span>
+                <span class="line-no">L163-240</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>通过最小化预测点云与真实点云之间的尺度差异，计算最优尺度因子。</p>
+<p>支持多种拟合模式：均值（avg）、中位数（median）、Weiszfeld 迭代加权。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    gt_pts1 (Tensor): 第一组真实 3D 点，形状 (B, H, W, 3)。</div>
+<div class="doc-detail">    gt_pts2 (Tensor | None): 第二组真实 3D 点，可为 ``None``。</div>
+<div class="doc-detail">    pr_pts1 (Tensor): 第一组预测 3D 点，形状 (B, H, W, 3)。</div>
+<div class="doc-detail">    pr_pts2 (Tensor | None): 第二组预测 3D 点，可为 ``None``。</div>
+<div class="doc-detail">    fit_mode (str): 拟合模式，可选 ``&quot;avg&quot;``、``&quot;median&quot;``、</div>
+<div class="doc-detail">        ``&quot;weiszfeld&quot;`` 或带 ``&quot;_stop_grad&quot;`` 后缀的变体。</div>
+<div class="doc-detail">    valid1 (Tensor | None): 第一组有效掩码。</div>
+<div class="doc-detail">    valid2 (Tensor | None): 第二组有效掩码。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 最优尺度因子，形状 (B,)。</div>
+</div></div>
         </div>
         
 </main>

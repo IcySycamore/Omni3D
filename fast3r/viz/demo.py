@@ -66,7 +66,12 @@ class ViserServerManager:
     Manages visualization servers launched as separate processes.
     """
     def __init__(self, req_queue, resp_queue):
-        self.req_queue = req_queue
+        """初始化 ViserServerManager。
+
+        Args:
+            req_queue: 请求队列。
+            resp_queue: 响应队列。
+        """
         self.resp_queue = resp_queue
         self.servers = {}  # server_id -> server info
         self.session_servers = {}  # session_id -> list of server_ids
@@ -74,6 +79,7 @@ class ViserServerManager:
         self.next_server_id = 1
 
     def run(self):
+        """启动管理器主循环，处理请求并管理可视化服务器。"""
         self.console.log("[bold green]ViserServerManager started[/bold green]")
         while True:
             try:
@@ -1020,6 +1026,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
         just_uploaded_video = gr.State(value=True)
 
         def update_gallery_upload(gallery_images, video, just_uploaded_video):
+            """更新图库上传控件的回调。"""
             if gallery_images:
                 if video and just_uploaded_video:
                     return video, False
@@ -1029,6 +1036,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
                 return None, just_uploaded_video
 
         def update_video_upload(gallery_images, video, just_uploaded_video, state):
+            """更新视频上传控件的回调。"""
             if video:
                 # Check if this is an example video by comparing basename
                 video_filename = os.path.basename(video)
@@ -1068,6 +1076,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
             raise gr.Error("Failed to handle feedback")
 
         def process_images_wrapper(uploaded_files, video_file, state, image_resolution):
+            """图像处理流程的包装函数。"""
             # Reset is_example flag for direct uploads
             if not state.get("is_example", False):
                 state = state.copy()
@@ -1108,6 +1117,7 @@ def create_demo(checkpoint_dir, examples_dir, output_dir, device: torch.device, 
     return demo
 
 def main():
+    """Demo 主函数，启动 Gradio 界面进行多视图 3D 重建。"""
     os.environ["GRADIO_TEMP_DIR"] = "./gradio_tmp_dir"
     parser = argparse.ArgumentParser(description="Fast3R 3D Reconstruction Demo...")
     parser.add_argument("--checkpoint_dir", type=str, default="jedyang97/Fast3R_ViT_Large_512")

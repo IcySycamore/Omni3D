@@ -22,23 +22,36 @@ from fast3r.dust3r.utils.image import imread_cv2
 
 
 class WildRGBD(Co3d):
+    """WildRGB-D 真实世界 RGB-D 数据集，继承自 Co3d。"""
+
     def __init__(self, mask_bg=True, *args, ROOT, **kwargs):
+        """初始化 WildRGBD 数据集。
+
+        Args:
+            mask_bg (bool | str): 是否掩码背景。默认 True。
+            ROOT (str): 数据集根目录。
+        """
         super().__init__(mask_bg, *args, ROOT=ROOT, **kwargs)
         self.dataset_label = 'WildRGBD'
 
     def _get_metadatapath(self, obj, instance, view_idx):
+        """返回元数据文件路径。"""
         return osp.join(self.ROOT, obj, instance, 'metadata', f'{view_idx:0>5d}.npz')
 
     def _get_impath(self, obj, instance, view_idx):
+        """返回 RGB 图像文件路径。"""
         return osp.join(self.ROOT, obj, instance, 'rgb', f'{view_idx:0>5d}.jpg')
 
     def _get_depthpath(self, obj, instance, view_idx):
+        """返回深度图文件路径。"""
         return osp.join(self.ROOT, obj, instance, 'depth', f'{view_idx:0>5d}.png')
 
     def _get_maskpath(self, obj, instance, view_idx):
+        """返回掩码文件路径。"""
         return osp.join(self.ROOT, obj, instance, 'masks', f'{view_idx:0>5d}.png')
 
     def _read_depthmap(self, depthpath, input_metadata):
+        """读取深度图并转换为米制单位（除以1000）。"""
         # We store depths in the depth scale of 1000.
         # That is, when we load depth image and divide by 1000, we could get depth in meters.
         depthmap = imread_cv2(depthpath, cv2.IMREAD_UNCHANGED)

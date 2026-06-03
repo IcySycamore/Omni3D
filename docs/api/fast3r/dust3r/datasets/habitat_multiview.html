@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 4 方法</span>
-            <span class="warn">
-                ⚠️ 5 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/habitat_multiview.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Habitat_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L18-103</span>
+                <span class="line-no">L18-116</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Habitat-Sim 多视图场景数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,36 +338,42 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">size</span> = <span class="arg-default">1000000</span>, <span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L19-35</span>
+                    <span class="line-no">L21-45</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 Habitat 多视图数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    size (int): 场景规模。默认 1000000。</div>
+<div class="doc-detail">    num_views (int): 每个样本的视图数量。默认 4。</div>
+<div class="doc-detail">    data_scaling (float): 数据缩放比例。默认 1.0。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-Habitat_Multiview-filter_scene">
                 <div class="method-header">
                     
                     <code><span class="fn-name">filter_scene</span> (<span class="arg-name">label</span>, <span class="arg-name">instance</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L37-44</span>
+                    <span class="line-no">L47-55</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>按标签和实例过滤场景列表。</p></div>
             </div>
             
             <div class="method" id="method-Habitat_Multiview-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L46-82</span>
+                    <span class="line-no">L57-94</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的多个视图。</p></div>
             </div>
             
             <div class="method" id="method-Habitat_Multiview-_load_one_view">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_one_view</span> (<span class="arg-name">data_path</span>, <span class="arg-name">key</span>, <span class="arg-name">view_index</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L84-103</span>
+                    <span class="line-no">L96-116</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载单个视图的图像、深度图、内参和位姿。</p></div>
             </div>
             
             </div>

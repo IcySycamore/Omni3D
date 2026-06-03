@@ -270,6 +270,7 @@ class SceneViz:
             SceneViz: 返回自身，支持链式调用。
         """
         def get(arr, idx):
+            """安全地获取数组中指定索引的元素，如果数组为 None 则返回 None。"""
             return None if arr is None else arr[idx]
 
         for i, pose_c2w in enumerate(poses):

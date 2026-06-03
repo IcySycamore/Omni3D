@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 17 方法</span>
-            <span class="warn">
-                ⚠️ 18 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/augmentor.py</div>
@@ -328,9 +328,24 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">StereoAugmentor</span>(object)
-                <span class="line-no">L33-236</span>
+                <span class="line-no">L33-366</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>立体匹配数据增广器，依次执行缩放、裁剪、垂直翻转、右视图旋转抖动和颜色增广。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    crop_size (tuple of int): 裁剪目标尺寸 ``(ch, cw)``。</div>
+<div class="doc-detail">    scale_prob (float): 执行随机缩放的概率。默认 ``0.5``。</div>
+<div class="doc-detail">    scale_xonly (bool): 仅在水平方向缩放。默认 ``True``。</div>
+<div class="doc-detail">    lhth (float): 低分辨率阈值，低于此值使用低分辨率缩放范围。默认 ``800.0``。</div>
+<div class="doc-detail">    lminscale (float): 低分辨率最小缩放指数。默认 ``0.0``。</div>
+<div class="doc-detail">    lmaxscale (float): 低分辨率最大缩放指数。默认 ``1.0``。</div>
+<div class="doc-detail">    hminscale (float): 高分辨率最小缩放指数。默认 ``-0.2``。</div>
+<div class="doc-detail">    hmaxscale (float): 高分辨率最大缩放指数。默认 ``0.4``。</div>
+<div class="doc-detail">    scale_interp_nearest (bool): 缩放视差时使用最近邻插值。默认 ``True``。</div>
+<div class="doc-detail">    rightjitterprob (float): 右视图旋转抖动概率。默认 ``0.5``。</div>
+<div class="doc-detail">    v_flip_prob (float): 垂直翻转概率。默认 ``0.5``。</div>
+<div class="doc-detail">    color_aug_asym (bool): 颜色增广是否非对称（左右图独立扰动）。默认 ``True``。</div>
+<div class="doc-detail">    color_choice_prob (float): 颜色增广选择单一变换而非组合的概率。默认 ``0.5``。</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -339,108 +354,194 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">crop_size</span>, <span class="arg-name">scale_prob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">scale_xonly</span> = <span class="arg-default">True</span>, <span class="arg-name">lhth</span> = <span class="arg-default">800.0</span>, <span class="arg-name">lminscale</span> = <span class="arg-default">0.0</span>, <span class="arg-name">lmaxscale</span> = <span class="arg-default">1.0</span>, <span class="arg-name">hminscale</span> = <span class="arg-default">-0.2</span>, <span class="arg-name">hmaxscale</span> = <span class="arg-default">0.4</span>, <span class="arg-name">scale_interp_nearest</span> = <span class="arg-default">True</span>, <span class="arg-name">rightjitterprob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">v_flip_prob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">color_aug_asym</span> = <span class="arg-default">True</span>, <span class="arg-name">color_choice_prob</span> = <span class="arg-default">0.5</span>)</code>
-                    <span class="line-no">L34-62</span>
+                    <span class="line-no">L52-81</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化立体匹配数据增广器。</p></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_scale">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_scale</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>)</code>
-                    <span class="line-no">L64-121</span>
+                    <span class="line-no">L83-153</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机缩放图像和视差图，并根据阈值选择缩放范围。</p>
+<p>当图像较短边小于 :attr:`lhth` 时使用低分辨率缩放范围，否则使用高分辨率范围。</p>
+<p>若不执行随机缩放，仍会在图像过小时进行最小缩放以保证能裁剪。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图，形状 ``(H, W, 3)``。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图，形状 ``(H, W, 3)``。</div>
+<div class="doc-detail">    disp (np.ndarray): 视差图，形状 ``(H, W)``。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 缩放后的 ``(img1, img2, disp)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_crop">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_crop</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>)</code>
-                    <span class="line-no">L123-132</span>
+                    <span class="line-no">L155-174</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机裁剪图像和视差图到 :attr:`crop_size` 指定的大小。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图。</div>
+<div class="doc-detail">    disp (np.ndarray): 视差图。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 裁剪后的 ``(img1, img2, disp)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_vflip">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_vflip</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>)</code>
-                    <span class="line-no">L134-140</span>
+                    <span class="line-no">L176-192</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>以概率 :attr:`v_flip_prob` 垂直翻转图像和视差图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图。</div>
+<div class="doc-detail">    disp (np.ndarray): 视差图。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 翻转后的 ``(img1, img2, disp)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_rotate_shift_right">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_rotate_shift_right</span> (<span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L142-159</span>
+                    <span class="line-no">L194-219</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>以概率 :attr:`rightjitterprob` 对右视图施加微小旋转和垂直平移。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img2 (np.ndarray): 右视图。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    np.ndarray: 旋转/平移后的右视图。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_color_contrast">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_contrast</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L161-168</span>
+                    <span class="line-no">L221-237</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机调整对比度，可非对称作用于左右图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Image): 左图 PIL Image。</div>
+<div class="doc-detail">    img2 (Image): 右图 PIL Image。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 调整后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_color_gamma">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_gamma</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L170-177</span>
+                    <span class="line-no">L239-255</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机调整伽马值，可非对称作用于左右图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Image): 左图 PIL Image。</div>
+<div class="doc-detail">    img2 (Image): 右图 PIL Image。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 调整后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_color_brightness">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_brightness</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L179-186</span>
+                    <span class="line-no">L257-273</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机调整亮度，可非对称作用于左右图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Image): 左图 PIL Image。</div>
+<div class="doc-detail">    img2 (Image): 右图 PIL Image。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 调整后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_color_hue">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_hue</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L188-195</span>
+                    <span class="line-no">L275-291</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机调整色调，可非对称作用于左右图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Image): 左图 PIL Image。</div>
+<div class="doc-detail">    img2 (Image): 右图 PIL Image。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 调整后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_color_saturation">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color_saturation</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L197-204</span>
+                    <span class="line-no">L293-309</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机调整饱和度，可非对称作用于左右图。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (Image): 左图 PIL Image。</div>
+<div class="doc-detail">    img2 (Image): 右图 PIL Image。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 调整后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-_random_color">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_random_color</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L206-228</span>
+                    <span class="line-no">L311-345</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>随机应用一种或一组颜色增广变换。</p>
+<p>以 :attr:`color_choice_prob` 的概率选取单一变换，否则以随机顺序依次应用</p>
+<p>对比度、伽马、亮度、色调和饱和度变换。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左图，uint8 数组。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右图，uint8 数组。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 增广后的 ``(img1, img2)``，float32 数组。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-StereoAugmentor-__call__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">disp</span>, <span class="arg-name">dataset_name</span>)</code>
-                    <span class="line-no">L230-236</span>
+                    <span class="line-no">L347-366</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>执行完整的立体匹配增广流水线。</p>
+<p>依次调用：随机缩放 → 随机裁剪 → 随机垂直翻转 → 右视图旋转抖动 → 颜色增广。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图，形状 ``(H, W, 3)``。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图，形状 ``(H, W, 3)``。</div>
+<div class="doc-detail">    disp (np.ndarray): 视差图，形状 ``(H, W)``。</div>
+<div class="doc-detail">    dataset_name (str): 数据集名称（用于特定数据集逻辑）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 增广后的 ``(img1, img2, disp)``。</div>
+</div></div>
             </div>
             
             </div>
@@ -451,9 +552,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlowAugmentor</span>
-                <span class="line-no">L239-394</span>
+                <span class="line-no">L369-585</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>光流数据增广器，依次执行空间增广（缩放/翻转/裁剪）和颜色增广。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    crop_size (tuple of int): 裁剪目标尺寸 ``(ch, cw)``。</div>
+<div class="doc-detail">    min_scale (float): 缩放指数下界。默认 ``-0.2``。</div>
+<div class="doc-detail">    max_scale (float): 缩放指数上界。默认 ``0.5``。</div>
+<div class="doc-detail">    spatial_aug_prob (float): 执行空间增广的概率。默认 ``0.8``。</div>
+<div class="doc-detail">    stretch_prob (float): 拉伸增广概率。默认 ``0.8``。</div>
+<div class="doc-detail">    max_stretch (float): 最大拉伸指数。默认 ``0.2``。</div>
+<div class="doc-detail">    h_flip_prob (float): 水平翻转概率。默认 ``0.5``。</div>
+<div class="doc-detail">    v_flip_prob (float): 垂直翻转概率。默认 ``0.1``。</div>
+<div class="doc-detail">    asymmetric_color_aug_prob (float): 非对称颜色增广概率。默认 ``0.2``。</div>
+</div></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -462,45 +574,82 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">crop_size</span>, <span class="arg-name">min_scale</span> = <span class="arg-default">-0.2</span>, <span class="arg-name">max_scale</span> = <span class="arg-default">0.5</span>, <span class="arg-name">spatial_aug_prob</span> = <span class="arg-default">0.8</span>, <span class="arg-name">stretch_prob</span> = <span class="arg-default">0.8</span>, <span class="arg-name">max_stretch</span> = <span class="arg-default">0.2</span>, <span class="arg-name">h_flip_prob</span> = <span class="arg-default">0.5</span>, <span class="arg-name">v_flip_prob</span> = <span class="arg-default">0.1</span>, <span class="arg-name">asymmetric_color_aug_prob</span> = <span class="arg-default">0.2</span>)</code>
-                    <span class="line-no">L240-269</span>
+                    <span class="line-no">L384-414</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化光流数据增广器。</p></div>
             </div>
             
             <div class="method" id="method-FlowAugmentor-color_transform">
                 <div class="method-header">
                     
                     <code><span class="fn-name">color_transform</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L271-287</span>
+                    <span class="line-no">L416-442</span>
                 </div>
-                <div class="docstring"><p>Photometric augmentation</p></div>
+                <div class="docstring"><p>颜色增广：以一定概率非对称或对称地应用 ColorJitter。</p>
+<p>非对称模式下左右图独立扰动；对称模式下先拼接再扰动以保证一致性。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图，uint8。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图，uint8。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 增广后的 ``(img1, img2)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-FlowAugmentor-_resize_flow">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resize_flow</span> (<span class="arg-name">flow</span>, <span class="arg-name">scale_x</span>, <span class="arg-name">scale_y</span>, <span class="arg-name">factor</span> = <span class="arg-default">1.0</span>)</code>
-                    <span class="line-no">L289-331</span>
+                    <span class="line-no">L444-500</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>缩放光流场，同步调整像素位置和位移量。</p>
+<p>对稠密光流直接 ``cv2.resize`` 并乘以缩放因子；对稀疏光流（含 ``inf``）</p>
+<p>使用坐标映射方式保留有效像素。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    flow (np.ndarray): 光流，形状 ``(H, W, 2)``。</div>
+<div class="doc-detail">    scale_x (float): 水平缩放因子。</div>
+<div class="doc-detail">    scale_y (float): 垂直缩放因子。</div>
+<div class="doc-detail">    factor (float): 额外分辨率因子（Spring 数据集使用 ``2.0``）。默认 ``1.0``。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    np.ndarray: 缩放后的光流。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-FlowAugmentor-spatial_transform">
                 <div class="method-header">
                     
                     <code><span class="fn-name">spatial_transform</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">flow</span>, <span class="arg-name">dname</span>)</code>
-                    <span class="line-no">L333-386</span>
+                    <span class="line-no">L502-566</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>空间增广：随机缩放、水平/垂直翻转和随机裁剪。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图。</div>
+<div class="doc-detail">    flow (np.ndarray): 光流场，形状 ``(H, W, 2)``。</div>
+<div class="doc-detail">    dname (str): 数据集名称（Spring 数据集需要特殊处理）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 增广后的 ``(img1, img2, flow)``。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-FlowAugmentor-__call__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">flow</span>, <span class="arg-name">dname</span>)</code>
-                    <span class="line-no">L388-394</span>
+                    <span class="line-no">L568-585</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>执行完整的光流增广流水线：空间增广 → 颜色增广 → 连续内存对齐。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img1 (np.ndarray): 左视图，形状 ``(H, W, 3)``。</div>
+<div class="doc-detail">    img2 (np.ndarray): 右视图，形状 ``(H, W, 3)``。</div>
+<div class="doc-detail">    flow (np.ndarray): 光流场，形状 ``(H, W, 2)``。</div>
+<div class="doc-detail">    dname (str): 数据集名称。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: 增广后的 ``(img1, img2, flow)``，均为连续内存数组。</div>
+</div></div>
             </div>
             
             </div>

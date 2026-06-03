@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 3 方法</span>
-            <span class="warn">
-                ⚠️ 5 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/patch_embed.py</div>
@@ -329,9 +329,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PatchEmbedDust3R</span>(PatchEmbed)
-                <span class="line-no">L24-38</span>
+                <span class="line-no">L35-61</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>DUSt3R 的 PatchEmbed 实现，支持标准正方形图像分块。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -340,9 +340,17 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L25-38</span>
+                    <span class="line-no">L38-61</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>前向传播：将图像划分为 patch 并投影到嵌入空间。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): 输入图像，形状 (B, C, H, W)。</div>
+<div class="doc-detail">    **kw: 额外参数（兼容性保留）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (x, pos)，其中 x 为嵌入后的 patch 序列 (B, N, C)，</div>
+<div class="doc-detail">    pos 为二维位置编码 (B, N, 2)。</div>
+</div></div>
             </div>
             
             </div>
@@ -353,7 +361,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ManyAR_PatchEmbed</span>(PatchEmbed)
-                <span class="line-no">L41-105</span>
+                <span class="line-no">L64-148</span>
             </h2>
             <div class="docstring"><p>Handle images with non-square aspect ratio.</p>
 <p>All images in the same batch have the same aspect ratio.</p>
@@ -366,18 +374,34 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">in_chans</span> = <span class="arg-default">3</span>, <span class="arg-name">embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">None</span>, <span class="arg-name">flatten</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L47-57</span>
+                    <span class="line-no">L70-90</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 ManyAR_PatchEmbed。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img_size: 默认图像尺寸。</div>
+<div class="doc-detail">    patch_size: Patch 大小。</div>
+<div class="doc-detail">    in_chans: 输入通道数。</div>
+<div class="doc-detail">    embed_dim: 嵌入维度。</div>
+<div class="doc-detail">    norm_layer: 归一化层。</div>
+<div class="doc-detail">    flatten: 是否将空间维度展平。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-ManyAR_PatchEmbed-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L59-105</span>
+                    <span class="line-no">L92-148</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>前向传播，处理包含横屏和竖屏图像的批次。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    img (Tensor): 输入图像，形状 (B, C, H, W)，其中 W &gt;= H（已填充）。</div>
+<div class="doc-detail">    true_shape (Tensor): 每张图像的真实尺寸，形状 (B, 2)。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (x, pos)，其中 x 为嵌入后的 patch 序列 (B, N, C)，</div>
+<div class="doc-detail">    pos 为二维位置编码 (B, N, 2)。</div>
+</div></div>
             </div>
             
             </div>
@@ -388,9 +412,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_patch_embed</span> (<span class="arg-name">patch_embed_cls</span>, <span class="arg-name">img_size</span>, <span class="arg-name">patch_size</span>, <span class="arg-name">enc_embed_dim</span>)</code>
-                <span class="line-no">L18-21</span>
+                <span class="line-no">L18-32</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据类名实例化对应的 PatchEmbed 模块。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    patch_embed_cls (str): 类名，可选 ``&quot;PatchEmbedDust3R&quot;`` 或 ``&quot;ManyAR_PatchEmbed&quot;``。</div>
+<div class="doc-detail">    img_size (int): 输入图像尺寸。</div>
+<div class="doc-detail">    patch_size (int): Patch 大小。</div>
+<div class="doc-detail">    enc_embed_dim (int): 编码器嵌入维度。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    PatchEmbed: 实例化的 PatchEmbed 模块。</div>
+</div></div>
         </div>
         
 </main>

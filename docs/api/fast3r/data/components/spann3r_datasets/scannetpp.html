@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 4 方法</span>
-            <span class="warn">
-                ⚠️ 5 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/components/spann3r_datasets/scannetpp.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Scannetpp</span>(BaseManyViewDataset)
-                <span class="line-no">L21-123</span>
+                <span class="line-no">L21-140</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>ScanNet++ 多视图数据集，基于 SPlan3R 序列采样。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,36 +338,46 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_seq</span> = <span class="arg-default">100</span>, <span class="arg-name">num_frames</span> = <span class="arg-default">5</span>, <span class="arg-name">min_thresh</span> = <span class="arg-default">10</span>, <span class="arg-name">max_thresh</span> = <span class="arg-default">100</span>, <span class="arg-name">test_id</span> = <span class="arg-default">None</span>, <span class="arg-name">full_video</span> = <span class="arg-default">False</span>, <span class="arg-name">kf_every</span> = <span class="arg-default">1</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L22-37</span>
+                    <span class="line-no">L24-51</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 ScanNet++ 数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_seq (int): 每个场景的序列数。默认 100。</div>
+<div class="doc-detail">    num_frames (int): 每个序列的帧数。默认 5。</div>
+<div class="doc-detail">    min_thresh (int): 帧间距最小阈值。默认 10。</div>
+<div class="doc-detail">    max_thresh (int): 帧间距最大阈值。默认 100。</div>
+<div class="doc-detail">    test_id: 测试场景 ID。默认 None。</div>
+<div class="doc-detail">    full_video (bool): 是否使用完整视频。默认 False。</div>
+<div class="doc-detail">    kf_every (int): 关键帧间隔。默认 1。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-Scannetpp-__len__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L39-40</span>
+                    <span class="line-no">L53-55</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回场景数与序列数的乘积。</p></div>
             </div>
             
             <div class="method" id="method-Scannetpp-load_all_scenes">
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_all_scenes</span> (<span class="arg-name">base_dir</span>, <span class="arg-name">num_seq</span> = <span class="arg-default">200</span>)</code>
-                    <span class="line-no">L42-61</span>
+                    <span class="line-no">L57-77</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>加载所有场景列表。</p></div>
             </div>
             
             <div class="method" id="method-Scannetpp-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>, <span class="arg-name">attempts</span> = <span class="arg-default">0</span>)</code>
-                    <span class="line-no">L63-123</span>
+                    <span class="line-no">L79-140</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取指定索引的多个视图。</p></div>
             </div>
             
             </div>

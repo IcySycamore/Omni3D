@@ -12,7 +12,17 @@ from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewD
 from fast3r.dust3r.utils.image import imread_cv2
 
 class MegaDepth_Multiview(BaseStereoViewDataset):
+    """MegaDepth 多视图互联网照片数据集。"""
+
     def __init__(self, num_views=4, window_size=60, num_samples_per_window=100, *args, ROOT, **kwargs):
+        """初始化 MegaDepth 多视图数据集。
+
+        Args:
+            num_views (int): 每个样本的视图数量。默认 4。
+            window_size (int): 时间窗口大小。默认 60。
+            num_samples_per_window (int): 每个窗口的采样数。默认 100。
+            ROOT (str): 数据集根目录。
+        """
         super().__init__(*args, **kwargs)
         self.ROOT = ROOT
         self.num_views = num_views
@@ -33,6 +43,7 @@ class MegaDepth_Multiview(BaseStereoViewDataset):
         self._generate_combinations()
 
     def select_scene(self, scene, opposite=False):
+        """按场景名选择或排除特定场景。"""
         scenes = (scene,) if isinstance(scene, str) else tuple(scene)
         scene_id = [s.startswith(scenes) for s in self.scenes]
         assert any(scene_id), 'no scene found'
@@ -46,12 +57,14 @@ class MegaDepth_Multiview(BaseStereoViewDataset):
         self.images = self.images[valid]
 
     def _load_data(self):
+        """加载预处理后的元数据。"""
         with np.load(osp.join(self.ROOT, 'all_metadata_for_multiview.npz')) as data:
             self.scenes = data['scenes']
             self.sceneids = data['sceneids']
             self.images = data['images']
 
     def _generate_scene_to_images_mapping(self):
+        """构建场景到图像索引的映射。"""
         self.scene_to_images = {}
         self.image_to_scene = {}
         for img_idx, scene_idx in enumerate(self.sceneids):
@@ -84,9 +97,11 @@ class MegaDepth_Multiview(BaseStereoViewDataset):
         self.combinations = sorted(set(self.combinations))
 
     def __len__(self):
+        """返回组合数（视图组数）的总数。"""
         return len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):
+        """根据索引获取 MegaDepth 多视图数据，支持随机偏移。"""
         image_indices = self.combinations[idx]
 
         # Ensure the indices stay within the scene boundaries

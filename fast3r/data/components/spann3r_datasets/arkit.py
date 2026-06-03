@@ -15,10 +15,24 @@ from dust3r.utils.image import imread_cv2
 from .base_many_view_dataset import BaseManyViewDataset
 
 class ArkitScene(BaseManyViewDataset):
+    """ARKitScenes 多视图数据集，基于 SPlan3R 序列采样。"""
+
     def __init__(self, num_seq=100, num_frames=5, 
                  min_thresh=10, max_thresh=100, 
                  test_id=None, full_video=False, 
                  kf_every=1, *args, ROOT, **kwargs):
+        """初始化 ARKitScenes 数据集。
+
+        Args:
+            num_seq (int): 每个场景的序列数。默认 100。
+            num_frames (int): 每个序列的帧数。默认 5。
+            min_thresh (int): 帧间距最小阈值。默认 10。
+            max_thresh (int): 帧间距最大阈值。默认 100。
+            test_id: 测试场景 ID。默认 None。
+            full_video (bool): 是否使用完整视频。默认 False。
+            kf_every (int): 关键帧间隔。默认 1。
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         self.num_seq = num_seq
@@ -34,9 +48,11 @@ class ArkitScene(BaseManyViewDataset):
         self.load_all_scenes(ROOT)
     
     def __len__(self):
+        """返回场景数与序列数的乘积。"""
         return len(self.scene_list) * self.num_seq
     
     def load_all_scenes(self, base_dir, num_seq=200):
+        """加载所有场景列表。"""
         
         if self.test_id is None:
             
@@ -76,6 +92,7 @@ class ArkitScene(BaseManyViewDataset):
         return intrinsic
     
     def get_pose(self, frame_id, poses_from_traj):
+        """根据帧 ID 从轨迹数据获取相机位姿矩阵，并转换为 OpenCV 坐标系。"""
         frame_pose = None
         if str(frame_id) in poses_from_traj:
             frame_pose = np.array(poses_from_traj[str(frame_id)])
@@ -122,6 +139,7 @@ class ArkitScene(BaseManyViewDataset):
         return (ts, Rt)
     
     def _get_views(self, idx, resolution, rng, attempts=0): 
+        """根据索引获取 ARKit 场景的多视图数据。"""
         scene_id = self.scene_list[idx // self.num_seq]
 
         image_path = osp.join(self.scene_path, scene_id, 'lowres_wide')

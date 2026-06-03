@@ -24,11 +24,17 @@ class Waymo (BaseStereoViewDataset):
     """
 
     def __init__(self, *args, ROOT, **kwargs):
+        """初始化 Waymo 数据集。
+
+        Args:
+            ROOT (str): 数据集根目录。
+        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         self._load_data()
 
     def _load_data(self):
+        """加载预处理后的图像对数据。"""
         with np.load(osp.join(self.ROOT, 'waymo_pairs.npz')) as data:
             self.scenes = data['scenes']
             self.frames = data['frames']
@@ -37,12 +43,15 @@ class Waymo (BaseStereoViewDataset):
             assert self.pairs[:, 0].max() == len(self.scenes) - 1
 
     def __len__(self):
+        """返回图像对数量。"""
         return len(self.pairs)
 
     def get_stats(self):
+        """返回数据集统计信息字符串。"""
         return f'{len(self)} pairs from {len(self.scenes)} scenes'
 
     def _get_views(self, pair_idx, resolution, rng):
+        """获取指定索引的两个视图。"""
         seq, img1, img2 = self.pairs[pair_idx]
         seq_path = osp.join(self.ROOT, self.scenes[seq])
 

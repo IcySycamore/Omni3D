@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 4 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/pos_embed.py</div>
@@ -343,9 +343,16 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_2d_sincos_pos_embed_from_grid</span> (<span class="arg-name">embed_dim</span>, <span class="arg-name">grid</span>)</code>
-                <span class="line-no">L47-55</span>
+                <span class="line-no">L47-64</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>从二维网格生成 2D 正弦位置编码。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    embed_dim: 嵌入维度，必须为偶数。</div>
+<div class="doc-detail">    grid: 形状为 (2, 1, H, W) 的网格坐标数组，grid[0] 为行坐标，grid[1] 为列坐标。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    np.ndarray: 形状为 (H*W, embed_dim) 的位置编码矩阵。</div>
+</div></div>
         </div>
         
 
@@ -353,7 +360,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_1d_sincos_pos_embed_from_grid</span> (<span class="arg-name">embed_dim</span>, <span class="arg-name">pos</span>)</code>
-                <span class="line-no">L58-76</span>
+                <span class="line-no">L67-85</span>
             </h2>
             <div class="docstring"><p>embed_dim: output dimension for each position</p>
 <p>pos: a list of positions to be encoded: size (M,)</p>
@@ -365,9 +372,14 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">interpolate_pos_embed</span> (<span class="arg-name">model</span>, <span class="arg-name">checkpoint_model</span>)</code>
-                <span class="line-no">L85-115</span>
+                <span class="line-no">L94-132</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将检查点中的位置编码插帧到当前模型所需的尺寸。</p>
+<p>当检查点的位置编着网格尺寸与当前模型不同时，使用双三次插帧自动适配。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    model: 当前模型，需具有 patch_embed 和 pos_embed 属性。</div>
+<div class="doc-detail">    checkpoint_model: 检查点的状态字典，可能包含 &quot;pos_embed&quot; 键。</div>
+</div></div>
         </div>
         
 </main>

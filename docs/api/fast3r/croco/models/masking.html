@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 2 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/masking.py</div>
@@ -327,7 +327,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">RandomMask</span>(nn.Module)
-                <span class="line-no">L19-32</span>
+                <span class="line-no">L19-45</span>
             </h2>
             <div class="docstring"><p>random masking</p></div>
             
@@ -338,18 +338,28 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_patches</span>, <span class="arg-name">mask_ratio</span>)</code>
-                    <span class="line-no">L24-27</span>
+                    <span class="line-no">L24-33</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化随机掩码生成器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_patches (int): patch 总数。</div>
+<div class="doc-detail">    mask_ratio (float): 掩码比例 (0~1)。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-RandomMask-__call__">
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L29-32</span>
+                    <span class="line-no">L35-45</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>生成随机掩码。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    x (Tensor): 输入张量（仅用于获取设备和批次大小）。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    BoolTensor: 形状 (B, num_patches) 的随机掩码。</div>
+</div></div>
             </div>
             
             </div>

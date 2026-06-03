@@ -23,10 +23,22 @@ from einops import rearrange, repeat
 
 
 def pair(t):
+    """将标量转换为二元组：若已是 tuple 则原样返回，否则复制为 (t, t)。"""
     return t if isinstance(t, tuple) else (t, t)
 
 
 def make_scratch(in_shape, out_shape, groups=1, expand=False):
+    """构建 DPT 的特征提取模块，包含4层卷积和归一化。
+
+    Args:
+        in_shape (list[int]): 各层输入通道数。
+        out_shape (int): 基础输出通道数。
+        groups (int): 卷积分组数。默认 1。
+        expand (bool): 是否逐层扩展通道数。默认 False。
+
+    Returns:
+        nn.Module: 包含 layer_rn 的特征提取模块。
+    """
     scratch = nn.Module()
 
     out_shape1 = out_shape
@@ -251,8 +263,17 @@ class FeatureFusionBlock_custom(nn.Module):
 
 
 def make_fusion_block(features, use_bn, width_ratio=1):
+    """构建特征融合块。
+
+    Args:
+        features (int): 特征通道数。
+        use_bn (bool): 是否使用批归一化。
+        width_ratio (int): 输出宽度比例。默认 1。
+
+    Returns:
+        FeatureFusionBlock_custom: 特征融合块实例。
+    """
     return FeatureFusionBlock_custom(
-        features,
         nn.ReLU(False),
         deconv=False,
         bn=use_bn,
@@ -328,6 +349,7 @@ class DPTOutputAdapter(nn.Module):
         output_width_ratio=1,
         **kwargs
     ):
+        """初始化 DPT 输出适配器，配置特征提取和融合参数。"""
         super().__init__()
         self.num_channels = num_channels
         self.stride_level = stride_level
@@ -490,14 +512,14 @@ class DPTOutputAdapter(nn.Module):
         )
 
     def adapt_tokens(self, encoder_tokens):
-        # Adapt tokens
+        """适配编码器 token，去除全局 token 并保留任务相关 token。\n\n        Args:\n            encoder_tokens (Tensor): 编码器输出 token。\n\n        Returns:\n            Tensor: 适配后的 token。\n        """
         x = []
         x.append(encoder_tokens[:, :])
         x = torch.cat(x, dim=-1)
         return x
 
     def forward(self, encoder_tokens: List[torch.Tensor], image_size):
-        # input_info: Dict):
+        """DPT 前向传播，从编码器多层特征生成密集预测。\n\n        Args:\n            encoder_tokens (List[Tensor]): 编码器各层输出的 token 列表。\n            image_size (tuple): 图像尺寸 (H, W)。\n\n        Returns:\n            Tensor: 密集预测输出。\n        """
         assert (
             self.dim_tokens_enc is not None
         ), "Need to call init(dim_tokens_enc) function first"

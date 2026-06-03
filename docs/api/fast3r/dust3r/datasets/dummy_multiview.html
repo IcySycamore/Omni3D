@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 3 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/dummy_multiview.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DummyMultiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L11-67</span>
+                <span class="line-no">L11-69</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>虚拟多视图数据集，生成随机张量用于测试和调试。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,7 +338,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">dataset_size</span> = <span class="arg-default">1000</span>, <span class="arg-name">*args</span>, <span class="arg-name">split</span> = <span class="arg-default">None</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">None</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L12-25</span>
+                    <span class="line-no">L13-26</span>
                 </div>
                 <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    num_views: Number of views per sample</div>
@@ -352,16 +352,16 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L27-28</span>
+                    <span class="line-no">L28-30</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
             
             <div class="method" id="method-DummyMultiview-_get_views">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L30-67</span>
+                    <span class="line-no">L32-69</span>
                 </div>
                 <div class="docstring"><p>Generate dummy views with random tensors in the same shape as ARKitScenes.</p></div>
             </div>

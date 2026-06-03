@@ -409,6 +409,11 @@ class MultiViewDUSt3RLitModule(LightningModule):
     #     pass
 
     def aggregate_and_log_reconstruction_detail_losses(self):
+        """聚合并记录非均匀视图数据集的详细损失。
+
+        在分布式训练环境下，从所有 rank 收集详细损失，
+        在 rank 0 上计算均值并记录到日志，然后清空缓存。
+        """
         # log the detailes loss for uneven view datasets
         # Gather and aggregate detailed losses for uneven-view datasets across all ranks
         if torch.distributed.is_initialized():
@@ -460,6 +465,12 @@ class MultiViewDUSt3RLitModule(LightningModule):
             # self.uneven_view_detailed_losses.clear()
 
     def aggregate_and_log_reconstruction_metrics(self):
+        """聚合并记录 3D 重建评估指标。
+
+        在分布式环境下收集并去重各数据集的场景级指标，
+        记录每个场景的详细指标以及数据集级别的平均指标，
+        最后清空 epoch 指标缓存。
+        """
         # Gather and deduplicate metrics by dataset across all ranks after all batches
         if torch.distributed.is_initialized():
             self.reconstruction_metrics_per_epoch = gather_deduplicated_scene_metrics(self.reconstruction_metrics_per_epoch)
@@ -538,7 +549,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
         # Function to process a single (view_index, batch_index) pair
         def process_view_batch(view_index, batch_index):
-            pred = preds[view_index]
+            """处理单个 (视图索引, 批次索引) 对的 ICP 对齐。"""
             view = views[view_index]
 
             # Get the predicted points from local and global heads for this sample
@@ -661,7 +672,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
         # Define the function to process a single sample
         def process_sample(i):
-            scene_name = "/".join(views[i]['label'][0].split('/')[:-1]) if "label" in views[i] else "unknown"
+            """处理单个样本的3D重建指标计算。"""
             pred_pts_list = []
             gt_pts_list_icp = []
             gt_pts_list_metrics = []
@@ -861,7 +872,8 @@ class MultiViewDUSt3RLitModule(LightningModule):
         if pred_cameras.shape[1] >= 2:
 
             def process_sample(sample_idx):
-                pred_sample = pred_cameras[sample_idx]  # Shape (num_views, 4, 4)
+                """计算单个样本的相对位姿误差指标（RRA、RTA、mAA）。"""
+                pred_sample = pred_cameras[sample_idx]
                 gt_sample = gt_cameras[sample_idx]      # Shape (num_views, 4, 4)
 
                 # Compute relative rotation and translation errors
@@ -919,8 +931,8 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
         # Estimate the focal length
         def estimate_focal_for_sample(sample_preds):
+            """估算单个样本的焦距长度。"""
             if focal_length_estimation_method == 'first_view_from_global_head':
-                # Use global head outputs for focal length estimation
                 pts3d_i = sample_preds[0]["pts3d_in_other_view"].unsqueeze(0)  # Shape: (1, H, W, 3)
                 conf_i = sample_preds[0]["conf"].unsqueeze(0)                  # Shape: (1, H, W)
             elif focal_length_estimation_method == 'first_view_from_local_head':
@@ -1181,7 +1193,8 @@ def estimate_cam_pose_one_sample(sample_preds, device='cpu', niter_PnP=10, min_c
 
     # Define the function to process each view
     def process_view(view_idx):
-        pts3d = sample_preds[view_idx]["pts3d_in_other_view"].cpu().numpy().squeeze()  # (H, W, 3)
+        """处理单个视图的 PnP 位姿估计。"""
+        pts3d = sample_preds[view_idx]["pts3d_in_other_view"].cpu().numpy().squeeze()
         valid_mask = sample_preds[view_idx]["conf"].cpu().numpy().squeeze() > 1.0  # Confidence mask
         # use the confidence map to filter out low-confidence points
         # conf_threshold_value = torch.quantile(sample_preds[view_idx]["conf"].view(-1), min_conf_thr_percentile / 100.0)

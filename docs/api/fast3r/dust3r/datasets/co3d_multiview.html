@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 6 方法</span>
-            <span class="warn">
-                ⚠️ 3 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/co3d_multiview.py</div>
@@ -327,9 +327,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Co3d_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L19-175</span>
+                <span class="line-no">L19-188</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Co3D_v2 多视图物体类别数据集。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,16 +338,24 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">window_degree_range</span> = <span class="arg-default">360</span>, <span class="arg-name">num_samples_per_window</span> = <span class="arg-default">100</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">mask_bg</span> = <span class="arg-default">True</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L20-49</span>
+                    <span class="line-no">L22-61</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 Co3D 多视图数据集。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    num_views (int): 每个样本的视图数量。默认 4。</div>
+<div class="doc-detail">    window_degree_range (int): 视角窗口的度数范围。默认 360。</div>
+<div class="doc-detail">    num_samples_per_window (int): 每个窗口的采样数。默认 100。</div>
+<div class="doc-detail">    data_scaling (float): 数据缩放比例。默认 1.0。</div>
+<div class="doc-detail">    mask_bg (bool | str): 是否掩码背景。默认 True。</div>
+<div class="doc-detail">    ROOT (str): 数据集根目录。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-Co3d_Multiview-_generate_combinations">
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_combinations</span> (<span class="arg-name">num_images</span>, <span class="arg-name">degree_range</span>, <span class="arg-name">num_samples_per_window</span>)</code>
-                    <span class="line-no">L51-73</span>
+                    <span class="line-no">L63-85</span>
                 </div>
                 <div class="docstring"><p>Generate all combinations of views such that the difference between</p>
 <p>the max and min index in one combo doesn&#x27;t exceed the degree range.</p>
@@ -362,7 +370,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_fetch_views_for_pool</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">image_pool</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L75-105</span>
+                    <span class="line-no">L87-117</span>
                 </div>
                 <div class="docstring"><p>Attempt to get valid views from a single image_pool, with oversampling if needed.</p></div>
             </div>
@@ -371,7 +379,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>, <span class="arg-name">max_scene_retries</span> = <span class="arg-default">5</span>)</code>
-                    <span class="line-no">L107-130</span>
+                    <span class="line-no">L119-142</span>
                 </div>
                 <div class="docstring"><p>Attempt to get views, retrying with different scenes if necessary.</p></div>
             </div>
@@ -380,7 +388,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_view_data</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">image_pool</span>, <span class="arg-name">im_idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L132-172</span>
+                    <span class="line-no">L144-184</span>
                 </div>
                 <div class="docstring"><p>Load the data for a single view, including image, depth, and camera parameters.</p></div>
             </div>
@@ -389,9 +397,9 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L174-175</span>
+                    <span class="line-no">L186-188</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>返回数据集大小（场景数 × 每场景组合数）。</p></div>
             </div>
             
             </div>

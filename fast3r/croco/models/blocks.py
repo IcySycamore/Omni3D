@@ -31,7 +31,19 @@ from torch.nn.attention import SDPBackend
 
 
 def _ntuple(n):
+    """Return a function that converts a scalar to an n-tuple.
+
+    If the input is already an iterable (but not a string), it is returned
+    as-is; otherwise it is replicated *n* times.
+
+    Args:
+        n (int): Length of the output tuple.
+
+    Returns:
+        Callable: Conversion function.
+    """
     def parse(x):
+        """将输入转换为指定长度的元组。"""
         if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
             return x
         return tuple(repeat(x, n))
@@ -62,14 +74,32 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):
+        """Initialize DropPath.
+
+        Args:
+            drop_prob (float): Probability of dropping a path during training.
+                Defaults to ``0.0`` (no drop).
+            scale_by_keep (bool): If ``True``, scale surviving paths by
+                ``1 / keep_prob`` to preserve expected magnitude.
+                Defaults to ``True``.
+        """
         super(DropPath, self).__init__()
         self.drop_prob = drop_prob
         self.scale_by_keep = scale_by_keep
 
     def forward(self, x):
+        """Apply stochastic depth to *x*.
+
+        Args:
+            x (Tensor): Input tensor.
+
+        Returns:
+            Tensor: Output tensor with paths randomly dropped during training.
+        """
         return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
 
     def extra_repr(self):
+        """返回 DropPath 的可读表示字符串。"""
         return f"drop_prob={round(self.drop_prob,3):0.3f}"
 
 
@@ -85,6 +115,20 @@ class Mlp(nn.Module):
         bias=True,
         drop=0.0,
     ):
+        """Initialize the MLP.
+
+        Args:
+            in_features (int): Number of input features.
+            hidden_features (int or None): Hidden layer size; defaults to
+                *in_features*.
+            out_features (int or None): Output size; defaults to
+                *in_features*.
+            act_layer (nn.Module): Activation class. Defaults to
+                ``nn.GELU``.
+            bias (bool or tuple): Whether to use bias in linear layers.
+                Defaults to ``True``.
+            drop (float or tuple): Dropout probability. Defaults to ``0.0``.
+        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -98,8 +142,15 @@ class Mlp(nn.Module):
         self.drop2 = nn.Dropout(drop_probs[1])
 
     def forward(self, x):
+        """Apply the two-layer MLP with activation and dropout.
+
+        Args:
+            x (Tensor): Input tensor of shape (..., in_features).
+
+        Returns:
+            Tensor: Output tensor of shape (..., out_features).
+        """
         x = self.fc1(x)
-        x = self.act(x)
         x = self.drop1(x)
         x = self.fc2(x)
         x = self.drop2(x)
@@ -107,11 +158,50 @@ class Mlp(nn.Module):
 
 
 class Attention(nn.Module):
+    """Multi-head self-attention with optional RoPE and pluggable backend.
+
+    Supports three attention implementations:
+    ``'pytorch_naive'`` (manual dot-product), ``'flash_attention'``,
+    and ``'pytorch_auto'``.
+
+    Args:
+        dim (int): Input feature dimension.
+        rope: Optional rotary position embedding module.
+        num_heads (int): Number of attention heads. Defaults to ``8``.
+        qkv_bias (bool): Add bias to QKV projections. Defaults to ``False``.
+        attn_drop (float): Attention weight dropout. Defaults to ``0.0``.
+        proj_drop (float): Output projection dropout. Defaults to ``0.0``.
+        attn_mask: Optional attention mask tensor.
+        is_causal (bool): Use causal masking. Defaults to ``False``.
+        attn_implementation (str): Backend selector. Defaults to
+            ``'pytorch_naive'``.
+        attn_bias_for_inference_enabled (bool): Scale attention logits for
+            longer inference sequences. Defaults to ``False``.
+    """
+
     def __init__(
         self, dim, rope=None, num_heads=8, qkv_bias=False, attn_drop=0.0, proj_drop=0.0,
         attn_mask=None, is_causal=False, attn_implementation="pytorch_naive",
         attn_bias_for_inference_enabled=False,
     ):
+        """Initialize the Attention module.
+
+        Args:
+            dim (int): Input feature dimension.
+            rope: Optional RoPE module applied to Q and K.
+            num_heads (int): Number of attention heads. Defaults to ``8``.
+            qkv_bias (bool): Bias for QKV projections. Defaults to ``False``.
+            attn_drop (float): Dropout on attention weights. Defaults to
+                ``0.0``.
+            proj_drop (float): Dropout on the output projection. Defaults
+                to ``0.0``.
+            attn_mask: Optional attention mask.
+            is_causal (bool): Enable causal masking. Defaults to ``False``.
+            attn_implementation (str): One of ``'pytorch_naive'``,
+                ``'flash_attention'``, or ``'pytorch_auto'``.
+            attn_bias_for_inference_enabled (bool): Enable inference-time
+                attention logit scaling. Defaults to ``False``.
+        """
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -133,6 +223,15 @@ class Attention(nn.Module):
         self.attn_implementation = attn_implementation
 
     def forward(self, x, xpos):
+        """Compute multi-head self-attention.
+
+        Args:
+            x (Tensor): Input feature tensor of shape (B, N, C).
+            xpos: Position tensor passed to the optional RoPE module.
+
+        Returns:
+            Tensor: Output tensor of shape (B, N, C).
+        """
         B, N, C = x.shape
 
         qkv = (
@@ -195,6 +294,30 @@ class Attention(nn.Module):
 
 
 class Block(nn.Module):
+    """Standard Vision Transformer encoder block.
+
+    Combines multi-head self-attention and an MLP with residual connections,
+    layer normalization, and optional stochastic depth.
+
+    Args:
+        dim (int): Feature dimension.
+        num_heads (int): Number of attention heads.
+        mlp_ratio (float): MLP hidden-dim multiplier. Defaults to ``4.0``.
+        qkv_bias (bool): Bias for QKV projections. Defaults to ``False``.
+        drop (float): Dropout on MLP and attention output. Defaults to
+            ``0.0``.
+        attn_drop (float): Attention weight dropout. Defaults to ``0.0``.
+        drop_path (float): Stochastic depth rate. Defaults to ``0.0``.
+        act_layer (nn.Module): Activation class. Defaults to ``nn.GELU``.
+        norm_layer (nn.Module): Normalization class. Defaults to
+            ``nn.LayerNorm``.
+        rope: Optional rotary position embedding module.
+        attn_implementation (str): Attention backend. Defaults to
+            ``'pytorch_naive'``.
+        attn_bias_for_inference_enabled (bool): Inference attention bias.
+            Defaults to ``False``.
+    """
+
     def __init__(
         self,
         dim,
@@ -210,6 +333,22 @@ class Block(nn.Module):
         attn_implementation="pytorch_naive",
         attn_bias_for_inference_enabled=False,
     ):
+        """Initialize the Block.
+
+        Args:
+            dim (int): Feature dimension.
+            num_heads (int): Number of attention heads.
+            mlp_ratio (float): Ratio of MLP hidden dim to *dim*.
+            qkv_bias (bool): Bias in QKV projections.
+            drop (float): Dropout rate.
+            attn_drop (float): Attention dropout rate.
+            drop_path (float): Stochastic depth probability.
+            act_layer (type): Activation class.
+            norm_layer (type): Normalization class.
+            rope: Optional RoPE module.
+            attn_implementation (str): Attention backend name.
+            attn_bias_for_inference_enabled (bool): Inference bias flag.
+        """
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
@@ -234,15 +373,54 @@ class Block(nn.Module):
         )
 
     def forward(self, x, xpos):
+        """Forward pass through the encoder block.
+
+        Args:
+            x (Tensor): Input tensor of shape (B, N, dim).
+            xpos: Position tensor forwarded to the attention module.
+
+        Returns:
+            Tensor: Output tensor of shape (B, N, dim).
+        """
         x = x + self.drop_path(self.attn(self.norm1(x), xpos))
         x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
 
 
 class CrossAttention(nn.Module):
+    """Multi-head cross-attention module.
+
+    Used in decoder blocks to let the query attend to key/value from
+    another sequence (e.g. the encoder output).
+
+    Args:
+        dim (int): Feature dimension.
+        rope: Optional rotary position embedding module.
+        num_heads (int): Number of attention heads. Defaults to ``8``.
+        qkv_bias (bool): Bias for projections. Defaults to ``False``.
+        attn_drop (float): Attention weight dropout. Defaults to ``0.0``.
+        proj_drop (float): Output projection dropout. Defaults to ``0.0``.
+        attn_mask: Optional attention mask.
+        is_causal (bool): Causal masking flag. Defaults to ``False``.
+        attn_implementation (str): Backend. Defaults to ``'pytorch_naive'``.
+    """
+
     def __init__(
         self, dim, rope=None, num_heads=8, qkv_bias=False, attn_drop=0.0, proj_drop=0.0, attn_mask=None, is_causal=False, attn_implementation="pytorch_naive"
     ):
+        """Initialize the CrossAttention module.
+
+        Args:
+            dim (int): Feature dimension.
+            rope: Optional RoPE module.
+            num_heads (int): Number of heads. Defaults to ``8``.
+            qkv_bias (bool): Bias on Q/K/V projections.
+            attn_drop (float): Attention weight dropout.
+            proj_drop (float): Output projection dropout.
+            attn_mask: Optional mask tensor.
+            is_causal (bool): Causal masking.
+            attn_implementation (str): Backend name.
+        """
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -263,6 +441,18 @@ class CrossAttention(nn.Module):
         self.attn_implementation = attn_implementation
 
     def forward(self, query, key, value, qpos, kpos):
+        """Compute cross-attention from query to key/value.
+
+        Args:
+            query (Tensor): Query tensor of shape (B, Nq, C).
+            key (Tensor): Key tensor of shape (B, Nk, C).
+            value (Tensor): Value tensor of shape (B, Nv, C).
+            qpos: Position tensor for queries (passed to RoPE).
+            kpos: Position tensor for keys (passed to RoPE).
+
+        Returns:
+            Tensor: Output tensor of shape (B, Nq, C).
+        """
         B, Nq, C = query.shape
         Nk = key.shape[1]
         Nv = value.shape[1]
@@ -317,6 +507,28 @@ class CrossAttention(nn.Module):
 
 
 class DecoderBlock(nn.Module):
+    """Transformer decoder block with self-attention, cross-attention, and MLP.
+
+    Applies self-attention on the query sequence, cross-attention from the
+    query to the memory sequence, and a feed-forward MLP, each wrapped with
+    residual connections, layer normalization, and stochastic depth.
+
+    Args:
+        dim (int): Feature dimension.
+        num_heads (int): Number of attention heads.
+        mlp_ratio (float): MLP hidden-dim multiplier. Defaults to ``4.0``.
+        qkv_bias (bool): Bias for projections. Defaults to ``False``.
+        drop (float): Dropout rate. Defaults to ``0.0``.
+        attn_drop (float): Attention dropout. Defaults to ``0.0``.
+        drop_path (float): Stochastic depth rate. Defaults to ``0.0``.
+        act_layer (type): Activation class. Defaults to ``nn.GELU``.
+        norm_layer (type): Normalization class. Defaults to ``nn.LayerNorm``.
+        norm_mem (bool): Apply layer norm to the memory. Defaults to ``True``.
+        rope: Optional RoPE module.
+        attn_implementation (str): Attention backend. Defaults to
+            ``'pytorch_naive'``.
+    """
+
     def __init__(
         self,
         dim,
@@ -332,6 +544,22 @@ class DecoderBlock(nn.Module):
         rope=None,
         attn_implementation="pytorch_naive",
     ):
+        """Initialize the DecoderBlock.
+
+        Args:
+            dim (int): Feature dimension.
+            num_heads (int): Number of attention heads.
+            mlp_ratio (float): MLP hidden-dim ratio.
+            qkv_bias (bool): Bias in QKV projections.
+            drop (float): Dropout rate.
+            attn_drop (float): Attention weight dropout.
+            drop_path (float): Stochastic depth probability.
+            act_layer (type): Activation class.
+            norm_layer (type): Normalization class.
+            norm_mem (bool): Whether to normalize the memory sequence.
+            rope: Optional RoPE module.
+            attn_implementation (str): Attention backend name.
+        """
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
@@ -365,6 +593,18 @@ class DecoderBlock(nn.Module):
         self.norm_y = norm_layer(dim) if norm_mem else nn.Identity()
 
     def forward(self, x, y, xpos, ypos):
+        """Forward pass through the decoder block.
+
+        Args:
+            x (Tensor): Query sequence of shape (B, Nq, dim).
+            y (Tensor): Memory (key/value) sequence of shape (B, Nk, dim).
+            xpos: Position tensor for the query sequence.
+            ypos: Position tensor for the memory sequence.
+
+        Returns:
+            tuple: ``(x, y)`` where *x* is the updated query tensor and
+            *y* is the unchanged memory tensor.
+        """
         x = x + self.drop_path(self.attn(self.norm1(x), xpos))
         y_ = self.norm_y(y)
         x = x + self.drop_path(self.cross_attn(self.norm2(x), y_, y_, xpos, ypos))
@@ -374,12 +614,30 @@ class DecoderBlock(nn.Module):
 
 # patch embedding
 class PositionGetter(object):
-    """return positions of patches"""
+    """Return positions of patches.
+
+    Caches patch position grids by (H, W) to avoid redundant computation.
+    Positions are returned as (row, col) integer pairs.
+    """
 
     def __init__(self):
+        """Initialize the PositionGetter with an empty cache."""
         self.cache_positions = {}
 
     def __call__(self, b, h, w, device):
+        """Return a (b, h*w, 2) tensor of (row, col) positions.
+
+        Results are cached per (h, w) pair.
+
+        Args:
+            b (int): Batch size.
+            h (int): Number of patch rows.
+            w (int): Number of patch columns.
+            device (torch.device): Target device.
+
+        Returns:
+            Tensor: Position tensor of shape (b, h*w, 2).
+        """
         if not (h, w) in self.cache_positions:
             x = torch.arange(w, device=device)
             y = torch.arange(h, device=device)
@@ -389,7 +647,20 @@ class PositionGetter(object):
 
 
 class PatchEmbed(nn.Module):
-    """just adding _init_weights + position getter compared to timm.models.layers.patch_embed.PatchEmbed"""
+    """Patch embedding with position getter and weight initialization.
+
+    Extends the standard patch embedding by adding a
+    :class:`PositionGetter` and an ``_init_weights`` method.
+
+    Args:
+        img_size (int): Input image size. Defaults to ``224``.
+        patch_size (int): Patch size. Defaults to ``16``.
+        in_chans (int): Number of input channels. Defaults to ``3``.
+        embed_dim (int): Embedding dimension. Defaults to ``768``.
+        norm_layer (nn.Module or None): Optional normalization layer.
+        flatten (bool): Flatten spatial dimensions into tokens.
+            Defaults to ``True``.
+    """
 
     def __init__(
         self,
@@ -400,6 +671,16 @@ class PatchEmbed(nn.Module):
         norm_layer=None,
         flatten=True,
     ):
+        """Initialize PatchEmbed.
+
+        Args:
+            img_size (int): Expected input image size.
+            patch_size (int): Size of each patch.
+            in_chans (int): Input channels.
+            embed_dim (int): Embedding dimension.
+            norm_layer: Optional normalization applied after projection.
+            flatten (bool): Whether to flatten the spatial grid.
+        """
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
@@ -417,6 +698,16 @@ class PatchEmbed(nn.Module):
         self.position_getter = PositionGetter()
 
     def forward(self, x):
+        """Embed an image into patch tokens with position codes.
+
+        Args:
+            x (Tensor): Input image of shape (B, C, H, W).
+
+        Returns:
+            tuple: ``(tokens, pos)`` where *tokens* is of shape
+            (B, N, embed_dim) and *pos* is the position grid of shape
+            (B, N, 2).
+        """
         B, C, H, W = x.shape
         torch._assert(
             H == self.img_size[0],
@@ -434,5 +725,6 @@ class PatchEmbed(nn.Module):
         return x, pos
 
     def _init_weights(self):
+        """Initialize the projection weights with Xavier uniform initialization."""
         w = self.proj.weight.data
         torch.nn.init.xavier_uniform_(w.view([w.shape[0], -1]))

@@ -25,6 +25,11 @@ from fast3r.croco.models.pos_embed import RoPE2D, get_2d_sincos_pos_embed
 
 
 class CroCoNet(nn.Module):
+    """CroCo 预训练网络，基于交叉视图完成任务训练。
+
+    采用 ViT 编码器 + 交叉注意力解码器的架构，输入一对图像，对第一张图像进行随机遮罩后利用第二张图像的上下文完成重建。
+    """
+
     def __init__(
         self,
         img_size=224,  # input image size
@@ -42,6 +47,24 @@ class CroCoNet(nn.Module):
         pos_embed="cosine",  # positional embedding (either cosine or RoPE100)
         attn_implementation="pytorch_naive",  # implementation of the scaled_dot_product_attention (either "pytorch_naive" or "flash_attention")
     ):
+        """初始化 CroCoNet。
+
+        Args:
+            img_size: 输入图像尺寸（正方形）。
+            patch_size: 分块大小。
+            mask_ratio: 编码器随机遮罩的 patch 比例。
+            enc_embed_dim: 编码器特征维度。
+            enc_depth: 编码器 Transformer 层数。
+            enc_num_heads: 编码器多头注意力头数。
+            dec_embed_dim: 解码器特征维度。
+            dec_depth: 解码器 Transformer 层数。
+            dec_num_heads: 解码器多头注意力头数。
+            mlp_ratio: MLP 隱层维度与 Embedding 维度的比值。
+            norm_layer: 归一化层类型。
+            norm_im2_in_dec: 解码器中是否对第二张图像的深度特征施加归一化。
+            pos_embed: 位置编码类型，支持 "cosine" 或 "RoPE{freq}"（如 "RoPE100"）。
+            attn_implementation: 注意力实现方式，支持 "pytorch_naive" 或 "flash_attention"。
+        """
         super(CroCoNet, self).__init__()
 
         # patch embeddings  (with initialization done as in MAE)
@@ -121,12 +144,30 @@ class CroCoNet(nn.Module):
         self.initialize_weights()
 
     def _set_patch_embed(self, img_size=224, patch_size=16, enc_embed_dim=768):
+        """初始化 patch 嵌入层。
+
+        Args:
+            img_size: 输入图像尺寸。
+            patch_size: 分块大小。
+            enc_embed_dim: 编码器嵌入维度。
+        """
         self.patch_embed = PatchEmbed(img_size, patch_size, 3, enc_embed_dim)
 
     def _set_mask_generator(self, num_patches, mask_ratio):
+        """初始化随机遮罩生成器。
+
+        Args:
+            num_patches: patch 总数。
+            mask_ratio: 遮罩比例（0~1）。
+        """
         self.mask_generator = RandomMask(num_patches, mask_ratio)
 
     def _set_mask_token(self, dec_embed_dim):
+        """初始化解码器的遮罩 token 参数。
+
+        Args:
+            dec_embed_dim: 解码器嵌入维度，决定 mask token 大小。
+        """
         self.mask_token = nn.Parameter(torch.zeros(1, 1, dec_embed_dim))
 
     def _set_decoder(
@@ -139,6 +180,17 @@ class CroCoNet(nn.Module):
         norm_layer,
         norm_im2_in_dec,
     ):
+        """初始化解码器组件，包括编解码投影层、DecoderBlock 列表和最终归一化层。
+
+        Args:
+            enc_embed_dim: 编码器嵌入维度，用于 decoder_embed 输入维度。
+            dec_embed_dim: 解码器嵌入维度。
+            dec_num_heads: 解码器注意力头数。
+            dec_depth: 解码器层数。
+            mlp_ratio: MLP 隐层维度比例。
+            norm_layer: 归一化层类型。
+            norm_im2_in_dec: 是否对第二张图像特征施加归一化。
+        """
         self.dec_depth = dec_depth
         self.dec_embed_dim = dec_embed_dim
         # transfer from encoder to decoder
@@ -163,9 +215,20 @@ class CroCoNet(nn.Module):
         self.dec_norm = norm_layer(dec_embed_dim)
 
     def _set_prediction_head(self, dec_embed_dim, patch_size):
+        """初始化像素预测头。
+
+        Args:
+            dec_embed_dim: 解码器嵌入维度，作为线性层输入。
+            patch_size: 分块大小，输出维度为 patch_size**2 * 3。
+        """
         self.prediction_head = nn.Linear(dec_embed_dim, patch_size**2 * 3, bias=True)
 
     def initialize_weights(self):
+        """初始化模型所有可学参数的权重。
+
+        对 patch_embed 调用其自定义初始化方法，使用正态分布初始化 mask_token，
+        并对其他线性层和 LayerNorm 层应用标准初始化。
+        """
         # patch embed
         self.patch_embed._init_weights()
         # mask tokens
@@ -175,6 +238,14 @@ class CroCoNet(nn.Module):
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
+        """对单个子模块施加标准权重初始化。
+
+        线性层使用 Xavier Uniform 初始化权重，偏置置零；
+        LayerNorm 层偏置置零、权重置一。
+
+        Args:
+            m: 待初始化的子模块（通常由 self.apply() 递归调用）。
+        """
         if isinstance(m, nn.Linear):
             # we use xavier_uniform following official JAX ViT:
             torch.nn.init.xavier_uniform_(m.weight)

@@ -22,6 +22,17 @@ from utils import misc as misc
 
 
 def split_prediction_conf(predictions, with_conf=False):
+    """从预测张量中分离预测层和置信度层。
+
+    Args:
+        predictions: 模型输出张量，形状 (B, C+1, H, W)。
+        with_conf: 是否包含置信度通道，默认 False。
+
+    Returns:
+        tuple: (predictions, conf)
+            - predictions: 主预测，形状 (B, C, H, W)
+            - conf: 置信度通道，形状 (B, 1, H, W)； with_conf=False 时为 None
+    """
     if not with_conf:
         return predictions, None
     conf = predictions[:, -1:, :, :]
@@ -42,6 +53,24 @@ def train_one_epoch(
     print_freq=20,
     args=None,
 ):
+    """训练模型一个完整 epoch。
+
+    Args:
+        model: 待训练的模型。
+        criterion: 损失函数。
+        metrics: 评估指标计算器。
+        data_loader: 训练数据加载器。
+        optimizer: 优化器。
+        device: 目标设备。
+        epoch: 当前训练轮次。
+        loss_scaler: 混合精度梯度缩放器。
+        log_writer: TensorBoard 日志写入器，可为 None。
+        print_freq: 每隔多少步打印日志，默认 20。
+        args: 训练参数对象。
+
+    Returns:
+        dict: 训练指标字典，包含 loss、lr 等全局平均。
+    """
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter("lr", misc.SmoothedValue(window_size=1, fmt="{value:.6f}"))
@@ -145,6 +174,21 @@ def validate_one_epoch(
     log_writer=None,
     args=None,
 ):
+    """验证模型一个完整 epoch，使用使用应置预测（tiled prediction）。
+
+    Args:
+        model: 待验证的模型。
+        criterion: 损失函数。
+        metrics: 评估指标计算器。
+        data_loaders: 验证数据加载器列表。
+        device: 目标设备。
+        epoch: 当前训练轮次。
+        log_writer: TensorBoard 日志写入器，可为 None。
+        args: 训练参数对象。
+
+    Returns:
+        dict: 各数据集上的指标平均字典。
+    """
     model.eval()
     metric_loggers = []
     header = "Epoch: [{}]".format(epoch)
@@ -227,10 +271,28 @@ import torch.nn.functional as F
 
 
 def _resize_img(img, new_size):
+    """使用双三次插帧调整图像尺寸。
+
+    Args:
+        img: 输入图像张量，形状 (B, C, H, W)。
+        new_size: 目标尺寸 (H', W')。
+
+    Returns:
+        torch.Tensor: 调整后的图像张量。
+    """
     return F.interpolate(img, size=new_size, mode="bicubic", align_corners=False)
 
 
 def _resize_stereo_or_flow(data, new_size):
+    """调整视差图或光流图，并根据缩放比例校正小数值。
+
+    Args:
+        data: 视差/光流张量，形状 (B, 1 or 2, H, W)。
+        new_size: 目标尺寸 (H', W')。
+
+    Returns:
+        torch.Tensor: 调整并缩放校正后的张量。
+    """
     assert data.ndim == 4
     assert data.size(1) in [1, 2]
     scale_x = new_size[1] / float(data.size(3))
@@ -259,6 +321,30 @@ def tiled_pred(
     with_conf=False,
     return_time=False,
 ):
+    """使用重叠裁剪片进行拼接预测，然后加权平均合并全图预测。
+
+    Args:
+        model: 待推理的模型。
+        criterion: 损失函数（可为 None）。
+        img1: 第一张图像，形状 (B, 3, H, W)。
+        img2: 第二张图像，形状 (B, 3, H, W)。
+        gt: 真实标注张量，可为 None。
+        overlap: 裁剪片之间的重叠率，默认 0.5。
+        bad_crop_thr: 差正裁剪系数阈值，不涉及过滤（保留参数）。
+        downscale: 是否下采样（保留参数）。
+        crop: 裁剪尺寸，可为整数或元组 (H, W)。
+        ret: 返回类型标志（保留参数）。
+        conf_mode: 置信度函数模式，支持 "conf_expsigmoid_beta_betasigmoid" 等。
+        with_conf: 模型输出是否包含置信度通道。
+        return_time: 是否返回推理时间。
+
+    Returns:
+        tuple: (pred, tiled_loss, c[, time])
+            - pred: 全图加权平均预测
+            - tiled_loss: 裁剪损失均値
+            - c: 加权平均置信度
+            - time: 推理时间（秒），仅当 return_time=True 时返回
+    """
     # for each image, we are going to run inference on many overlapping patches
     # then, all predictions will be weighted-averaged
     if gt is not None:
@@ -289,6 +375,7 @@ def tiled_pred(
         raise NotImplementedError(f"conf_mode {conf_mode} is not implemented")
 
     def crop_generator():
+        """生成重叠裁剪区域的坐标序列，用于分块推理。"""
         for sy in _overlapping(H, win_height, overlap):
             for sx in _overlapping(W, win_width, overlap):
                 yield sy, sx, sy, sx, True
@@ -354,6 +441,16 @@ def tiled_pred(
 
 
 def _overlapping(total, window, overlap=0.5):
+    """生成指定重叠率的滑动窗口切片建生器。
+
+    Args:
+        total: 维度总长度。
+        window: 窗口大小。
+        overlap: 相邻窗口的重叠率，默认 0.5。
+
+    Yields:
+        slice: 下一个窗口对应的 Python slice 对象。
+    """
     assert total >= window and 0 <= overlap < 1, (total, window, overlap)
     num_windows = 1 + int(np.ceil((total - window) / ((1 - overlap) * window)))
     offsets = np.linspace(0, total - window, num_windows).round().astype(int)
@@ -361,6 +458,16 @@ def _overlapping(total, window, overlap=0.5):
 
 
 def _crop(img, sy, sx):
+    """从图像中裁剪指定窗口，超边界部分自动填充。
+
+    Args:
+        img: 输入图像张量，形状 (B, C, H, W)。
+        sy: 高度方向的 slice。
+        sx: 宽度方向的 slice。
+
+    Returns:
+        torch.Tensor: 裁剪并填充后的子图像。
+    """
     B, THREE, H, W = img.shape
     if 0 <= sy.start and sy.stop <= H and 0 <= sx.start and sx.stop <= W:
         return img[:, :, sy, sx]

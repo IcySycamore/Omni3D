@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 2 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/criterion.py</div>
@@ -327,9 +327,10 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MaskedMSE</span>(torch.nn.Module)
-                <span class="line-no">L20-42</span>
+                <span class="line-no">L20-59</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>带掩码的 MSE 损失函数，用于 CroCo 预训练。</p>
+<p>支持对被掩码的 patch 计算损失，并可选地按 patch 像素均值/方差归一化。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,19 +339,30 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">norm_pix_loss</span> = <span class="arg-default">False</span>, <span class="arg-name">masked</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L21-28</span>
+                    <span class="line-no">L26-35</span>
                 </div>
-                <div class="docstring"><p>norm_pix_loss: normalize each patch by their pixel mean and variance</p>
-<p>masked: compute loss over the masked patches only</p></div>
+                <div class="docstring"><p>初始化 MaskedMSE。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    norm_pix_loss (bool): 是否按 patch 像素均值/方差归一化。默认 False。</div>
+<div class="doc-detail">    masked (bool): 是否仅在被掩码的 patch 上计算损失。默认 True。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-MaskedMSE-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">pred</span>, <span class="arg-name">mask</span>, <span class="arg-name">target</span>)</code>
-                    <span class="line-no">L30-42</span>
+                    <span class="line-no">L37-59</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>计算带掩码的 MSE 损失。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pred (Tensor): 预测值。</div>
+<div class="doc-detail">    mask (BoolTensor): 掩码，True 表示被掩码的位置。</div>
+<div class="doc-detail">    target (Tensor): 目标值。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 标量损失值。</div>
+</div></div>
             </div>
             
             </div>

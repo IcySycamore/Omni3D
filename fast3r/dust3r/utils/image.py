@@ -45,6 +45,18 @@ def imread_cv2(path, options=cv2.IMREAD_COLOR):
 
 
 def rgb(ftensor, true_shape=None):
+    """将张量转换为 RGB numpy 数组（值域 [0, 1]）。
+
+    支持 (3,H,W)、(B,3,H,W)、(H,W,3) 等多种输入格式，
+    并根据归一化方式自动还原到 [0, 1] 范围。
+
+    Args:
+        ftensor (Tensor | ndarray | list): 输入张量或列表。
+        true_shape (tuple | None): 如果提供，裁剪到 (H, W) 尺寸。
+
+    Returns:
+        ndarray: 形状为 (H, W, 3) 的 RGB 数组，值域 [0, 1]。
+    """
     if isinstance(ftensor, list):
         return [rgb(x, true_shape=true_shape) for x in ftensor]
     if isinstance(ftensor, torch.Tensor):
@@ -64,6 +76,19 @@ def rgb(ftensor, true_shape=None):
 
 
 def _resize_pil_image(img, long_edge_size):
+    """按长边等比缩放 PIL 图像。
+
+    缩放时根据目标大小自动选择插值方法：
+    - 缩小使用 LANCZOS（高质量）
+    - 放大使用 BICUBIC
+
+    Args:
+        img (PIL.Image): 输入图像。
+        long_edge_size (int): 长边的目标像素数。
+
+    Returns:
+        PIL.Image: 缩放后的图像。
+    """
     S = max(img.size)
     if S > long_edge_size:
         interp = PIL.Image.LANCZOS

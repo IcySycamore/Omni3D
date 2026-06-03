@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 13 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 3 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/geometry.py</div>
@@ -462,9 +462,20 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">get_joint_pointcloud_depth</span> (<span class="arg-name">z1</span>, <span class="arg-name">z2</span>, <span class="arg-name">valid_mask1</span>, <span class="arg-name">valid_mask2</span> = <span class="arg-default">None</span>, <span class="arg-name">quantile</span> = <span class="arg-default">0.5</span>)</code>
-                <span class="line-no">L339-354</span>
+                <span class="line-no">L339-368</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算联合点云的深度中位数（或分位数）。</p>
+<p>将两个视图的深度值合并后计算分位数，用于全局尺度对齐。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    z1 (Tensor): 视图1的深度图，形状 (B, H, W)。</div>
+<div class="doc-detail">    z2 (Tensor | None): 视图2的深度图。</div>
+<div class="doc-detail">    valid_mask1 (BoolTensor): 视图1的有效掩码。</div>
+<div class="doc-detail">    valid_mask2 (BoolTensor | None): 视图2的有效掩码。</div>
+<div class="doc-detail">    quantile (float): 分位数，0.5 表示中位数。默认 0.5。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 形状 (B,) 的深度分位数值。</div>
+</div></div>
         </div>
         
 
@@ -473,9 +484,23 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">get_joint_pointcloud_center_scale</span> (<span class="arg-name">pts1</span>, <span class="arg-name">pts2</span>, <span class="arg-name">valid_mask1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid_mask2</span> = <span class="arg-default">None</span>, <span class="arg-name">z_only</span> = <span class="arg-default">False</span>, <span class="arg-name">center</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L358-378</span>
+                <span class="line-no">L372-409</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算联合点云的中心和缩放因子。</p>
+<p>基于中位数计算点云中心和尺度，用于归一化。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pts1 (Tensor): 视图1的3D点，形状 (B, H, W, 3)。</div>
+<div class="doc-detail">    pts2 (Tensor | None): 视图2的3D点。</div>
+<div class="doc-detail">    valid_mask1 (BoolTensor | None): 视图1的有效掩码。</div>
+<div class="doc-detail">    valid_mask2 (BoolTensor | None): 视图2的有效掩码。</div>
+<div class="doc-detail">    z_only (bool): 是否仅对 Z 轴做中心化。默认 False。</div>
+<div class="doc-detail">    center (bool): 是否先中心化再计算尺度。默认 True。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: (_center, scale)</div>
+<div class="doc-detail">        - _center: 形状 (B, 1, 1, 3) 的中心坐标。</div>
+<div class="doc-detail">        - scale: 形状 (B, 1, 1, 1) 的缩放因子。</div>
+</div></div>
         </div>
         
 
@@ -483,7 +508,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">find_reciprocal_matches</span> (<span class="arg-name">P1</span>, <span class="arg-name">P2</span>)</code>
-                <span class="line-no">L381-397</span>
+                <span class="line-no">L412-428</span>
             </h2>
             <div class="docstring"><p>returns 3 values:</p>
 <p>1 - reciprocal_in_P2: a boolean array of size P2.shape[0], a &quot;True&quot; value indicates a match</p>
@@ -496,9 +521,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_med_dist_between_poses</span> (<span class="arg-name">poses</span>)</code>
-                <span class="line-no">L400-403</span>
+                <span class="line-no">L431-442</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>计算多个相机位姿之间平移距离的中位数。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    poses (list[ndarray | Tensor]): 相机位姿列表，每个为 (4, 4) 矩阵。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: 平移距离的中位数。</div>
+</div></div>
         </div>
         
 </main>

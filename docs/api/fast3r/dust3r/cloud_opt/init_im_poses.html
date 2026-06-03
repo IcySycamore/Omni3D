@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 13 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 12 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/init_im_poses.py</div>
@@ -340,9 +340,22 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">init_from_known_poses</span> (<span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">min_conf_thr</span> = <span class="arg-default">3</span>)</code>
-                <span class="line-no">L29-74</span>
+                <span class="line-no">L29-90</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Initialize all pairwise poses when all image poses are known.</p>
+<p>Uses PnP to estimate relative pairwise poses, then aligns them to the</p>
+<p>known ground-truth poses via rigid similarity transformation.</p>
+<p>Also initializes per-image depth maps from the best-confidence pairwise</p>
+<p>prediction.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    self (BasePCOptimizer): The optimizer instance.</div>
+<div class="doc-detail">    niter_PnP (int): Number of RANSAC-PnP iterations. Defaults to ``10``.</div>
+<div class="doc-detail">    min_conf_thr (float): Minimum confidence threshold for PnP masking.</div>
+<div class="doc-detail">        Defaults to ``3``.</div>
+</div>
+<div class="doc-section"><strong>Raises:</strong>
+<div class="doc-detail">    AssertionError: If not all image poses are known.</div>
+</div></div>
         </div>
         
 
@@ -351,7 +364,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">init_minimum_spanning_tree</span> (<span class="arg-name">**kw</span>)</code>
-                <span class="line-no">L78-98</span>
+                <span class="line-no">L94-114</span>
             </h2>
             <div class="docstring"><p>Init all camera poses (image-wise and pairwise poses) given</p>
 <p>an initial set of pairwise estimations.</p></div>
@@ -362,9 +375,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">init_from_pts3d</span> (<span class="arg-name">pts3d</span>, <span class="arg-name">im_focals</span>, <span class="arg-name">im_poses</span>)</code>
-                <span class="line-no">L101-147</span>
+                <span class="line-no">L117-177</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Initialize optimizer parameters from pre-computed 3D point maps.</p>
+<p>If some camera poses are already known, aligns the provided poses to</p>
+<p>them via a global similarity transform.  Then sets pairwise poses,</p>
+<p>depth maps, per-image poses, and focal lengths.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    self (BasePCOptimizer): The optimizer instance.</div>
+<div class="doc-detail">    pts3d (list of Tensor): Per-image 3D point maps of shape (H, W, 3).</div>
+<div class="doc-detail">    im_focals (list of float or None): Per-image focal length estimates;</div>
+<div class="doc-detail">        ``None`` entries are skipped.</div>
+<div class="doc-detail">    im_poses (Tensor): Per-image cam-to-world matrices of shape</div>
+<div class="doc-detail">        (n_imgs, 4, 4).</div>
+</div></div>
         </div>
         
 
@@ -372,9 +396,36 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">minimum_spanning_tree</span> (<span class="arg-name">imshapes</span>, <span class="arg-name">edges</span>, <span class="arg-name">pred_i</span>, <span class="arg-name">pred_j</span>, <span class="arg-name">conf_i</span>, <span class="arg-name">conf_j</span>, <span class="arg-name">im_conf</span>, <span class="arg-name">min_conf_thr</span>, <span class="arg-name">device</span>, <span class="arg-name">has_im_poses</span> = <span class="arg-default">True</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L150-256</span>
+                <span class="line-no">L180-317</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Build a consistent 3D scene by traversing the minimum spanning tree of the pairwise graph.</p>
+<p>Constructs a confidence-weighted graph over all image pairs, computes</p>
+<p>its minimum spanning tree, and propagates 3D point maps along tree</p>
+<p>edges starting from the most-confident pair.  Optionally estimates</p>
+<p>camera poses via PnP for images not covered by the tree.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    imshapes (list of tuple): Per-image (H, W) shapes.</div>
+<div class="doc-detail">    edges (list of tuple): List of (i, j) edge pairs.</div>
+<div class="doc-detail">    pred_i (dict): Per-edge source 3D point predictions.</div>
+<div class="doc-detail">    pred_j (dict): Per-edge target 3D point predictions.</div>
+<div class="doc-detail">    conf_i (dict): Per-edge source confidence maps.</div>
+<div class="doc-detail">    conf_j (dict): Per-edge target confidence maps.</div>
+<div class="doc-detail">    im_conf (list of Tensor): Per-image aggregated confidence maps.</div>
+<div class="doc-detail">    min_conf_thr (float): Confidence threshold for PnP masking.</div>
+<div class="doc-detail">    device (torch.device): Compute device.</div>
+<div class="doc-detail">    has_im_poses (bool): Whether to estimate per-image poses.</div>
+<div class="doc-detail">        Defaults to ``True``.</div>
+<div class="doc-detail">    niter_PnP (int): RANSAC-PnP iteration count. Defaults to ``10``.</div>
+<div class="doc-detail">    verbose (bool): Print progress messages. Defaults to ``True``.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(pts3d, msp_edges, im_focals, im_poses)`` where</div>
+</div>
+<p>    - *pts3d* – list of per-image (H, W, 3) point maps;</p>
+<p>    - *msp_edges* – list of (i, j) tuples for MST edges used;</p>
+<p>    - *im_focals* – list of estimated focal lengths (or ``None`` each);</p>
+<p>    - *im_poses* – stacked (n_imgs, 4, 4) cam-to-world matrices,</p>
+<p>      or ``None`` when *has_im_poses* is ``False``.</p></div>
         </div>
         
 
@@ -382,9 +433,15 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">dict_to_sparse_graph</span> (<span class="arg-name">dic</span>)</code>
-                <span class="line-no">L259-264</span>
+                <span class="line-no">L320-333</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Convert an edge-score dictionary to a sparse adjacency matrix.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dic (dict): Mapping from (i, j) edge tuple to scalar score value.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    scipy.sparse.dok_array: Sparse (n_imgs, n_imgs) matrix.</div>
+</div></div>
         </div>
         
 
@@ -392,9 +449,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rigid_points_registration</span> (<span class="arg-name">pts1</span>, <span class="arg-name">pts2</span>, <span class="arg-name">conf</span>)</code>
-                <span class="line-no">L267-274</span>
+                <span class="line-no">L336-357</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Estimate a weighted rigid similarity transform (sRT) between two point sets.</p>
+<p>Wraps ``roma.rigid_points_registration`` with confidence-based weighting</p>
+<p>and returns scale, rotation, and translation separately.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pts1 (Tensor): Source points of shape (H, W, 3) or (N, 3).</div>
+<div class="doc-detail">    pts2 (Tensor): Target points with the same shape as *pts1*.</div>
+<div class="doc-detail">    conf (Tensor): Per-point confidence weights, same leading shape.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(s, R, T)`` where *s* is the scalar scale, *R* is the</div>
+<div class="doc-detail">    (3, 3) rotation matrix, and *T* is the (3,) translation vector.</div>
+</div></div>
         </div>
         
 
@@ -402,9 +470,19 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">sRT_to_4x4</span> (<span class="arg-name">scale</span>, <span class="arg-name">R</span>, <span class="arg-name">T</span>, <span class="arg-name">device</span>)</code>
-                <span class="line-no">L277-281</span>
+                <span class="line-no">L360-377</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Compose a similarity transform into a 4x4 homogeneous matrix.</p>
+<p>Constructs ``[[s*R, T], [0, 0, 0, 1]]``.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    scale (float): Scalar scale factor.</div>
+<div class="doc-detail">    R (Tensor): (3, 3) rotation matrix.</div>
+<div class="doc-detail">    T (Tensor): (3,) or (3, 1) translation vector.</div>
+<div class="doc-detail">    device (torch.device): Target device.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: (4, 4) homogeneous transformation matrix.</div>
+</div></div>
         </div>
         
 
@@ -412,9 +490,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">estimate_focal</span> (<span class="arg-name">pts3d_i</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L284-292</span>
+                <span class="line-no">L380-399</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Estimate focal length from a 3D point map using the Weiszfeld algorithm.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pts3d_i (Tensor): Per-pixel 3D point map of shape (H, W, 3) in</div>
+<div class="doc-detail">        camera coordinates.</div>
+<div class="doc-detail">    pp (Tensor or None): Principal point (cx, cy).  If ``None``,</div>
+<div class="doc-detail">        defaults to the image centre.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    float: Estimated focal length in pixels.</div>
+</div></div>
         </div>
         
 
@@ -423,9 +510,17 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@cache</span>
 
                 <code><span class="fn-name">pixel_grid</span> (<span class="arg-name">H</span>, <span class="arg-name">W</span>)</code>
-                <span class="line-no">L296-297</span>
+                <span class="line-no">L403-414</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Return a (H, W, 2) pixel coordinate grid (cached).</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    H (int): Image height.</div>
+<div class="doc-detail">    W (int): Image width.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    np.ndarray: Float32 array of shape (H, W, 2) containing (x, y)</div>
+<div class="doc-detail">    pixel coordinates.</div>
+</div></div>
         </div>
         
 
@@ -433,9 +528,31 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">fast_pnp</span> (<span class="arg-name">pts3d</span>, <span class="arg-name">focal</span>, <span class="arg-name">msk</span>, <span class="arg-name">device</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">num_guessed_focals</span> = <span class="arg-default">100</span>)</code>
-                <span class="line-no">L300-350</span>
+                <span class="line-no">L417-492</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Estimate camera pose (and optionally focal length) from a 3D point map using RANSAC-PnP.</p>
+<p>If *focal* is ``None``, tries ``num_guessed_focals`` logarithmically</p>
+<p>spaced focal values and selects the one with the most PnP inliers.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    pts3d (Tensor): Per-pixel 3D point map of shape (H, W, 3) in</div>
+<div class="doc-detail">        camera coordinates.</div>
+<div class="doc-detail">    focal (float or None): Known focal length.  Pass ``None`` to</div>
+<div class="doc-detail">        estimate it automatically.</div>
+<div class="doc-detail">    msk (BoolTensor): Confidence mask of shape (H, W); only masked</div>
+<div class="doc-detail">        pixels are used for PnP.</div>
+<div class="doc-detail">    device (torch.device): Target device for the output pose.</div>
+<div class="doc-detail">    pp (Tensor or None): Principal point (cx, cy).  Defaults to image</div>
+<div class="doc-detail">        centre.</div>
+<div class="doc-detail">    niter_PnP (int): ``iterationsCount`` passed to</div>
+<div class="doc-detail">        ``cv2.solvePnPRansac``. Defaults to ``10``.</div>
+<div class="doc-detail">    num_guessed_focals (int): Number of focal length candidates when</div>
+<div class="doc-detail">        *focal* is ``None``. Defaults to ``100``.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(best_focal, cam2world)`` where *best_focal* is the</div>
+<div class="doc-detail">    estimated focal (float) and *cam2world* is a (4, 4) tensor,</div>
+<div class="doc-detail">    or ``(None, None)`` if PnP fails.</div>
+</div></div>
         </div>
         
 
@@ -443,9 +560,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_known_poses</span> ()</code>
-                <span class="line-no">L353-359</span>
+                <span class="line-no">L495-512</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Return the known (frozen) camera poses and their mask.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    self (BasePCOptimizer): The optimizer instance.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(nkp, known_poses_msk, known_poses)`` where *nkp* is the</div>
+<div class="doc-detail">    count of known poses (int/Tensor), *known_poses_msk* is a bool</div>
+<div class="doc-detail">    tensor of length ``n_imgs``, and *known_poses* is a (n_imgs, 4, 4)</div>
+<div class="doc-detail">    tensor, or ``(0, None, None)`` when no image poses exist.</div>
+</div></div>
         </div>
         
 
@@ -453,9 +579,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_known_focals</span> ()</code>
-                <span class="line-no">L362-368</span>
+                <span class="line-no">L515-532</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Return the known (frozen) focal lengths and their mask.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    self (BasePCOptimizer): The optimizer instance.</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(nkf, known_focal_msk, known_focals)`` where *nkf* is the</div>
+<div class="doc-detail">    count of known focals, *known_focal_msk* is a bool tensor, and</div>
+<div class="doc-detail">    *known_focals* is a tensor of focal lengths, or</div>
+<div class="doc-detail">    ``(0, None, None)`` when no image poses exist.</div>
+</div></div>
         </div>
         
 
@@ -463,9 +598,20 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">align_multiple_poses</span> (<span class="arg-name">src_poses</span>, <span class="arg-name">target_poses</span>)</code>
-                <span class="line-no">L371-382</span>
+                <span class="line-no">L535-560</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>Align a set of source poses to target poses via weighted rigid registration.</p>
+<p>Uses the camera centres and forward-direction points as correspondence</p>
+<p>set for ``roma.rigid_points_registration``.</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    src_poses (Tensor): Source cam-to-world matrices of shape (N, 4, 4).</div>
+<div class="doc-detail">    target_poses (Tensor): Target cam-to-world matrices of shape (N, 4, 4).</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    tuple: ``(s, R, T)`` – scalar scale, (3, 3) rotation matrix,</div>
+<div class="doc-detail">    (3,) translation vector of the similarity transform that maps</div>
+<div class="doc-detail">    *src_poses* to *target_poses*.</div>
+</div></div>
         </div>
         
 </main>

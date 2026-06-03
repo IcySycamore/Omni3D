@@ -312,8 +312,8 @@ td a:hover { text-decoration: underline; }
             <span>📁 2 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 4 方法</span>
-            <span class="warn">
-                ⚠️ 6 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/curope/curope2d.py</div>
@@ -328,9 +328,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">cuRoPE2D_func</span>(torch.autograd.Function)
-                <span class="line-no">L18-36</span>
+                <span class="line-no">L18-39</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>2D 旋转位置编码（RoPE）的自定义 autograd 函数，使用 CUDA 内核加速。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -339,18 +339,18 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">forward</span> (<span class="arg-name">ctx</span>, <span class="arg-name">tokens</span>, <span class="arg-name">positions</span>, <span class="arg-name">base</span>, <span class="arg-name">F0</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L21-28</span>
+                    <span class="line-no">L22-30</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>前向传播：对 tokens 应用 2D RoPE。</p></div>
             </div>
             
             <div class="method" id="method-cuRoPE2D_func-backward">
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">backward</span> (<span class="arg-name">ctx</span>, <span class="arg-name">grad_res</span>)</code>
-                    <span class="line-no">L32-36</span>
+                    <span class="line-no">L34-39</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>反向传播：对梯度应用逆向 2D RoPE。</p></div>
             </div>
             
             </div>
@@ -361,9 +361,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">cuRoPE2D</span>(torch.nn.Module)
-                <span class="line-no">L39-47</span>
+                <span class="line-no">L42-67</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>2D 旋转位置编码模块，封装 CUDA 加速的 RoPE 实现。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -372,18 +372,29 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">freq</span> = <span class="arg-default">100.0</span>, <span class="arg-name">F0</span> = <span class="arg-default">1.0</span>)</code>
-                    <span class="line-no">L40-43</span>
+                    <span class="line-no">L45-54</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 cuRoPE2D。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    freq (float): 频率基数。默认 100.0。</div>
+<div class="doc-detail">    F0 (float): 频率缩放因子。默认 1.0。</div>
+</div></div>
             </div>
             
             <div class="method" id="method-cuRoPE2D-forward">
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">tokens</span>, <span class="arg-name">positions</span>)</code>
-                    <span class="line-no">L45-47</span>
+                    <span class="line-no">L56-67</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>对输入 tokens 应用 2D 旋转位置编码。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    tokens (Tensor): 输入 token 张量。</div>
+<div class="doc-detail">    positions (Tensor): 2D 位置张量。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    Tensor: 编码后的 token 张量。</div>
+</div></div>
             </div>
             
             </div>
