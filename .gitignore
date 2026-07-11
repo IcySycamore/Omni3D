@@ -144,7 +144,7 @@ dmypy.json
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
-**/.vscode
+# **/.vscode  # 注释掉这行，否则下方的 !.vscode/settings.json 等例外规则会失效
 
 # JetBrains
 .idea/
@@ -167,3 +167,4 @@ configs/local/default.yaml
 
 # Aim logging
 .aim
+docs/api/.DS_Store
