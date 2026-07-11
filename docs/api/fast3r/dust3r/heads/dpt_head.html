@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/heads/dpt_head.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>DPT 头。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-DPTOutputAdapter_fix">class DPTOutputAdapter_fix</a></li>
 <li><a href="#class-PixelwiseTaskWithDPT">class PixelwiseTaskWithDPT</a></li>
@@ -329,7 +335,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DPTOutputAdapter_fix</span>(DPTOutputAdapter)
-                <span class="line-no">L28-104</span>
+                <span class="line-no">L30-106</span>
             </h2>
             <div class="docstring"><p>Adapt croco&#x27;s DPTOutputAdapter implementation for dust3r:</p>
 <p>remove duplicated weigths, and fix forward for dust3r</p></div>
@@ -341,7 +347,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">init</span> (<span class="arg-name">dim_tokens_enc</span> = <span class="arg-default">768</span>)</code>
-                    <span class="line-no">L34-45</span>
+                    <span class="line-no">L36-47</span>
                 </div>
                 <div class="docstring"><p>初始化 DPT 适配器，删除重复的后处理激活层。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -353,7 +359,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">encoder_tokens</span>: <span class="arg-type">List[torch.Tensor]</span>, <span class="arg-name">image_size</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L47-104</span>
+                    <span class="line-no">L49-106</span>
                 </div>
                 <div class="docstring"><p>DPT 前向传播，从多层编码器 token 生成密集像素级预测。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -373,7 +379,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PixelwiseTaskWithDPT</span>(nn.Module)
-                <span class="line-no">L107-165</span>
+                <span class="line-no">L109-167</span>
             </h2>
             <div class="docstring"><p>DPT module for dust3r, can return 3D points + confidence for all pixels</p></div>
             
@@ -384,7 +390,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">n_cls_token</span> = <span class="arg-default">0</span>, <span class="arg-name">hooks_idx</span> = <span class="arg-default">None</span>, <span class="arg-name">dim_tokens</span> = <span class="arg-default">None</span>, <span class="arg-name">output_width_ratio</span> = <span class="arg-default">1</span>, <span class="arg-name">num_channels</span> = <span class="arg-default">1</span>, <span class="arg-name">postprocess</span> = <span class="arg-default">None</span>, <span class="arg-name">depth_mode</span> = <span class="arg-default">None</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">None</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L110-150</span>
+                    <span class="line-no">L112-152</span>
                 </div>
                 <div class="docstring"><p>初始化 PixelwiseTaskWithDPT 模块。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -404,7 +410,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">img_info</span>)</code>
-                    <span class="line-no">L152-165</span>
+                    <span class="line-no">L154-167</span>
                 </div>
                 <div class="docstring"><p>前向传播，输出像素级 3D 点和可选的置信度。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -424,7 +430,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">create_dpt_head</span> (<span class="arg-name">net</span>, <span class="arg-name">has_conf</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L168-189</span>
+                <span class="line-no">L170-191</span>
             </h2>
             <div class="docstring"><p>return PixelwiseTaskWithDPT for given net params</p></div>
         </div>

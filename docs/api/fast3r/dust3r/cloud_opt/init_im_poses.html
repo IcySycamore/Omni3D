@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/init_im_poses.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>初始化图像位姿。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-init_from_known_poses">init_from_known_poses()</a></li>
 <li><a href="#func-init_minimum_spanning_tree">init_minimum_spanning_tree()</a></li>
@@ -340,7 +346,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">init_from_known_poses</span> (<span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">min_conf_thr</span> = <span class="arg-default">3</span>)</code>
-                <span class="line-no">L29-90</span>
+                <span class="line-no">L31-92</span>
             </h2>
             <div class="docstring"><p>Initialize all pairwise poses when all image poses are known.</p>
 <p>Uses PnP to estimate relative pairwise poses, then aligns them to the</p>
@@ -364,7 +370,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">init_minimum_spanning_tree</span> (<span class="arg-name">**kw</span>)</code>
-                <span class="line-no">L94-114</span>
+                <span class="line-no">L96-116</span>
             </h2>
             <div class="docstring"><p>Init all camera poses (image-wise and pairwise poses) given</p>
 <p>an initial set of pairwise estimations.</p></div>
@@ -375,7 +381,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">init_from_pts3d</span> (<span class="arg-name">pts3d</span>, <span class="arg-name">im_focals</span>, <span class="arg-name">im_poses</span>)</code>
-                <span class="line-no">L117-177</span>
+                <span class="line-no">L119-179</span>
             </h2>
             <div class="docstring"><p>Initialize optimizer parameters from pre-computed 3D point maps.</p>
 <p>If some camera poses are already known, aligns the provided poses to</p>
@@ -396,7 +402,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">minimum_spanning_tree</span> (<span class="arg-name">imshapes</span>, <span class="arg-name">edges</span>, <span class="arg-name">pred_i</span>, <span class="arg-name">pred_j</span>, <span class="arg-name">conf_i</span>, <span class="arg-name">conf_j</span>, <span class="arg-name">im_conf</span>, <span class="arg-name">min_conf_thr</span>, <span class="arg-name">device</span>, <span class="arg-name">has_im_poses</span> = <span class="arg-default">True</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L180-317</span>
+                <span class="line-no">L182-319</span>
             </h2>
             <div class="docstring"><p>Build a consistent 3D scene by traversing the minimum spanning tree of the pairwise graph.</p>
 <p>Constructs a confidence-weighted graph over all image pairs, computes</p>
@@ -433,7 +439,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">dict_to_sparse_graph</span> (<span class="arg-name">dic</span>)</code>
-                <span class="line-no">L320-333</span>
+                <span class="line-no">L322-335</span>
             </h2>
             <div class="docstring"><p>Convert an edge-score dictionary to a sparse adjacency matrix.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -449,7 +455,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rigid_points_registration</span> (<span class="arg-name">pts1</span>, <span class="arg-name">pts2</span>, <span class="arg-name">conf</span>)</code>
-                <span class="line-no">L336-357</span>
+                <span class="line-no">L338-359</span>
             </h2>
             <div class="docstring"><p>Estimate a weighted rigid similarity transform (sRT) between two point sets.</p>
 <p>Wraps ``roma.rigid_points_registration`` with confidence-based weighting</p>
@@ -470,7 +476,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">sRT_to_4x4</span> (<span class="arg-name">scale</span>, <span class="arg-name">R</span>, <span class="arg-name">T</span>, <span class="arg-name">device</span>)</code>
-                <span class="line-no">L360-377</span>
+                <span class="line-no">L362-379</span>
             </h2>
             <div class="docstring"><p>Compose a similarity transform into a 4x4 homogeneous matrix.</p>
 <p>Constructs ``[[s*R, T], [0, 0, 0, 1]]``.</p>
@@ -490,7 +496,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">estimate_focal</span> (<span class="arg-name">pts3d_i</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L380-399</span>
+                <span class="line-no">L382-401</span>
             </h2>
             <div class="docstring"><p>Estimate focal length from a 3D point map using the Weiszfeld algorithm.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -510,7 +516,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@cache</span>
 
                 <code><span class="fn-name">pixel_grid</span> (<span class="arg-name">H</span>, <span class="arg-name">W</span>)</code>
-                <span class="line-no">L403-414</span>
+                <span class="line-no">L405-416</span>
             </h2>
             <div class="docstring"><p>Return a (H, W, 2) pixel coordinate grid (cached).</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -528,7 +534,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">fast_pnp</span> (<span class="arg-name">pts3d</span>, <span class="arg-name">focal</span>, <span class="arg-name">msk</span>, <span class="arg-name">device</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>, <span class="arg-name">niter_PnP</span> = <span class="arg-default">10</span>, <span class="arg-name">num_guessed_focals</span> = <span class="arg-default">100</span>)</code>
-                <span class="line-no">L417-492</span>
+                <span class="line-no">L419-494</span>
             </h2>
             <div class="docstring"><p>Estimate camera pose (and optionally focal length) from a 3D point map using RANSAC-PnP.</p>
 <p>If *focal* is ``None``, tries ``num_guessed_focals`` logarithmically</p>
@@ -560,7 +566,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_known_poses</span> ()</code>
-                <span class="line-no">L495-512</span>
+                <span class="line-no">L497-514</span>
             </h2>
             <div class="docstring"><p>Return the known (frozen) camera poses and their mask.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -579,7 +585,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_known_focals</span> ()</code>
-                <span class="line-no">L515-532</span>
+                <span class="line-no">L517-534</span>
             </h2>
             <div class="docstring"><p>Return the known (frozen) focal lengths and their mask.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -598,7 +604,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">align_multiple_poses</span> (<span class="arg-name">src_poses</span>, <span class="arg-name">target_poses</span>)</code>
-                <span class="line-no">L535-560</span>
+                <span class="line-no">L537-562</span>
             </h2>
             <div class="docstring"><p>Align a set of source poses to target poses via weighted rigid registration.</p>
 <p>Uses the camera centres and forward-direction points as correspondence</p>

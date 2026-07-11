@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/wildrgbd.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>WildRGBD 数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-WildRGBD">class WildRGBD</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">WildRGBD</span>(Co3d)
-                <span class="line-no">L24-59</span>
+                <span class="line-no">L26-61</span>
             </h2>
             <div class="docstring"><p>WildRGB-D 真实世界 RGB-D 数据集，继承自 Co3d。</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">mask_bg</span> = <span class="arg-default">True</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L27-35</span>
+                    <span class="line-no">L29-37</span>
                 </div>
                 <div class="docstring"><p>初始化 WildRGBD 数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -351,7 +357,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_metadatapath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L37-39</span>
+                    <span class="line-no">L39-41</span>
                 </div>
                 <div class="docstring"><p>返回元数据文件路径。</p></div>
             </div>
@@ -360,7 +366,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_impath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L41-43</span>
+                    <span class="line-no">L43-45</span>
                 </div>
                 <div class="docstring"><p>返回 RGB 图像文件路径。</p></div>
             </div>
@@ -369,7 +375,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_depthpath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L45-47</span>
+                    <span class="line-no">L47-49</span>
                 </div>
                 <div class="docstring"><p>返回深度图文件路径。</p></div>
             </div>
@@ -378,7 +384,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_maskpath</span> (<span class="arg-name">obj</span>, <span class="arg-name">instance</span>, <span class="arg-name">view_idx</span>)</code>
-                    <span class="line-no">L49-51</span>
+                    <span class="line-no">L51-53</span>
                 </div>
                 <div class="docstring"><p>返回掩码文件路径。</p></div>
             </div>
@@ -387,7 +393,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_read_depthmap</span> (<span class="arg-name">depthpath</span>, <span class="arg-name">input_metadata</span>)</code>
-                    <span class="line-no">L53-59</span>
+                    <span class="line-no">L55-61</span>
                 </div>
                 <div class="docstring"><p>读取深度图并转换为米制单位（除以1000）。</p></div>
             </div>

@@ -1,3 +1,5 @@
+"""主窗口逻辑。"""
+
 import os
 import shutil
 import threading
@@ -21,7 +23,10 @@ from fast3r.viz.video_utils import extract_frames_from_video
 from process import start_visualization,align_local_pts3d_to_global
 
 class window(QMainWindow):
+    """主窗口逻辑控制器。"""
+
     def __init__(self):
+        """初始化主窗口 UI、模型和媒体播放器。"""
         super().__init__()
         self.m=Ui_MainWindow()
         self.m.setupUi(self)
@@ -53,34 +58,42 @@ class window(QMainWindow):
 
     @pyqtSlot()
     def on_toolButton_4_clicked(self):
+        """最小化窗口。"""
         self.showMinimized()
 
     @pyqtSlot()
     def on_toolButton_3_clicked(self):
+        """关闭窗口。"""
         self.close()
 
     @pyqtSlot()
     def on_pushButton_clicked(self):
+        """触发上传图片。"""
         self.upload_images()
 
     @pyqtSlot()
     def on_pushButton_2_clicked(self):
+        """触发上传视频。"""
         self.upload_video()
 
     @pyqtSlot()
     def on_radioButton_clicked(self):
+        """选择 512 分辨率。"""
         self.image_resolution=self.m.radioButton.text()
 
     @pyqtSlot()
     def on_radioButton_2_clicked(self):
+        """选择 224 分辨率。"""
         self.image_resolution = self.m.radioButton_2.text()
 
     @pyqtSlot()
     def on_pushButton_3_clicked(self):
+        """触发图片处理流程。"""
         self.process_images_wrapper()
 
 
     def upload_images(self):
+        """打开文件对话框并加载用户选择的图片。"""
         # 打开文件对话框，允许用户选择多个文件
         options = QFileDialog.Options()
         files, _ = QFileDialog.getOpenFileNames(self, "Select Images", "", "Image Files (*.png *.jpg *.bmp)", options=options)
@@ -90,6 +103,7 @@ class window(QMainWindow):
             display_images(self.m,self.image_paths)
 
     def upload_video(self):
+        """打开文件对话框并提取视频帧。"""
         # 打开文件对话框以选择视频文件
         video_file, _ = QFileDialog.getOpenFileName(self, "Open Video File", "",
                                                     "Video Files (*.mp4 *.avi *.mov *.mkv)")
@@ -112,6 +126,7 @@ class window(QMainWindow):
             playthread.start()
 
     def process_images_wrapper(self):
+        """加载图片、运行模型推理并启动可视化。"""
         image_size = int(self.image_resolution)
         self.model = self.model.to(device)
         self.model.eval()

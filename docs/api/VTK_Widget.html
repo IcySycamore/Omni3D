@@ -312,13 +312,19 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 0 函数</span>
             <span>🔧 3 方法</span>
-            <span class="warn">
-                ⚠️ 4 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/VTK_Widget.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>VTK 控件。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-VTKWidget">class VTKWidget</a></li>
 </ul></div>
@@ -327,9 +333,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">VTKWidget</span>(QWidget)
-                <span class="line-no">L8-71</span>
+                <span class="line-no">L10-87</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>基于 VTK 的 3D 渲染控件。</p></div>
             
             <div class="methods">
                 <h3>方法</h3>
@@ -338,27 +344,35 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">parent</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L9-27</span>
+                    <span class="line-no">L13-32</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>初始化 VTK 渲染窗口和交互器。</p></div>
             </div>
             
             <div class="method" id="method-VTKWidget-get_click_position">
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_click_position</span> ()</code>
-                    <span class="line-no">L40-51</span>
+                    <span class="line-no">L45-57</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>获取鼠标点击位置对应的三维世界坐标。</p></div>
             </div>
             
             <div class="method" id="method-VTKWidget-find_closest_point">
                 <div class="method-header">
                     
                     <code><span class="fn-name">find_closest_point</span> (<span class="arg-name">click_pos</span>, <span class="arg-name">points</span>, <span class="arg-name">max_extent</span>)</code>
-                    <span class="line-no">L53-71</span>
+                    <span class="line-no">L59-87</span>
                 </div>
-                <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+                <div class="docstring"><p>在点击位置附近搜索最近的点云点。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    click_pos: 点击位置的三维坐标。</div>
+<div class="doc-detail">    points: 点云数据。</div>
+<div class="doc-detail">    max_extent: 点云最大范围，用于确定搜索半径。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    距离点击位置最近的点，若未找到则返回 None。</div>
+</div></div>
             </div>
             
             </div>

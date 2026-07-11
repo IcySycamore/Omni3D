@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/crops/extract_crops_from_images.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>从图像提取裁剪块。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-arg_parser">arg_parser()</a></li>
 <li><a href="#func-main">main()</a></li>
@@ -332,7 +338,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">arg_parser</span> ()</code>
-                <span class="line-no">L24-55</span>
+                <span class="line-no">L26-57</span>
             </h2>
             <div class="docstring"><p>创建命令行参数解析器。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -345,7 +351,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">main</span> (<span class="arg-name">args</span>)</code>
-                <span class="line-no">L58-89</span>
+                <span class="line-no">L60-91</span>
             </h2>
             <div class="docstring"><p>主流程：加载裁剪列表、准备任务、多线程生成裁剪图像并写入 listing 文件。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -358,7 +364,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_crop_file</span> (<span class="arg-name">path</span>)</code>
-                <span class="line-no">L92-117</span>
+                <span class="line-no">L94-119</span>
             </h2>
             <div class="docstring"><p>加载裁剪文件，解析图像对及其裁剪区域。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -375,7 +381,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">prepare_jobs</span> (<span class="arg-name">pairs</span>, <span class="arg-name">num_levels</span>, <span class="arg-name">num_pairs_in_dir</span>)</code>
-                <span class="line-no">L120-152</span>
+                <span class="line-no">L122-154</span>
             </h2>
             <div class="docstring"><p>根据层次目录结构准备裁剪任务。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -393,7 +399,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_image</span> (<span class="arg-name">path</span>)</code>
-                <span class="line-no">L155-171</span>
+                <span class="line-no">L157-173</span>
             </h2>
             <div class="docstring"><p>加载图像并转换为 RGB 模式。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -412,7 +418,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">save_image_crops</span> (<span class="arg-name">args</span>, <span class="arg-name">data</span>)</code>
-                <span class="line-no">L174-239</span>
+                <span class="line-no">L176-241</span>
             </h2>
             <div class="docstring"><p>加载图像对并保存裁剪后的图像。</p>
 <p>对每对图像执行裁剪、缩放和旋转，保存为 JPEG 文件。</p>

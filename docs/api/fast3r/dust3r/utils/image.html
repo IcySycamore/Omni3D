@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/image.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>图像工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-imread_cv2">imread_cv2()</a></li>
 <li><a href="#func-rgb">rgb()</a></li>
@@ -330,7 +336,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">imread_cv2</span> (<span class="arg-name">path</span>, <span class="arg-name">options</span> = <span class="arg-default">cv2.IMREAD_COLOR</span>)</code>
-                <span class="line-no">L35-44</span>
+                <span class="line-no">L37-46</span>
             </h2>
             <div class="docstring"><p>Open an image or a depthmap with opencv-python.</p></div>
         </div>
@@ -340,7 +346,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rgb</span> (<span class="arg-name">ftensor</span>, <span class="arg-name">true_shape</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L47-75</span>
+                <span class="line-no">L49-77</span>
             </h2>
             <div class="docstring"><p>将张量转换为 RGB numpy 数组（值域 [0, 1]）。</p>
 <p>支持 (3,H,W)、(B,3,H,W)、(H,W,3) 等多种输入格式，</p>
@@ -359,7 +365,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_resize_pil_image</span> (<span class="arg-name">img</span>, <span class="arg-name">long_edge_size</span>)</code>
-                <span class="line-no">L78-98</span>
+                <span class="line-no">L80-100</span>
             </h2>
             <div class="docstring"><p>按长边等比缩放 PIL 图像。</p>
 <p>缩放时根据目标大小自动选择插值方法：</p>
@@ -379,7 +385,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_images</span> (<span class="arg-name">folder_or_list</span>, <span class="arg-name">size</span>, <span class="arg-name">square_ok</span> = <span class="arg-default">False</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>, <span class="arg-name">rotate_clockwise_90</span> = <span class="arg-default">False</span>, <span class="arg-name">crop_to_landscape</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L101-184</span>
+                <span class="line-no">L103-186</span>
             </h2>
             <div class="docstring"><p>open and convert all images in a list or folder to proper input format for DUSt3R</p></div>
         </div>

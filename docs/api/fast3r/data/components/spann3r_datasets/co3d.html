@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/components/spann3r_datasets/co3d.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>CO3D 数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-Co3d">class Co3d</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Co3d</span>(BaseManyViewDataset)
-                <span class="line-no">L19-206</span>
+                <span class="line-no">L21-208</span>
             </h2>
             <div class="docstring"><p>Co3D 多视图物体类别数据集，基于 SPlan3R 序列采样。</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">mask_bg</span> = <span class="arg-default">True</span>, <span class="arg-name">use_comb</span> = <span class="arg-default">True</span>, <span class="arg-name">scene_class</span> = <span class="arg-default">None</span>, <span class="arg-name">scene_id</span> = <span class="arg-default">None</span>, <span class="arg-name">num_seq</span> = <span class="arg-default">100</span>, <span class="arg-name">num_frames</span> = <span class="arg-default">5</span>, <span class="arg-name">min_thresh</span> = <span class="arg-default">10</span>, <span class="arg-name">max_thresh</span> = <span class="arg-default">100</span>, <span class="arg-name">full_video</span> = <span class="arg-default">False</span>, <span class="arg-name">lb</span> = <span class="arg-default">0</span>, <span class="arg-name">ub</span> = <span class="arg-default">30</span>, <span class="arg-name">kf_every</span> = <span class="arg-default">1</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L22-63</span>
+                    <span class="line-no">L24-65</span>
                 </div>
                 <div class="docstring"><p>初始化 Co3d 数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -362,7 +368,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_combinations</span> (<span class="arg-name">use_comb</span>, <span class="arg-name">lb</span>, <span class="arg-name">ub</span>)</code>
-                    <span class="line-no">L66-79</span>
+                    <span class="line-no">L68-81</span>
                 </div>
                 <div class="docstring"><p>生成视角组合列表。</p></div>
             </div>
@@ -371,7 +377,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_scene</span> (<span class="arg-name">scene_class</span> = <span class="arg-default">None</span>, <span class="arg-name">scene_id</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L83-101</span>
+                    <span class="line-no">L85-103</span>
                 </div>
                 <div class="docstring"><p>加载场景数据。</p></div>
             </div>
@@ -380,7 +386,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L103-105</span>
+                    <span class="line-no">L105-107</span>
                 </div>
                 <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
@@ -389,7 +395,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>, <span class="arg-name">attempts</span> = <span class="arg-default">0</span>)</code>
-                    <span class="line-no">L107-206</span>
+                    <span class="line-no">L109-208</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的多视图数据。</p></div>
             </div>

@@ -1,10 +1,13 @@
+"""图片上传显示。"""
+
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget,QGridLayout,QLabel,QScrollArea,QPushButton,QHBoxLayout,QVBoxLayout
 from PyQt5.QtGui import QPixmap
 
 
-def display_images(window,image_paths):
+def display_images(window, image_paths):
+    """在窗口中以网格形式显示一组图片缩略图。"""
     # 清空所有现有的布局项
     layout = window.widget_2.layout()
     for i in reversed(range(layout.count())):
@@ -41,7 +44,8 @@ def display_images(window,image_paths):
             row += 1  # 两行分别是图片和下载按钮
 
 
-def display_images_choosed(label, path, window,image_paths):
+def display_images_choosed(label, path, window, image_paths):
+    """放大显示选中的图片，并在下方保持缩略图列表。"""
     # 清空所有现有的布局项
     layout = window.widget_2.layout()
     for i in reversed(range(layout.count())):

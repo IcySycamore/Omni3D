@@ -1,6 +1,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
+"""从图像提取裁剪块。"""
+
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 

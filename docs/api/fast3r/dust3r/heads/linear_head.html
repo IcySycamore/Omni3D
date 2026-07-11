@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/heads/linear_head.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>线性头。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-LinearPts3d">class LinearPts3d</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">LinearPts3d</span>(nn.Module)
-                <span class="line-no">L19-66</span>
+                <span class="line-no">L21-68</span>
             </h2>
             <div class="docstring"><p>Linear head for dust3r</p>
 <p>Each token outputs: - 16x16 3D points (+ confidence)</p></div>
@@ -339,7 +345,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">net</span>, <span class="arg-name">has_conf</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L25-38</span>
+                    <span class="line-no">L27-40</span>
                 </div>
                 <div class="docstring"><p>初始化线性预测头。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -352,7 +358,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">setup</span> (<span class="arg-name">croconet</span>)</code>
-                    <span class="line-no">L40-42</span>
+                    <span class="line-no">L42-44</span>
                 </div>
                 <div class="docstring"><p>设置函数（当前为空实现，保留接口兼容性）。</p></div>
             </div>
@@ -361,7 +367,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">decout</span>, <span class="arg-name">img_shape</span>)</code>
-                    <span class="line-no">L44-66</span>
+                    <span class="line-no">L46-68</span>
                 </div>
                 <div class="docstring"><p>线性前向传播，将解码器输出映射为像素级 3D 点和可选置信度。</p>
 <div class="doc-section"><strong>Args:</strong>

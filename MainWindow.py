@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""主窗口 UI。"""
+
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
@@ -12,7 +14,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_MainWindow(object):
+    """主窗口 UI 界面定义。"""
+
     def setupUi(self, MainWindow):
+        """设置主窗口 UI 布局和控件。"""
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -105,6 +110,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
+        """设置主窗口控件的显示文本。"""
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "3D重建"))

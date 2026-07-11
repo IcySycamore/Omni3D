@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/models/fast3r.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Fast3R 模型。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-Fast3R">class Fast3R</a></li>
 <li><a href="#class-CroCoEncoder">class CroCoEncoder</a></li>
@@ -331,7 +337,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Fast3R</span>(nn.Module, huggingface_hub.PyTorchModelHubMixin)
-                <span class="line-no">L45-598</span>
+                <span class="line-no">L47-600</span>
             </h2>
             <div class="docstring"><p>Fast3R: Fast 3D Reconstruction from Multiple Views.</p>
 <p>该模型从多张图像中快速重建 3D 场景。由三部分组成：</p>
@@ -347,7 +353,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">encoder_args</span>: <span class="arg-type">dict</span>, <span class="arg-name">decoder_args</span>: <span class="arg-type">dict</span>, <span class="arg-name">head_args</span>: <span class="arg-type">dict</span>, <span class="arg-name">freeze</span> = <span class="arg-default">&#x27;none&#x27;</span>)</code>
-                    <span class="line-no">L59-87</span>
+                    <span class="line-no">L61-89</span>
                 </div>
                 <div class="docstring"><p>初始化 Fast3R 模型。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -362,7 +368,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">build_encoder</span> (<span class="arg-name">encoder_args</span>: <span class="arg-type">dict</span>)</code>
-                    <span class="line-no">L89-111</span>
+                    <span class="line-no">L91-113</span>
                 </div>
                 <div class="docstring"><p>根据配置构建图像编码器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -379,7 +385,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">build_decoder</span> (<span class="arg-name">decoder_args</span>: <span class="arg-type">dict</span>)</code>
-                    <span class="line-no">L113-134</span>
+                    <span class="line-no">L115-136</span>
                 </div>
                 <div class="docstring"><p>根据配置构建多视角解码器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -396,7 +402,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">build_head</span> (<span class="arg-name">head_args</span>: <span class="arg-type">dict</span>)</code>
-                    <span class="line-no">L136-180</span>
+                    <span class="line-no">L138-182</span>
                 </div>
                 <div class="docstring"><p>构建预测头（DPT Head），用于将解码器输出映射为逐像素的 3D 点坐标。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -415,7 +421,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">head_factory</span> (<span class="arg-name">head_type</span>, <span class="arg-name">output_mode</span>, <span class="arg-name">has_conf</span> = <span class="arg-default">False</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>)</code>
-                    <span class="line-no">L182-220</span>
+                    <span class="line-no">L184-222</span>
                 </div>
                 <div class="docstring"><p>构建解码器的预测头。</p>
 <p>根据头类型和输出模式创建对应的预测头模块。当前仅支持 DPT 头用于 pts3d 输出。</p>
@@ -437,7 +443,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L222-234</span>
+                    <span class="line-no">L224-236</span>
                 </div>
                 <div class="docstring"><p>加载模型权重。</p>
 <p>直接委托给父类 nn.Module.load_state_dict。</p>
@@ -454,7 +460,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_from_dust3r_checkpoint</span> (<span class="arg-name">dust3r_checkpoint_path</span>: <span class="arg-type">str</span>)</code>
-                    <span class="line-no">L236-313</span>
+                    <span class="line-no">L238-315</span>
                 </div>
                 <div class="docstring"><p>Load a Dust3R checkpoint into the model.</p>
 <p>Only load the patch_embed, enc_blocks, enc_norm, and downstream_head1 components from the checkpoint.</p>
@@ -467,7 +473,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_freeze</span> (<span class="arg-name">freeze</span>)</code>
-                    <span class="line-no">L315-330</span>
+                    <span class="line-no">L317-332</span>
                 </div>
                 <div class="docstring"><p>设置模型冻结策略。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -482,7 +488,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_images</span> (<span class="arg-name">views</span>, <span class="arg-name">chunk_size</span> = <span class="arg-default">400</span>)</code>
-                    <span class="line-no">L332-393</span>
+                    <span class="line-no">L334-395</span>
                 </div>
                 <div class="docstring"><p>编码所有视图的图像。</p>
 <p>将多张图像通过编码器，支持分块处理以避免 OOM。当所有图像形状相同时，</p>
@@ -503,7 +509,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_max_parallel_views_for_head</span> (<span class="arg-name">max_parallel_views_for_head</span>)</code>
-                    <span class="line-no">L395-401</span>
+                    <span class="line-no">L397-403</span>
                 </div>
                 <div class="docstring"><p>设置预测头并行处理的最大视图数，用于控制推理时显存占用。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -515,7 +521,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">views</span>, <span class="arg-name">profiling</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L403-598</span>
+                    <span class="line-no">L405-600</span>
                 </div>
                 <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    views (list[dict]): a list of views, each view is a dict of tensors, the tensors are batched</div>
@@ -534,7 +540,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CroCoEncoder</span>(nn.Module)
-                <span class="line-no">L600-710</span>
+                <span class="line-no">L602-712</span>
             </h2>
             <div class="docstring"><p>CroCo 图像编码器，基于 Vision Transformer。</p>
 <p>将图像分割为 patch，通过 Transformer 编码器块提取特征，</p>
@@ -553,7 +559,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">512</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">patch_embed_cls</span> = <span class="arg-default">&#x27;ManyAR_PatchEmbed&#x27;</span>, <span class="arg-name">embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">12</span>, <span class="arg-name">depth</span> = <span class="arg-default">12</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">partial(nn.LayerNorm, eps=1e-06)</span>, <span class="arg-name">pos_embed</span> = <span class="arg-default">&#x27;RoPE100&#x27;</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
-                    <span class="line-no">L612-668</span>
+                    <span class="line-no">L614-670</span>
                 </div>
                 <div class="docstring"><p>初始化 CroCo 编码器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -574,7 +580,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
-                    <span class="line-no">L670-687</span>
+                    <span class="line-no">L672-689</span>
                 </div>
                 <div class="docstring"><p>设置 Patch 嵌入层。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -588,7 +594,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L689-710</span>
+                    <span class="line-no">L691-712</span>
                 </div>
                 <div class="docstring"><p>CroCo 编码器前向传播：编码图像为 patch 特征。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -610,7 +616,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DinoEncoder</span>(nn.Module)
-                <span class="line-no">L712-825</span>
+                <span class="line-no">L714-827</span>
             </h2>
             <div class="docstring"><p>DINOv2 图像编码器，使用预训练的 DINOv2 ViT-L/14 模型。</p>
 <p>支持横屏和竖屏图像的自动处理，通过 PositionGetter 计算位置编码。</p></div>
@@ -622,7 +628,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">patch_size</span> = <span class="arg-default">14</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L717-736</span>
+                    <span class="line-no">L719-738</span>
                 </div>
                 <div class="docstring"><p>初始化 DINO 编码器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -638,7 +644,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L738-808</span>
+                    <span class="line-no">L740-810</span>
                 </div>
                 <div class="docstring"><p>编码图像为 patch 特征，自动处理横屏和竖屏图像。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -656,7 +662,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_process_images</span> (<span class="arg-name">images</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L810-825</span>
+                    <span class="line-no">L812-827</span>
                 </div>
                 <div class="docstring"><p>Process a batch of images through the DINO encoder and compute positions.</p></div>
             </div>
@@ -669,7 +675,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Fast3RDecoder</span>(nn.Module)
-                <span class="line-no">L828-1013</span>
+                <span class="line-no">L830-1015</span>
             </h2>
             <div class="docstring"><p>Fast3R 多视角解码器，基于 CroCo Transformer Block。</p>
 <p>将多个视图的编码特征拼接后，通过 Transformer 解码器块进行跨视角信息交互，</p>
@@ -688,7 +694,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">random_image_idx_embedding</span>: <span class="arg-type">bool</span>, <span class="arg-name">enc_embed_dim</span>: <span class="arg-type">int</span>, <span class="arg-name">embed_dim</span>: <span class="arg-type">int</span> = <span class="arg-default">768</span>, <span class="arg-name">num_heads</span>: <span class="arg-type">int</span> = <span class="arg-default">12</span>, <span class="arg-name">depth</span>: <span class="arg-type">int</span> = <span class="arg-default">12</span>, <span class="arg-name">mlp_ratio</span>: <span class="arg-type">float</span> = <span class="arg-default">4.0</span>, <span class="arg-name">qkv_bias</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>, <span class="arg-name">drop</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_drop</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_implementation</span>: <span class="arg-type">str</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">attn_bias_for_inference_enabled</span> = <span class="arg-default">True</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">partial(nn.LayerNorm, eps=1e-06)</span>)</code>
-                    <span class="line-no">L840-901</span>
+                    <span class="line-no">L842-903</span>
                 </div>
                 <div class="docstring"><p>初始化 Fast3R 解码器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -711,7 +717,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_per_rank_generator</span> ()</code>
-                    <span class="line-no">L903-918</span>
+                    <span class="line-no">L905-920</span>
                 </div>
                 <div class="docstring"><p>生成每个分布式 rank 的随机数生成器。</p>
 <p>确保不同 rank 使用不同种子，同一 rank 在不同前向传播中产生不同随机数。</p>
@@ -724,7 +730,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_random_image_pos</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_views</span>, <span class="arg-name">max_image_idx</span>, <span class="arg-name">device</span>)</code>
-                    <span class="line-no">L920-971</span>
+                    <span class="line-no">L922-973</span>
                 </div>
                 <div class="docstring"><p>Generates non-repeating random image indices for each sample, retrieves corresponding</p>
 <p>positional embeddings for each view, and concatenates them.</p>
@@ -744,7 +750,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">positions</span>, <span class="arg-name">image_ids</span>)</code>
-                    <span class="line-no">L973-1013</span>
+                    <span class="line-no">L975-1015</span>
                 </div>
                 <div class="docstring"><p>Forward pass through the decoder.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -762,7 +768,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">LlamaDecoder</span>(nn.Module)
-                <span class="line-no">L1015-1225</span>
+                <span class="line-no">L1017-1227</span>
             </h2>
             <div class="docstring"><p>LLaMA 风格的多视角解码器。</p>
 <p>使用 LLaMA Transformer 架构进行跨视角信息交互，</p>
@@ -784,7 +790,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">random_image_idx_embedding</span>: <span class="arg-type">bool</span>, <span class="arg-name">enc_embed_dim</span>: <span class="arg-type">int</span>, <span class="arg-name">embed_dim</span>: <span class="arg-type">int</span> = <span class="arg-default">4096</span>, <span class="arg-name">n_layers</span>: <span class="arg-type">int</span> = <span class="arg-default">32</span>, <span class="arg-name">n_heads</span>: <span class="arg-type">int</span> = <span class="arg-default">32</span>, <span class="arg-name">n_kv_heads</span>: <span class="arg-type">Optional[int]</span> = <span class="arg-default">None</span>, <span class="arg-name">multiple_of</span>: <span class="arg-type">int</span> = <span class="arg-default">256</span>, <span class="arg-name">ffn_dim_multiplier</span>: <span class="arg-type">Optional[float]</span> = <span class="arg-default">None</span>, <span class="arg-name">norm_eps</span>: <span class="arg-type">float</span> = <span class="arg-default">1e-05</span>, <span class="arg-name">rope_theta</span>: <span class="arg-type">float</span> = <span class="arg-default">10000</span>, <span class="arg-name">max_seq_len</span>: <span class="arg-type">int</span> = <span class="arg-default">1000</span>, <span class="arg-name">is_causal</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">depth_init</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L1030-1090</span>
+                    <span class="line-no">L1032-1092</span>
                 </div>
                 <div class="docstring"><p>初始化 LLaMA 解码器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -808,7 +814,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_precompute_freqs_cis</span> (<span class="arg-name">max_seq_len</span>)  -> <span class="ret-type">torch.Tensor</span></code>
-                    <span class="line-no">L1092-1107</span>
+                    <span class="line-no">L1094-1109</span>
                 </div>
                 <div class="docstring"><p>预计算 RoPE 频率复数张量。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -823,7 +829,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_per_rank_generator</span> ()</code>
-                    <span class="line-no">L1109-1122</span>
+                    <span class="line-no">L1111-1124</span>
                 </div>
                 <div class="docstring"><p>生成每个分布式 rank 的随机数生成器。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -835,7 +841,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_random_freqs_cis</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_views</span>, <span class="arg-name">max_image_idx</span>, <span class="arg-name">device</span>)</code>
-                    <span class="line-no">L1124-1175</span>
+                    <span class="line-no">L1126-1177</span>
                 </div>
                 <div class="docstring"><p>Generates freqs_cis for each patch based on random image indices.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -854,7 +860,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">positions</span>, <span class="arg-name">image_ids</span>)</code>
-                    <span class="line-no">L1177-1225</span>
+                    <span class="line-no">L1179-1227</span>
                 </div>
                 <div class="docstring"><p>LLaMA 解码器前向传播。</p>
 <div class="doc-section"><strong>Args:</strong>

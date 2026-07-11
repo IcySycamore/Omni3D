@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/device.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>设备工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-todevice">todevice()</a></li>
 <li><a href="#func-to_numpy">to_numpy()</a></li>
@@ -332,7 +338,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">todevice</span> (<span class="arg-name">batch</span>, <span class="arg-name">device</span>, <span class="arg-name">callback</span> = <span class="arg-default">None</span>, <span class="arg-name">non_blocking</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L17-42</span>
+                <span class="line-no">L19-44</span>
             </h2>
             <div class="docstring"><p>Transfer some variables to another device (i.e. GPU, CPU:torch, CPU:numpy).</p>
 <p>batch: list, tuple, dict of tensors or other things</p>
@@ -345,7 +351,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">to_numpy</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L48-57</span>
+                <span class="line-no">L50-59</span>
             </h2>
             <div class="docstring"><p>将张量或嵌套结构转换为 numpy 数组。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -361,7 +367,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">to_cpu</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L60-69</span>
+                <span class="line-no">L62-71</span>
             </h2>
             <div class="docstring"><p>将张量或嵌套结构转移到 CPU。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -377,7 +383,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">to_cuda</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L72-81</span>
+                <span class="line-no">L74-83</span>
             </h2>
             <div class="docstring"><p>将张量或嵌套结构转移到 CUDA GPU。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -393,7 +399,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">collate_with_cat</span> (<span class="arg-name">whatever</span>, <span class="arg-name">lists</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L84-124</span>
+                <span class="line-no">L86-126</span>
             </h2>
             <div class="docstring"><p>递归地拼接批量数据，对张量使用 torch.cat，对字典和元组递归处理。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -410,7 +416,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">listify</span> (<span class="arg-name">elems</span>)</code>
-                <span class="line-no">L127-136</span>
+                <span class="line-no">L129-138</span>
             </h2>
             <div class="docstring"><p>将嵌套列表展平为单层列表。</p>
 <div class="doc-section"><strong>Args:</strong>

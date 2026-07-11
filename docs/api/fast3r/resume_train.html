@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/resume_train.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>恢复训练。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-load_resume_config">load_resume_config()</a></li>
 <li><a href="#func-resume_train">resume_train()</a></li>
@@ -328,7 +334,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_resume_config</span> (<span class="arg-name">run_dir</span>: <span class="arg-type">str</span>)  -> <span class="ret-type">DictConfig</span></code>
-                <span class="line-no">L22-43</span>
+                <span class="line-no">L24-45</span>
             </h2>
             <div class="docstring"><p>Loads the configuration from &#x27;hydra/config.yaml&#x27; in the specified run directory for resuming training.</p>
 <p>:param run_dir: Path to the run directory.</p>
@@ -340,7 +346,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">resume_train</span> (<span class="arg-name">run_dir</span>: <span class="arg-type">str</span>)  -> <span class="ret-type">Optional[float]</span></code>
-                <span class="line-no">L46-66</span>
+                <span class="line-no">L48-68</span>
             </h2>
             <div class="docstring"><p>Resumes training from the last checkpoint and configuration found in the specified directory.</p>
 <p>:param run_dir: Path to the directory containing the last checkpoint and config.</p>

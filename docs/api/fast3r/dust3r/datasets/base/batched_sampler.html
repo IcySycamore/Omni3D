@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/batched_sampler.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>批采样器。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-BatchedRandomSampler">class BatchedRandomSampler</a></li>
 <li><a href="#func-round_by">round_by()</a></li>
@@ -328,7 +334,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BatchedRandomSampler</span>
-                <span class="line-no">L17-94</span>
+                <span class="line-no">L19-96</span>
             </h2>
             <div class="docstring"><p>Random sampling under a constraint: each sample in the batch has the same feature,</p>
 <p>which is chosen randomly from a known pool of &#x27;features&#x27; for each batch.</p>
@@ -343,7 +349,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dataset</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">pool_size</span>, <span class="arg-name">world_size</span> = <span class="arg-default">1</span>, <span class="arg-name">rank</span> = <span class="arg-default">0</span>, <span class="arg-name">drop_last</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L27-52</span>
+                    <span class="line-no">L29-54</span>
                 </div>
                 <div class="docstring"><p>初始化分批随机采样器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -360,7 +366,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L54-56</span>
+                    <span class="line-no">L56-58</span>
                 </div>
                 <div class="docstring"><p>返回每个进程的采样数量。</p></div>
             </div>
@@ -369,7 +375,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L58-60</span>
+                    <span class="line-no">L60-62</span>
                 </div>
                 <div class="docstring"><p>设置当前 epoch，用于确定性随机采样。</p></div>
             </div>
@@ -378,7 +384,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__iter__</span> ()</code>
-                    <span class="line-no">L62-94</span>
+                    <span class="line-no">L64-96</span>
                 </div>
                 <div class="docstring"><p>迭代生成 (sample_idx, feat_idx) 索引元组。</p></div>
             </div>
@@ -391,7 +397,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">round_by</span> (<span class="arg-name">total</span>, <span class="arg-name">multiple</span>, <span class="arg-name">up</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L97-110</span>
+                <span class="line-no">L99-112</span>
             </h2>
             <div class="docstring"><p>将 total 向下取整为 multiple 的倍数。</p>
 <div class="doc-section"><strong>Args:</strong>

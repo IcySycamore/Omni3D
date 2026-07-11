@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/eval/recon_metric.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>重建评估指标。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-completion_ratio">completion_ratio()</a></li>
 <li><a href="#func-accuracy">accuracy()</a></li>
@@ -333,7 +339,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">completion_ratio</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">dist_th</span> = <span class="arg-default">0.05</span>)</code>
-                <span class="line-no">L14-31</span>
+                <span class="line-no">L16-33</span>
             </h2>
             <div class="docstring"><p>计算重建点云对真实点云的完成度比例（Completion Ratio）。</p>
 <p>对真实点云中的每个点，在重建点云中查找最近邻，统计距离小于</p>
@@ -353,7 +359,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">accuracy</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">device</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L34-62</span>
+                <span class="line-no">L36-64</span>
             </h2>
             <div class="docstring"><p>计算重建点云对真实点云的精度（Accuracy）。</p>
 <p>对重建点云中的每个点，在真实点云中查找最近邻，返回平均距离、</p>
@@ -375,7 +381,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">completion</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">device</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L65-92</span>
+                <span class="line-no">L67-94</span>
             </h2>
             <div class="docstring"><p>计算重建点云对真实点云的完成度（Completion）。</p>
 <p>对真实点云中的每个点，在重建点云中查找最近邻，返回平均距离、</p>
@@ -397,7 +403,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">downsample_point_cloud</span> (<span class="arg-name">points</span>, <span class="arg-name">thresh</span>)</code>
-                <span class="line-no">L139-163</span>
+                <span class="line-no">L141-165</span>
             </h2>
             <div class="docstring"><p>Downsamples the point cloud so that no two points are closer than &#x27;thresh&#x27;.</p>
 <p>Returns the downsampled points and indices of the points that were kept.</p></div>
@@ -408,7 +414,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">accuracy_fast</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L166-219</span>
+                <span class="line-no">L168-221</span>
             </h2>
             <div class="docstring"><p>快速计算重建点云对真实点云的精度（带下采样优化）。</p>
 <p>先对重建点云进行半径下采样，再计算到真实点云的最近邻距离，</p>
@@ -429,7 +435,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">completion_fast</span> (<span class="arg-name">gt_points</span>, <span class="arg-name">rec_points</span>, <span class="arg-name">gt_normals</span> = <span class="arg-default">None</span>, <span class="arg-name">rec_normals</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L222-276</span>
+                <span class="line-no">L224-278</span>
             </h2>
             <div class="docstring"><p>快速计算重建点云对真实点云的完成度（带下采样优化）。</p>
 <p>先对真实点云进行半径下采样，再计算到重建点云的最近邻距离，</p>
@@ -450,7 +456,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">compute_iou</span> (<span class="arg-name">pred_vox</span>, <span class="arg-name">target_vox</span>)</code>
-                <span class="line-no">L281-305</span>
+                <span class="line-no">L283-307</span>
             </h2>
             <div class="docstring"><p>计算两个体素网格之间的交并比（IoU）。</p>
 <div class="doc-section"><strong>Args:</strong>

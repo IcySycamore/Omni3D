@@ -312,13 +312,19 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 8 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 6 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/process.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>处理流程。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-is_outdoor_scene">is_outdoor_scene()</a></li>
 <li><a href="#func-rainbow_color">rainbow_color()</a></li>
@@ -334,9 +340,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_outdoor_scene</span> (<span class="arg-name">frame_data_list</span>)</code>
-                <span class="line-no">L17-24</span>
+                <span class="line-no">L19-27</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据天空像素比例判断场景是否为室外。</p></div>
         </div>
         
 
@@ -344,9 +350,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rainbow_color</span> (<span class="arg-name">n</span>, <span class="arg-name">total</span>)</code>
-                <span class="line-no">L26-29</span>
+                <span class="line-no">L29-33</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>根据索引生成彩虹色。</p></div>
         </div>
         
 
@@ -354,7 +360,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">detect_sky_mask</span> (<span class="arg-name">img_rgb</span>)</code>
-                <span class="line-no">L31-79</span>
+                <span class="line-no">L35-83</span>
             </h2>
             <div class="docstring"><p>Detect sky pixels using HSV color space and morphological operations.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -370,7 +376,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">align_local_pts3d_to_global</span> (<span class="arg-name">preds</span>, <span class="arg-name">views</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">0</span>)</code>
-                <span class="line-no">L81-203</span>
+                <span class="line-no">L85-207</span>
             </h2>
             <div class="docstring"><p>Aligns the local point clouds to the global coordinate frame.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -389,9 +395,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">start_visualization</span> (<span class="arg-name">window</span>, <span class="arg-name">output_dict</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">10</span>, <span class="arg-name">global_conf_thr_value_to_drop_view</span> = <span class="arg-default">1.5</span>, <span class="arg-name">point_size</span> = <span class="arg-default">0.0004</span>)</code>
-                <span class="line-no">L205-214</span>
+                <span class="line-no">L209-219</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>处理模型输出并启动三维重建可视化。</p></div>
         </div>
         
 
@@ -399,9 +405,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">frame_processing</span> (<span class="arg-name">output</span>, <span class="arg-name">gui_global_conf_threshold</span>)</code>
-                <span class="line-no">L217-300</span>
+                <span class="line-no">L222-306</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>将模型输出处理为每帧可视化数据。</p></div>
         </div>
         
 
@@ -409,9 +415,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">reconstruction</span> (<span class="arg-name">window</span>, <span class="arg-name">frame_data_list</span>, <span class="arg-name">max_extent</span>, <span class="arg-name">gui_show_confidence_color</span>, <span class="arg-name">gui_rainbow_color_option</span>, <span class="arg-name">gui_show_global</span>, <span class="arg-name">gui_show_local</span>, <span class="arg-name">gui_point_size</span>)</code>
-                <span class="line-no">L302-400</span>
+                <span class="line-no">L308-408</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>在 VTK 窗口中渲染点云重建结果。</p></div>
         </div>
         
 
@@ -419,9 +425,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">on_left_click</span> (<span class="arg-name">obj</span>, <span class="arg-name">event</span>, <span class="arg-name">window</span>, <span class="arg-name">points</span>, <span class="arg-name">max_extent</span>)</code>
-                <span class="line-no">L402-443</span>
+                <span class="line-no">L410-452</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>处理鼠标左键点击事件，标记最近点或连接两点画线。</p></div>
         </div>
         
 </main>

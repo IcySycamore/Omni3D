@@ -1,3 +1,5 @@
+"""处理流程。"""
+
 import vtk
 from tqdm.auto import tqdm
 import numpy as np
@@ -15,6 +17,7 @@ last_sphere_actor = None
 before_sphere_actor = None
 last_line_actor = None
 def is_outdoor_scene(frame_data_list):
+    """根据天空像素比例判断场景是否为室外。"""
     sky_ratios = []
     for fd in frame_data_list:
         mask = fd.get('sorted_not_sky_global', np.ones(1))
@@ -24,6 +27,7 @@ def is_outdoor_scene(frame_data_list):
     return significant >= len(sky_ratios) / 4
 
 def rainbow_color(n, total):
+    """根据索引生成彩虹色。"""
     import colorsys
     hue = n / total
     return colorsys.hsv_to_rgb(hue, 1.0, 1.0)
@@ -202,8 +206,9 @@ def align_local_pts3d_to_global(preds, views, min_conf_thr_percentile=0):
         # Stack the aligned points back into a tensor of shape (B, H, W, 3)
         pred['pts3d_local_aligned_to_global'] = torch.stack(aligned_pts_dict[view_index], dim=0)
 
-def start_visualization(window,output_dict, min_conf_thr_percentile=10,
-                        global_conf_thr_value_to_drop_view=1.5,point_size=0.0004):
+def start_visualization(window, output_dict, min_conf_thr_percentile=10,
+                        global_conf_thr_value_to_drop_view=1.5, point_size=0.0004):
+    """处理模型输出并启动三维重建可视化。"""
     gui_global_conf_threshold=global_conf_thr_value_to_drop_view    #gui_global_conf_threshold根据用户选择
     gui_point_size=point_size
     gui_show_confidence_color = False#用户可选
@@ -214,7 +219,8 @@ def start_visualization(window,output_dict, min_conf_thr_percentile=10,
     reconstruction(window,frame_data_list,max_extent,gui_show_confidence_color,gui_rainbow_color_option,gui_show_global,gui_show_local,gui_point_size)
 
 
-def frame_processing(output,gui_global_conf_threshold):
+def frame_processing(output, gui_global_conf_threshold):
+    """将模型输出处理为每帧可视化数据。"""
     num_frames = len(output['preds'])
     frame_data_list = []
     cumulative_pts = []
@@ -299,7 +305,9 @@ def frame_processing(output,gui_global_conf_threshold):
 
     return frame_data_list,scene_extent
 
-def reconstruction(window,frame_data_list,max_extent,gui_show_confidence_color,gui_rainbow_color_option,gui_show_global,gui_show_local,gui_point_size):
+def reconstruction(window, frame_data_list, max_extent, gui_show_confidence_color,
+                   gui_rainbow_color_option, gui_show_global, gui_show_local, gui_point_size):
+    """在 VTK 窗口中渲染点云重建结果。"""
     print(len(frame_data_list))
     # Scene type detection and sky masking initialization
     is_outdoor = is_outdoor_scene(frame_data_list)
@@ -399,7 +407,8 @@ def reconstruction(window,frame_data_list,max_extent,gui_show_confidence_color,g
     # window.widget_3.render_window.GetInteractor().AddObserver("LeftButtonPressEvent", window.widget_3.on_left_click)
     window.widget_3.render_window.Render()
 
-def on_left_click(obj, event,window,points,max_extent):
+def on_left_click(obj, event, window, points, max_extent):
+    """处理鼠标左键点击事件，标记最近点或连接两点画线。"""
     global closest_point,last_sphere_actor,last_line_actor,before_sphere_actor
     # 获取鼠标点击位置的3D坐标
     click_pos = window.widget_3.get_click_position()

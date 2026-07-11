@@ -1,3 +1,5 @@
+"""VTK 控件。"""
+
 import sys
 import vtk
 import numpy as np
@@ -6,7 +8,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 class VTKWidget(QWidget):
+    """基于 VTK 的 3D 渲染控件。"""
+
     def __init__(self, parent=None):
+        """初始化 VTK 渲染窗口和交互器。"""
         super().__init__(parent)
         layout = QVBoxLayout(self)
         # 获取 QWidget 的位置（在窗口内的坐标）
@@ -38,6 +43,7 @@ class VTKWidget(QWidget):
     #     print(f"最近的点坐标: {closest_point}")
 
     def get_click_position(self):
+        """获取鼠标点击位置对应的三维世界坐标。"""
         # 获取鼠标点击的位置
         click_pos = self.vtk_widget.GetRenderWindow().GetInteractor().GetEventPosition()
 
@@ -50,7 +56,17 @@ class VTKWidget(QWidget):
         # print(f"World coordinates of clicked point: {world_pos}")
         return world_pos
 
-    def find_closest_point(self, click_pos,points,max_extent):
+    def find_closest_point(self, click_pos, points, max_extent):
+        """在点击位置附近搜索最近的点云点。
+
+        Args:
+            click_pos: 点击位置的三维坐标。
+            points: 点云数据。
+            max_extent: 点云最大范围，用于确定搜索半径。
+
+        Returns:
+            距离点击位置最近的点，若未找到则返回 None。
+        """
         # 定义搜索范围
         cube_half_length = max_extent*0.02
         closest_point = None

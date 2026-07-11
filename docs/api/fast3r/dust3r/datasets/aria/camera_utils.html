@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/aria/camera_utils.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>相机工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-VignetteCorrector">class VignetteCorrector</a></li>
 <li><a href="#func-undistort_fisheye_to_pinhole_rgbd">undistort_fisheye_to_pinhole_rgbd()</a></li>
@@ -333,7 +339,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">VignetteCorrector</span>
-                <span class="line-no">L85-116</span>
+                <span class="line-no">L87-118</span>
             </h2>
             <div class="docstring"><p>A class to apply vignette correction to an RGB image.</p></div>
             
@@ -344,7 +350,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">vignette_file</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L90-99</span>
+                    <span class="line-no">L92-101</span>
                 </div>
                 <div class="docstring"><p>Initialize the VignetteCorrector with a vignette file.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -356,7 +362,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">correct</span> (<span class="arg-name">rgb_image</span>)</code>
-                    <span class="line-no">L101-116</span>
+                    <span class="line-no">L103-118</span>
                 </div>
                 <div class="docstring"><p>Apply vignette correction to an RGB image.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -375,7 +381,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">undistort_fisheye_to_pinhole_rgbd</span> (<span class="arg-name">fisheye_img</span>, <span class="arg-name">fisheye_depth</span>, <span class="arg-name">fisheye_params</span>, <span class="arg-name">pinhole_params</span>)</code>
-                <span class="line-no">L13-82</span>
+                <span class="line-no">L15-84</span>
             </h2>
             <div class="docstring"><p>Undistort fisheye images and depth into pinhole camera images and depth.</p>
 <div class="doc-section"><strong>Inputs:</strong>
@@ -395,7 +401,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">sign_plus</span> (<span class="arg-name">x</span>)</code>
-                <span class="line-no">L123-130</span>
+                <span class="line-no">L125-132</span>
             </h2>
             <div class="docstring"><p>return +1 for positive and for 0.0 in x. This is important for our handling</p>
 <p>of z values that should never be 0.0</p></div>
@@ -407,7 +413,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.jit.script</span>
 
                 <code><span class="fn-name">fisheye624_project</span> (<span class="arg-name">xyz</span>, <span class="arg-name">params</span>)</code>
-                <span class="line-no">L134-245</span>
+                <span class="line-no">L136-247</span>
             </h2>
             <div class="docstring"><p>Batched implementation of the FisheyeRadTanThinPrism (aka Fisheye624) camera</p>
 <p>model project() function.</p>
@@ -449,7 +455,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.jit.script</span>
 
                 <code><span class="fn-name">fisheye624_unproject</span> (<span class="arg-name">uv</span>, <span class="arg-name">params</span>, <span class="arg-name">max_iters</span>: <span class="arg-type">int</span> = <span class="arg-default">5</span>)</code>
-                <span class="line-no">L249-414</span>
+                <span class="line-no">L251-416</span>
             </h2>
             <div class="docstring"><p>Batched implementation of the FisheyeRadTanThinPrism (aka Fisheye624) camera</p>
 <p>model. There is no analytical solution for the inverse of the project()</p>
@@ -478,7 +484,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">pinhole_project</span> (<span class="arg-name">xyz</span>, <span class="arg-name">params</span>)</code>
-                <span class="line-no">L417-443</span>
+                <span class="line-no">L419-445</span>
             </h2>
             <div class="docstring"><p>Batched implementation of the Pinhole (aka Linear) camera</p>
 <p>model project() function.</p>
@@ -497,7 +503,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">pinhole_unproject</span> (<span class="arg-name">uv</span>, <span class="arg-name">params</span>, <span class="arg-name">max_iters</span>: <span class="arg-type">int</span> = <span class="arg-default">5</span>)</code>
-                <span class="line-no">L446-471</span>
+                <span class="line-no">L448-473</span>
             </h2>
             <div class="docstring"><p>Batched implementation of the Pinhole (aka Linear) camera</p>
 <p>model.</p>

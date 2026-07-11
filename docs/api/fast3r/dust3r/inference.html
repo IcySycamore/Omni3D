@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/inference.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>推理。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-_interleave_imgs">_interleave_imgs()</a></li>
 <li><a href="#func-make_batch_symmetric">make_batch_symmetric()</a></li>
@@ -333,7 +339,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_interleave_imgs</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                <span class="line-no">L21-39</span>
+                <span class="line-no">L23-41</span>
             </h2>
             <div class="docstring"><p>将两个图像字典按样本交错合并。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -350,7 +356,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">make_batch_symmetric</span> (<span class="arg-name">batch</span>)</code>
-                <span class="line-no">L42-53</span>
+                <span class="line-no">L44-55</span>
             </h2>
             <div class="docstring"><p>将批次数据对称化（同时考虑正向和反向图像对）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -366,7 +372,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">loss_of_one_batch</span> (<span class="arg-name">batch</span>, <span class="arg-name">model</span>, <span class="arg-name">criterion</span>, <span class="arg-name">device</span>, <span class="arg-name">symmetrize_batch</span> = <span class="arg-default">False</span>, <span class="arg-name">use_amp</span> = <span class="arg-default">False</span>, <span class="arg-name">ret</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L56-98</span>
+                <span class="line-no">L58-100</span>
             </h2>
             <div class="docstring"><p>对单个批次进行推理并计算损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -390,7 +396,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">inference</span> (<span class="arg-name">pairs</span>, <span class="arg-name">model</span>, <span class="arg-name">device</span>, <span class="arg-name">batch_size</span> = <span class="arg-default">8</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L102-132</span>
+                <span class="line-no">L104-134</span>
             </h2>
             <div class="docstring"><p>对图像对列表进行批量推理。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -410,7 +416,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">check_if_same_size</span> (<span class="arg-name">pairs</span>)</code>
-                <span class="line-no">L135-148</span>
+                <span class="line-no">L137-150</span>
             </h2>
             <div class="docstring"><p>检查所有图像对中的图像是否具有相同尺寸。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -426,7 +432,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_pred_pts3d</span> (<span class="arg-name">gt</span>, <span class="arg-name">pred</span>, <span class="arg-name">use_pose</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L151-185</span>
+                <span class="line-no">L153-187</span>
             </h2>
             <div class="docstring"><p>从模型预测中提取 3D 点云。</p>
 <p>根据预测字典中的键（&#x27;depth&#x27;/&#x27;pts3d&#x27;/&#x27;pts3d_in_other_view&#x27;）选择不同提取策略。</p>
@@ -445,7 +451,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">find_opt_scaling</span> (<span class="arg-name">gt_pts1</span>, <span class="arg-name">gt_pts2</span>, <span class="arg-name">pr_pts1</span>, <span class="arg-name">pr_pts2</span> = <span class="arg-default">None</span>, <span class="arg-name">fit_mode</span> = <span class="arg-default">&#x27;weiszfeld_stop_grad&#x27;</span>, <span class="arg-name">valid1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid2</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L188-263</span>
+                <span class="line-no">L190-265</span>
             </h2>
             <div class="docstring"><p>找到使预测点云与真实点云最对齐的最优缩放因子。</p>
 <div class="doc-section"><strong>Args:</strong>

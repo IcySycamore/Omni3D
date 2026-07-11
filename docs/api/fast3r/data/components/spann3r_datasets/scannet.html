@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/components/spann3r_datasets/scannet.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>ScanNet 数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-Scannet">class Scannet</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Scannet</span>(BaseManyViewDataset)
-                <span class="line-no">L17-137</span>
+                <span class="line-no">L19-139</span>
             </h2>
             <div class="docstring"><p>ScanNet 多视图数据集，基于 SPlan3R 序列采样。</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_seq</span> = <span class="arg-default">100</span>, <span class="arg-name">num_frames</span> = <span class="arg-default">5</span>, <span class="arg-name">min_thresh</span> = <span class="arg-default">10</span>, <span class="arg-name">max_thresh</span> = <span class="arg-default">100</span>, <span class="arg-name">test_id</span> = <span class="arg-default">None</span>, <span class="arg-name">full_video</span> = <span class="arg-default">False</span>, <span class="arg-name">kf_every</span> = <span class="arg-default">1</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L20-47</span>
+                    <span class="line-no">L22-49</span>
                 </div>
                 <div class="docstring"><p>初始化 ScanNet 数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -357,7 +363,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L49-51</span>
+                    <span class="line-no">L51-53</span>
                 </div>
                 <div class="docstring"><p>返回场景数与序列数的乘积。</p></div>
             </div>
@@ -366,7 +372,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_all_scenes</span> (<span class="arg-name">base_dir</span>)</code>
-                    <span class="line-no">L53-75</span>
+                    <span class="line-no">L55-77</span>
                 </div>
                 <div class="docstring"><p>加载所有场景列表。</p></div>
             </div>
@@ -375,7 +381,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>, <span class="arg-name">attempts</span> = <span class="arg-default">0</span>)</code>
-                    <span class="line-no">L77-137</span>
+                    <span class="line-no">L79-139</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的多个视图。</p></div>
             </div>

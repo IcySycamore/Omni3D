@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/inference_multiview.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>多视图推理。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-loss_of_one_batch">loss_of_one_batch()</a></li>
 <li><a href="#func-inference">inference()</a></li>
@@ -331,7 +337,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">loss_of_one_batch</span> (<span class="arg-name">batch</span>, <span class="arg-name">model</span>, <span class="arg-name">criterion</span>, <span class="arg-name">device</span>, <span class="arg-name">precision</span>, <span class="arg-name">symmetrize_batch</span> = <span class="arg-default">False</span>, <span class="arg-name">use_amp</span> = <span class="arg-default">False</span>, <span class="arg-name">ret</span> = <span class="arg-default">None</span>, <span class="arg-name">profiling</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L22-61</span>
+                <span class="line-no">L24-63</span>
             </h2>
             <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    batch (list[dict]): a list of views, each view is a dict of tensors, the tensors are batched</div>
@@ -344,7 +350,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">inference</span> (<span class="arg-name">multiple_views_in_one_sample</span>, <span class="arg-name">model</span>, <span class="arg-name">device</span>, <span class="arg-name">dtype</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>, <span class="arg-name">profiling</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L65-109</span>
+                <span class="line-no">L67-111</span>
             </h2>
             <div class="docstring"><p>对多视角图像进行模型推理。</p>
 <p>将同一组视图送入模型前向传播，返回预测结果。</p>
@@ -367,7 +373,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">check_if_same_size</span> (<span class="arg-name">imgs</span>)</code>
-                <span class="line-no">L112-122</span>
+                <span class="line-no">L114-124</span>
             </h2>
             <div class="docstring"><p>检查一组图像是否具有相同的像素尺寸。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -383,7 +389,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_pred_pts3d</span> (<span class="arg-name">gt</span>, <span class="arg-name">pred</span>, <span class="arg-name">use_pose</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L125-160</span>
+                <span class="line-no">L127-162</span>
             </h2>
             <div class="docstring"><p>从模型预测结果中提取 3D 点坐标。</p>
 <p>支持从 depth + pseudo_focal、pts3d 或 pts3d_in_other_view 三种模式提取。</p>
@@ -403,7 +409,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">find_opt_scaling</span> (<span class="arg-name">gt_pts1</span>, <span class="arg-name">gt_pts2</span>, <span class="arg-name">pr_pts1</span>, <span class="arg-name">pr_pts2</span> = <span class="arg-default">None</span>, <span class="arg-name">fit_mode</span> = <span class="arg-default">&#x27;weiszfeld_stop_grad&#x27;</span>, <span class="arg-name">valid1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid2</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L163-240</span>
+                <span class="line-no">L165-242</span>
             </h2>
             <div class="docstring"><p>通过最小化预测点云与真实点云之间的尺度差异，计算最优尺度因子。</p>
 <p>支持多种拟合模式：均值（avg）、中位数（median）、Weiszfeld 迭代加权。</p>

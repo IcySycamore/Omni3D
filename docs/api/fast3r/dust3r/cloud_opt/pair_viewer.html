@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/pair_viewer.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>图像对查看器。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-PairViewer">class PairViewer</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PairViewer</span>(BasePCOptimizer)
-                <span class="line-no">L24-229</span>
+                <span class="line-no">L26-231</span>
             </h2>
             <div class="docstring"><p>This a Dummy Optimizer.</p>
 <p>To use only when the goal is to visualize the results for a pair of images (with is_symmetrized)</p></div>
@@ -339,7 +345,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L30-121</span>
+                    <span class="line-no">L32-123</span>
                 </div>
                 <div class="docstring"><p>Initialize the PairViewer by estimating focal lengths and relative poses.</p>
 <p>Computes focal lengths via the Weiszfeld algorithm, estimates the</p>
@@ -359,7 +365,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_depthmap</span> (<span class="arg-name">idx</span>, <span class="arg-name">depth</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L123-133</span>
+                    <span class="line-no">L125-135</span>
                 </div>
                 <div class="docstring"><p>No-op: depth maps are fixed in PairViewer and cannot be overwritten.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -373,7 +379,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_depthmaps</span> (<span class="arg-name">raw</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L135-145</span>
+                    <span class="line-no">L137-147</span>
                 </div>
                 <div class="docstring"><p>Return the fixed depth maps stored during initialization.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -388,7 +394,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_focal</span> (<span class="arg-name">idx</span>, <span class="arg-name">focal</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L147-155</span>
+                    <span class="line-no">L149-157</span>
                 </div>
                 <div class="docstring"><p>Set the focal length for image *idx*.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -402,7 +408,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_focals</span> ()</code>
-                    <span class="line-no">L157-163</span>
+                    <span class="line-no">L159-165</span>
                 </div>
                 <div class="docstring"><p>Return the stored focal lengths.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -414,7 +420,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_known_focal_mask</span> ()</code>
-                    <span class="line-no">L165-171</span>
+                    <span class="line-no">L167-173</span>
                 </div>
                 <div class="docstring"><p>Return a boolean mask indicating which focals are frozen.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -426,7 +432,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_principal_points</span> ()</code>
-                    <span class="line-no">L173-179</span>
+                    <span class="line-no">L175-181</span>
                 </div>
                 <div class="docstring"><p>Return the stored principal points.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -438,7 +444,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_intrinsics</span> ()</code>
-                    <span class="line-no">L181-194</span>
+                    <span class="line-no">L183-196</span>
                 </div>
                 <div class="docstring"><p>Return per-image 3x3 intrinsic (K) matrices.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -450,7 +456,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_im_poses</span> ()</code>
-                    <span class="line-no">L196-202</span>
+                    <span class="line-no">L198-204</span>
                 </div>
                 <div class="docstring"><p>Return the stored cam-to-world pose matrices.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -462,7 +468,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">depth_to_pts3d</span> ()</code>
-                    <span class="line-no">L204-221</span>
+                    <span class="line-no">L206-223</span>
                 </div>
                 <div class="docstring"><p>Convert fixed depth maps to 3D point maps in world coordinates.</p>
 <p>Projects each pixel through the camera intrinsics and applies the</p>
@@ -476,7 +482,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> ()</code>
-                    <span class="line-no">L223-229</span>
+                    <span class="line-no">L225-231</span>
                 </div>
                 <div class="docstring"><p>Return NaN as the alignment loss (PairViewer does not optimize).</p>
 <div class="doc-section"><strong>Returns:</strong>

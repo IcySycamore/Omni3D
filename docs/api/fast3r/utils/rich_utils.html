@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/utils/rich_utils.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Rich 工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-print_config_tree">print_config_tree()</a></li>
 <li><a href="#func-enforce_tags">enforce_tags()</a></li>
@@ -329,7 +335,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@rank_zero_only</span>
 
                 <code><span class="fn-name">print_config_tree</span> (<span class="arg-name">cfg</span>: <span class="arg-type">DictConfig</span>, <span class="arg-name">print_order</span>: <span class="arg-type">Sequence[str]</span> = <span class="arg-default">(&#x27;data&#x27;, &#x27;model&#x27;, &#x27;callbacks&#x27;, &#x27;logger&#x27;, &#x27;trainer&#x27;, &#x27;paths&#x27;, &#x27;extras&#x27;)</span>, <span class="arg-name">resolve</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">save_to_file</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>)  -> <span class="ret-type">None</span></code>
-                <span class="line-no">L24-80</span>
+                <span class="line-no">L26-82</span>
             </h2>
             <div class="docstring"><p>Prints the contents of a DictConfig as a tree structure using the Rich library.</p>
 <p>:param cfg: A DictConfig composed by Hydra.</p>
@@ -345,7 +351,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@rank_zero_only</span>
 
                 <code><span class="fn-name">enforce_tags</span> (<span class="arg-name">cfg</span>: <span class="arg-type">DictConfig</span>, <span class="arg-name">save_to_file</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>)  -> <span class="ret-type">None</span></code>
-                <span class="line-no">L84-105</span>
+                <span class="line-no">L86-107</span>
             </h2>
             <div class="docstring"><p>Prompts user to input tags from command line if no tags are provided in config.</p>
 <p>:param cfg: A DictConfig composed by Hydra.</p>

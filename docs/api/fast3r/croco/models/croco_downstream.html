@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/croco_downstream.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>croco downstream。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-CroCoDownstreamMonocularEncoder">class CroCoDownstreamMonocularEncoder</a></li>
 <li><a href="#class-CroCoDownstreamBinocular">class CroCoDownstreamBinocular</a></li>
@@ -329,7 +335,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CroCoDownstreamMonocularEncoder</span>(CroCoNet)
-                <span class="line-no">L49-92</span>
+                <span class="line-no">L51-94</span>
             </h2>
             <div class="docstring"><p>单目下游任务编码器，仅使用 CroCo 的编码器部分。</p></div>
             
@@ -340,7 +346,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">head</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L51-61</span>
+                    <span class="line-no">L53-63</span>
                 </div>
                 <div class="docstring"><p>Build network for monocular downstream task, only using the encoder.</p>
 <p>It takes an extra argument head, that is called with the features</p>
@@ -353,7 +359,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_generator</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L63-65</span>
+                    <span class="line-no">L65-67</span>
                 </div>
                 <div class="docstring"><p>No mask generator</p></div>
             </div>
@@ -362,7 +368,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_token</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L67-70</span>
+                    <span class="line-no">L69-72</span>
                 </div>
                 <div class="docstring"><p>No mask token</p></div>
             </div>
@@ -371,7 +377,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_decoder</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L72-74</span>
+                    <span class="line-no">L74-76</span>
                 </div>
                 <div class="docstring"><p>No decoder</p></div>
             </div>
@@ -380,7 +386,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L76-78</span>
+                    <span class="line-no">L78-80</span>
                 </div>
                 <div class="docstring"><p>No &#x27;prediction head&#x27; for downstream tasks.</p></div>
             </div>
@@ -389,7 +395,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img</span>)</code>
-                    <span class="line-no">L80-92</span>
+                    <span class="line-no">L82-94</span>
                 </div>
                 <div class="docstring"><p>img if of size batch_size x 3 x h x w</p></div>
             </div>
@@ -402,7 +408,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CroCoDownstreamBinocular</span>(CroCoNet)
-                <span class="line-no">L95-161</span>
+                <span class="line-no">L97-163</span>
             </h2>
             <div class="docstring"><p>双目下游任务模型，使用 CroCo 的编码器+解码器。</p></div>
             
@@ -413,7 +419,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">head</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L97-105</span>
+                    <span class="line-no">L99-107</span>
                 </div>
                 <div class="docstring"><p>Build network for binocular downstream task</p>
 <p>It takes an extra argument head, that is called with the features</p>
@@ -425,7 +431,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_generator</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L107-109</span>
+                    <span class="line-no">L109-111</span>
                 </div>
                 <div class="docstring"><p>No mask generator</p></div>
             </div>
@@ -434,7 +440,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_mask_token</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L111-114</span>
+                    <span class="line-no">L113-116</span>
                 </div>
                 <div class="docstring"><p>No mask token</p></div>
             </div>
@@ -443,7 +449,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L116-118</span>
+                    <span class="line-no">L118-120</span>
                 </div>
                 <div class="docstring"><p>No prediction head for downstream tasks, define your own head</p></div>
             </div>
@@ -452,7 +458,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">encode_image_pairs</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">return_all_blocks</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L120-140</span>
+                    <span class="line-no">L122-142</span>
                 </div>
                 <div class="docstring"><p>run encoder for a pair of images</p>
 <p>it is actually ~5% faster to concatenate the images along the batch dimension</p>
@@ -463,7 +469,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>)</code>
-                    <span class="line-no">L142-161</span>
+                    <span class="line-no">L144-163</span>
                 </div>
                 <div class="docstring"><p>双目前向传播，编码图像对并通过解码器和预测头。</p></div>
             </div>
@@ -476,7 +482,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">croco_args_from_ckpt</span> (<span class="arg-name">ckpt</span>)</code>
-                <span class="line-no">L19-46</span>
+                <span class="line-no">L21-48</span>
             </h2>
             <div class="docstring"><p>从检查点中提取 CroCo 模型参数。</p>
 <p>支持三种格式的检查点：</p>

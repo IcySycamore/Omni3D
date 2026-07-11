@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/utils/cropping.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>裁剪工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-ImageList">class ImageList</a></li>
 <li><a href="#func-rescale_image_depthmap">rescale_image_depthmap()</a></li>
@@ -331,7 +337,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ImageList</span>
-                <span class="line-no">L27-69</span>
+                <span class="line-no">L29-71</span>
             </h2>
             <div class="docstring"><p>Convenience class to aply the same operation to a whole set of images.</p></div>
             
@@ -342,7 +348,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">images</span>)</code>
-                    <span class="line-no">L31-43</span>
+                    <span class="line-no">L33-45</span>
                 </div>
                 <div class="docstring"><p>初始化 ImageList。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -354,7 +360,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L45-47</span>
+                    <span class="line-no">L47-49</span>
                 </div>
                 <div class="docstring"><p>返回图像数量。</p></div>
             </div>
@@ -363,7 +369,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">to_pil</span> ()</code>
-                    <span class="line-no">L49-51</span>
+                    <span class="line-no">L51-53</span>
                 </div>
                 <div class="docstring"><p>返回 PIL Image 元组或单个 Image。</p></div>
             </div>
@@ -372,7 +378,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">size</span> ()</code>
-                    <span class="line-no">L54-57</span>
+                    <span class="line-no">L56-59</span>
                 </div>
                 <div class="docstring"><p>返回所有图像的统一尺寸 (W, H)。</p></div>
             </div>
@@ -381,7 +387,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">resize</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L59-61</span>
+                    <span class="line-no">L61-63</span>
                 </div>
                 <div class="docstring"><p>批量调整图像大小。</p></div>
             </div>
@@ -390,7 +396,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">crop</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L63-65</span>
+                    <span class="line-no">L65-67</span>
                 </div>
                 <div class="docstring"><p>批量裁剪图像。</p></div>
             </div>
@@ -399,7 +405,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_dispatch</span> (<span class="arg-name">func</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L67-69</span>
+                    <span class="line-no">L69-71</span>
                 </div>
                 <div class="docstring"><p>将方法调用分发到所有图像。</p></div>
             </div>
@@ -412,7 +418,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rescale_image_depthmap</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">camera_intrinsics</span>, <span class="arg-name">output_resolution</span>, <span class="arg-name">force</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L72-100</span>
+                <span class="line-no">L74-102</span>
             </h2>
             <div class="docstring"><p>Jointly rescale a (image, depthmap) </p>
 <p>so that (out_width, out_height) &gt;= output_res</p></div>
@@ -423,7 +429,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">camera_matrix_of_crop</span> (<span class="arg-name">input_camera_matrix</span>, <span class="arg-name">input_resolution</span>, <span class="arg-name">output_resolution</span>, <span class="arg-name">scaling</span> = <span class="arg-default">1</span>, <span class="arg-name">offset_factor</span> = <span class="arg-default">0.5</span>, <span class="arg-name">offset</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L103-128</span>
+                <span class="line-no">L105-130</span>
             </h2>
             <div class="docstring"><p>根据裁剪参数计算新的相机内参矩阵。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -444,7 +450,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">crop_image_depthmap</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">camera_intrinsics</span>, <span class="arg-name">crop_bbox</span>)</code>
-                <span class="line-no">L131-146</span>
+                <span class="line-no">L133-148</span>
             </h2>
             <div class="docstring"><p>Return a crop of the input view.</p></div>
         </div>
@@ -454,7 +460,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">bbox_from_intrinsics_in_out</span> (<span class="arg-name">input_camera_matrix</span>, <span class="arg-name">output_camera_matrix</span>, <span class="arg-name">output_resolution</span>)</code>
-                <span class="line-no">L149-163</span>
+                <span class="line-no">L151-165</span>
             </h2>
             <div class="docstring"><p>根据输入输出相机内参计算裁剪边界框。</p>
 <div class="doc-section"><strong>Args:</strong>

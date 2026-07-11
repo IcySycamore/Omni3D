@@ -312,13 +312,19 @@ td a:hover { text-decoration: underline; }
             <span>📁 1 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 2 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/__init__.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>点云优化。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-GlobalAlignerMode">class GlobalAlignerMode</a></li>
 <li><a href="#func-global_aligner">global_aligner()</a></li>
@@ -328,9 +334,9 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">GlobalAlignerMode</span>(Enum)
-                <span class="line-no">L20-23</span>
+                <span class="line-no">L22-27</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>全局对齐优化器模式。</p></div>
             <div class="class-vars"><strong>类变量:</strong> <code>PointCloudOptimizer</code>, <code>ModularPointCloudOptimizer</code>, <code>PairViewer</code></div>
             <div class="methods">
                 <h3>方法</h3>
@@ -343,9 +349,18 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">global_aligner</span> (<span class="arg-name">dust3r_output</span>, <span class="arg-name">device</span>, <span class="arg-name">mode</span> = <span class="arg-default">GlobalAlignerMode.PointCloudOptimizer</span>, <span class="arg-name">**optim_kw</span>)</code>
-                <span class="line-no">L26-45</span>
+                <span class="line-no">L30-60</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>创建全局对齐优化器实例。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dust3r_output: DUSt3R 模型输出，包含 view1、view2、pred1、pred2。</div>
+<div class="doc-detail">    device: 运行设备。</div>
+<div class="doc-detail">    mode: 优化器模式，决定使用哪种优化器。</div>
+<div class="doc-detail">    **optim_kw: 优化器额外参数。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    配置好的优化器网络实例。</div>
+</div></div>
         </div>
         
 </main>

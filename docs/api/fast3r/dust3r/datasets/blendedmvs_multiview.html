@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/blendedmvs_multiview.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>BlendedMVS 多视图数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-BlendedMVS_Multiview">class BlendedMVS_Multiview</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BlendedMVS_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L14-124</span>
+                <span class="line-no">L16-126</span>
             </h2>
             <div class="docstring"><p>Multi-view Dataset of BlendedMVS scenes.</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">num_samples_per_window</span> = <span class="arg-default">10</span>, <span class="arg-name">window_size</span> = <span class="arg-default">6</span>, <span class="arg-name">ordered</span> = <span class="arg-default">False</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">split</span> = <span class="arg-default">None</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L17-35</span>
+                    <span class="line-no">L19-37</span>
                 </div>
                 <div class="docstring"><p>初始化 BlendedMVS 多视图数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -355,7 +361,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_data</span> (<span class="arg-name">split</span>)</code>
-                    <span class="line-no">L37-60</span>
+                    <span class="line-no">L39-62</span>
                 </div>
                 <div class="docstring"><p>加载预处理后的图像对数据。</p></div>
             </div>
@@ -364,7 +370,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_combinations</span> ()</code>
-                    <span class="line-no">L62-89</span>
+                    <span class="line-no">L64-91</span>
                 </div>
                 <div class="docstring"><p>Generate combinations of image indices for multi-view sampling.</p></div>
             </div>
@@ -373,7 +379,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L91-93</span>
+                    <span class="line-no">L93-95</span>
                 </div>
                 <div class="docstring"><p>返回组合数量。</p></div>
             </div>
@@ -382,7 +388,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L95-124</span>
+                    <span class="line-no">L97-126</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的多个视图。</p></div>
             </div>

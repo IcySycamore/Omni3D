@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/image_pairs.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>图像对处理。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-make_pairs">make_pairs()</a></li>
 <li><a href="#func-sel">sel()</a></li>
@@ -331,7 +337,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">make_pairs</span> (<span class="arg-name">imgs</span>, <span class="arg-name">scene_graph</span> = <span class="arg-default">&#x27;complete&#x27;</span>, <span class="arg-name">prefilter</span> = <span class="arg-default">None</span>, <span class="arg-name">symmetrize</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L17-61</span>
+                <span class="line-no">L19-63</span>
             </h2>
             <div class="docstring"><p>根据场景图策略从图像列表中生成图像对。</p>
 <p>支持 ``complete``（全连接）、``swin-{winsize}``（滑动窗口）、</p>
@@ -352,7 +358,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">sel</span> (<span class="arg-name">x</span>, <span class="arg-name">kept</span>)</code>
-                <span class="line-no">L64-79</span>
+                <span class="line-no">L66-81</span>
             </h2>
             <div class="docstring"><p>根据索引 ``kept`` 从张量、数组或字典中选择元素。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -369,7 +375,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_filter_edges_seq</span> (<span class="arg-name">edges</span>, <span class="arg-name">seq_dis_thr</span>, <span class="arg-name">cyclic</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L82-103</span>
+                <span class="line-no">L84-105</span>
             </h2>
             <div class="docstring"><p>根据序列距离阈值过滤边（内部辅助函数）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -387,7 +393,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">filter_pairs_seq</span> (<span class="arg-name">pairs</span>, <span class="arg-name">seq_dis_thr</span>, <span class="arg-name">cyclic</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L106-119</span>
+                <span class="line-no">L108-121</span>
             </h2>
             <div class="docstring"><p>根据序列距离阈值过滤图像对。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -405,7 +411,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">filter_edges_seq</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">seq_dis_thr</span>, <span class="arg-name">cyclic</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L122-141</span>
+                <span class="line-no">L124-143</span>
             </h2>
             <div class="docstring"><p>根据序列距离阈值过滤视图和预测结果中的边。</p>
 <div class="doc-section"><strong>Args:</strong>

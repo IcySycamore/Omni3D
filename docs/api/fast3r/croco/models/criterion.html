@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/criterion.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>损失函数。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-MaskedMSE">class MaskedMSE</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MaskedMSE</span>(torch.nn.Module)
-                <span class="line-no">L20-59</span>
+                <span class="line-no">L22-61</span>
             </h2>
             <div class="docstring"><p>带掩码的 MSE 损失函数，用于 CroCo 预训练。</p>
 <p>支持对被掩码的 patch 计算损失，并可选地按 patch 像素均值/方差归一化。</p></div>
@@ -339,7 +345,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">norm_pix_loss</span> = <span class="arg-default">False</span>, <span class="arg-name">masked</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L26-35</span>
+                    <span class="line-no">L28-37</span>
                 </div>
                 <div class="docstring"><p>初始化 MaskedMSE。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -352,7 +358,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">pred</span>, <span class="arg-name">mask</span>, <span class="arg-name">target</span>)</code>
-                    <span class="line-no">L37-59</span>
+                    <span class="line-no">L39-61</span>
                 </div>
                 <div class="docstring"><p>计算带掩码的 MSE 损失。</p>
 <div class="doc-section"><strong>Args:</strong>

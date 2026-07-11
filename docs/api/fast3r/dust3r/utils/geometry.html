@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/geometry.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>几何工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-xy_grid">xy_grid()</a></li>
 <li><a href="#func-geotrf">geotrf()</a></li>
@@ -339,7 +345,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">xy_grid</span> (<span class="arg-name">W</span>, <span class="arg-name">H</span>, <span class="arg-name">device</span> = <span class="arg-default">None</span>, <span class="arg-name">origin</span> = <span class="arg-default">(0, 0)</span>, <span class="arg-name">unsqueeze</span> = <span class="arg-default">None</span>, <span class="arg-name">cat_dim</span> = <span class="arg-default">-1</span>, <span class="arg-name">homogeneous</span> = <span class="arg-default">False</span>, <span class="arg-name">**arange_kw</span>)</code>
-                <span class="line-no">L21-52</span>
+                <span class="line-no">L23-54</span>
             </h2>
             <div class="docstring"><p>Output a (H,W,2) array of int32</p>
 <p>with output[j,i,0] = i + origin[0]</p>
@@ -351,7 +357,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">geotrf</span> (<span class="arg-name">Trf</span>, <span class="arg-name">pts</span>, <span class="arg-name">ncol</span> = <span class="arg-default">None</span>, <span class="arg-name">norm</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L55-123</span>
+                <span class="line-no">L57-125</span>
             </h2>
             <div class="docstring"><p>Apply a geometric transformation to a list of 3-D points.</p>
 <p>H: 3x3 or 4x4 projection matrix (typically a Homography)</p>
@@ -366,7 +372,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">inv</span> (<span class="arg-name">mat</span>)</code>
-                <span class="line-no">L126-132</span>
+                <span class="line-no">L128-134</span>
             </h2>
             <div class="docstring"><p>Invert a torch or numpy matrix</p></div>
         </div>
@@ -376,7 +382,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">depthmap_to_pts3d</span> (<span class="arg-name">depth</span>, <span class="arg-name">pseudo_focal</span>, <span class="arg-name">pp</span> = <span class="arg-default">None</span>, <span class="arg-name">**_</span>)</code>
-                <span class="line-no">L135-183</span>
+                <span class="line-no">L137-185</span>
             </h2>
             <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    - depthmap (BxHxW array):</div>
@@ -392,7 +398,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">depthmap_to_camera_coordinates</span> (<span class="arg-name">depthmap</span>, <span class="arg-name">camera_intrinsics</span>, <span class="arg-name">pseudo_focal</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L186-218</span>
+                <span class="line-no">L188-220</span>
             </h2>
             <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    - depthmap (HxW array):</div>
@@ -408,7 +414,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">depthmap_to_absolute_camera_coordinates</span> (<span class="arg-name">depthmap</span>, <span class="arg-name">camera_intrinsics</span>, <span class="arg-name">camera_pose</span>, <span class="arg-name">**kw</span>)</code>
-                <span class="line-no">L221-243</span>
+                <span class="line-no">L223-245</span>
             </h2>
             <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    - depthmap (HxW array):</div>
@@ -425,7 +431,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">colmap_to_opencv_intrinsics</span> (<span class="arg-name">K</span>)</code>
-                <span class="line-no">L246-256</span>
+                <span class="line-no">L248-258</span>
             </h2>
             <div class="docstring"><p>Modify camera intrinsics to follow a different convention.</p>
 <p>Coordinates of the center of the top-left pixels are by default:</p>
@@ -438,7 +444,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">opencv_to_colmap_intrinsics</span> (<span class="arg-name">K</span>)</code>
-                <span class="line-no">L259-269</span>
+                <span class="line-no">L261-271</span>
             </h2>
             <div class="docstring"><p>Modify camera intrinsics to follow a different convention.</p>
 <p>Coordinates of the center of the top-left pixels are by default:</p>
@@ -451,7 +457,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">normalize_pointcloud</span> (<span class="arg-name">pts1</span>, <span class="arg-name">pts2</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid2</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L272-335</span>
+                <span class="line-no">L274-337</span>
             </h2>
             <div class="docstring"><p>renorm pointmaps pts1, pts2 with norm_mode</p></div>
         </div>
@@ -462,7 +468,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">get_joint_pointcloud_depth</span> (<span class="arg-name">z1</span>, <span class="arg-name">z2</span>, <span class="arg-name">valid_mask1</span>, <span class="arg-name">valid_mask2</span> = <span class="arg-default">None</span>, <span class="arg-name">quantile</span> = <span class="arg-default">0.5</span>)</code>
-                <span class="line-no">L339-368</span>
+                <span class="line-no">L341-370</span>
             </h2>
             <div class="docstring"><p>计算联合点云的深度中位数（或分位数）。</p>
 <p>将两个视图的深度值合并后计算分位数，用于全局尺度对齐。</p>
@@ -484,7 +490,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">get_joint_pointcloud_center_scale</span> (<span class="arg-name">pts1</span>, <span class="arg-name">pts2</span>, <span class="arg-name">valid_mask1</span> = <span class="arg-default">None</span>, <span class="arg-name">valid_mask2</span> = <span class="arg-default">None</span>, <span class="arg-name">z_only</span> = <span class="arg-default">False</span>, <span class="arg-name">center</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L372-409</span>
+                <span class="line-no">L374-411</span>
             </h2>
             <div class="docstring"><p>计算联合点云的中心和缩放因子。</p>
 <p>基于中位数计算点云中心和尺度，用于归一化。</p>
@@ -508,7 +514,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">find_reciprocal_matches</span> (<span class="arg-name">P1</span>, <span class="arg-name">P2</span>)</code>
-                <span class="line-no">L412-428</span>
+                <span class="line-no">L414-430</span>
             </h2>
             <div class="docstring"><p>returns 3 values:</p>
 <p>1 - reciprocal_in_P2: a boolean array of size P2.shape[0], a &quot;True&quot; value indicates a match</p>
@@ -521,7 +527,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_med_dist_between_poses</span> (<span class="arg-name">poses</span>)</code>
-                <span class="line-no">L431-442</span>
+                <span class="line-no">L433-444</span>
             </h2>
             <div class="docstring"><p>计算多个相机位姿之间平移距离的中位数。</p>
 <div class="doc-section"><strong>Args:</strong>

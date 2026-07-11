@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/cloud_opt/modular_optimizer.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>模块化优化器。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-ModularPointCloudOptimizer">class ModularPointCloudOptimizer</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ModularPointCloudOptimizer</span>(BasePCOptimizer)
-                <span class="line-no">L22-344</span>
+                <span class="line-no">L24-346</span>
             </h2>
             <div class="docstring"><p>Optimize a global scene, given a list of pairwise observations.</p>
 <p>Unlike PointCloudOptimizer, you can fix parts of the optimization process (partial poses/intrinsics)</p>
@@ -341,7 +347,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">optimize_pp</span> = <span class="arg-default">False</span>, <span class="arg-name">fx_and_fy</span> = <span class="arg-default">False</span>, <span class="arg-name">focal_brake</span> = <span class="arg-default">20</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L29-66</span>
+                    <span class="line-no">L31-68</span>
                 </div>
                 <div class="docstring"><p>Initialize the modular point cloud optimizer.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -362,7 +368,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_pose</span> (<span class="arg-name">known_poses</span>, <span class="arg-name">pose_msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L68-92</span>
+                    <span class="line-no">L70-94</span>
                 </div>
                 <div class="docstring"><p>Preset (freeze) camera poses for a subset of images.</p>
 <p>Sets the specified cam-to-world poses and disables gradient</p>
@@ -380,7 +386,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_intrinsics</span> (<span class="arg-name">known_intrinsics</span>, <span class="arg-name">msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L94-112</span>
+                    <span class="line-no">L96-114</span>
                 </div>
                 <div class="docstring"><p>Preset (freeze) camera intrinsics for a subset of images.</p>
 <p>Decomposes each 3x3 intrinsic matrix *K* into a focal length</p>
@@ -398,7 +404,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_focal</span> (<span class="arg-name">known_focals</span>, <span class="arg-name">msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L114-125</span>
+                    <span class="line-no">L116-127</span>
                 </div>
                 <div class="docstring"><p>Preset (freeze) focal lengths for a subset of images.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -412,7 +418,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">preset_principal_point</span> (<span class="arg-name">known_pp</span>, <span class="arg-name">msk</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L127-139</span>
+                    <span class="line-no">L129-141</span>
                 </div>
                 <div class="docstring"><p>Preset (freeze) principal points for a subset of images.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -427,7 +433,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_no_grad</span> (<span class="arg-name">tensor</span>)</code>
-                    <span class="line-no">L141-151</span>
+                    <span class="line-no">L143-153</span>
                 </div>
                 <div class="docstring"><p>Disable gradient computation for a parameter tensor.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -443,7 +449,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_msk_indices</span> (<span class="arg-name">msk</span>)</code>
-                    <span class="line-no">L153-184</span>
+                    <span class="line-no">L155-186</span>
                 </div>
                 <div class="docstring"><p>Convert a mask specification to a list of image indices.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -467,7 +473,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_focal</span> (<span class="arg-name">idx</span>, <span class="arg-name">focal</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L186-202</span>
+                    <span class="line-no">L188-204</span>
                 </div>
                 <div class="docstring"><p>Set the log-encoded focal length for image *idx*.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -484,7 +490,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_focals</span> ()</code>
-                    <span class="line-no">L204-212</span>
+                    <span class="line-no">L206-214</span>
                 </div>
                 <div class="docstring"><p>Return per-image focal lengths (decoded from log-space).</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -497,7 +503,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_principal_point</span> (<span class="arg-name">idx</span>, <span class="arg-name">pp</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L214-235</span>
+                    <span class="line-no">L216-237</span>
                 </div>
                 <div class="docstring"><p>Set the principal point for image *idx*.</p>
 <p>Stores the principal point as a small offset from the image center</p>
@@ -517,7 +523,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_principal_points</span> ()</code>
-                    <span class="line-no">L237-251</span>
+                    <span class="line-no">L239-253</span>
                 </div>
                 <div class="docstring"><p>Return per-image principal points in pixel coordinates.</p>
 <p>Decodes from the stored centered, scaled representation back to</p>
@@ -531,7 +537,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_intrinsics</span> ()</code>
-                    <span class="line-no">L253-268</span>
+                    <span class="line-no">L255-270</span>
                 </div>
                 <div class="docstring"><p>Return per-image 3x3 intrinsic (K) matrices.</p>
 <p>Assembles focal lengths and principal points into standard camera</p>
@@ -545,7 +551,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_im_poses</span> ()</code>
-                    <span class="line-no">L270-277</span>
+                    <span class="line-no">L272-279</span>
                 </div>
                 <div class="docstring"><p>Return per-image cam-to-world transformation matrices.</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -557,7 +563,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_depthmap</span> (<span class="arg-name">idx</span>, <span class="arg-name">depth</span>, <span class="arg-name">force</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L279-296</span>
+                    <span class="line-no">L281-298</span>
                 </div>
                 <div class="docstring"><p>Set the log-encoded depth map for image *idx*.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -575,7 +581,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_depthmaps</span> ()</code>
-                    <span class="line-no">L298-304</span>
+                    <span class="line-no">L300-306</span>
                 </div>
                 <div class="docstring"><p>Return optimized depth maps (exponentiated from log-space).</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -587,7 +593,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">depth_to_pts3d</span> ()</code>
-                    <span class="line-no">L306-336</span>
+                    <span class="line-no">L308-338</span>
                 </div>
                 <div class="docstring"><p>Convert depth maps to 3D point maps in world coordinates.</p>
 <p>Projects each pixel through the camera intrinsics to obtain</p>
@@ -603,7 +609,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pts3d</span> ()</code>
-                    <span class="line-no">L338-344</span>
+                    <span class="line-no">L340-346</span>
                 </div>
                 <div class="docstring"><p>Return optimized 3D point maps (alias for :meth:`depth_to_pts3d`).</p>
 <div class="doc-section"><strong>Returns:</strong>
