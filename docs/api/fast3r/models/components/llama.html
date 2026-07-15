@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/models/components/llama.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>LLaMA 组件。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-ModelArgs">class ModelArgs</a></li>
 <li><a href="#class-RMSNorm">class RMSNorm</a></li>
@@ -337,7 +343,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@dataclass</span>
 
                 class <span class="cls-name">ModelArgs</span>
-                <span class="line-no">L22-66</span>
+                <span class="line-no">L24-68</span>
             </h2>
             <div class="docstring"><p>Hyperparameter configuration for the Llama Transformer model.</p>
 <div class="doc-section"><strong>Attributes:</strong>
@@ -378,7 +384,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">RMSNorm</span>(nn.Module)
-                <span class="line-no">L165-214</span>
+                <span class="line-no">L167-216</span>
             </h2>
             <div class="docstring"><p>Initialize the RMSNorm normalization layer.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -397,7 +403,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>: <span class="arg-type">int</span>, <span class="arg-name">eps</span>: <span class="arg-type">float</span> = <span class="arg-default">1e-06</span>)</code>
-                    <span class="line-no">L178-182</span>
+                    <span class="line-no">L180-184</span>
                 </div>
                 <div class="docstring"><p>初始化 RMS 归一化层。</p></div>
             </div>
@@ -406,7 +412,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_norm</span> (<span class="arg-name">x</span>: <span class="arg-type">torch.Tensor</span>)</code>
-                    <span class="line-no">L184-195</span>
+                    <span class="line-no">L186-197</span>
                 </div>
                 <div class="docstring"><p>Apply the RMS normalization formula without the learnable scale.</p>
 <p>Computes ``x / sqrt(mean(x^2) + eps)``.</p>
@@ -422,7 +428,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>: <span class="arg-type">torch.Tensor</span>)</code>
-                    <span class="line-no">L197-210</span>
+                    <span class="line-no">L199-212</span>
                 </div>
                 <div class="docstring"><p>Apply RMSNorm to the input tensor.</p>
 <p>Normalizes the input in float32, casts back to the original dtype,</p>
@@ -439,7 +445,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">reset_parameters</span> ()</code>
-                    <span class="line-no">L212-214</span>
+                    <span class="line-no">L214-216</span>
                 </div>
                 <div class="docstring"><p>Reset the learnable scale to all-ones (identity transform).</p></div>
             </div>
@@ -452,7 +458,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Attention</span>(nn.Module)
-                <span class="line-no">L217-322</span>
+                <span class="line-no">L219-324</span>
             </h2>
             <div class="docstring"><p>Multi-head attention module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -479,7 +485,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">n_heads</span>: <span class="arg-type">int</span>, <span class="arg-name">n_kv_heads</span>: <span class="arg-type">Optional[int]</span>, <span class="arg-name">dim</span>: <span class="arg-type">int</span>, <span class="arg-name">is_causal</span>: <span class="arg-type">bool</span>)</code>
-                    <span class="line-no">L238-263</span>
+                    <span class="line-no">L240-265</span>
                 </div>
                 <div class="docstring"><p>Initialize the Attention module.</p>
 <p>Creates linear projection layers for queries (wq), keys (wk),</p>
@@ -499,7 +505,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">init_weights</span> (<span class="arg-name">init_std</span>: <span class="arg-type">float</span>)</code>
-                    <span class="line-no">L265-278</span>
+                    <span class="line-no">L267-280</span>
                 </div>
                 <div class="docstring"><p>Initialize projection weights using truncated normal distributions.</p>
 <p>Query, key, and value projections use std ``0.02``; the output</p>
@@ -515,7 +521,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>: <span class="arg-type">torch.Tensor</span>, <span class="arg-name">freqs_cis</span>: <span class="arg-type">torch.Tensor</span>)</code>
-                    <span class="line-no">L280-322</span>
+                    <span class="line-no">L282-324</span>
                 </div>
                 <div class="docstring"><p>Forward pass of the attention module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -535,7 +541,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FeedForward</span>(nn.Module)
-                <span class="line-no">L325-387</span>
+                <span class="line-no">L327-389</span>
             </h2>
             <div class="docstring"><p>FeedForward module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -557,7 +563,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>: <span class="arg-type">int</span>, <span class="arg-name">hidden_dim</span>: <span class="arg-type">int</span>, <span class="arg-name">multiple_of</span>: <span class="arg-type">int</span>, <span class="arg-name">ffn_dim_multiplier</span>: <span class="arg-type">Optional[float]</span>)</code>
-                    <span class="line-no">L341-358</span>
+                    <span class="line-no">L343-360</span>
                 </div>
                 <div class="docstring"><p>初始化 SwiGLU 前馈网络层。</p></div>
             </div>
@@ -566,7 +572,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L360-372</span>
+                    <span class="line-no">L362-374</span>
                 </div>
                 <div class="docstring"><p>Apply the SwiGLU feed-forward transformation.</p>
 <p>Computes ``w2(silu(w1(x)) * w3(x))``, a gated activation</p>
@@ -583,7 +589,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">init_weights</span> (<span class="arg-name">init_std</span>: <span class="arg-type">float</span>)</code>
-                    <span class="line-no">L374-387</span>
+                    <span class="line-no">L376-389</span>
                 </div>
                 <div class="docstring"><p>Initialize feed-forward weights using truncated normal distributions.</p>
 <p>The gate projection (w1) uses std ``0.02``; the output projection</p>
@@ -603,7 +609,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">TransformerBlock</span>(nn.Module)
-                <span class="line-no">L390-489</span>
+                <span class="line-no">L392-491</span>
             </h2>
             <div class="docstring"><p>TransformerBlock Module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -635,7 +641,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">layer_id</span>: <span class="arg-type">int</span>, <span class="arg-name">n_heads</span>: <span class="arg-type">int</span>, <span class="arg-name">n_kv_heads</span>: <span class="arg-type">Optional[int]</span>, <span class="arg-name">dim</span>: <span class="arg-type">int</span>, <span class="arg-name">multiple_of</span>: <span class="arg-type">int</span>, <span class="arg-name">ffn_dim_multiplier</span>: <span class="arg-type">float</span>, <span class="arg-name">n_layers</span>: <span class="arg-type">int</span>, <span class="arg-name">is_causal</span>: <span class="arg-type">bool</span>, <span class="arg-name">norm_eps</span>: <span class="arg-type">float</span>, <span class="arg-name">depth_init</span>: <span class="arg-type">bool</span>)</code>
-                    <span class="line-no">L416-460</span>
+                    <span class="line-no">L418-462</span>
                 </div>
                 <div class="docstring"><p>Initialize a Transformer block.</p>
 <p>Creates attention and feed-forward sub-modules together with their</p>
@@ -661,7 +667,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>: <span class="arg-type">torch.Tensor</span>, <span class="arg-name">freqs_cis</span>: <span class="arg-type">torch.Tensor</span>)</code>
-                    <span class="line-no">L462-478</span>
+                    <span class="line-no">L464-480</span>
                 </div>
                 <div class="docstring"><p>Perform a forward pass through the TransformerBlock.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -677,7 +683,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">init_weights</span> ()</code>
-                    <span class="line-no">L480-489</span>
+                    <span class="line-no">L482-491</span>
                 </div>
                 <div class="docstring"><p>Initialize all sub-module weights for this Transformer block.</p>
 <p>Resets both RMSNorm layers and calls the attention and feed-forward</p>
@@ -692,7 +698,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Transformer</span>(nn.Module)
-                <span class="line-no">L492-633</span>
+                <span class="line-no">L494-635</span>
             </h2>
             <div class="docstring"><p>Transformer Module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -716,7 +722,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">model_args</span>: <span class="arg-type">ModelArgs</span>)</code>
-                    <span class="line-no">L510-543</span>
+                    <span class="line-no">L512-545</span>
                 </div>
                 <div class="docstring"><p>Initialize the full Transformer model.</p>
 <p>Creates token embeddings, all Transformer blocks, the final RMSNorm,</p>
@@ -731,7 +737,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">reset_parameters</span> ()</code>
-                    <span class="line-no">L545-552</span>
+                    <span class="line-no">L547-554</span>
                 </div>
                 <div class="docstring"><p>Re-compute and overwrite the RoPE frequency buffer.</p>
 <p>Should be called after changing ``model_args`` or when restoring</p>
@@ -742,7 +748,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">init_weights</span> ()</code>
-                    <span class="line-no">L554-582</span>
+                    <span class="line-no">L556-584</span>
                 </div>
                 <div class="docstring"><p>[Note: On ``init_weights`` vs.</p>
 <p>``reset_parameters``]</p>
@@ -760,7 +766,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_precompute_freqs_cis</span> ()  -> <span class="ret-type">torch.Tensor</span></code>
-                    <span class="line-no">L584-601</span>
+                    <span class="line-no">L586-603</span>
                 </div>
                 <div class="docstring"><p>Pre-compute the RoPE complex frequency tensor.</p>
 <p>Delegates to the module-level :func:`precompute_freqs_cis` with</p>
@@ -776,7 +782,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">tokens</span>: <span class="arg-type">torch.Tensor</span>)</code>
-                    <span class="line-no">L603-620</span>
+                    <span class="line-no">L605-622</span>
                 </div>
                 <div class="docstring"><p>Perform a forward pass through the Transformer model.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -791,7 +797,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge cls">cls</span>
                     <code><span class="fn-name">from_model_args</span> (<span class="arg-name">model_args</span>: <span class="arg-type">ModelArgs</span>)  -> <span class="ret-type">&#x27;Transformer&#x27;</span></code>
-                    <span class="line-no">L623-633</span>
+                    <span class="line-no">L625-635</span>
                 </div>
                 <div class="docstring"><p>Initialize a Transformer model from a ModelArgs object.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -810,7 +816,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">precompute_freqs_cis</span> (<span class="arg-name">dim</span>: <span class="arg-type">int</span>, <span class="arg-name">end</span>: <span class="arg-type">int</span>, <span class="arg-name">theta</span>: <span class="arg-type">float</span> = <span class="arg-default">10000.0</span>)  -> <span class="ret-type">torch.Tensor</span></code>
-                <span class="line-no">L69-88</span>
+                <span class="line-no">L71-90</span>
             </h2>
             <div class="docstring"><p>Precompute the frequency tensor for complex exponentials (cis) with given dimensions.</p>
 <p>This function calculates a frequency tensor with complex exponentials using the given dimension &#x27;dim&#x27;</p>
@@ -831,7 +837,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">reshape_for_broadcast</span> (<span class="arg-name">freqs_cis</span>: <span class="arg-type">torch.Tensor</span>, <span class="arg-name">x</span>: <span class="arg-type">torch.Tensor</span>)  -> <span class="ret-type">torch.Tensor</span></code>
-                <span class="line-no">L91-121</span>
+                <span class="line-no">L93-123</span>
             </h2>
             <div class="docstring"><p>Reshape frequency tensor for broadcasting it with another tensor.</p>
 <p>This function reshapes the frequency tensor to have the same shape as the target tensor &#x27;x&#x27;</p>
@@ -852,7 +858,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">apply_rotary_emb</span> (<span class="arg-name">xq</span>: <span class="arg-type">torch.Tensor</span>, <span class="arg-name">xk</span>: <span class="arg-type">torch.Tensor</span>, <span class="arg-name">freqs_cis</span>: <span class="arg-type">torch.Tensor</span>)  -> <span class="ret-type">tuple[torch.Tensor, torch.Tensor]</span></code>
-                <span class="line-no">L124-150</span>
+                <span class="line-no">L126-152</span>
             </h2>
             <div class="docstring"><p>Apply rotary embeddings to input tensors using the given frequency tensor.</p>
 <p>This function applies rotary embeddings to the given query &#x27;xq&#x27; and key &#x27;xk&#x27; tensors using the provided</p>
@@ -874,7 +880,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">repeat_kv</span> (<span class="arg-name">x</span>: <span class="arg-type">torch.Tensor</span>, <span class="arg-name">n_rep</span>: <span class="arg-type">int</span>)  -> <span class="ret-type">torch.Tensor</span></code>
-                <span class="line-no">L153-162</span>
+                <span class="line-no">L155-164</span>
             </h2>
             <div class="docstring"><p>torch.repeat_interleave(x, dim=2, repeats=n_rep)</p></div>
         </div>

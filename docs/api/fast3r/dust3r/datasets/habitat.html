@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/habitat.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Habitat 数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-Habitat">class Habitat</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Habitat</span>(BaseStereoViewDataset)
-                <span class="line-no">L26-99</span>
+                <span class="line-no">L28-101</span>
             </h2>
             <div class="docstring"><p>Habitat-Sim 合成室内场景数据集，用于双视图 3D 重建。</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">size</span>, <span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L29-42</span>
+                    <span class="line-no">L31-44</span>
                 </div>
                 <div class="docstring"><p>初始化 Habitat 数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -351,7 +357,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">filter_scene</span> (<span class="arg-name">label</span>, <span class="arg-name">instance</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L44-52</span>
+                    <span class="line-no">L46-54</span>
                 </div>
                 <div class="docstring"><p>按标签和实例过滤场景列表。</p></div>
             </div>
@@ -360,7 +366,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L54-77</span>
+                    <span class="line-no">L56-79</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的两个随机视图。</p></div>
             </div>
@@ -369,7 +375,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_one_view</span> (<span class="arg-name">data_path</span>, <span class="arg-name">key</span>, <span class="arg-name">view_index</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L79-99</span>
+                    <span class="line-no">L81-101</span>
                 </div>
                 <div class="docstring"><p>加载单个视图的图像、深度图、内参和位姿。</p></div>
             </div>

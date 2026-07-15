@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/perceiver_block.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>perceiver block。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-PerceiverCompressor">class PerceiverCompressor</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PerceiverCompressor</span>(nn.Module)
-                <span class="line-no">L14-99</span>
+                <span class="line-no">L16-101</span>
             </h2>
             <div class="docstring"><p>Perceiver 压缩器，将多个图像的视觉 token 压缩为固定数量的潜在表示。</p>
 <p>使用交叉注意力机制将可变长度的视觉 token 序列压缩为固定长度的潜在表示，</p>
@@ -340,7 +346,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">token_dim</span>, <span class="arg-name">latent_dim</span>, <span class="arg-name">num_latents</span>, <span class="arg-name">num_cross_layers</span>, <span class="arg-name">num_latent_transformer_layers</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">8</span>, <span class="arg-name">dropout</span> = <span class="arg-default">0.0</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">nn.LayerNorm</span>)</code>
-                    <span class="line-no">L20-60</span>
+                    <span class="line-no">L22-62</span>
                 </div>
                 <div class="docstring"><p>初始化 Perceiver 压缩器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -359,7 +365,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">pos</span>, <span class="arg-name">image_ids</span>)</code>
-                    <span class="line-no">L62-99</span>
+                    <span class="line-no">L64-101</span>
                 </div>
                 <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    x (torch.Tensor): Input tensor of shape [B, P, C] where</div>

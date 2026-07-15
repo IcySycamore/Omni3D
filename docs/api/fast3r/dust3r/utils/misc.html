@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/utils/misc.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>杂项工具。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-fill_default_args">fill_default_args()</a></li>
 <li><a href="#func-freeze_all_params">freeze_all_params()</a></li>
@@ -335,7 +341,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">fill_default_args</span> (<span class="arg-name">kwargs</span>, <span class="arg-name">func</span>)</code>
-                <span class="line-no">L16-35</span>
+                <span class="line-no">L18-37</span>
             </h2>
             <div class="docstring"><p>Fill missing keys in *kwargs* with the default values of *func*&#x27;s signature.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -352,7 +358,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">freeze_all_params</span> (<span class="arg-name">modules</span>)</code>
-                <span class="line-no">L38-51</span>
+                <span class="line-no">L40-53</span>
             </h2>
             <div class="docstring"><p>Disable gradient computation for all parameters in the given modules.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -366,7 +372,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_symmetrized</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>)</code>
-                <span class="line-no">L54-74</span>
+                <span class="line-no">L56-76</span>
             </h2>
             <div class="docstring"><p>Check whether two view dictionaries form a symmetrized batch.</p>
 <p>A batch is symmetrized when each even/odd sample pair ``(x[i], y[i+1])``</p>
@@ -385,7 +391,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">flip</span> (<span class="arg-name">tensor</span>)</code>
-                <span class="line-no">L77-79</span>
+                <span class="line-no">L79-81</span>
             </h2>
             <div class="docstring"><p>flip so that tensor[0::2] &lt;=&gt; tensor[1::2]</p></div>
         </div>
@@ -395,7 +401,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">interleave</span> (<span class="arg-name">tensor1</span>, <span class="arg-name">tensor2</span>)</code>
-                <span class="line-no">L82-97</span>
+                <span class="line-no">L84-99</span>
             </h2>
             <div class="docstring"><p>Interleave two tensors along the batch dimension.</p>
 <p>Returns two tensors where *res1* is ``[t1[0], t2[0], t1[1], t2[1], ...]``</p>
@@ -414,7 +420,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">transpose_to_landscape</span> (<span class="arg-name">head</span>, <span class="arg-name">activate</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L100-148</span>
+                <span class="line-no">L102-150</span>
             </h2>
             <div class="docstring"><p>Predict in the correct aspect-ratio,</p>
 <p>then transpose the result in landscape</p>
@@ -426,7 +432,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">transposed</span> (<span class="arg-name">dic</span>)</code>
-                <span class="line-no">L151-161</span>
+                <span class="line-no">L153-163</span>
             </h2>
             <div class="docstring"><p>Swap axes 1 and 2 for all tensors in a dictionary (portrait &lt;-&gt; landscape).</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -443,7 +449,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">invalid_to_nans</span> (<span class="arg-name">arr</span>, <span class="arg-name">valid_mask</span>, <span class="arg-name">ndim</span> = <span class="arg-default">999</span>)</code>
-                <span class="line-no">L164-183</span>
+                <span class="line-no">L166-185</span>
             </h2>
             <div class="docstring"><p>Replace invalid (masked-out) entries with NaN.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -464,7 +470,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">invalid_to_zeros</span> (<span class="arg-name">arr</span>, <span class="arg-name">valid_mask</span>, <span class="arg-name">ndim</span> = <span class="arg-default">999</span>)</code>
-                <span class="line-no">L186-209</span>
+                <span class="line-no">L188-211</span>
             </h2>
             <div class="docstring"><p>Replace invalid (masked-out) entries with zero and count valid points.</p>
 <div class="doc-section"><strong>Args:</strong>

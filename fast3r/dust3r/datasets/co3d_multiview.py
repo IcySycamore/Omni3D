@@ -1,6 +1,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
+"""CO3D 多视图数据集。"""
+
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 

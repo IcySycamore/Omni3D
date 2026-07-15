@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/datasets/pairs_dataset.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>图像对数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-PairsDataset">class PairsDataset</a></li>
 <li><a href="#func-load_image">load_image()</a></li>
@@ -333,7 +339,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PairsDataset</span>(Dataset)
-                <span class="line-no">L175-214</span>
+                <span class="line-no">L177-216</span>
             </h2>
             <div class="docstring"><p>图像对数据集，加载指定数据集的图像对并应用变换。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -351,7 +357,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dnames</span>, <span class="arg-name">trfs</span> = <span class="arg-default">&#x27;&#x27;</span>, <span class="arg-name">totensor</span> = <span class="arg-default">True</span>, <span class="arg-name">normalize</span> = <span class="arg-default">True</span>, <span class="arg-name">data_dir</span> = <span class="arg-default">&#x27;./data/&#x27;</span>)</code>
-                    <span class="line-no">L186-194</span>
+                    <span class="line-no">L188-196</span>
                 </div>
                 <div class="docstring"><p>初始化图像对数据集。</p></div>
             </div>
@@ -360,7 +366,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L196-198</span>
+                    <span class="line-no">L198-200</span>
                 </div>
                 <div class="docstring"><p>返回图像对总数。</p></div>
             </div>
@@ -369,7 +375,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">index</span>)</code>
-                    <span class="line-no">L200-214</span>
+                    <span class="line-no">L202-216</span>
                 </div>
                 <div class="docstring"><p>加载并变换指定索引的图像对。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -388,7 +394,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_image</span> (<span class="arg-name">impath</span>)</code>
-                <span class="line-no">L17-26</span>
+                <span class="line-no">L19-28</span>
             </h2>
             <div class="docstring"><p>加载图像文件。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -404,7 +410,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_pairs_from_cache_file</span> (<span class="arg-name">fname</span>, <span class="arg-name">root</span> = <span class="arg-default">&#x27;&#x27;</span>)</code>
-                <span class="line-no">L29-50</span>
+                <span class="line-no">L31-52</span>
             </h2>
             <div class="docstring"><p>从缓存文件加载图像对路径列表。</p>
 <p>每行包含两张图像的相对路径，用空格分隔。</p>
@@ -422,7 +428,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_pairs_from_list_file</span> (<span class="arg-name">fname</span>, <span class="arg-name">root</span> = <span class="arg-default">&#x27;&#x27;</span>)</code>
-                <span class="line-no">L53-73</span>
+                <span class="line-no">L55-75</span>
             </h2>
             <div class="docstring"><p>从列表文件加载图像对，自动拼接 ``_1.jpg`` / ``_2.jpg`` 后缀。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -439,7 +445,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">write_cache_file</span> (<span class="arg-name">fname</span>, <span class="arg-name">pairs</span>, <span class="arg-name">root</span> = <span class="arg-default">&#x27;&#x27;</span>)</code>
-                <span class="line-no">L76-95</span>
+                <span class="line-no">L78-97</span>
             </h2>
             <div class="docstring"><p>将图像对路径列表写入缓存文件。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -454,7 +460,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">parse_and_cache_all_pairs</span> (<span class="arg-name">dname</span>, <span class="arg-name">data_dir</span> = <span class="arg-default">&#x27;./data/&#x27;</span>)</code>
-                <span class="line-no">L98-136</span>
+                <span class="line-no">L100-138</span>
             </h2>
             <div class="docstring"><p>解析指定数据集的图像对并写入缓存文件。</p>
 <p>目前仅支持 ``habitat_release`` 数据集。</p>
@@ -469,7 +475,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">dnames_to_image_pairs</span> (<span class="arg-name">dnames</span>, <span class="arg-name">data_dir</span> = <span class="arg-default">&#x27;./data/&#x27;</span>)</code>
-                <span class="line-no">L139-172</span>
+                <span class="line-no">L141-174</span>
             </h2>
             <div class="docstring"><p>dnames: list of datasets with image pairs, separated by +</p></div>
         </div>

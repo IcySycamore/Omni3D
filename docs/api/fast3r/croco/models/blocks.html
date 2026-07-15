@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/blocks.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>blocks。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-DropPath">class DropPath</a></li>
 <li><a href="#class-Mlp">class Mlp</a></li>
@@ -336,7 +342,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DropPath</span>(nn.Module)
-                <span class="line-no">L73-103</span>
+                <span class="line-no">L75-105</span>
             </h2>
             <div class="docstring"><p>Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).</p></div>
             
@@ -347,7 +353,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">drop_prob</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">scale_by_keep</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L76-88</span>
+                    <span class="line-no">L78-90</span>
                 </div>
                 <div class="docstring"><p>Initialize DropPath.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -363,7 +369,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L90-99</span>
+                    <span class="line-no">L92-101</span>
                 </div>
                 <div class="docstring"><p>Apply stochastic depth to *x*.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -378,7 +384,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">extra_repr</span> ()</code>
-                    <span class="line-no">L101-103</span>
+                    <span class="line-no">L103-105</span>
                 </div>
                 <div class="docstring"><p>返回 DropPath 的可读表示字符串。</p></div>
             </div>
@@ -391,7 +397,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Mlp</span>(nn.Module)
-                <span class="line-no">L106-157</span>
+                <span class="line-no">L108-159</span>
             </h2>
             <div class="docstring"><p>MLP as used in Vision Transformer, MLP-Mixer and related networks</p></div>
             
@@ -402,7 +408,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">in_features</span>, <span class="arg-name">hidden_features</span> = <span class="arg-default">None</span>, <span class="arg-name">out_features</span> = <span class="arg-default">None</span>, <span class="arg-name">act_layer</span> = <span class="arg-default">nn.GELU</span>, <span class="arg-name">bias</span> = <span class="arg-default">True</span>, <span class="arg-name">drop</span> = <span class="arg-default">0.0</span>)</code>
-                    <span class="line-no">L109-142</span>
+                    <span class="line-no">L111-144</span>
                 </div>
                 <div class="docstring"><p>Initialize the MLP.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -423,7 +429,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L144-157</span>
+                    <span class="line-no">L146-159</span>
                 </div>
                 <div class="docstring"><p>Apply the two-layer MLP with activation and dropout.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -442,7 +448,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Attention</span>(nn.Module)
-                <span class="line-no">L160-293</span>
+                <span class="line-no">L162-295</span>
             </h2>
             <div class="docstring"><p>Multi-head self-attention with optional RoPE and pluggable backend.</p>
 <p>Supports three attention implementations:</p>
@@ -470,7 +476,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">8</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">proj_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_mask</span> = <span class="arg-default">None</span>, <span class="arg-name">is_causal</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">attn_bias_for_inference_enabled</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L182-223</span>
+                    <span class="line-no">L184-225</span>
                 </div>
                 <div class="docstring"><p>Initialize the Attention module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -495,7 +501,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">xpos</span>)</code>
-                    <span class="line-no">L225-293</span>
+                    <span class="line-no">L227-295</span>
                 </div>
                 <div class="docstring"><p>Compute multi-head self-attention.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -515,7 +521,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Block</span>(nn.Module)
-                <span class="line-no">L296-387</span>
+                <span class="line-no">L298-389</span>
             </h2>
             <div class="docstring"><p>Standard Vision Transformer encoder block.</p>
 <p>Combines multi-head self-attention and an MLP with residual connections,</p>
@@ -546,7 +552,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">num_heads</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4.0</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">drop_path</span> = <span class="arg-default">0.0</span>, <span class="arg-name">act_layer</span> = <span class="arg-default">nn.GELU</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">nn.LayerNorm</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">attn_bias_for_inference_enabled</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L321-373</span>
+                    <span class="line-no">L323-375</span>
                 </div>
                 <div class="docstring"><p>Initialize the Block.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -569,7 +575,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">xpos</span>)</code>
-                    <span class="line-no">L375-387</span>
+                    <span class="line-no">L377-389</span>
                 </div>
                 <div class="docstring"><p>Forward pass through the encoder block.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -589,7 +595,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CrossAttention</span>(nn.Module)
-                <span class="line-no">L390-506</span>
+                <span class="line-no">L392-508</span>
             </h2>
             <div class="docstring"><p>Multi-head cross-attention module.</p>
 <p>Used in decoder blocks to let the query attend to key/value from</p>
@@ -613,7 +619,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">num_heads</span> = <span class="arg-default">8</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">proj_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_mask</span> = <span class="arg-default">None</span>, <span class="arg-name">is_causal</span> = <span class="arg-default">False</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
-                    <span class="line-no">L408-441</span>
+                    <span class="line-no">L410-443</span>
                 </div>
                 <div class="docstring"><p>Initialize the CrossAttention module.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -633,7 +639,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">query</span>, <span class="arg-name">key</span>, <span class="arg-name">value</span>, <span class="arg-name">qpos</span>, <span class="arg-name">kpos</span>)</code>
-                    <span class="line-no">L443-506</span>
+                    <span class="line-no">L445-508</span>
                 </div>
                 <div class="docstring"><p>Compute cross-attention from query to key/value.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -656,7 +662,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">DecoderBlock</span>(nn.Module)
-                <span class="line-no">L509-612</span>
+                <span class="line-no">L511-614</span>
             </h2>
             <div class="docstring"><p>Transformer decoder block with self-attention, cross-attention, and MLP.</p>
 <p>Applies self-attention on the query sequence, cross-attention from the</p>
@@ -685,7 +691,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">dim</span>, <span class="arg-name">num_heads</span>, <span class="arg-name">mlp_ratio</span> = <span class="arg-default">4.0</span>, <span class="arg-name">qkv_bias</span> = <span class="arg-default">False</span>, <span class="arg-name">drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">attn_drop</span> = <span class="arg-default">0.0</span>, <span class="arg-name">drop_path</span> = <span class="arg-default">0.0</span>, <span class="arg-name">act_layer</span> = <span class="arg-default">nn.GELU</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">nn.LayerNorm</span>, <span class="arg-name">norm_mem</span> = <span class="arg-default">True</span>, <span class="arg-name">rope</span> = <span class="arg-default">None</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>)</code>
-                    <span class="line-no">L532-593</span>
+                    <span class="line-no">L534-595</span>
                 </div>
                 <div class="docstring"><p>Initialize the DecoderBlock.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -708,7 +714,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">y</span>, <span class="arg-name">xpos</span>, <span class="arg-name">ypos</span>)</code>
-                    <span class="line-no">L595-612</span>
+                    <span class="line-no">L597-614</span>
                 </div>
                 <div class="docstring"><p>Forward pass through the decoder block.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -731,7 +737,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PositionGetter</span>(object)
-                <span class="line-no">L616-646</span>
+                <span class="line-no">L618-648</span>
             </h2>
             <div class="docstring"><p>Return positions of patches.</p>
 <p>Caches patch position grids by (H, W) to avoid redundant computation.</p>
@@ -744,7 +750,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L623-625</span>
+                    <span class="line-no">L625-627</span>
                 </div>
                 <div class="docstring"><p>Initialize the PositionGetter with an empty cache.</p></div>
             </div>
@@ -753,7 +759,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__call__</span> (<span class="arg-name">b</span>, <span class="arg-name">h</span>, <span class="arg-name">w</span>, <span class="arg-name">device</span>)</code>
-                    <span class="line-no">L627-646</span>
+                    <span class="line-no">L629-648</span>
                 </div>
                 <div class="docstring"><p>Return a (b, h*w, 2) tensor of (row, col) positions.</p>
 <p>Results are cached per (h, w) pair.</p>
@@ -776,7 +782,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PatchEmbed</span>(nn.Module)
-                <span class="line-no">L649-730</span>
+                <span class="line-no">L651-732</span>
             </h2>
             <div class="docstring"><p>Patch embedding with position getter and weight initialization.</p>
 <p>Extends the standard patch embedding by adding a</p>
@@ -798,7 +804,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">in_chans</span> = <span class="arg-default">3</span>, <span class="arg-name">embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">None</span>, <span class="arg-name">flatten</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L665-698</span>
+                    <span class="line-no">L667-700</span>
                 </div>
                 <div class="docstring"><p>Initialize PatchEmbed.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -815,7 +821,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L700-725</span>
+                    <span class="line-no">L702-727</span>
                 </div>
                 <div class="docstring"><p>Embed an image into patch tokens with position codes.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -832,7 +838,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_init_weights</span> ()</code>
-                    <span class="line-no">L727-730</span>
+                    <span class="line-no">L729-732</span>
                 </div>
                 <div class="docstring"><p>Initialize the projection weights with Xavier uniform initialization.</p></div>
             </div>
@@ -845,7 +851,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_ntuple</span> (<span class="arg-name">n</span>)</code>
-                <span class="line-no">L33-51</span>
+                <span class="line-no">L35-53</span>
             </h2>
             <div class="docstring"><p>Return a function that converts a scalar to an n-tuple.</p>
 <p>If the input is already an iterable (but not a string), it is returned</p>
@@ -863,7 +869,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">drop_path</span> (<span class="arg-name">x</span>, <span class="arg-name">drop_prob</span>: <span class="arg-type">float</span> = <span class="arg-default">0.0</span>, <span class="arg-name">training</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">scale_by_keep</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L57-70</span>
+                <span class="line-no">L59-72</span>
             </h2>
             <div class="docstring"><p>Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).</p></div>
         </div>

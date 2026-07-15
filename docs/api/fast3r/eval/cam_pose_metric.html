@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/eval/cam_pose_metric.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>相机位姿评估指标。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-camera_to_rel_deg">camera_to_rel_deg()</a></li>
 <li><a href="#func-calculate_auc_np">calculate_auc_np()</a></li>
@@ -335,7 +341,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">camera_to_rel_deg</span> (<span class="arg-name">pred_cameras_c2w</span>, <span class="arg-name">gt_cameras_c2w</span>, <span class="arg-name">device</span>, <span class="arg-name">batch_size</span>)</code>
-                <span class="line-no">L17-54</span>
+                <span class="line-no">L19-56</span>
             </h2>
             <div class="docstring"><p>计算预测相机与真实相机之间的相对旋转误差（度）和平移角误差（度）。</p>
 <p>注意：输入为列主序 SE3 矩阵（平移向量在最后一列），即 c2w 矩阵。</p>
@@ -356,7 +362,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">calculate_auc_np</span> (<span class="arg-name">r_error</span>, <span class="arg-name">t_error</span>, <span class="arg-name">max_threshold</span> = <span class="arg-default">30</span>)</code>
-                <span class="line-no">L57-84</span>
+                <span class="line-no">L59-86</span>
             </h2>
             <div class="docstring"><p>Calculate the Area Under the Curve (AUC) for the given error arrays.</p>
 <p>:param r_error: numpy array representing R error values (Degree).</p>
@@ -370,7 +376,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">calculate_auc</span> (<span class="arg-name">r_error</span>, <span class="arg-name">t_error</span>, <span class="arg-name">max_threshold</span> = <span class="arg-default">30</span>)</code>
-                <span class="line-no">L87-114</span>
+                <span class="line-no">L89-116</span>
             </h2>
             <div class="docstring"><p>Calculate the Area Under the Curve (AUC) for the given error arrays using PyTorch.</p>
 <p>:param r_error: torch.Tensor representing R error values (Degree).</p>
@@ -384,7 +390,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">batched_all_pairs</span> (<span class="arg-name">B</span>)</code>
-                <span class="line-no">L117-130</span>
+                <span class="line-no">L119-132</span>
             </h2>
             <div class="docstring"><p>生成 B 个视图的所有不重复视图对的索引。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -400,7 +406,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">closed_form_inverse</span> (<span class="arg-name">se3</span>)</code>
-                <span class="line-no">L132-164</span>
+                <span class="line-no">L134-166</span>
             </h2>
             <div class="docstring"><p>Computes the inverse of each 4x4 SE(3) matrix in the batch.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -416,7 +422,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rotation_angle</span> (<span class="arg-name">rot_gt</span>, <span class="arg-name">rot_pred</span>, <span class="arg-name">batch_size</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L168-186</span>
+                <span class="line-no">L170-188</span>
             </h2>
             <div class="docstring"><p>计算两组旋转矩阵之间的相对旋转角度（度）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -434,7 +440,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">translation_angle</span> (<span class="arg-name">tvec_gt</span>, <span class="arg-name">tvec_pred</span>, <span class="arg-name">batch_size</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L189-207</span>
+                <span class="line-no">L191-209</span>
             </h2>
             <div class="docstring"><p>计算两组平移向量之间的角度误差（度）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -452,7 +458,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">compare_translation_by_angle</span> (<span class="arg-name">t_gt</span>, <span class="arg-name">t</span>, <span class="arg-name">eps</span> = <span class="arg-default">1e-15</span>, <span class="arg-name">default_err</span> = <span class="arg-default">1000000.0</span>)</code>
-                <span class="line-no">L210-222</span>
+                <span class="line-no">L212-224</span>
             </h2>
             <div class="docstring"><p>Normalize the translation vectors and compute the angle between them.</p></div>
         </div>
@@ -462,7 +468,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">compute_ARE</span> (<span class="arg-name">rotation1</span>, <span class="arg-name">rotation2</span>)</code>
-                <span class="line-no">L224-245</span>
+                <span class="line-no">L226-247</span>
             </h2>
             <div class="docstring"><p>计算平均相对旋转误差（Average Relative Error，度）。</p>
 <p>对每对旋转矩阵计算相对旋转角度，返回较小值（考虑 180 度对称性）。</p>

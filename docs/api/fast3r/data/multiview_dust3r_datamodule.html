@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/multiview_dust3r_datamodule.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>多视图 DUSt3R 数据模块。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-MultiViewDUSt3RDataModule">class MultiViewDUSt3RDataModule</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MultiViewDUSt3RDataModule</span>(LightningDataModule)
-                <span class="line-no">L18-205</span>
+                <span class="line-no">L20-207</span>
             </h2>
             <div class="docstring"><p>LightningDataModule for the custom dataset.</p>
 <p> A `LightningDataModule` implements 7 key methods:</p>
@@ -358,7 +364,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">train_datasets</span>: <span class="arg-type">list[str]</span>, <span class="arg-name">validation_datasets</span>: <span class="arg-type">list[str]</span>, <span class="arg-name">batch_size_per_device</span>: <span class="arg-type">int</span> = <span class="arg-default">64</span>, <span class="arg-name">batch_size_per_device_val</span>: <span class="arg-type">int</span> = <span class="arg-default">64</span>, <span class="arg-name">num_workers</span>: <span class="arg-type">int</span> = <span class="arg-default">12</span>, <span class="arg-name">num_workers_val</span>: <span class="arg-type">int</span> = <span class="arg-default">2</span>, <span class="arg-name">pin_memory</span>: <span class="arg-type">bool</span> = <span class="arg-default">True</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L50-83</span>
+                    <span class="line-no">L52-85</span>
                 </div>
                 <div class="docstring"><p>Initialize a CustomDataModule.</p>
 <p>:param train_dataset: Path to the training dataset.</p>
@@ -372,7 +378,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">prepare_data</span> ()  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L85-88</span>
+                    <span class="line-no">L87-90</span>
                 </div>
                 <div class="docstring"><p>Download or prepare the dataset if needed.</p></div>
             </div>
@@ -381,7 +387,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">setup</span> (<span class="arg-name">stage</span>: <span class="arg-type">Optional[str]</span> = <span class="arg-default">None</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L90-96</span>
+                    <span class="line-no">L92-98</span>
                 </div>
                 <div class="docstring"><p>Load data and set variables: `self.data_train`, `self.data_val`, `self.data_test`.</p>
 <p>This method is called by Lightning before `trainer.fit()`, `trainer.validate()`, `trainer.test()`, and</p>
@@ -392,7 +398,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">train_dataloader</span> ()  -> <span class="ret-type">DataLoader[Any]</span></code>
-                    <span class="line-no">L98-126</span>
+                    <span class="line-no">L100-128</span>
                 </div>
                 <div class="docstring"><p>Create and return the train dataloader.</p>
 <p>:return: The train dataloader.</p></div>
@@ -402,7 +408,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">val_dataloader</span> ()  -> <span class="ret-type">DataLoader[Any]</span></code>
-                    <span class="line-no">L128-177</span>
+                    <span class="line-no">L130-179</span>
                 </div>
                 <div class="docstring"><p>Create and return the validation dataloader.</p>
 <p>:return: The validation dataloader.</p></div>
@@ -412,7 +418,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">teardown</span> (<span class="arg-name">stage</span>: <span class="arg-type">Optional[str]</span> = <span class="arg-default">None</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L186-191</span>
+                    <span class="line-no">L188-193</span>
                 </div>
                 <div class="docstring"><p>Clean up after `trainer.fit()`, `trainer.validate()`, `trainer.test()`, and `trainer.predict()`.</p>
 <p>:param stage: The stage being torn down. Either `&quot;fit&quot;`, `&quot;validate&quot;`, `&quot;test&quot;`, or `&quot;predict&quot;`.</p></div>
@@ -422,7 +428,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">state_dict</span> ()  -> <span class="ret-type">Dict[Any, Any]</span></code>
-                    <span class="line-no">L193-198</span>
+                    <span class="line-no">L195-200</span>
                 </div>
                 <div class="docstring"><p>Generate and save the datamodule state.</p>
 <p>:return: A dictionary containing the datamodule state.</p></div>
@@ -432,7 +438,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">state_dict</span>: <span class="arg-type">Dict[str, Any]</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L200-205</span>
+                    <span class="line-no">L202-207</span>
                 </div>
                 <div class="docstring"><p>Reload datamodule state given datamodule `state_dict()`.</p>
 <p>:param state_dict: The datamodule state returned by `self.state_dict()`.</p></div>

@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/viz/viser_visualizer.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Viser 可视化器。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-detect_sky_mask">detect_sky_mask()</a></li>
 <li><a href="#func-is_outdoor_scene">is_outdoor_scene()</a></li>
@@ -337,7 +343,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">detect_sky_mask</span> (<span class="arg-name">img_rgb</span>)</code>
-                <span class="line-no">L24-72</span>
+                <span class="line-no">L26-74</span>
             </h2>
             <div class="docstring"><p>Detect sky pixels using HSV color space and morphological operations.</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -353,7 +359,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_outdoor_scene</span> (<span class="arg-name">frame_data_list</span>)</code>
-                <span class="line-no">L74-94</span>
+                <span class="line-no">L76-96</span>
             </h2>
             <div class="docstring"><p>Detect whether the scene is outdoor by checking the proportion of sky pixels.</p>
 <p>Computes the sky ratio for each frame and returns ``True`` when at least</p>
@@ -373,7 +379,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">update_frame_visibility</span> (<span class="arg-name">server</span>, <span class="arg-name">frame_data_list</span>, <span class="arg-name">gui_timestep</span>, <span class="arg-name">num_frames</span>, <span class="arg-name">gui_show_global</span>, <span class="arg-name">gui_show_local</span>, <span class="arg-name">gui_show_high_conf</span>, <span class="arg-name">gui_show_low_conf</span>)</code>
-                <span class="line-no">L98-128</span>
+                <span class="line-no">L100-130</span>
             </h2>
             <div class="docstring"><p>Update the visibility of all frame nodes based on the current timestep.</p>
 <p>Shows frames with index ``&lt;= gui_timestep.value``; the global and local</p>
@@ -399,7 +405,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">update_point_cloud_colors</span> (<span class="arg-name">server</span>, <span class="arg-name">frame_data_list</span>, <span class="arg-name">gui_timestep</span>, <span class="arg-name">gui_show_confidence_color</span>, <span class="arg-name">gui_rainbow_color_option</span>, <span class="arg-name">gui_show_global</span>, <span class="arg-name">gui_show_local</span>)</code>
-                <span class="line-no">L130-164</span>
+                <span class="line-no">L132-166</span>
             </h2>
             <div class="docstring"><p>Swap point cloud colors for all frames based on the active color mode.</p>
 <p>Three mutually exclusive color modes are supported (evaluated in order):</p>
@@ -425,7 +431,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">update_points_filtering</span> (<span class="arg-name">server</span>, <span class="arg-name">frame_data_list</span>, <span class="arg-name">gui_timestep</span>, <span class="arg-name">gui_min_conf_percentile</span>, <span class="arg-name">gui_mask_sky</span>, <span class="arg-name">gui_show_confidence_color</span>, <span class="arg-name">gui_rainbow_color_option</span>)</code>
-                <span class="line-no">L166-236</span>
+                <span class="line-no">L168-238</span>
             </h2>
             <div class="docstring"><p>Filter and update point clouds based on confidence percentile and sky masking.</p>
 <p>For each frame, the top ``(100 - gui_min_conf_percentile.value)`` percent</p>
@@ -452,7 +458,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">collect_visible_points</span> (<span class="arg-name">frame_data_list</span>, <span class="arg-name">current_timestep</span>)</code>
-                <span class="line-no">L239-290</span>
+                <span class="line-no">L241-292</span>
             </h2>
             <div class="docstring"><p>Collect all currently visible 3D points and their colors up to *current_timestep*.</p>
 <p>Iterates over global and local point cloud nodes for frames</p>
@@ -475,7 +481,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">safe_color_conversion</span> (<span class="arg-name">colors</span>)</code>
-                <span class="line-no">L292-329</span>
+                <span class="line-no">L294-331</span>
             </h2>
             <div class="docstring"><p>Convert an array of colors to uint8 format, handling multiple input ranges.</p>
 <p>Supported input formats:</p>
@@ -497,7 +503,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">generate_ply_bytes</span> (<span class="arg-name">points</span>, <span class="arg-name">colors</span>)</code>
-                <span class="line-no">L331-370</span>
+                <span class="line-no">L333-372</span>
             </h2>
             <div class="docstring"><p>Serialize a point cloud to binary PLY format.</p>
 <p>Builds a PLY header and packs 3D coordinates (float32) together with</p>
@@ -517,7 +523,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">playback_loop</span> (<span class="arg-name">gui_playing</span>, <span class="arg-name">gui_timestep</span>, <span class="arg-name">num_frames</span>, <span class="arg-name">gui_framerate</span>)</code>
-                <span class="line-no">L373-392</span>
+                <span class="line-no">L375-394</span>
             </h2>
             <div class="docstring"><p>Continuously advance the timestep slider at the requested frame rate.</p>
 <p>Runs in an infinite loop (intended for a background thread): increments</p>
@@ -539,7 +545,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">bind_update</span> (<span class="arg-name">widget</span>, <span class="arg-name">update_func</span>)</code>
-                <span class="line-no">L394-405</span>
+                <span class="line-no">L396-407</span>
             </h2>
             <div class="docstring"><p>Attach an update callback to a GUI widget.</p>
 <p>A thin wrapper around ``widget.on_update`` that ignores the event</p>
@@ -556,7 +562,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">start_visualization</span> (<span class="arg-name">output</span>, <span class="arg-name">min_conf_thr_percentile</span> = <span class="arg-default">10</span>, <span class="arg-name">global_conf_thr_value_to_drop_view</span> = <span class="arg-default">1.5</span>, <span class="arg-name">port</span> = <span class="arg-default">8020</span>, <span class="arg-name">point_size</span> = <span class="arg-default">0.0004</span>)</code>
-                <span class="line-no">L408-910</span>
+                <span class="line-no">L410-912</span>
             </h2>
             <div class="docstring"><p>Launch an interactive viser-based 3D visualization server for Fast3R output.</p>
 <p>Estimates camera poses from the model predictions, constructs per-frame</p>

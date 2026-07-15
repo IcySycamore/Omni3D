@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/utils/pylogger.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Python 日志器。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-RankedLogger">class RankedLogger</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">RankedLogger</span>(logging.LoggerAdapter)
-                <span class="line-no">L13-57</span>
+                <span class="line-no">L15-59</span>
             </h2>
             <div class="docstring"><p>A multi-GPU-friendly python command line logger.</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">name</span>: <span class="arg-type">str</span> = <span class="arg-default">__name__</span>, <span class="arg-name">rank_zero_only</span>: <span class="arg-type">bool</span> = <span class="arg-default">False</span>, <span class="arg-name">extra</span>: <span class="arg-type">Optional[Mapping[str, object]]</span> = <span class="arg-default">None</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L16-31</span>
+                    <span class="line-no">L18-33</span>
                 </div>
                 <div class="docstring"><p>Initializes a multi-GPU-friendly python command line logger that logs on all processes</p>
 <p>with their rank prefixed in the log message.</p>
@@ -351,7 +357,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">log</span> (<span class="arg-name">level</span>: <span class="arg-type">int</span>, <span class="arg-name">msg</span>: <span class="arg-type">str</span>, <span class="arg-name">rank</span>: <span class="arg-type">Optional[int]</span> = <span class="arg-default">None</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)  -> <span class="ret-type">None</span></code>
-                    <span class="line-no">L33-57</span>
+                    <span class="line-no">L35-59</span>
                 </div>
                 <div class="docstring"><p>Delegate a log call to the underlying logger, after prefixing its message with the rank</p>
 <p>of the process it&#x27;s being logged from. If `&#x27;rank&#x27;` is provided, then the log will only</p>

@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/patch_embed.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>补丁嵌入。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-PatchEmbedDust3R">class PatchEmbedDust3R</a></li>
 <li><a href="#class-ManyAR_PatchEmbed">class ManyAR_PatchEmbed</a></li>
@@ -329,7 +335,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">PatchEmbedDust3R</span>(PatchEmbed)
-                <span class="line-no">L35-61</span>
+                <span class="line-no">L37-63</span>
             </h2>
             <div class="docstring"><p>DUSt3R 的 PatchEmbed 实现，支持标准正方形图像分块。</p></div>
             
@@ -340,7 +346,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">x</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L38-61</span>
+                    <span class="line-no">L40-63</span>
                 </div>
                 <div class="docstring"><p>前向传播：将图像划分为 patch 并投影到嵌入空间。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -361,7 +367,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ManyAR_PatchEmbed</span>(PatchEmbed)
-                <span class="line-no">L64-148</span>
+                <span class="line-no">L66-150</span>
             </h2>
             <div class="docstring"><p>Handle images with non-square aspect ratio.</p>
 <p>All images in the same batch have the same aspect ratio.</p>
@@ -374,7 +380,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">in_chans</span> = <span class="arg-default">3</span>, <span class="arg-name">embed_dim</span> = <span class="arg-default">768</span>, <span class="arg-name">norm_layer</span> = <span class="arg-default">None</span>, <span class="arg-name">flatten</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L70-90</span>
+                    <span class="line-no">L72-92</span>
                 </div>
                 <div class="docstring"><p>初始化 ManyAR_PatchEmbed。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -391,7 +397,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">img</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L92-148</span>
+                    <span class="line-no">L94-150</span>
                 </div>
                 <div class="docstring"><p>前向传播，处理包含横屏和竖屏图像的批次。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -412,7 +418,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_patch_embed</span> (<span class="arg-name">patch_embed_cls</span>, <span class="arg-name">img_size</span>, <span class="arg-name">patch_size</span>, <span class="arg-name">enc_embed_dim</span>)</code>
-                <span class="line-no">L18-32</span>
+                <span class="line-no">L20-34</span>
             </h2>
             <div class="docstring"><p>根据类名实例化对应的 PatchEmbed 模块。</p>
 <div class="doc-section"><strong>Args:</strong>

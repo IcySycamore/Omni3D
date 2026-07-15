@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/staticthings3d.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>StaticThings3D 数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-StaticThings3D">class StaticThings3D</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">StaticThings3D</span>(BaseStereoViewDataset)
-                <span class="line-no">L22-84</span>
+                <span class="line-no">L24-86</span>
             </h2>
             <div class="docstring"><p>Dataset of indoor scenes, 5 images each time</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">ROOT</span>, <span class="arg-name">*args</span>, <span class="arg-name">mask_bg</span> = <span class="arg-default">&#x27;rand&#x27;</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L25-40</span>
+                    <span class="line-no">L27-42</span>
                 </div>
                 <div class="docstring"><p>初始化 StaticThings3D 数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -351,7 +357,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L42-44</span>
+                    <span class="line-no">L44-46</span>
                 </div>
                 <div class="docstring"><p>返回图像对数量。</p></div>
             </div>
@@ -360,7 +366,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_stats</span> ()</code>
-                    <span class="line-no">L46-48</span>
+                    <span class="line-no">L48-50</span>
                 </div>
                 <div class="docstring"><p>返回数据集统计信息字符串。</p></div>
             </div>
@@ -369,7 +375,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">pair_idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L50-84</span>
+                    <span class="line-no">L52-86</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的两个视图。</p></div>
             </div>

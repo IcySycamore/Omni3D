@@ -312,13 +312,19 @@ td a:hover { text-decoration: underline; }
             <span>📁 0 类</span>
             <span>⚡ 1 函数</span>
             <span>🔧 0 方法</span>
-            <span class="warn">
-                ⚠️ 1 处缺 docstring
+            <span class="ok">
+                ⚠️ 0 处缺 docstring
             </span>
         </div>
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/__init__.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-get_data_loader">get_data_loader()</a></li>
 </ul></div>
@@ -327,9 +333,22 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_data_loader</span> (<span class="arg-name">dataset</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_workers</span> = <span class="arg-default">8</span>, <span class="arg-name">shuffle</span> = <span class="arg-default">True</span>, <span class="arg-name">drop_last</span> = <span class="arg-default">True</span>, <span class="arg-name">pin_mem</span> = <span class="arg-default">True</span>, <span class="arg-name">persistent_workers</span> = <span class="arg-default">False</span>, <span class="arg-name">multiprocessing_context</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L28-64</span>
+                <span class="line-no">L30-81</span>
             </h2>
-            <div class="docstring"><p class="no-doc">⚠️ 缺少 docstring</p></div>
+            <div class="docstring"><p>获取数据集加载器。</p>
+<div class="doc-section"><strong>Args:</strong>
+<div class="doc-detail">    dataset: 数据集对象或名称字符串。</div>
+<div class="doc-detail">    batch_size: 每批样本数量。</div>
+<div class="doc-detail">    num_workers: 数据加载线程数。</div>
+<div class="doc-detail">    shuffle: 是否打乱数据。</div>
+<div class="doc-detail">    drop_last: 是否丢弃不足一个 batch 的数据。</div>
+<div class="doc-detail">    pin_mem: 是否使用锁页内存。</div>
+<div class="doc-detail">    persistent_workers: 是否保持工作进程存活。</div>
+<div class="doc-detail">    multiprocessing_context: 多进程上下文。</div>
+</div>
+<div class="doc-section"><strong>Returns:</strong>
+<div class="doc-detail">    torch.utils.data.DataLoader: 配置好的数据加载器。</div>
+</div></div>
         </div>
         
 </main>
