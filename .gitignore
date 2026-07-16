@@ -185,3 +185,6 @@ Omni3D_Cpp迁移审查与计划.html
 
 # ---- 本机 frp 部署配置（配置文档见 docs/frp/）----
 frp/frpc.toml
+
+# ---- benchmark outputs ----
+outputs/
