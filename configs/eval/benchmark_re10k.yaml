@@ -1,0 +1,18 @@
+name: re10k_pose_mock
+task: pose
+output_dir: outputs/benchmark/re10k_pose_mock
+
+backend:
+  type: mock
+  kwargs:
+    num_views: 10
+    seed: 42
+
+data:
+  scene_dirs:
+    - data/re10k/test/scene_001
+    - data/re10k/test/scene_002
+    - data/re10k/test/scene_003
+
+evaluator_kwargs:
+  max_threshold: 30
