@@ -4,41 +4,41 @@ from PyQt5.QtWidgets import QWidget,QGridLayout,QLabel,QScrollArea,QPushButton,Q
 from PyQt5.QtGui import QPixmap
 
 
-def display_images(window,image_paths):
-    # 清空所有现有的布局项
-    layout = window.widget_2.layout()
-    for i in reversed(range(layout.count())):
-        layout.itemAt(i).widget().deleteLater()
-
-    # 创建一个可以滚动的区域
-    scroll_area = QScrollArea()
-    scroll_area.setWidgetResizable(True)
-    # 创建内部的 widget 来放置图片
-    gallery_widget = QWidget()
-    gallery_layout = QGridLayout(gallery_widget)
-    # 将 gallery widget 添加到 scroll area
-    scroll_area.setWidget(gallery_widget)
-    layout.addWidget(scroll_area)
-    window.widget_2.setLayout(layout)
-
-    image_labels = []
-    # 每行显示 6 张图
-    row = 0
-    col = 0
-    for image_path in image_paths:
-        pixmap = QPixmap(image_path)
-        label = QLabel()
-        label.setPixmap(pixmap.scaled(150, 150, Qt.KeepAspectRatio))  # 设置固定的高度为 150px
-        label.mousePressEvent = lambda event, label=label, path=image_path, window=window, image_paths=image_paths: display_images_choosed(label, path,window,image_paths)
-        image_labels.append(label)
-
-        # 将图片和按钮添加到布局中
-        gallery_layout.addWidget(label, row, col)
-
-        col += 1
-        if col >= 4:  # 每行 6 张图片
-            col = 0
-            row += 1  # 两行分别是图片和下载按钮
+def display_images(m, image_paths):
+    """在画廊中显示图片"""
+    
+    # 清除现有内容
+    layout = m.gallery_widget.layout()
+    if layout is not None:
+        # 清除现有布局中的控件
+        for i in reversed(range(layout.count())): 
+            widget = layout.itemAt(i).widget()
+            if widget:
+                widget.setParent(None)
+    else:
+        # 创建新布局
+        layout = QGridLayout(m.gallery_widget)
+        layout.setSpacing(10)
+    
+    # 显示图片
+    for idx, path in enumerate(image_paths[:20]):  # 最多显示20张
+        try:
+            pixmap = QPixmap(path)
+            if not pixmap.isNull():
+                scaled_pixmap = pixmap.scaled(180, 180, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                
+                label = QLabel()
+                label.setPixmap(scaled_pixmap)
+                label.setToolTip(path)
+                label.setStyleSheet("border: 1px solid #0f3460; border-radius: 5px; padding: 2px; background-color: #1a1a3a;")
+                
+                row = idx // 4
+                col = idx % 4
+                layout.addWidget(label, row, col)
+        except Exception as e:
+            print(f"加载图片失败 {path}: {e}")
+    
+    print(f"已显示 {min(len(image_paths), 20)} 张预览图片")
 
 
 def display_images_choosed(label, path, window,image_paths):
