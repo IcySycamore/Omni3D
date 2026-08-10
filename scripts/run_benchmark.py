@@ -16,10 +16,11 @@ from pathlib import Path
 # 允许从项目根目录导入 fast3r
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from fast3r.eval.benchmark import BenchmarkRunner
+from fast3r.eval.benchmark import BenchmarkRunner  # pylint: disable=wrong-import-position
 
 
-def main():
+def main() -> None:
+    """解析命令行参数并运行评测。"""
     parser = argparse.ArgumentParser(description="Run Fast3R benchmark")
     parser.add_argument(
         "--config",
@@ -40,11 +41,11 @@ def main():
     if args.scenes:
         runner.scene_dirs = [Path(s) for s in args.scenes]
 
-    per_scene, summary = runner.run()
+    _per_scene, summary = runner.run()
 
     print("\n===== Benchmark Summary =====")
-    for k, v in summary.items():
-        print(f"{k}: {v}")
+    for key, value in summary.items():
+        print(f"{key}: {value}")
     print(f"\nResults saved to: {runner.output_dir}")
 
 
