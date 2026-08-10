@@ -14,8 +14,8 @@
     runner.run()
 """
 
-import json
 import csv
+import json
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -25,8 +25,8 @@ import numpy as np
 import yaml
 
 from fast3r.eval.pose_metric_np import (
-    camera_to_rel_deg,
     calculate_auc_np,
+    camera_to_rel_deg,
     compute_ate,
     compute_rpe,
 )
@@ -38,6 +38,7 @@ from fast3r.eval.recon_metric import (
 
 
 def _ensure_dir(path: Path) -> Path:
+    """确保目录存在并返回路径。"""
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -47,20 +48,12 @@ class InferenceBackend(ABC):
 
     @abstractmethod
     def infer_poses(self, scene_dir: Path) -> dict[str, Any]:
-        """推理某个场景的相机位姿。
-
-        Returns:
-            dict: 至少包含 ``pred_c2w`` 和 ``gt_c2w`` 两个 ndarray。
-        """
+        """推理某个场景的相机位姿。"""
         raise NotImplementedError
 
     @abstractmethod
     def infer_reconstruction(self, scene_dir: Path) -> dict[str, Any]:
-        """推理某个场景的三维点云。
-
-        Returns:
-            dict: 至少包含 ``pred_points`` 和 ``gt_points`` 两个 ndarray。
-        """
+        """推理某个场景的三维点云。"""
         raise NotImplementedError
 
 
@@ -73,6 +66,7 @@ class MockInferenceBackend(InferenceBackend):
         self.rng = np.random.default_rng(seed)
 
     def _generate_c2w(self, n: int, noise_scale: float = 0.01) -> np.ndarray:
+        """生成模拟相机 c2w 矩阵。"""
         c2w = np.tile(np.eye(4, dtype=np.float32), (n, 1, 1))
         for i in range(n):
             angle = 0.05 * i
@@ -89,23 +83,26 @@ class MockInferenceBackend(InferenceBackend):
         return c2w
 
     def infer_poses(self, scene_dir: Path) -> dict[str, Any]:
+        """返回模拟位姿结果。"""
         gt_c2w = self._generate_c2w(self.num_views, noise_scale=0.0)
         pred_c2w = self._generate_c2w(self.num_views, noise_scale=0.01)
         return {"pred_c2w": pred_c2w, "gt_c2w": gt_c2w}
 
     def infer_reconstruction(self, scene_dir: Path) -> dict[str, Any]:
+        """返回模拟重建结果。"""
         gt_points = self.rng.standard_normal((self.num_points, 3)).astype(np.float32)
         pred_points = gt_points + self.rng.normal(0, 0.02, (self.num_points, 3)).astype(np.float32)
         return {"pred_points": pred_points, "gt_points": gt_points}
 
 
-class PoseEvaluator:
+class PoseEvaluator:  # pylint: disable=too-few-public-methods
     """相机位姿评测器。"""
 
     def __init__(self, max_threshold: int = 30):
         self.max_threshold = max_threshold
 
     def evaluate(self, pred_c2w: np.ndarray, gt_c2w: np.ndarray) -> dict[str, float]:
+        """评估位姿并返回指标字典。"""
         r_err, t_err = camera_to_rel_deg(pred_c2w, gt_c2w)
         auc = calculate_auc_np(r_err, t_err, max_threshold=self.max_threshold)
         ate = compute_ate(pred_c2w, gt_c2w)
@@ -122,13 +119,14 @@ class PoseEvaluator:
         }
 
 
-class ReconEvaluator:
+class ReconEvaluator:  # pylint: disable=too-few-public-methods
     """三维重建评测器。"""
 
     def __init__(self, dist_th: float = 0.05):
         self.dist_th = dist_th
 
     def evaluate(self, pred_points: np.ndarray, gt_points: np.ndarray) -> dict[str, float]:
+        """评估重建点云并返回指标字典。"""
         acc, acc_med = accuracy(gt_points, pred_points)
         comp, comp_med = completion(gt_points, pred_points)
         comp_ratio = completion_ratio(gt_points, pred_points, dist_th=self.dist_th)
@@ -144,6 +142,7 @@ class ReconEvaluator:
 class BenchmarkRunner:
     """统一评测执行器。"""
 
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def __init__(
         self,
         name: str,
@@ -198,6 +197,7 @@ class BenchmarkRunner:
         )
 
     def _run_scene(self, scene_dir: Path) -> dict[str, Any]:
+        """运行单个场景的评测。"""
         start = time.time()
         if self.task == "pose":
             inference_output = self.backend.infer_poses(scene_dir)
@@ -215,7 +215,7 @@ class BenchmarkRunner:
         result["time_sec"] = time.time() - start
         return result
 
-    def run(self) -> list[dict[str, Any]]:
+    def run(self) -> tuple[list[dict[str, Any]], dict[str, float]]:
         """运行评测并保存结果。"""
         _ensure_dir(self.output_dir)
         per_scene = []
@@ -245,6 +245,7 @@ class BenchmarkRunner:
         return per_scene, summary
 
     def _summarize(self, per_scene: list[dict[str, Any]]) -> dict[str, float]:
+        """汇总多场景结果。"""
         if not per_scene:
             return {}
         numeric_keys = [k for k in per_scene[0].keys() if k not in ("scene", "time_sec")]
