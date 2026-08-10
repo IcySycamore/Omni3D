@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/waymo.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Waymo 数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-Waymo">class Waymo</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Waymo</span>(BaseStereoViewDataset)
-                <span class="line-no">L22-81</span>
+                <span class="line-no">L24-83</span>
             </h2>
             <div class="docstring"><p>Dataset of outdoor street scenes, 5 images each time</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L26-34</span>
+                    <span class="line-no">L28-36</span>
                 </div>
                 <div class="docstring"><p>初始化 Waymo 数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -350,7 +356,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_data</span> ()</code>
-                    <span class="line-no">L36-43</span>
+                    <span class="line-no">L38-45</span>
                 </div>
                 <div class="docstring"><p>加载预处理后的图像对数据。</p></div>
             </div>
@@ -359,7 +365,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L45-47</span>
+                    <span class="line-no">L47-49</span>
                 </div>
                 <div class="docstring"><p>返回图像对数量。</p></div>
             </div>
@@ -368,7 +374,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_stats</span> ()</code>
-                    <span class="line-no">L49-51</span>
+                    <span class="line-no">L51-53</span>
                 </div>
                 <div class="docstring"><p>返回数据集统计信息字符串。</p></div>
             </div>
@@ -377,7 +383,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">pair_idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L53-81</span>
+                    <span class="line-no">L55-83</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的两个视图。</p></div>
             </div>

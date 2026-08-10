@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/viz_plotly.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>Plotly 可视化。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-SceneViz">class SceneViz</a></li>
 <li><a href="#func-image2zvals">image2zvals()</a></li>
@@ -334,7 +340,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">SceneViz</span>
-                <span class="line-no">L15-117</span>
+                <span class="line-no">L17-119</span>
             </h2>
             <div class="docstring"><p>基于 Plotly 的 3D 场景可视化工具类。</p>
 <p>提供添加点云、相机的接口，并支持导出 HTML 和交互式显示。</p></div>
@@ -346,7 +352,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L21-23</span>
+                    <span class="line-no">L23-25</span>
                 </div>
                 <div class="docstring"><p>初始化 SceneViz，创建空的 Plotly Figure。</p></div>
             </div>
@@ -355,7 +361,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">export_html</span> (<span class="arg-name">filename</span> = <span class="arg-default">&#x27;scene_visualization.html&#x27;</span>)</code>
-                    <span class="line-no">L25-30</span>
+                    <span class="line-no">L27-32</span>
                 </div>
                 <div class="docstring"><p>Exports the current figure to a self-contained HTML file.</p></div>
             </div>
@@ -364,7 +370,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_pointcloud</span> (<span class="arg-name">pts3d</span>, <span class="arg-name">color</span>, <span class="arg-name">mask</span> = <span class="arg-default">None</span>, <span class="arg-name">point_size</span> = <span class="arg-default">1</span>, <span class="arg-name">view_idx</span> = <span class="arg-default">0</span>)</code>
-                    <span class="line-no">L32-50</span>
+                    <span class="line-no">L34-52</span>
                 </div>
                 <div class="docstring"><p>Adds a point cloud to the Plotly figure using original colors.</p></div>
             </div>
@@ -373,7 +379,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">clamp_color</span> (<span class="arg-name">rgb_color</span>)</code>
-                    <span class="line-no">L52-54</span>
+                    <span class="line-no">L54-56</span>
                 </div>
                 <div class="docstring"><p>Ensure that RGB values are clamped between 0 and 255.</p></div>
             </div>
@@ -382,7 +388,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_camera</span> (<span class="arg-name">pose_c2w</span>, <span class="arg-name">focal</span> = <span class="arg-default">None</span>, <span class="arg-name">color</span> = <span class="arg-default">(0, 0, 0)</span>, <span class="arg-name">image</span> = <span class="arg-default">None</span>, <span class="arg-name">imsize</span> = <span class="arg-default">None</span>, <span class="arg-name">cam_size</span> = <span class="arg-default">0.02</span>, <span class="arg-name">view_idx</span> = <span class="arg-default">0</span>, <span class="arg-name">enable_color_image</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L56-75</span>
+                    <span class="line-no">L58-77</span>
                 </div>
                 <div class="docstring"><p>Adds a camera frustum to the plot, with an optional image texture.</p></div>
             </div>
@@ -391,7 +397,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">add_cameras</span> (<span class="arg-name">poses</span>, <span class="arg-name">focals</span> = <span class="arg-default">None</span>, <span class="arg-name">images</span> = <span class="arg-default">None</span>, <span class="arg-name">imsizes</span> = <span class="arg-default">None</span>, <span class="arg-name">colors</span> = <span class="arg-default">None</span>, <span class="arg-name">cam_size</span> = <span class="arg-default">0.02</span>, <span class="arg-name">enable_color_image</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L77-94</span>
+                    <span class="line-no">L79-96</span>
                 </div>
                 <div class="docstring"><p>Add multiple cameras with adjustable frustum size.</p></div>
             </div>
@@ -400,7 +406,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">show</span> (<span class="arg-name">point_size</span> = <span class="arg-default">1</span>, <span class="arg-name">viewer</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L96-117</span>
+                    <span class="line-no">L98-119</span>
                 </div>
                 <div class="docstring"><p>显示 3D 场景。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -420,7 +426,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">image2zvals</span> (<span class="arg-name">img</span>, <span class="arg-name">n_colors</span> = <span class="arg-default">64</span>, <span class="arg-name">n_training_pixels</span> = <span class="arg-default">1000</span>)</code>
-                <span class="line-no">L120-141</span>
+                <span class="line-no">L122-143</span>
             </h2>
             <div class="docstring"><p>Quantize the image using KMeans for color mapping.</p></div>
         </div>
@@ -430,7 +436,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">regular_triangles</span> (<span class="arg-name">rows</span>, <span class="arg-name">cols</span>)</code>
-                <span class="line-no">L144-151</span>
+                <span class="line-no">L146-153</span>
             </h2>
             <div class="docstring"><p>Generate regular triangles for a mesh.</p></div>
         </div>
@@ -440,7 +446,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">mesh_data</span> (<span class="arg-name">img</span>, <span class="arg-name">resolution</span> = <span class="arg-default">128</span>, <span class="arg-name">n_colors</span> = <span class="arg-default">64</span>, <span class="arg-name">n_training_pixels</span> = <span class="arg-default">1000</span>)</code>
-                <span class="line-no">L154-170</span>
+                <span class="line-no">L156-172</span>
             </h2>
             <div class="docstring"><p>Generate mesh data with quantized color intensities for the image.</p></div>
         </div>
@@ -450,7 +456,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">generate_meshgrid</span> (<span class="arg-name">frustum_points_world</span>, <span class="arg-name">resolution</span>)</code>
-                <span class="line-no">L173-184</span>
+                <span class="line-no">L175-186</span>
             </h2>
             <div class="docstring"><p>Generate a meshgrid and calculate X, Y, Z for the surface or mesh3d.</p></div>
         </div>
@@ -460,7 +466,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">create_mesh3d</span> (<span class="arg-name">pose_c2w</span>, <span class="arg-name">img</span>, <span class="arg-name">frustum_points_world</span>, <span class="arg-name">resolution</span> = <span class="arg-default">64</span>, <span class="arg-name">n_colors</span> = <span class="arg-default">64</span>, <span class="arg-name">view_idx</span> = <span class="arg-default">0</span>)</code>
-                <span class="line-no">L187-205</span>
+                <span class="line-no">L189-207</span>
             </h2>
             <div class="docstring"><p>Creates a Mesh3d object for the image texture mapping.</p></div>
         </div>
@@ -470,7 +476,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">create_surface</span> (<span class="arg-name">frustum_points_world</span>, <span class="arg-name">img_downsampled</span>, <span class="arg-name">z_vals</span>, <span class="arg-name">resolution</span> = <span class="arg-default">64</span>, <span class="arg-name">view_idx</span> = <span class="arg-default">0</span>)</code>
-                <span class="line-no">L208-217</span>
+                <span class="line-no">L210-219</span>
             </h2>
             <div class="docstring"><p>Creates a Surface object with grayscale for faster rendering.</p></div>
         </div>
@@ -480,7 +486,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">create_camera_frustum_with_image</span> (<span class="arg-name">pose_c2w</span>, <span class="arg-name">focal</span>, <span class="arg-name">H</span>, <span class="arg-name">W</span>, <span class="arg-name">image</span> = <span class="arg-default">None</span>, <span class="arg-name">screen_width</span> = <span class="arg-default">0.02</span>, <span class="arg-name">color</span> = <span class="arg-default">&#x27;blue&#x27;</span>, <span class="arg-name">resolution</span> = <span class="arg-default">128</span>, <span class="arg-name">view_idx</span> = <span class="arg-default">0</span>, <span class="arg-name">enable_color_image</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L220-273</span>
+                <span class="line-no">L222-275</span>
             </h2>
             <div class="docstring"><p>Creates a frustum for a camera and optionally adds an image to the frustum.</p></div>
         </div>

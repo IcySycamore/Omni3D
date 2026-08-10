@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/losses.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>损失函数。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-LLoss">class LLoss</a></li>
 <li><a href="#class-L21Loss">class L21Loss</a></li>
@@ -341,7 +347,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">LLoss</span>(nn.Module)
-                <span class="line-no">L54-106</span>
+                <span class="line-no">L56-108</span>
             </h2>
             <div class="docstring"><p>L-范数损失基类。</p>
 <p>子类需实现 distance() 方法定义具体的距离度量。</p>
@@ -354,7 +360,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">reduction</span> = <span class="arg-default">&#x27;mean&#x27;</span>)</code>
-                    <span class="line-no">L61-68</span>
+                    <span class="line-no">L63-70</span>
                 </div>
                 <div class="docstring"><p>初始化 LLoss。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -366,7 +372,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
-                    <span class="line-no">L70-91</span>
+                    <span class="line-no">L72-93</span>
                 </div>
                 <div class="docstring"><p>计算两组点之间的 L-范数损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -382,7 +388,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">distance</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
-                    <span class="line-no">L93-106</span>
+                    <span class="line-no">L95-108</span>
                 </div>
                 <div class="docstring"><p>计算两点之间的距离（由子类实现）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -405,7 +411,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">L21Loss</span>(LLoss)
-                <span class="line-no">L109-122</span>
+                <span class="line-no">L111-124</span>
             </h2>
             <div class="docstring"><p>3D 点之间的欧氏距离损失（L2,1 范数）。</p></div>
             
@@ -416,7 +422,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">distance</span> (<span class="arg-name">a</span>, <span class="arg-name">b</span>)</code>
-                    <span class="line-no">L112-122</span>
+                    <span class="line-no">L114-124</span>
                 </div>
                 <div class="docstring"><p>计算两组 3D 点间的欧氏距离。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -436,7 +442,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Criterion</span>(nn.Module)
-                <span class="line-no">L128-168</span>
+                <span class="line-no">L130-170</span>
             </h2>
             <div class="docstring"><p>损失基类，封装一个 LLoss 实例作为底层度量标准。</p>
 <p>提供 get_name() 和 with_reduction() 接口供子类使用。</p></div>
@@ -448,7 +454,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L134-144</span>
+                    <span class="line-no">L136-146</span>
                 </div>
                 <div class="docstring"><p>初始化 Criterion。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -460,7 +466,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_name</span> ()</code>
-                    <span class="line-no">L146-152</span>
+                    <span class="line-no">L148-154</span>
                 </div>
                 <div class="docstring"><p>返回损失的名称字符串。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -472,7 +478,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">with_reduction</span> (<span class="arg-name">mode</span>)</code>
-                    <span class="line-no">L154-168</span>
+                    <span class="line-no">L156-170</span>
                 </div>
                 <div class="docstring"><p>返回一个使用指定 reduction 模式的损失副本。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -491,7 +497,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MultiLoss</span>(nn.Module)
-                <span class="line-no">L171-276</span>
+                <span class="line-no">L173-278</span>
             </h2>
             <div class="docstring"><p>Easily combinable losses (also keep track of individual loss values):</p>
 <p>    loss = MyLoss1() + 0.1*MyLoss2()</p>
@@ -506,7 +512,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> ()</code>
-                    <span class="line-no">L178-182</span>
+                    <span class="line-no">L180-184</span>
                 </div>
                 <div class="docstring"><p>初始化 MultiLoss，设置权重为 1，链式损失为 None。</p></div>
             </div>
@@ -515,7 +521,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L184-193</span>
+                    <span class="line-no">L186-195</span>
                 </div>
                 <div class="docstring"><p>计算损失（由子类实现）。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -530,7 +536,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_name</span> ()</code>
-                    <span class="line-no">L195-204</span>
+                    <span class="line-no">L197-206</span>
                 </div>
                 <div class="docstring"><p>返回损失名称字符串（由子类实现）。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -545,7 +551,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__mul__</span> (<span class="arg-name">alpha</span>)</code>
-                    <span class="line-no">L206-218</span>
+                    <span class="line-no">L208-220</span>
                 </div>
                 <div class="docstring"><p>返回带权重的损失副本（支持 alpha * loss 语法）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -560,7 +566,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__add__</span> (<span class="arg-name">loss2</span>)</code>
-                    <span class="line-no">L222-237</span>
+                    <span class="line-no">L224-239</span>
                 </div>
                 <div class="docstring"><p>将两个损失链式连接（支持 loss1 + loss2 语法）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -575,7 +581,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L239-250</span>
+                    <span class="line-no">L241-252</span>
                 </div>
                 <div class="docstring"><p>返回损失的字符串表示，含权重和链式结构。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -587,7 +593,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L252-276</span>
+                    <span class="line-no">L254-278</span>
                 </div>
                 <div class="docstring"><p>前向传播，计算加权损失并递归调用链式损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -607,7 +613,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3D</span>(Criterion, MultiLoss)
-                <span class="line-no">L279-378</span>
+                <span class="line-no">L281-380</span>
             </h2>
             <div class="docstring"><p>Ensure that all 3D points are correct.</p>
 <p>Asymmetric loss: view1 is supposed to be the anchor.</p>
@@ -624,7 +630,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L290-300</span>
+                    <span class="line-no">L292-302</span>
                 </div>
                 <div class="docstring"><p>初始化 Regr3D。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -638,7 +644,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_all_pts3d</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L302-345</span>
+                    <span class="line-no">L304-347</span>
                 </div>
                 <div class="docstring"><p>提取并归一化双视角的真实与预测 3D 点。</p>
 <p>所有点都变换到 view1 的相机坐标系中。</p>
@@ -658,7 +664,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L347-378</span>
+                    <span class="line-no">L349-380</span>
                 </div>
                 <div class="docstring"><p>计算双视角 3D 点回归损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -681,7 +687,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3DMultiview</span>(Criterion, MultiLoss)
-                <span class="line-no">L381-472</span>
+                <span class="line-no">L383-474</span>
             </h2>
             <div class="docstring"><p>Ensure that all 3D points are correct for multiple views.</p>
 <p>Asymmetric loss: view1 is supposed to be the anchor.</p></div>
@@ -693,7 +699,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L386-396</span>
+                    <span class="line-no">L388-398</span>
                 </div>
                 <div class="docstring"><p>初始化 Regr3DMultiview。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -707,7 +713,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pts3d_for_view</span> (<span class="arg-name">gt_anchor</span>, <span class="arg-name">pred_anchor</span>, <span class="arg-name">gt_other</span>, <span class="arg-name">pred_other</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L398-439</span>
+                    <span class="line-no">L400-441</span>
                 </div>
                 <div class="docstring"><p>提取并归一化锚视图和目标视图的 3D 点。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -726,7 +732,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L441-472</span>
+                    <span class="line-no">L443-474</span>
                 </div>
                 <div class="docstring"><p>计算多视角 3D 点回归损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -747,7 +753,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3DMultiviewV2</span>(Criterion, MultiLoss)
-                <span class="line-no">L475-589</span>
+                <span class="line-no">L477-591</span>
             </h2>
             <div class="docstring"><p>Ensure that all 3D points are correct for multiple views.</p>
 <p>The point clouds from all views are concatenated together for normalization,</p>
@@ -761,7 +767,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L482-492</span>
+                    <span class="line-no">L484-494</span>
                 </div>
                 <div class="docstring"><p>初始化 Regr3DMultiviewV2 损失函数。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -775,7 +781,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pts3d_from_views</span> (<span class="arg-name">gt_views</span>, <span class="arg-name">pred_views</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L494-524</span>
+                    <span class="line-no">L496-526</span>
                 </div>
                 <div class="docstring"><p>Get point clouds and valid masks for multiple views.</p></div>
             </div>
@@ -784,7 +790,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">normalize_pointcloud_from_views</span> (<span class="arg-name">pts_list</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid_list</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L526-570</span>
+                    <span class="line-no">L528-572</span>
                 </div>
                 <div class="docstring"><p>Normalize point clouds from multiple views, excluding invalid points from normalization.</p></div>
             </div>
@@ -793,7 +799,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L572-589</span>
+                    <span class="line-no">L574-591</span>
                 </div>
                 <div class="docstring"><p>Compute the loss by normalizing the point clouds across views and logging each view&#x27;s loss.</p></div>
             </div>
@@ -806,7 +812,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3DMultiviewV3</span>(Criterion, MultiLoss)
-                <span class="line-no">L592-780</span>
+                <span class="line-no">L594-782</span>
             </h2>
             <div class="docstring"><p>Ensure that all 3D points are correct for multiple views.</p>
 <p>The point clouds from all views are concatenated together for normalization,</p>
@@ -820,7 +826,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">criterion</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">gt_scale</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L599-611</span>
+                    <span class="line-no">L601-613</span>
                 </div>
                 <div class="docstring"><p>初始化 Regr3DMultiviewV3 损失函数。</p>
 <p>支持全局坐标系和局部坐标系的双重建模。</p>
@@ -835,7 +841,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_pts3d_from_views</span> (<span class="arg-name">gt_views</span>, <span class="arg-name">pred_views</span>, <span class="arg-name">dist_clip</span> = <span class="arg-default">None</span>, <span class="arg-name">local</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L613-643</span>
+                    <span class="line-no">L615-645</span>
                 </div>
                 <div class="docstring"><p>Get point clouds and valid masks for multiple views.</p></div>
             </div>
@@ -844,7 +850,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">normalize_pointcloud_from_views</span> (<span class="arg-name">pts_list</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid_list</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L645-689</span>
+                    <span class="line-no">L647-691</span>
                 </div>
                 <div class="docstring"><p>Normalize point clouds from multiple views, excluding invalid points from normalization.</p></div>
             </div>
@@ -853,7 +859,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">normalize_pointcloud_per_view</span> (<span class="arg-name">pts_list</span>, <span class="arg-name">norm_mode</span> = <span class="arg-default">&#x27;avg_dis&#x27;</span>, <span class="arg-name">valid_list</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L691-728</span>
+                    <span class="line-no">L693-730</span>
                 </div>
                 <div class="docstring"><p>Normalize point clouds on a per-view basis.</p></div>
             </div>
@@ -862,7 +868,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L730-780</span>
+                    <span class="line-no">L732-782</span>
                 </div>
                 <div class="docstring"><p>计算 Regr3DMultiviewV3 的多视图回归损失。</p>
 <p>同时计算全局坐标系和局部坐标系下的 3D 点云回归损失，</p>
@@ -887,7 +893,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ConfLossMultiview</span>(MultiLoss)
-                <span class="line-no">L783-854</span>
+                <span class="line-no">L785-856</span>
             </h2>
             <div class="docstring"><p>多视角置信度加权回归损失。</p>
 <p>利用模型学习到的置信度对逐像素损失加权，高置信区域损失惩罚更大。</p>
@@ -902,7 +908,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">pixel_loss</span>, <span class="arg-name">alpha</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L794-804</span>
+                    <span class="line-no">L796-806</span>
                 </div>
                 <div class="docstring"><p>初始化 ConfLossMultiview。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -915,7 +921,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_name</span> ()</code>
-                    <span class="line-no">L806-812</span>
+                    <span class="line-no">L808-814</span>
                 </div>
                 <div class="docstring"><p>返回损失名称。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -927,7 +933,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_conf_log</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L814-823</span>
+                    <span class="line-no">L816-825</span>
                 </div>
                 <div class="docstring"><p>返回置信度及其对数。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -942,7 +948,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L825-854</span>
+                    <span class="line-no">L827-856</span>
                 </div>
                 <div class="docstring"><p>计算置信度加权的多视角损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -963,7 +969,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ConfLossMultiviewV2</span>(MultiLoss)
-                <span class="line-no">L857-948</span>
+                <span class="line-no">L859-950</span>
             </h2>
             <div class="docstring"><p>多视角置信度加权回归损失（V2），分别对全局和局部损失归一化。</p>
 <p>在 V1 基础上区分 &#x27;global&#x27; 和 &#x27;local&#x27; 损失类型，分别索引对应置信度</p>
@@ -976,7 +982,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">pixel_loss</span>, <span class="arg-name">alpha</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L864-874</span>
+                    <span class="line-no">L866-876</span>
                 </div>
                 <div class="docstring"><p>初始化 ConfLossMultiviewV2。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -989,7 +995,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_name</span> ()</code>
-                    <span class="line-no">L876-882</span>
+                    <span class="line-no">L878-884</span>
                 </div>
                 <div class="docstring"><p>返回损失名称。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -1001,7 +1007,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_conf_log</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L884-893</span>
+                    <span class="line-no">L886-895</span>
                 </div>
                 <div class="docstring"><p>返回置信度及其对数。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -1016,7 +1022,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gts</span>, <span class="arg-name">preds</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L895-948</span>
+                    <span class="line-no">L897-950</span>
                 </div>
                 <div class="docstring"><p>计算分离全局/局部路径的置信度加权损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -1038,7 +1044,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ConfLoss</span>(MultiLoss)
-                <span class="line-no">L950-1026</span>
+                <span class="line-no">L952-1028</span>
             </h2>
             <div class="docstring"><p>双视角置信度加权回归损失（原始版本）。</p>
 <p>利用模型学习到的置信度对逐像素损失加权，适用于双视角 (view1, view2) 场景。</p>
@@ -1053,7 +1059,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">pixel_loss</span>, <span class="arg-name">alpha</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L961-971</span>
+                    <span class="line-no">L963-973</span>
                 </div>
                 <div class="docstring"><p>初始化 ConfLoss。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -1066,7 +1072,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_name</span> ()</code>
-                    <span class="line-no">L973-979</span>
+                    <span class="line-no">L975-981</span>
                 </div>
                 <div class="docstring"><p>返回损失名称。</p>
 <div class="doc-section"><strong>Returns:</strong>
@@ -1078,7 +1084,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_conf_log</span> (<span class="arg-name">x</span>)</code>
-                    <span class="line-no">L981-990</span>
+                    <span class="line-no">L983-992</span>
                 </div>
                 <div class="docstring"><p>返回置信度及其对数。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -1093,7 +1099,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">compute_loss</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L992-1026</span>
+                    <span class="line-no">L994-1028</span>
                 </div>
                 <div class="docstring"><p>计算双视角置信度加权损失。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -1116,7 +1122,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3D_ShiftInv</span>(Regr3D)
-                <span class="line-no">L1029-1077</span>
+                <span class="line-no">L1031-1079</span>
             </h2>
             <div class="docstring"><p>深度平移不变的 3D 点回归损失。</p>
 <p>在 Regr3D 基础上减去联合点云的中位深度，使损失对绝对深度平移不敏感。</p></div>
@@ -1128,7 +1134,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_all_pts3d</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>)</code>
-                    <span class="line-no">L1035-1077</span>
+                    <span class="line-no">L1037-1079</span>
                 </div>
                 <div class="docstring"><p>提取并进行深度平移归一化的 3D 点。</p>
 <p>计算并减去真实/预测点云的联合中位深度，消除深度平移影响。</p>
@@ -1151,7 +1157,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3D_ScaleInv</span>(Regr3D)
-                <span class="line-no">L1080-1132</span>
+                <span class="line-no">L1082-1134</span>
             </h2>
             <div class="docstring"><p>尺度不变的 3D 点回归损失。</p>
 <p>在 Regr3D 基础上对点云进行全局尺度归一化。</p>
@@ -1165,7 +1171,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_all_pts3d</span> (<span class="arg-name">gt1</span>, <span class="arg-name">gt2</span>, <span class="arg-name">pred1</span>, <span class="arg-name">pred2</span>)</code>
-                    <span class="line-no">L1088-1132</span>
+                    <span class="line-no">L1090-1134</span>
                 </div>
                 <div class="docstring"><p>提取并进行尺度归一化的 3D 点。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -1187,7 +1193,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">Regr3D_ScaleShiftInv</span>(Regr3D_ScaleInv, Regr3D_ShiftInv)
-                <span class="line-no">L1135-1142</span>
+                <span class="line-no">L1137-1144</span>
             </h2>
             <div class="docstring"><p>同时对深度平移和尺度不变的 3D 点回归损失。</p>
 <p>通过 MRO 先应用 Regr3D_ShiftInv（深度平移归一化），</p>
@@ -1204,7 +1210,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">Sum</span> (<span class="arg-name">*losses_and_masks</span>)</code>
-                <span class="line-no">L28-51</span>
+                <span class="line-no">L30-53</span>
             </h2>
             <div class="docstring"><p>合并多个 (loss, mask) 或 (loss, mask, loss_type) 元组。</p>
 <p>若各损失为标量则直接求和返回；否则原样返回元组列表供 ConfLoss 使用。</p>

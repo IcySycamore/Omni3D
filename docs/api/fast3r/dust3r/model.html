@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/model.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>模型定义。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-AsymmetricCroCo3DStereo">class AsymmetricCroCo3DStereo</a></li>
 <li><a href="#class-FlashDUSt3R">class FlashDUSt3R</a></li>
@@ -329,7 +335,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">AsymmetricCroCo3DStereo</span>(CroCoNet, huggingface_hub.PyTorchModelHubMixin)
-                <span class="line-no">L77-406</span>
+                <span class="line-no">L79-408</span>
             </h2>
             <div class="docstring"><p>Two siamese encoders, followed by two decoders.</p>
 <p>The goal is to output 3d points directly, both images in view1&#x27;s frame</p>
@@ -342,7 +348,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">output_mode</span> = <span class="arg-default">&#x27;pts3d&#x27;</span>, <span class="arg-name">head_type</span> = <span class="arg-default">&#x27;linear&#x27;</span>, <span class="arg-name">depth_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, -inf, inf)</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, 1, inf)</span>, <span class="arg-name">freeze</span> = <span class="arg-default">&#x27;none&#x27;</span>, <span class="arg-name">landscape_only</span> = <span class="arg-default">True</span>, <span class="arg-name">patch_embed_cls</span> = <span class="arg-default">&#x27;PatchEmbedDust3R&#x27;</span>, <span class="arg-name">**croco_kwargs</span>)</code>
-                    <span class="line-no">L89-126</span>
+                    <span class="line-no">L91-128</span>
                 </div>
                 <div class="docstring"><p>初始化 AsymmetricCroCo3DStereo 模型。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -361,7 +367,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge cls">cls</span>
                     <code><span class="fn-name">from_pretrained</span> (<span class="arg-name">pretrained_model_name_or_path</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L129-144</span>
+                    <span class="line-no">L131-146</span>
                 </div>
                 <div class="docstring"><p>从预训练模型加载。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -377,7 +383,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
-                    <span class="line-no">L146-150</span>
+                    <span class="line-no">L148-152</span>
                 </div>
                 <div class="docstring"><p>设置 Patch 嵌入层（AsymmetricCroCo3DStereo 版本），支持多种嵌入层类型。</p></div>
             </div>
@@ -386,7 +392,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L152-169</span>
+                    <span class="line-no">L154-171</span>
                 </div>
                 <div class="docstring"><p>加载状态字典，自动复制解码器权重到第二个解码器。</p>
 <p>如果检查点中没有 dec_blocks2 的权重，会自动将 dec_blocks 的权重复制到 dec_blocks2。</p>
@@ -403,7 +409,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_freeze</span> (<span class="arg-name">freeze</span>)</code>
-                    <span class="line-no">L171-186</span>
+                    <span class="line-no">L173-188</span>
                 </div>
                 <div class="docstring"><p>设置模型冻结策略。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -418,7 +424,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L188-190</span>
+                    <span class="line-no">L190-192</span>
                 </div>
                 <div class="docstring"><p>No prediction head</p></div>
             </div>
@@ -427,7 +433,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_downstream_head</span> (<span class="arg-name">output_mode</span>, <span class="arg-name">head_type</span>, <span class="arg-name">landscape_only</span>, <span class="arg-name">depth_mode</span>, <span class="arg-name">conf_mode</span>, <span class="arg-name">patch_size</span>, <span class="arg-name">img_size</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L192-237</span>
+                    <span class="line-no">L194-239</span>
                 </div>
                 <div class="docstring"><p>初始化双视图的下游预测头。</p>
 <p>创建两个独立的预测头（分别对应两个视图），并可选地包装为横屏模式。</p>
@@ -447,7 +453,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_image</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L239-263</span>
+                    <span class="line-no">L241-265</span>
                 </div>
                 <div class="docstring"><p>编码单张图像为 patch 序列特征。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -466,7 +472,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_image_pairs</span> (<span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">true_shape1</span>, <span class="arg-name">true_shape2</span>)</code>
-                    <span class="line-no">L265-287</span>
+                    <span class="line-no">L267-289</span>
                 </div>
                 <div class="docstring"><p>编码一对图像，支持不同尺寸的图像对。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -484,7 +490,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_symmetrized</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>)</code>
-                    <span class="line-no">L289-325</span>
+                    <span class="line-no">L291-327</span>
                 </div>
                 <div class="docstring"><p>对称编码两个视图，支持对称化数据增强。</p>
 <p>如果两个视图已对称化，只计算一半的前向传播以提高效率。</p>
@@ -501,7 +507,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_decoder</span> (<span class="arg-name">f1</span>, <span class="arg-name">pos1</span>, <span class="arg-name">f2</span>, <span class="arg-name">pos2</span>)</code>
-                    <span class="line-no">L327-359</span>
+                    <span class="line-no">L329-361</span>
                 </div>
                 <div class="docstring"><p>非对称双解码器前向传播。</p>
 <p>两组解码器块分别处理两个视图的特征，进行交叉注意力交互。</p>
@@ -520,7 +526,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_downstream_head</span> (<span class="arg-name">head_num</span>, <span class="arg-name">decout</span>, <span class="arg-name">img_shape</span>)</code>
-                    <span class="line-no">L361-375</span>
+                    <span class="line-no">L363-377</span>
                 </div>
                 <div class="docstring"><p>获取下游预测头的输出。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -537,7 +543,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">view1</span>, <span class="arg-name">view2</span>)</code>
-                    <span class="line-no">L377-406</span>
+                    <span class="line-no">L379-408</span>
                 </div>
                 <div class="docstring"><p>双视图 DUSt3R 前向传播。</p>
 <p>编码两个视图，通过非对称解码器交互，输出两个视图的 3D 点预测。</p>
@@ -560,7 +566,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">FlashDUSt3R</span>(CroCoNet, huggingface_hub.PyTorchModelHubMixin)
-                <span class="line-no">L409-839</span>
+                <span class="line-no">L411-841</span>
             </h2>
             <div class="docstring"><p>Two siamese encoders, followed by a single large decoder.</p>
 <p>The goal is to output 3d points directly, processing multiple views.</p></div>
@@ -572,7 +578,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">output_mode</span> = <span class="arg-default">&#x27;pts3d&#x27;</span>, <span class="arg-name">head_type</span> = <span class="arg-default">&#x27;linear&#x27;</span>, <span class="arg-name">depth_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, -inf, inf)</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">(&#x27;exp&#x27;, 1, inf)</span>, <span class="arg-name">freeze</span> = <span class="arg-default">&#x27;none&#x27;</span>, <span class="arg-name">landscape_only</span> = <span class="arg-default">True</span>, <span class="arg-name">patch_embed_cls</span> = <span class="arg-default">&#x27;PatchEmbedDust3R&#x27;</span>, <span class="arg-name">decoder_pos_embed_type</span> = <span class="arg-default">&#x27;sinusoidal&#x27;</span>, <span class="arg-name">attn_implementation</span> = <span class="arg-default">&#x27;pytorch_naive&#x27;</span>, <span class="arg-name">random_image_idx_embedding</span> = <span class="arg-default">False</span>, <span class="arg-name">**croco_kwargs</span>)</code>
-                    <span class="line-no">L420-483</span>
+                    <span class="line-no">L422-485</span>
                 </div>
                 <div class="docstring"><p>初始化 FlashDUSt3R 模型。</p>
 <p>与 AsymmetricCroCo3DStereo 不同，FlashDUSt3R 使用单个大型解码器处理多视图。</p>
@@ -595,7 +601,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge cls">cls</span>
                     <code><span class="fn-name">from_pretrained</span> (<span class="arg-name">pretrained_model_name_or_path</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L486-501</span>
+                    <span class="line-no">L488-503</span>
                 </div>
                 <div class="docstring"><p>从预训练模型加载。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -611,7 +617,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_patch_embed</span> (<span class="arg-name">img_size</span> = <span class="arg-default">224</span>, <span class="arg-name">patch_size</span> = <span class="arg-default">16</span>, <span class="arg-name">enc_embed_dim</span> = <span class="arg-default">768</span>)</code>
-                    <span class="line-no">L503-507</span>
+                    <span class="line-no">L505-509</span>
                 </div>
                 <div class="docstring"><p>设置 Patch 嵌入层（FlashDUSt3R 版本）。</p></div>
             </div>
@@ -620,7 +626,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">load_state_dict</span> (<span class="arg-name">ckpt</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L509-510</span>
+                    <span class="line-no">L511-512</span>
                 </div>
                 <div class="docstring"><p>加载状态字典。</p></div>
             </div>
@@ -629,7 +635,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_freeze</span> (<span class="arg-name">freeze</span>)</code>
-                    <span class="line-no">L512-529</span>
+                    <span class="line-no">L514-531</span>
                 </div>
                 <div class="docstring"><p>设置 FlashDUSt3R 模型的冻结策略。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -645,7 +651,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_prediction_head</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L531-533</span>
+                    <span class="line-no">L533-535</span>
                 </div>
                 <div class="docstring"><p>No prediction head</p></div>
             </div>
@@ -654,7 +660,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_downstream_head</span> (<span class="arg-name">output_mode</span>, <span class="arg-name">head_type</span>, <span class="arg-name">landscape_only</span>, <span class="arg-name">depth_mode</span>, <span class="arg-name">conf_mode</span>, <span class="arg-name">patch_size</span>, <span class="arg-name">img_size</span>, <span class="arg-name">**kw</span>)</code>
-                    <span class="line-no">L535-572</span>
+                    <span class="line-no">L537-574</span>
                 </div>
                 <div class="docstring"><p>初始化 FlashDUSt3R 的单一预测头和包装层。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -673,7 +679,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_image</span> (<span class="arg-name">image</span>, <span class="arg-name">true_shape</span>)</code>
-                    <span class="line-no">L574-597</span>
+                    <span class="line-no">L576-599</span>
                 </div>
                 <div class="docstring"><p>编码单张图像为 patch 序列特征（FlashDUSt3R 版本）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -691,7 +697,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_encode_images</span> (<span class="arg-name">views</span>)</code>
-                    <span class="line-no">L599-625</span>
+                    <span class="line-no">L601-627</span>
                 </div>
                 <div class="docstring"><p>对所有输入视图进行编码。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -709,7 +715,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_per_rank_generator</span> ()</code>
-                    <span class="line-no">L627-645</span>
+                    <span class="line-no">L629-647</span>
                 </div>
                 <div class="docstring"><p>生成每个分布式 rank 独立且确定性的随机生成器。</p>
 <p>每个 rank 生成不同的随机排列，但对于固定的前向传播次数确定。</p>
@@ -722,7 +728,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_random_image_pos</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">batch_size</span>, <span class="arg-name">num_views</span>, <span class="arg-name">max_image_idx</span>, <span class="arg-name">device</span>)</code>
-                    <span class="line-no">L647-698</span>
+                    <span class="line-no">L649-700</span>
                 </div>
                 <div class="docstring"><p>Generates non-repeating random image indices for each sample, retrieves corresponding</p>
 <p>positional embeddings for each view, and concatenates them.</p>
@@ -742,7 +748,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_decoder</span> (<span class="arg-name">encoded_feats</span>, <span class="arg-name">positions</span>, <span class="arg-name">image_ids</span>)</code>
-                    <span class="line-no">L700-745</span>
+                    <span class="line-no">L702-747</span>
                 </div>
                 <div class="docstring"><p>多视图全局解码器前向传播。</p>
 <p>将所有视图特征拼接后经过多视图 Transformer 块处理，</p>
@@ -761,7 +767,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">views</span>)</code>
-                    <span class="line-no">L747-839</span>
+                    <span class="line-no">L749-841</span>
                 </div>
                 <div class="docstring"><div class="doc-section"><strong>Args:</strong>
 <div class="doc-detail">    views (list[dict]): a list of views, each view is a dict of tensors, the tensors are batched</div>
@@ -779,7 +785,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">load_model</span> (<span class="arg-name">model_path</span>, <span class="arg-name">device</span>, <span class="arg-name">verbose</span> = <span class="arg-default">True</span>)</code>
-                <span class="line-no">L46-74</span>
+                <span class="line-no">L48-76</span>
             </h2>
             <div class="docstring"><p>从检查点路径加载 DUSt3R 模型。</p>
 <div class="doc-section"><strong>Args:</strong>

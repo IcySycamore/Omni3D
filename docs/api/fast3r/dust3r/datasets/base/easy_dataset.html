@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/easy_dataset.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>简易数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-EasyDataset">class EasyDataset</a></li>
 <li><a href="#class-MulDataset">class MulDataset</a></li>
@@ -330,7 +336,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">EasyDataset</span>
-                <span class="line-no">L18-74</span>
+                <span class="line-no">L20-76</span>
             </h2>
             <div class="docstring"><p>a dataset that you can easily resize and combine.</p>
 <div class="doc-section"><strong>Examples:</strong>
@@ -347,7 +353,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__add__</span> (<span class="arg-name">other</span>)</code>
-                    <span class="line-no">L29-31</span>
+                    <span class="line-no">L31-33</span>
                 </div>
                 <div class="docstring"><p>拼接两个数据集。</p></div>
             </div>
@@ -356,7 +362,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__rmul__</span> (<span class="arg-name">factor</span>)</code>
-                    <span class="line-no">L33-35</span>
+                    <span class="line-no">L35-37</span>
                 </div>
                 <div class="docstring"><p>重复数据集 factor 次（如 2 * dataset）。</p></div>
             </div>
@@ -365,7 +371,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__rmatmul__</span> (<span class="arg-name">factor</span>)</code>
-                    <span class="line-no">L37-39</span>
+                    <span class="line-no">L39-41</span>
                 </div>
                 <div class="docstring"><p>调整数据集大小为 factor（如 10 @ dataset）。</p></div>
             </div>
@@ -374,7 +380,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L41-43</span>
+                    <span class="line-no">L43-45</span>
                 </div>
                 <div class="docstring"><p>设置当前 epoch（用于随机种子控制）。</p></div>
             </div>
@@ -383,7 +389,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_ratio</span> (<span class="arg-name">train_ratio</span>)</code>
-                    <span class="line-no">L45-47</span>
+                    <span class="line-no">L47-49</span>
                 </div>
                 <div class="docstring"><p>设置训练比例。</p></div>
             </div>
@@ -392,7 +398,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">make_sampler</span> (<span class="arg-name">batch_size</span>, <span class="arg-name">shuffle</span> = <span class="arg-default">True</span>, <span class="arg-name">world_size</span> = <span class="arg-default">1</span>, <span class="arg-name">rank</span> = <span class="arg-default">0</span>, <span class="arg-name">drop_last</span> = <span class="arg-default">True</span>)</code>
-                    <span class="line-no">L49-74</span>
+                    <span class="line-no">L51-76</span>
                 </div>
                 <div class="docstring"><p>创建按宽高比分批的随机采样器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -415,7 +421,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">MulDataset</span>(EasyDataset)
-                <span class="line-no">L77-112</span>
+                <span class="line-no">L79-114</span>
             </h2>
             <div class="docstring"><p>Artifically augmenting the size of a dataset.</p></div>
             <div class="class-vars"><strong>类变量:</strong> <code>multiplicator</code></div>
@@ -426,7 +432,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">multiplicator</span>, <span class="arg-name">dataset</span>)</code>
-                    <span class="line-no">L82-91</span>
+                    <span class="line-no">L84-93</span>
                 </div>
                 <div class="docstring"><p>初始化重复数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -439,7 +445,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L93-95</span>
+                    <span class="line-no">L95-97</span>
                 </div>
                 <div class="docstring"><p>返回数据集大小（原始大小 × 倍数）。</p></div>
             </div>
@@ -448,7 +454,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L97-99</span>
+                    <span class="line-no">L99-101</span>
                 </div>
                 <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
@@ -457,7 +463,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L101-107</span>
+                    <span class="line-no">L103-109</span>
                 </div>
                 <div class="docstring"><p>根据索引获取数据（取模映射回原始数据集）。</p></div>
             </div>
@@ -466,7 +472,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resolutions</span> ()</code>
-                    <span class="line-no">L110-112</span>
+                    <span class="line-no">L112-114</span>
                 </div>
                 <div class="docstring"><p>返回原始数据集的分辨率列表。</p></div>
             </div>
@@ -479,7 +485,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ResizedDataset</span>(EasyDataset)
-                <span class="line-no">L115-177</span>
+                <span class="line-no">L117-179</span>
             </h2>
             <div class="docstring"><p>Artifically changing the size of a dataset.</p></div>
             <div class="class-vars"><strong>类变量:</strong> <code>new_size</code></div>
@@ -490,7 +496,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">new_size</span>, <span class="arg-name">dataset</span>)</code>
-                    <span class="line-no">L120-129</span>
+                    <span class="line-no">L122-131</span>
                 </div>
                 <div class="docstring"><p>初始化调整大小数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -503,7 +509,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L131-133</span>
+                    <span class="line-no">L133-135</span>
                 </div>
                 <div class="docstring"><p>返回调整后的数据集大小。</p></div>
             </div>
@@ -512,7 +518,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L135-141</span>
+                    <span class="line-no">L137-143</span>
                 </div>
                 <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
@@ -521,7 +527,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L143-157</span>
+                    <span class="line-no">L145-159</span>
                 </div>
                 <div class="docstring"><p>设置 epoch，生成确定性随机索引映射。</p></div>
             </div>
@@ -530,7 +536,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_ratio</span> (<span class="arg-name">train_ratio</span>)</code>
-                    <span class="line-no">L159-161</span>
+                    <span class="line-no">L161-163</span>
                 </div>
                 <div class="docstring"><p>设置训练比例，传递给原始数据集。</p></div>
             </div>
@@ -539,7 +545,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L163-172</span>
+                    <span class="line-no">L165-174</span>
                 </div>
                 <div class="docstring"><p>根据索引映射获取数据。</p></div>
             </div>
@@ -548,7 +554,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resolutions</span> ()</code>
-                    <span class="line-no">L175-177</span>
+                    <span class="line-no">L177-179</span>
                 </div>
                 <div class="docstring"><p>返回原始数据集的分辨率列表。</p></div>
             </div>
@@ -561,7 +567,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">CatDataset</span>(EasyDataset)
-                <span class="line-no">L180-242</span>
+                <span class="line-no">L182-244</span>
             </h2>
             <div class="docstring"><p>Concatenation of several datasets</p></div>
             
@@ -572,7 +578,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">datasets</span>)</code>
-                    <span class="line-no">L183-192</span>
+                    <span class="line-no">L185-194</span>
                 </div>
                 <div class="docstring"><p>初始化拼接数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -584,7 +590,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L194-196</span>
+                    <span class="line-no">L196-198</span>
                 </div>
                 <div class="docstring"><p>返回拼接后的数据集总大小。</p></div>
             </div>
@@ -593,7 +599,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L198-207</span>
+                    <span class="line-no">L200-209</span>
                 </div>
                 <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
@@ -602,7 +608,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_epoch</span> (<span class="arg-name">epoch</span>)</code>
-                    <span class="line-no">L209-212</span>
+                    <span class="line-no">L211-214</span>
                 </div>
                 <div class="docstring"><p>设置 epoch，传递给所有子数据集。</p></div>
             </div>
@@ -611,7 +617,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">set_ratio</span> (<span class="arg-name">train_ratio</span>)</code>
-                    <span class="line-no">L214-217</span>
+                    <span class="line-no">L216-219</span>
                 </div>
                 <div class="docstring"><p>设置训练比例，传递给所有子数据集。</p></div>
             </div>
@@ -620,7 +626,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L219-234</span>
+                    <span class="line-no">L221-236</span>
                 </div>
                 <div class="docstring"><p>根据索引获取数据，自动路由到对应的子数据集。</p></div>
             </div>
@@ -629,7 +635,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_resolutions</span> ()</code>
-                    <span class="line-no">L237-242</span>
+                    <span class="line-no">L239-244</span>
                 </div>
                 <div class="docstring"><p>返回所有子数据集的统一分辨率列表。</p></div>
             </div>

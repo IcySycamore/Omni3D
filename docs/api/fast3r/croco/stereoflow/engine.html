@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/stereoflow/engine.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>训练引擎。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#func-split_prediction_conf">split_prediction_conf()</a></li>
 <li><a href="#func-train_one_epoch">train_one_epoch()</a></li>
@@ -334,7 +340,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">split_prediction_conf</span> (<span class="arg-name">predictions</span>, <span class="arg-name">with_conf</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L24-40</span>
+                <span class="line-no">L26-42</span>
             </h2>
             <div class="docstring"><p>从预测张量中分离预测层和置信度层。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -353,7 +359,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">train_one_epoch</span> (<span class="arg-name">model</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">criterion</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">metrics</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">data_loader</span>: <span class="arg-type">Iterable</span>, <span class="arg-name">optimizer</span>: <span class="arg-type">torch.optim.Optimizer</span>, <span class="arg-name">device</span>: <span class="arg-type">torch.device</span>, <span class="arg-name">epoch</span>: <span class="arg-type">int</span>, <span class="arg-name">loss_scaler</span>, <span class="arg-name">log_writer</span> = <span class="arg-default">None</span>, <span class="arg-name">print_freq</span> = <span class="arg-default">20</span>, <span class="arg-name">args</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L43-163</span>
+                <span class="line-no">L45-165</span>
             </h2>
             <div class="docstring"><p>训练模型一个完整 epoch。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -380,7 +386,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">validate_one_epoch</span> (<span class="arg-name">model</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">criterion</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">metrics</span>: <span class="arg-type">torch.nn.Module</span>, <span class="arg-name">data_loaders</span>: <span class="arg-type">list[Iterable]</span>, <span class="arg-name">device</span>: <span class="arg-type">torch.device</span>, <span class="arg-name">epoch</span>: <span class="arg-type">int</span>, <span class="arg-name">log_writer</span> = <span class="arg-default">None</span>, <span class="arg-name">args</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L167-267</span>
+                <span class="line-no">L169-269</span>
             </h2>
             <div class="docstring"><p>验证模型一个完整 epoch，使用使用应置预测（tiled prediction）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -403,7 +409,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_resize_img</span> (<span class="arg-name">img</span>, <span class="arg-name">new_size</span>)</code>
-                <span class="line-no">L273-283</span>
+                <span class="line-no">L275-285</span>
             </h2>
             <div class="docstring"><p>使用双三次插帧调整图像尺寸。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -420,7 +426,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_resize_stereo_or_flow</span> (<span class="arg-name">data</span>, <span class="arg-name">new_size</span>)</code>
-                <span class="line-no">L286-305</span>
+                <span class="line-no">L288-307</span>
             </h2>
             <div class="docstring"><p>调整视差图或光流图，并根据缩放比例校正小数值。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -438,7 +444,7 @@ td a:hover { text-decoration: underline; }
                 <span class='decorator'>@torch.no_grad()</span>
 
                 <code><span class="fn-name">tiled_pred</span> (<span class="arg-name">model</span>, <span class="arg-name">criterion</span>, <span class="arg-name">img1</span>, <span class="arg-name">img2</span>, <span class="arg-name">gt</span>, <span class="arg-name">overlap</span> = <span class="arg-default">0.5</span>, <span class="arg-name">bad_crop_thr</span> = <span class="arg-default">0.05</span>, <span class="arg-name">downscale</span> = <span class="arg-default">False</span>, <span class="arg-name">crop</span> = <span class="arg-default">512</span>, <span class="arg-name">ret</span> = <span class="arg-default">&#x27;loss&#x27;</span>, <span class="arg-name">conf_mode</span> = <span class="arg-default">&#x27;conf_expsigmoid_10_5&#x27;</span>, <span class="arg-name">with_conf</span> = <span class="arg-default">False</span>, <span class="arg-name">return_time</span> = <span class="arg-default">False</span>)</code>
-                <span class="line-no">L309-440</span>
+                <span class="line-no">L311-442</span>
             </h2>
             <div class="docstring"><p>使用重叠裁剪片进行拼接预测，然后加权平均合并全图预测。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -470,7 +476,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_overlapping</span> (<span class="arg-name">total</span>, <span class="arg-name">window</span>, <span class="arg-name">overlap</span> = <span class="arg-default">0.5</span>)</code>
-                <span class="line-no">L443-457</span>
+                <span class="line-no">L445-459</span>
             </h2>
             <div class="docstring"><p>生成指定重叠率的滑动窗口切片建生器。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -488,7 +494,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">_crop</span> (<span class="arg-name">img</span>, <span class="arg-name">sy</span>, <span class="arg-name">sx</span>)</code>
-                <span class="line-no">L460-477</span>
+                <span class="line-no">L462-479</span>
             </h2>
             <div class="docstring"><p>从图像中裁剪指定窗口，超边界部分自动填充。</p>
 <div class="doc-section"><strong>Args:</strong>

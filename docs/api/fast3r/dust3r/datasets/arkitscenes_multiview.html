@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/arkitscenes_multiview.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>ARKitScenes 多视图数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-ARKitScenes_Multiview">class ARKitScenes_Multiview</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ARKitScenes_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L17-146</span>
+                <span class="line-no">L19-148</span>
             </h2>
             <div class="docstring"><p>ARKitScenes 多视图室内场景数据集。</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">window_size</span> = <span class="arg-default">6</span>, <span class="arg-name">num_samples_per_window</span> = <span class="arg-default">10</span>, <span class="arg-name">ordered</span> = <span class="arg-default">False</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">*args</span>, <span class="arg-name">split</span> = <span class="arg-default">...</span>, <span class="arg-name">ROOT</span> = <span class="arg-default">...</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L20-48</span>
+                    <span class="line-no">L22-50</span>
                 </div>
                 <div class="docstring"><p>初始化 ARKitScenes 多视图数据集。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -356,7 +362,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_load_data</span> (<span class="arg-name">split</span>)</code>
-                    <span class="line-no">L50-57</span>
+                    <span class="line-no">L52-59</span>
                 </div>
                 <div class="docstring"><p>加载预处理后的元数据。</p></div>
             </div>
@@ -365,7 +371,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_combinations</span> ()</code>
-                    <span class="line-no">L59-105</span>
+                    <span class="line-no">L61-107</span>
                 </div>
                 <div class="docstring"><p>Generate combinations of image indices for multiview.</p></div>
             </div>
@@ -374,7 +380,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L107-109</span>
+                    <span class="line-no">L109-111</span>
                 </div>
                 <div class="docstring"><p>返回组合数量。</p></div>
             </div>
@@ -383,7 +389,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L111-146</span>
+                    <span class="line-no">L113-148</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的多个视图。</p></div>
             </div>

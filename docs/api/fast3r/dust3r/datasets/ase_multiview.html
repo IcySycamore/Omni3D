@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/ase_multiview.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>ASE 多视图数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-ASE_Multiview">class ASE_Multiview</a></li>
 <li><a href="#class-ASE_Multiview_Simple">class ASE_Multiview_Simple</a></li>
@@ -333,7 +339,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ASE_Multiview</span>(BaseStereoViewDataset)
-                <span class="line-no">L171-314</span>
+                <span class="line-no">L173-316</span>
             </h2>
             <div class="docstring"><p>多视图 ASE 数据集，加载多视角图像和相机参数。</p></div>
             
@@ -344,7 +350,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">ROOT</span>, <span class="arg-name">split</span> = <span class="arg-default">&#x27;train&#x27;</span>, <span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">window_size</span> = <span class="arg-default">10</span>, <span class="arg-name">num_samples_per_window</span> = <span class="arg-default">10</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">ordered</span> = <span class="arg-default">False</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L173-223</span>
+                    <span class="line-no">L175-225</span>
                 </div>
                 <div class="docstring"><p>初始化。</p></div>
             </div>
@@ -353,7 +359,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_generate_combinations</span> ()</code>
-                    <span class="line-no">L225-245</span>
+                    <span class="line-no">L227-247</span>
                 </div>
                 <div class="docstring"><p>生成视图索引组合。</p></div>
             </div>
@@ -362,7 +368,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L247-249</span>
+                    <span class="line-no">L249-251</span>
                 </div>
                 <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
@@ -371,7 +377,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L251-314</span>
+                    <span class="line-no">L253-316</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的多视图数据。</p></div>
             </div>
@@ -384,7 +390,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">ASE_Multiview_Simple</span>(BaseStereoViewDataset)
-                <span class="line-no">L320-460</span>
+                <span class="line-no">L322-462</span>
             </h2>
             <div class="docstring"><p>A simplified version that:</p>
 <p>  - Finds the first scene in ROOT</p>
@@ -400,7 +406,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">ROOT</span>, <span class="arg-name">split</span> = <span class="arg-default">&#x27;train&#x27;</span>, <span class="arg-name">num_views</span> = <span class="arg-default">4</span>, <span class="arg-name">data_scaling</span> = <span class="arg-default">1.0</span>, <span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L329-383</span>
+                    <span class="line-no">L331-385</span>
                 </div>
                 <div class="docstring"><p>初始化。</p></div>
             </div>
@@ -409,7 +415,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L385-387</span>
+                    <span class="line-no">L387-389</span>
                 </div>
                 <div class="docstring"><p>返回数据集大小。</p></div>
             </div>
@@ -418,7 +424,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L389-452</span>
+                    <span class="line-no">L391-454</span>
                 </div>
                 <div class="docstring"><p>Implements the base class method for obtaining a list of views.</p></div>
             </div>
@@ -427,7 +433,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">index</span>)</code>
-                    <span class="line-no">L454-460</span>
+                    <span class="line-no">L456-462</span>
                 </div>
                 <div class="docstring"><p>The base class calls _get_views(self, idx, resolution, rng).</p>
 <p>The base class might handle some extra logic for augmentations, etc.</p></div>
@@ -441,7 +447,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">imread_cv2</span> (<span class="arg-name">path</span>, <span class="arg-name">flags</span> = <span class="arg-default">cv2.IMREAD_COLOR</span>)</code>
-                <span class="line-no">L72-77</span>
+                <span class="line-no">L74-79</span>
             </h2>
             <div class="docstring"><p>读取图像文件，如未找到则抛出 FileNotFoundError。</p></div>
         </div>
@@ -451,7 +457,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">read_trajectory_file</span> (<span class="arg-name">filepath</span>)</code>
-                <span class="line-no">L79-106</span>
+                <span class="line-no">L81-108</span>
             </h2>
             <div class="docstring"><p>读取 Aria 设备的轨迹文件，返回位姿和旋转矩阵。</p></div>
         </div>
@@ -461,7 +467,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">get_rotation_matrix_z</span> (<span class="arg-name">k</span>)</code>
-                <span class="line-no">L112-135</span>
+                <span class="line-no">L114-137</span>
             </h2>
             <div class="docstring"><p>生成绕 Z 轴旋转 k*90 度的 4x4 变换矩阵。</p></div>
         </div>
@@ -471,7 +477,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">rotate_image_90_clockwise</span> (<span class="arg-name">img</span>)</code>
-                <span class="line-no">L137-139</span>
+                <span class="line-no">L139-141</span>
             </h2>
             <div class="docstring"><p>将图像顺时针旋转 90 度。</p></div>
         </div>
@@ -481,7 +487,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">adjust_intrinsics_for_90_clockwise_rotation</span> (<span class="arg-name">K</span>, <span class="arg-name">original_width</span>, <span class="arg-name">original_height</span>)</code>
-                <span class="line-no">L141-166</span>
+                <span class="line-no">L143-168</span>
             </h2>
             <div class="docstring"><p>调整相机内参矩阵以适应顺时针 90 度旋转。</p></div>
         </div>

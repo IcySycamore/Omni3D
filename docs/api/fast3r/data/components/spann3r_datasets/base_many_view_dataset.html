@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/data/components/spann3r_datasets/base_many_view_dataset.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>多视图基础数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-BaseManyViewDataset">class BaseManyViewDataset</a></li>
 </ul></div>
@@ -327,7 +333,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BaseManyViewDataset</span>(BaseStereoViewDataset)
-                <span class="line-no">L11-61</span>
+                <span class="line-no">L13-63</span>
             </h2>
             <div class="docstring"><p>多视图数据集基类，提供序列化帧采样功能。</p></div>
             
@@ -338,7 +344,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">*args</span>, <span class="arg-name">**kwargs</span>)</code>
-                    <span class="line-no">L14-16</span>
+                    <span class="line-no">L16-18</span>
                 </div>
                 <div class="docstring"><p>初始化多视图数据集基类。</p></div>
             </div>
@@ -347,7 +353,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">sample_frames</span> (<span class="arg-name">img_idxs</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L18-51</span>
+                    <span class="line-no">L20-53</span>
                 </div>
                 <div class="docstring"><p>从图像索引列表中采样指定数量的帧，保证帧间距在阈值范围内。</p></div>
             </div>
@@ -356,7 +362,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">sample_frame_idx</span> (<span class="arg-name">img_idxs</span>, <span class="arg-name">rng</span>, <span class="arg-name">full_video</span> = <span class="arg-default">False</span>)</code>
-                    <span class="line-no">L54-61</span>
+                    <span class="line-no">L56-63</span>
                 </div>
                 <div class="docstring"><p>根据模式采样帧索引，支持关键帧采样和全帧模式。</p></div>
             </div>

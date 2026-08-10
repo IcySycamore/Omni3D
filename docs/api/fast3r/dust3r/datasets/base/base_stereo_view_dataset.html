@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/dust3r/datasets/base/base_stereo_view_dataset.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>立体视图基础数据集。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-BaseStereoViewDataset">class BaseStereoViewDataset</a></li>
 <li><a href="#func-is_good_type">is_good_type()</a></li>
@@ -330,7 +336,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">BaseStereoViewDataset</span>(EasyDataset)
-                <span class="line-no">L23-242</span>
+                <span class="line-no">L25-244</span>
             </h2>
             <div class="docstring"><p>Define all basic options.</p>
 <div class="doc-section"><strong>Usage:</strong>
@@ -349,7 +355,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">split</span> = <span class="arg-default">None</span>, <span class="arg-name">resolution</span> = <span class="arg-default">None</span>, <span class="arg-name">transform</span> = <span class="arg-default">ImgNorm</span>, <span class="arg-name">aug_crop</span> = <span class="arg-default">False</span>, <span class="arg-name">seed</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L35-61</span>
+                    <span class="line-no">L37-63</span>
                 </div>
                 <div class="docstring"><p>初始化 BaseStereoViewDataset。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -365,7 +371,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__len__</span> ()</code>
-                    <span class="line-no">L63-65</span>
+                    <span class="line-no">L65-67</span>
                 </div>
                 <div class="docstring"><p>返回场景数量。</p></div>
             </div>
@@ -374,7 +380,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">get_stats</span> ()</code>
-                    <span class="line-no">L67-68</span>
+                    <span class="line-no">L69-70</span>
                 </div>
                 <div class="docstring"><p>返回数据集统计信息字符串。</p></div>
             </div>
@@ -383,7 +389,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__repr__</span> ()</code>
-                    <span class="line-no">L70-82</span>
+                    <span class="line-no">L72-84</span>
                 </div>
                 <div class="docstring"><p>返回数据集的字符串表示。</p></div>
             </div>
@@ -392,7 +398,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_get_views</span> (<span class="arg-name">idx</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span>)</code>
-                    <span class="line-no">L84-95</span>
+                    <span class="line-no">L86-97</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的视图数据（需子类实现）。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -409,7 +415,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__getitem__</span> (<span class="arg-name">idx</span>)</code>
-                    <span class="line-no">L97-162</span>
+                    <span class="line-no">L99-164</span>
                 </div>
                 <div class="docstring"><p>获取指定索引的数据，支持 (idx, aspect_ratio_idx) 元组索引。</p></div>
             </div>
@@ -418,7 +424,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_set_resolutions</span> (<span class="arg-name">resolutions</span>)</code>
-                    <span class="line-no">L164-184</span>
+                    <span class="line-no">L166-186</span>
                 </div>
                 <div class="docstring"><p>设置并验证图像分辨率列表。</p></div>
             </div>
@@ -427,7 +433,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">_crop_resize_if_necessary</span> (<span class="arg-name">image</span>, <span class="arg-name">depthmap</span>, <span class="arg-name">intrinsics</span>, <span class="arg-name">resolution</span>, <span class="arg-name">rng</span> = <span class="arg-default">None</span>, <span class="arg-name">info</span> = <span class="arg-default">None</span>)</code>
-                    <span class="line-no">L186-242</span>
+                    <span class="line-no">L188-244</span>
                 </div>
                 <div class="docstring"><p>This function:</p>
 <p>- first downsizes the image with LANCZOS inteprolation,</p>
@@ -442,7 +448,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">is_good_type</span> (<span class="arg-name">key</span>, <span class="arg-name">v</span>)</code>
-                <span class="line-no">L245-251</span>
+                <span class="line-no">L247-253</span>
             </h2>
             <div class="docstring"><p>returns (is_good, err_msg)</p></div>
         </div>
@@ -452,7 +458,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">view_name</span> (<span class="arg-name">view</span>, <span class="arg-name">batch_index</span> = <span class="arg-default">None</span>)</code>
-                <span class="line-no">L254-263</span>
+                <span class="line-no">L256-265</span>
             </h2>
             <div class="docstring"><p>返回视图的标识字符串（数据集/标签/实例）。</p></div>
         </div>
@@ -462,7 +468,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 <code><span class="fn-name">transpose_to_landscape</span> (<span class="arg-name">view</span>)</code>
-                <span class="line-no">L266-285</span>
+                <span class="line-no">L268-287</span>
             </h2>
             <div class="docstring"><p>将竖屏视图转置为横屏，同步交换所有相关数组。</p></div>
         </div>

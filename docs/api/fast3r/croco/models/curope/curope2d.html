@@ -319,6 +319,12 @@ td a:hover { text-decoration: underline; }
         <div class="module-path">源码: /Users/apple/Documents/Omni3D/fast3r/croco/models/curope/curope2d.py</div>
     </div>
     
+
+        <div class="module-doc">
+            <h2>模块说明</h2>
+            <p>2D CUDA rope。</p>
+        </div>
+        
 <div class="toc"><h2>目录</h2><ul>
 <li><a href="#class-cuRoPE2D_func">class cuRoPE2D_func</a></li>
 <li><a href="#class-cuRoPE2D">class cuRoPE2D</a></li>
@@ -328,7 +334,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">cuRoPE2D_func</span>(torch.autograd.Function)
-                <span class="line-no">L18-39</span>
+                <span class="line-no">L20-41</span>
             </h2>
             <div class="docstring"><p>2D 旋转位置编码（RoPE）的自定义 autograd 函数，使用 CUDA 内核加速。</p></div>
             
@@ -339,7 +345,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">forward</span> (<span class="arg-name">ctx</span>, <span class="arg-name">tokens</span>, <span class="arg-name">positions</span>, <span class="arg-name">base</span>, <span class="arg-name">F0</span> = <span class="arg-default">1</span>)</code>
-                    <span class="line-no">L22-30</span>
+                    <span class="line-no">L24-32</span>
                 </div>
                 <div class="docstring"><p>前向传播：对 tokens 应用 2D RoPE。</p></div>
             </div>
@@ -348,7 +354,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     <span class="badge static">static</span>
                     <code><span class="fn-name">backward</span> (<span class="arg-name">ctx</span>, <span class="arg-name">grad_res</span>)</code>
-                    <span class="line-no">L34-39</span>
+                    <span class="line-no">L36-41</span>
                 </div>
                 <div class="docstring"><p>反向传播：对梯度应用逆向 2D RoPE。</p></div>
             </div>
@@ -361,7 +367,7 @@ td a:hover { text-decoration: underline; }
             <h2>
                 
                 class <span class="cls-name">cuRoPE2D</span>(torch.nn.Module)
-                <span class="line-no">L42-67</span>
+                <span class="line-no">L44-69</span>
             </h2>
             <div class="docstring"><p>2D 旋转位置编码模块，封装 CUDA 加速的 RoPE 实现。</p></div>
             
@@ -372,7 +378,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">__init__</span> (<span class="arg-name">freq</span> = <span class="arg-default">100.0</span>, <span class="arg-name">F0</span> = <span class="arg-default">1.0</span>)</code>
-                    <span class="line-no">L45-54</span>
+                    <span class="line-no">L47-56</span>
                 </div>
                 <div class="docstring"><p>初始化 cuRoPE2D。</p>
 <div class="doc-section"><strong>Args:</strong>
@@ -385,7 +391,7 @@ td a:hover { text-decoration: underline; }
                 <div class="method-header">
                     
                     <code><span class="fn-name">forward</span> (<span class="arg-name">tokens</span>, <span class="arg-name">positions</span>)</code>
-                    <span class="line-no">L56-67</span>
+                    <span class="line-no">L58-69</span>
                 </div>
                 <div class="docstring"><p>对输入 tokens 应用 2D 旋转位置编码。</p>
 <div class="doc-section"><strong>Args:</strong>
