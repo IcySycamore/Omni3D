@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""多视图 DUSt3R 模块。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -33,12 +31,10 @@ from fast3r.utils import pylogger
 log = pylogger.RankedLogger(__name__, rank_zero_only=True)
 
 class AccumulatedSum(BaseAggregator):
-    """累计求和指标，用于跨 GPU 聚合整数值。"""
     def __init__(
         self,
         **kwargs: Any,
     ) -> None:
-        """初始化 AccumulatedSum。"""
         super().__init__(
             fn="sum",
             default_value=torch.tensor(0.0, dtype=torch.long),
@@ -48,18 +44,9 @@ class AccumulatedSum(BaseAggregator):
         )
 
     def update(self, value: int) -> None:
-        """更新累计和。
-
-        Args:
-            value: 要累加的整数值。
-        """
+        self.sum_value += value
 
     def compute(self) -> torch.LongTensor:
-        """计算并返回当前累计和。
-
-        Returns:
-            torch.LongTensor: 累计求和结果。
-        """
         return self.sum_value
 
 def gather_deduplicated_scene_metrics(reconstruction_metrics_per_epoch):
@@ -78,17 +65,6 @@ def gather_deduplicated_scene_metrics(reconstruction_metrics_per_epoch):
     return all_metrics
 
 class MultiViewDUSt3RLitModule(LightningModule):
-    """Fast3R 的 PyTorch Lightning 训练模块。
-
-    封装了 Fast3R 模型的训练、验证、评估流程，包括：
-    - 训练/验证步
-    - 相机位姿评估（RRA、RTA、mAA）
-    - 3D 重建评估（Accuracy、Completion、Normal Consistency）
-    - 局部点云对齐到全局坐标系
-    - 优化器和学习率调度配置
-
-    继承自 LightningModule，与 Lightning Trainer 无缝集成。
-    """
     def __init__(
         self,
         net: torch.nn.Module,
@@ -101,19 +77,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
         resume_from_checkpoint: Optional[str] = None,
         eval_use_pts3d_from_local_head: bool = True,
     ) -> None:
-        """初始化多视图 DUSt3R Lightning 模块。
-
-        Args:
-            net: 核心模型（Fast3R 或 FlashDUSt3R）。
-            train_criterion: 训练损失函数。
-            validation_criterion: 验证损失函数。
-            optimizer: 优化器配置。
-            scheduler: 学习率调度器配置。
-            compile: 是否使用 torch.compile 编译模型。
-            pretrained: 预训练权重路径。
-            resume_from_checkpoint: 恢复训练的检查点路径。
-            eval_use_pts3d_from_local_head: 评估时是否使用局部预测头的 3D 点。
-        """
         super().__init__()
 
         self.save_hyperparameters(logger=False, ignore=['net', 'train_criterion', 'validation_criterion'])
@@ -155,31 +118,15 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
     @classmethod
     def load_for_inference(cls, net: Fast3R):
-        """创建用于推理的 Lightning 模块。
-
-        Args:
-            net: 已加载权重的 Fast3R 模型。
-
-        Returns:
-            MultiViewDUSt3RLitModule: 设置为 eval 模式的 Lightning 模块。
-        """
         lit_module = cls(net=net, train_criterion=None, validation_criterion=None, optimizer=None, scheduler=None, compile=False)
         lit_module.eval()
         return lit_module
 
     def forward(self, views: List[Dict[str, torch.Tensor]]) -> Any:
-        """前向传播，委托给核心模型。
-
-        Args:
-            views: 视图列表，每个视图为包含 'img'、'pts3d' 等键的字典。
-
-        Returns:
-            list[dict]: 每个视图的预测结果。
-        """
         return self.net(views)
 
     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        """加载检查点时的回调，用于处理旧版本检查点的兼容性。"""
+        # Legacy: if the checkpoint does not contain the epoch_fraction, train_total_samples, and train_total_images
         # we manually add them to the checkpoint
         # if self.trainer.strategy.strategy_name != "deepseed":
         #     if checkpoint["state_dict"].get("epoch_fraction") is None:
@@ -205,14 +152,14 @@ class MultiViewDUSt3RLitModule(LightningModule):
                 self.wandb_logger.watch(self.net, log="all", log_freq=500, log_graph=False)
 
     def on_train_epoch_start(self) -> None:
-        """训练 epoch 开始时的回调，设置数据集和采样器的 epoch 以保证数据增强的随机性。"""
+        # our custom dataset and sampler has to have epoch set by calling set_epoch
         if hasattr(self.trainer.train_dataloader, "dataset") and hasattr(self.trainer.train_dataloader.dataset, "set_epoch"):
             self.trainer.train_dataloader.dataset.set_epoch(self.current_epoch)
         if hasattr(self.trainer.train_dataloader, "sampler") and hasattr(self.trainer.train_dataloader.sampler, "set_epoch"):
             self.trainer.train_dataloader.sampler.set_epoch(self.current_epoch)
 
     def on_validation_epoch_start(self) -> None:
-        """验证 epoch 开始时的回调，设置数据集的 epoch 为 0。"""
+        # our custom dataset and sampler has to have epoch set by calling set_epoch
         for loader in self.trainer.val_dataloaders:
             if hasattr(loader, "dataset") and hasattr(loader.dataset, "set_epoch"):
                 loader.dataset.set_epoch(0)
@@ -222,19 +169,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
     def model_step(
         self, batch: List[Dict[str, torch.Tensor]], criterion: torch.nn.Module,
     ) -> Tuple[torch.Tensor, Dict]:
-        """执行一步模型推理和损失计算。
-
-        Args:
-            batch: 输入批次数据，视图列表。
-            criterion: 损失函数。
-
-        Returns:
-            tuple: (views, preds, loss, loss_details)
-                - views: 移动到设备后的输入视图
-                - preds: 模型预测结果
-                - loss: 总损失值
-                - loss_details: 损失细分字典
-        """
         device = self.device
 
         # Move data to device
@@ -256,15 +190,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
     def training_step(
         self, batch: List[Dict[str, torch.Tensor]], batch_idx: int
     ) -> torch.Tensor:
-        """Lightning 训练步，执行前向传播、损失计算和指标记录。
-
-        Args:
-            batch: 输入批次数据。
-            batch_idx: 批次索引。
-
-        Returns:
-            torch.Tensor: 当前步的损失值。
-        """
         views, preds, loss, loss_details = self.model_step(batch, self.train_criterion)
 
         if not isinstance(loss, (torch.Tensor, dict, type(None))):  # this will cause a lightning.fabric.utilities.exceptions.MisconfigurationException
@@ -314,18 +239,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
     def validation_step(
         self, batch: List[Dict[str, torch.Tensor]], batch_idx: int, dataloader_idx: int = 0,
     ) -> torch.Tensor:
-        """Lightning 验证步，计算验证损失并触发指标评估。
-
-        对于 Co3D_v2 数据集评估相机位姿，对于 DTU/7Scenes/NRGBD 评估 3D 重建。
-
-        Args:
-            batch: 输入批次数据。
-            batch_idx: 批次索引。
-            dataloader_idx: 数据加载器索引。
-
-        Returns:
-            torch.Tensor: 当前步的损失值。
-        """
         views, preds, loss, loss_details = self.model_step(batch, self.validation_criterion)
 
         # Extract the dataset name and batch size
@@ -393,7 +306,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
         return loss_value
 
     def on_validation_epoch_end(self) -> None:
-        """验证 epoch 结束时的回调，记录汇总指标和 3D 重建评估结果。"""
+        self.log("val/loss", self.val_loss, prog_bar=True)
 
         # if we dont do these, wandb for some reason cannot display the validation loss with them as the x-axis
         self.log("trainer/epoch", self.epoch_fraction, sync_dist=True)
@@ -411,11 +324,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
     #     pass
 
     def aggregate_and_log_reconstruction_detail_losses(self):
-        """聚合并记录非均匀视图数据集的详细损失。
-
-        在分布式训练环境下，从所有 rank 收集详细损失，
-        在 rank 0 上计算均值并记录到日志，然后清空缓存。
-        """
         # log the detailes loss for uneven view datasets
         # Gather and aggregate detailed losses for uneven-view datasets across all ranks
         if torch.distributed.is_initialized():
@@ -467,12 +375,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
             # self.uneven_view_detailed_losses.clear()
 
     def aggregate_and_log_reconstruction_metrics(self):
-        """聚合并记录 3D 重建评估指标。
-
-        在分布式环境下收集并去重各数据集的场景级指标，
-        记录每个场景的详细指标以及数据集级别的平均指标，
-        最后清空 epoch 指标缓存。
-        """
         # Gather and deduplicate metrics by dataset across all ranks after all batches
         if torch.distributed.is_initialized():
             self.reconstruction_metrics_per_epoch = gather_deduplicated_scene_metrics(self.reconstruction_metrics_per_epoch)
@@ -551,7 +453,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
         # Function to process a single (view_index, batch_index) pair
         def process_view_batch(view_index, batch_index):
-            """处理单个 (视图索引, 批次索引) 对的 ICP 对齐。"""
+            pred = preds[view_index]
             view = views[view_index]
 
             # Get the predicted points from local and global heads for this sample
@@ -650,19 +552,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
                                 min_conf_thr_percentile_for_local_alignment_and_icp=0,
                                 min_conf_thr_percentile_for_metric_cacluation=0,
                                 use_pts3d_from_local_head=True):
-        """评估 3D 重建质量。
-
-        计算预测点云与 GT 点云之间的 Accuracy、Completion 和 Normal Consistency。
-        先将局部预测头的输出对齐到全局坐标系，然后用 roma 刚体变换进行 ICP 对齐。
-
-        Args:
-            views: 视图列表，包含 GT 点云信息。
-            preds: 模型预测结果列表。
-            dataset_name: 数据集名称（'dtu', '7scenes', 'nrgbd'）。
-            min_conf_thr_percentile_for_local_alignment_and_icp: ICP 对齐的置信度百分位阈值。
-            min_conf_thr_percentile_for_metric_cacluation: 指标计算的置信度百分位阈值。
-            use_pts3d_from_local_head: 是否使用局部预测头的 3D 点进行评估。
-        """
         # align the local head output to the global output
         # and populate the preds with "pts3d_local_aligned_to_global"
         if use_pts3d_from_local_head:
@@ -674,7 +563,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
         # Define the function to process a single sample
         def process_sample(i):
-            """处理单个样本的3D重建指标计算。"""
+            scene_name = "/".join(views[i]['label'][0].split('/')[:-1]) if "label" in views[i] else "unknown"
             pred_pts_list = []
             gt_pts_list_icp = []
             gt_pts_list_metrics = []
@@ -874,8 +763,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
         if pred_cameras.shape[1] >= 2:
 
             def process_sample(sample_idx):
-                """计算单个样本的相对位姿误差指标（RRA、RTA、mAA）。"""
-                pred_sample = pred_cameras[sample_idx]
+                pred_sample = pred_cameras[sample_idx]  # Shape (num_views, 4, 4)
                 gt_sample = gt_cameras[sample_idx]      # Shape (num_views, 4, 4)
 
                 # Compute relative rotation and translation errors
@@ -933,8 +821,8 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
         # Estimate the focal length
         def estimate_focal_for_sample(sample_preds):
-            """估算单个样本的焦距长度。"""
             if focal_length_estimation_method == 'first_view_from_global_head':
+                # Use global head outputs for focal length estimation
                 pts3d_i = sample_preds[0]["pts3d_in_other_view"].unsqueeze(0)  # Shape: (1, H, W, 3)
                 conf_i = sample_preds[0]["conf"].unsqueeze(0)                  # Shape: (1, H, W)
             elif focal_length_estimation_method == 'first_view_from_local_head':
@@ -982,15 +870,7 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
     @staticmethod
     def correct_preds_orientation(preds, views):
-        """原位修正预测点和置信度图的方向。
-
-        当视图为竖屏时，数据加载器会将图像转置为横屏格式。
-        此函数将预测结果转回原始方向。
-
-        Args:
-            preds: 模型预测结果列表。
-            views: 视图列表，包含 'true_shape' 信息。
-        """
+        # *In-place* correction of the orientation of the predicted points and confidence maps
 
         # correct the shape of the predicted points and confidence maps if the view is portrait
         # this is because the data loader transposed the input images and valid_masks to landscape
@@ -1058,14 +938,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
                         pred["pts3d_local_aligned_to_global"] = pts3d_local_aligned_to_global_list
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        """配置优化器和学习率调度器。
-
-        支持 LinearWarmupCosineAnnealingLR 调度器，自动将 warmup_epochs 和 max_epochs
-        缩放到实际训练步数。
-
-        Returns:
-            Dict[str, Any]: 包含 'optimizer' 和可选的 'lr_scheduler' 的配置字典。
-        """
         optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
 
         if self.hparams.scheduler is not None:
@@ -1114,11 +986,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
         return {"optimizer": optimizer}
 
     def setup(self, stage: str) -> None:
-        """Lightning setup 回调，在训练前加载预训练权重和可选的模型编译。
-
-        Args:
-            stage: 当前阶段（'fit'、'validate'、'test'、'predict'）。
-        """
         if self.hparams.compile and stage == "fit":
             self.net = torch.compile(self.net)
 
@@ -1129,12 +996,6 @@ class MultiViewDUSt3RLitModule(LightningModule):
             self._load_pretrained_weights()
 
     def _load_pretrained_weights(self) -> None:
-        """加载预训练权重。
-
-        支持从 DUSt3R 或 Fast3R 检查点加载权重。
-        - DUSt3R: 仅加载编码器和第一个预测头的权重。
-        - Fast3R: 加载完整权重。
-        """
         log.info(f"Loading pretrained: {self.pretrained}")
         if isinstance(self.net, FlashDUSt3R):  # if the model is FlashDUSt3R, use the weights of the first head only
             ckpt = torch.load(self.pretrained)
@@ -1175,28 +1036,12 @@ class MultiViewDUSt3RLitModule(LightningModule):
 
 
 def estimate_cam_pose_one_sample(sample_preds, device='cpu', niter_PnP=10, min_conf_thr_percentile=0):
-    """估计单个样本的所有视图相机位姿和焦距。
-
-    使用 fast_pnp 并行估计每个视图的相机到世界 (c2w) 变换矩阵和焦距。
-
-    Args:
-        sample_preds: 单个样本的预测结果列表。
-        device: 计算设备，默认 'cpu'。
-        niter_PnP: PnP 迭代次数，默认 10。
-        min_conf_thr_percentile: 最小置信度百分位阈值，默认 0。
-
-    Returns:
-        tuple: (poses_c2w, estimated_focals)
-            - poses_c2w: 每个视图的 c2w 变换矩阵列表，形状 (4, 4)
-            - estimated_focals: 每个视图的估计焦距列表
-    """
     poses_c2w = []
     estimated_focals = []
 
     # Define the function to process each view
     def process_view(view_idx):
-        """处理单个视图的 PnP 位姿估计。"""
-        pts3d = sample_preds[view_idx]["pts3d_in_other_view"].cpu().numpy().squeeze()
+        pts3d = sample_preds[view_idx]["pts3d_in_other_view"].cpu().numpy().squeeze()  # (H, W, 3)
         valid_mask = sample_preds[view_idx]["conf"].cpu().numpy().squeeze() > 1.0  # Confidence mask
         # use the confidence map to filter out low-confidence points
         # conf_threshold_value = torch.quantile(sample_preds[view_idx]["conf"].view(-1), min_conf_thr_percentile / 100.0)
@@ -1234,19 +1079,6 @@ def estimate_cam_pose_one_sample(sample_preds, device='cpu', niter_PnP=10, min_c
 
 
 def estimate_focal(pts3d_i, conf_i, pp=None, min_conf_thr_percentile=10):
-    """估计相机焦距。
-
-    使用 Weiszfeld 算法从 3D 点和置信度掩码估计焦距。
-
-    Args:
-        pts3d_i: 3D 点坐标，形状 (1, H, W, 3)。
-        conf_i: 置信度图，形状 (1, H, W)。
-        pp: 主点坐标，形状 (1, 2)。默认为图像中心。
-        min_conf_thr_percentile: 置信度百分位阈值，默认 10。
-
-    Returns:
-        float: 估计的焦距值。
-    """
     B, H, W, THREE = pts3d_i.shape
     assert B == 1  # Since we're processing one sample at a time
 

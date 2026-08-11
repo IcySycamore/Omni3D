@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""DPT 头。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -34,11 +32,6 @@ class DPTOutputAdapter_fix(DPTOutputAdapter):
     """
 
     def init(self, dim_tokens_enc=768):
-        """初始化 DPT 适配器，删除重复的后处理激活层。
-
-        Args:
-            dim_tokens_enc (int): 编码器 token 的维度。默认 768。
-        """
         super().init(dim_tokens_enc)
         # these are duplicated weights
         del self.act_1_postprocess
@@ -47,15 +40,6 @@ class DPTOutputAdapter_fix(DPTOutputAdapter):
         del self.act_4_postprocess
 
     def forward(self, encoder_tokens: List[torch.Tensor], image_size=None):
-        """DPT 前向传播，从多层编码器 token 生成密集像素级预测。
-
-        Args:
-            encoder_tokens (List[Tensor]): 编码器各层输出的 token 列表。
-            image_size (tuple | None): 图像尺寸 (H, W)。默认使用初始化时的尺寸。
-
-        Returns:
-            Tensor: 像素级预测输出，形状 (B, num_channels, H, W)。
-        """
         assert (
             self.dim_tokens_enc is not None
         ), "Need to call init(dim_tokens_enc) function first"
@@ -122,19 +106,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         conf_mode=None,
         **kwargs
     ):
-        """初始化 PixelwiseTaskWithDPT 模块。
-
-        Args:
-            n_cls_token (int): CLS token 数量，当前仅支持 0。
-            hooks_idx (list | None): 选取编码器层的索引列表。
-            dim_tokens (list | None): 各 hook 层的 token 维度。
-            output_width_ratio (int): 输出宽度比例。默认 1。
-            num_channels (int): 输出通道数。默认 1。
-            postprocess: 后处理函数。
-            depth_mode: 深度模式元组。
-            conf_mode: 置信度模式元组。
-            **kwargs: 传递给 DPTOutputAdapter 的额外参数。
-        """
         super(PixelwiseTaskWithDPT, self).__init__()
         self.return_all_layers = True  # backbone needs to return all layers
         self.postprocess = postprocess
@@ -152,15 +123,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         self.dpt.init(**dpt_init_args)
 
     def forward(self, x, img_info):
-        """前向传播，输出像素级 3D 点和可选的置信度。
-
-        Args:
-            x (list[Tensor]): 解码器各层输出。
-            img_info (tuple): 图像尺寸 (H, W)。
-
-        Returns:
-            dict: 包含 'pts3d' 和可选 'conf' 的预测结果。
-        """
         out = self.dpt(x, image_size=(img_info[0], img_info[1]))
         if self.postprocess:
             out = self.postprocess(out, self.depth_mode, self.conf_mode)

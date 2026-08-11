@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""perceiver block。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -14,24 +12,7 @@ from blocks import CrossAttention, Block
 from pos_embed import get_1d_sincos_pos_embed_from_grid
 
 class PerceiverCompressor(nn.Module):
-    """Perceiver 压缩器，将多个图像的视觉 token 压缩为固定数量的潜在表示。
-
-    使用交叉注意力机制将可变长度的视觉 token 序列压缩为固定长度的潜在表示，
-    并添加图像级别的位置编码来区分不同图像来源。
-    """
     def __init__(self, token_dim, latent_dim, num_latents, num_cross_layers, num_latent_transformer_layers, num_heads=8, dropout=0.0, norm_layer=nn.LayerNorm):
-        """初始化 Perceiver 压缩器。
-
-        Args:
-            token_dim (int): 输入 token 维度。
-            latent_dim (int): 潜在表示维度。
-            num_latents (int): 潜在表示数量。
-            num_cross_layers (int): 交叉注意力层数。
-            num_latent_transformer_layers (int): 每层潜在 Transformer 的自注意力层数。
-            num_heads (int): 注意力头数。默认 8。
-            dropout (float): Dropout 概率。默认 0.0。
-            norm_layer: 归一化层类型。默认 LayerNorm。
-        """
         super(PerceiverCompressor, self).__init__()
         self.token_dim = token_dim
         self.latent_dim = latent_dim

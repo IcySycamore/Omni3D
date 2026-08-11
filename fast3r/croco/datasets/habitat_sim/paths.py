@@ -33,15 +33,6 @@ SceneData = collections.namedtuple(
 
 
 def list_replicacad_scenes(base_output_dir, base_path=SCENES_DATASET["replica_cad"]):
-    """列出所有 ReplicaCAD 场景的数据路径。
-
-    Args:
-        base_output_dir (str): 输出根目录。
-        base_path (str): ReplicaCAD 数据集根目录。
-
-    Returns:
-        list of SceneData: 场景数据列表。
-    """
     scene_dataset_config_file = os.path.join(
         base_path, "replicaCAD.scene_dataset_config.json"
     )
@@ -66,15 +57,6 @@ def list_replicacad_scenes(base_output_dir, base_path=SCENES_DATASET["replica_ca
 def list_replica_cad_baked_lighting_scenes(
     base_output_dir, base_path=SCENES_DATASET["replica_cad_baked_lighting"]
 ):
-    """列出所有 ReplicaCAD Baked Lighting 场景的数据路径。
-
-    Args:
-        base_output_dir (str): 输出根目录。
-        base_path (str): Baked Lighting 数据集根目录。
-
-    Returns:
-        list of SceneData: 场景数据列表。
-    """
     scene_dataset_config_file = os.path.join(
         base_path, "replicaCAD_baked.scene_dataset_config.json"
     )
@@ -98,15 +80,6 @@ def list_replica_cad_baked_lighting_scenes(
 
 
 def list_replica_scenes(base_output_dir, base_path):
-    """列出所有 Replica 场景的数据路径。
-
-    Args:
-        base_output_dir (str): 输出根目录。
-        base_path (str): Replica 数据集根目录。
-
-    Returns:
-        list of SceneData: 场景数据列表。
-    """
     scenes_data = []
     for scene_id in os.listdir(base_path):
         scene = os.path.join(base_path, scene_id, "mesh.ply")
@@ -171,17 +144,6 @@ def list_scenes(base_output_dir, base_path):
 
 
 def list_scenes_available(base_output_dir, scenes_dataset_paths=SCENES_DATASET):
-    """列出所有可用场景数据集的路径信息。
-
-    遍历 HM3D、Gibson、Habitat test scenes、ReplicaCAD、ScanNet 和 Replica。
-
-    Args:
-        base_output_dir (str): 输出根目录。
-        scenes_dataset_paths (dict): 场景数据集路径字典。
-
-    Returns:
-        list of SceneData: 所有可用场景的数据列表。
-    """
     scenes_data = []
 
     # HM3D

@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""点云优化。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -20,8 +18,6 @@ from .pair_viewer import PairViewer
 
 
 class GlobalAlignerMode(Enum):
-    """全局对齐优化器模式。"""
-
     PointCloudOptimizer = "PointCloudOptimizer"
     ModularPointCloudOptimizer = "ModularPointCloudOptimizer"
     PairViewer = "PairViewer"
@@ -30,17 +26,6 @@ class GlobalAlignerMode(Enum):
 def global_aligner(
     dust3r_output, device, mode=GlobalAlignerMode.PointCloudOptimizer, **optim_kw
 ):
-    """创建全局对齐优化器实例。
-
-    Args:
-        dust3r_output: DUSt3R 模型输出，包含 view1、view2、pred1、pred2。
-        device: 运行设备。
-        mode: 优化器模式，决定使用哪种优化器。
-        **optim_kw: 优化器额外参数。
-
-    Returns:
-        配置好的优化器网络实例。
-    """
     # extract all inputs
     view1, view2, pred1, pred2 = [
         dust3r_output[k] for k in "view1 view2 pred1 pred2".split()

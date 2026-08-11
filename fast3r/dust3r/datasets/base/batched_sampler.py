@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""批采样器。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -29,16 +27,6 @@ class BatchedRandomSampler:
     def __init__(
         self, dataset, batch_size, pool_size, world_size=1, rank=0, drop_last=True
     ):
-        """初始化分批随机采样器。
-
-        Args:
-            dataset: 数据集实例。
-            batch_size (int): 批次大小。
-            pool_size (int): 特征池大小（如宽高比数量）。
-            world_size (int): 分布式进程数。默认 1。
-            rank (int): 当前进程 rank。默认 0。
-            drop_last (bool): 是否丢弃不完整批次。默认 True。
-        """
         self.batch_size = batch_size
         self.pool_size = pool_size
 
@@ -54,15 +42,13 @@ class BatchedRandomSampler:
         self.epoch = None
 
     def __len__(self):
-        """返回每个进程的采样数量。"""
         return self.total_size // self.world_size
 
     def set_epoch(self, epoch):
-        """设置当前 epoch，用于确定性随机采样。"""
         self.epoch = epoch
 
     def __iter__(self):
-        """迭代生成 (sample_idx, feat_idx) 索引元组。"""
+        # prepare RNG
         if self.epoch is None:
             assert (
                 self.world_size == 1 and self.rank == 0
@@ -97,16 +83,6 @@ class BatchedRandomSampler:
 
 
 def round_by(total, multiple, up=False):
-    """将 total 向下取整为 multiple 的倍数。
-
-    Args:
-        total (int): 总数。
-        multiple (int): 取整基数。
-        up (bool): 是否向上取整。默认 False。
-
-    Returns:
-        int: 取整后的值。
-    """
     if up:
         total = total + multiple - 1
     return (total // multiple) * multiple

@@ -1,5 +1,3 @@
-"""检查点工具。"""
-
 import os
 import torch
 import hydra

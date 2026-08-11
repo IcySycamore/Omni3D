@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""pos embed。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -47,15 +45,6 @@ def get_2d_sincos_pos_embed(embed_dim, grid_size, n_cls_token=0):
 
 
 def get_2d_sincos_pos_embed_from_grid(embed_dim, grid):
-    """从二维网格生成 2D 正弦位置编码。
-
-    Args:
-        embed_dim: 嵌入维度，必须为偶数。
-        grid: 形状为 (2, 1, H, W) 的网格坐标数组，grid[0] 为行坐标，grid[1] 为列坐标。
-
-    Returns:
-        np.ndarray: 形状为 (H*W, embed_dim) 的位置编码矩阵。
-    """
     assert embed_dim % 2 == 0
 
     # use half of dimensions to encode grid_h
@@ -94,14 +83,6 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 # DeiT: https://github.com/facebookresearch/deit
 # --------------------------------------------------------
 def interpolate_pos_embed(model, checkpoint_model):
-    """将检查点中的位置编码插帧到当前模型所需的尺寸。
-
-    当检查点的位置编着网格尺寸与当前模型不同时，使用双三次插帧自动适配。
-
-    Args:
-        model: 当前模型，需具有 patch_embed 和 pos_embed 属性。
-        checkpoint_model: 检查点的状态字典，可能包含 "pos_embed" 键。
-    """
     if "pos_embed" in checkpoint_model:
         pos_embed_checkpoint = checkpoint_model["pos_embed"]
         embedding_size = pos_embed_checkpoint.shape[-1]
@@ -148,32 +129,13 @@ except ImportError:
     )
 
     class RoPE2D(torch.nn.Module):
-        """PyTorch 纯实现的 2D 旋转位置编码（RoPE2D），用于 CUDA 版本不可用时的回退实现。"""
-
         def __init__(self, freq=100.0, F0=1.0):
-            """初始化 RoPE2D。
-
-            Args:
-                freq: RoPE 基础频率，默认为 100.0。
-                F0: 频率缩放因子，默认为 1.0。
-            """
             super().__init__()
             self.base = freq
             self.F0 = F0
             self.cache = {}
 
         def get_cos_sin(self, D, seq_len, device, dtype):
-            """计算或读取缓存的余弦和正弦序列。
-
-            Args:
-                D: 单个轴的特征维度大小（tokens.size(3) // 2）。
-                seq_len: 序列最大长度。
-                device: 目标设备。
-                dtype: 目标数据类型。
-
-            Returns:
-                Tuple[torch.Tensor, torch.Tensor]: (cos, sin) 张量，形状均为 (seq_len, D*2)。
-            """
             if (D, seq_len, device, dtype) not in self.cache:
                 inv_freq = 1.0 / (
                     self.base ** (torch.arange(0, D, 2).float().to(device) / D)
@@ -188,29 +150,10 @@ except ImportError:
 
         @staticmethod
         def rotate_half(x):
-            """对特征向量进行半字翻转，RoPE 的关键操作。
-
-            Args:
-                x: 形状为 (..., D) 的特征张量。
-
-            Returns:
-                torch.Tensor: 对后半次取负并与前半拼接后的结果。
-            """
             x1, x2 = x[..., : x.shape[-1] // 2], x[..., x.shape[-1] // 2 :]
             return torch.cat((-x2, x1), dim=-1)
 
         def apply_rope1d(self, tokens, pos1d, cos, sin):
-            """对一维 token 序列施加 RoPE。
-
-            Args:
-                tokens: 形状为 (B, nheads, N, D) 的特征张量。
-                pos1d: 形状为 (B, N) 的整数位置索引张量。
-                cos: 余弦编码表，形状为 (seq_len, D*2)。
-                sin: 正弦编码表，形状为 (seq_len, D*2)。
-
-            Returns:
-                torch.Tensor: 施加 RoPE 后的 tokens，形状同输入。
-            """
             assert pos1d.ndim == 2
             cos = torch.nn.functional.embedding(pos1d, cos)[:, None, :, :]
             sin = torch.nn.functional.embedding(pos1d, sin)[:, None, :, :]

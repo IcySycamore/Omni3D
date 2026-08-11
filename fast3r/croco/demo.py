@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""演示脚本。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -17,7 +15,6 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 
 
 def main():
-    """CroCo 模型演示：加载图像对，执行交叉注意力推理，保存可视化结果。"""
     device = torch.device(
         "cuda:0"
         if torch.cuda.is_available() and torch.cuda.device_count() > 0

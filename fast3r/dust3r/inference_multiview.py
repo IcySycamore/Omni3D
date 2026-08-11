@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""多视图推理。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -65,22 +63,6 @@ def loss_of_one_batch(
 
 @torch.no_grad()
 def inference(multiple_views_in_one_sample, model, device, dtype, verbose=True, profiling=False):
-    """对多视角图像进行模型推理。
-
-    将同一组视图送入模型前向传播，返回预测结果。
-    若视图像素尺寸不一致，则强制逐张推理（batch_size=1）。
-
-    Args:
-        multiple_views_in_one_sample (list[dict]): 同一组的多视角图像字典列表。
-        model (nn.Module): Fast3R 模型。
-        device (torch.device): 推理设备。
-        dtype (str | torch.dtype): 精度模式，如 "32"、"bf16-mixed" 等。
-        verbose (bool): 是否打印日志。
-        profiling (bool): 是否返回性能分析信息。
-
-    Returns:
-        dict | tuple: 推理结果字典，或在 ``profiling=True`` 时返回 (result, profiling_info)。
-    """
     if verbose:
         print(f">> Inference with model on {len(multiple_views_in_one_sample)} images")
     result = []
@@ -112,32 +94,11 @@ def inference(multiple_views_in_one_sample, model, device, dtype, verbose=True, 
 
 
 def check_if_same_size(imgs):
-    """检查一组图像是否具有相同的像素尺寸。
-
-    Args:
-        imgs (list[dict]): 图像字典列表，每个字典包含 ``img`` 张量。
-
-    Returns:
-        bool: 若所有图像尺寸相同则返回 ``True``。
-    """
     shapes = [img["img"].shape[-2:] for img in imgs]
     return all(shape == shapes[0] for shape in shapes)
 
 
 def get_pred_pts3d(gt, pred, use_pose=False):
-    """从模型预测结果中提取 3D 点坐标。
-
-    支持从 depth + pseudo_focal、pts3d 或 pts3d_in_other_view 三种模式提取。
-    若 ``use_pose=True``，则使用预测的相机位姿对点云进行变换。
-
-    Args:
-        gt (dict): 真实视图字典，可能包含 ``camera_intrinsics``。
-        pred (dict): 模型预测结果字典。
-        use_pose (bool): 是否应用预测的相机位姿变换。
-
-    Returns:
-        Tensor: 3D 点云张量，形状 (B, H, W, 3)。
-    """
     if "depth" in pred and "pseudo_focal" in pred:
         try:
             pp = gt["camera_intrinsics"][..., :2, 2]
@@ -171,23 +132,6 @@ def find_opt_scaling(
     valid1=None,
     valid2=None,
 ):
-    """通过最小化预测点云与真实点云之间的尺度差异，计算最优尺度因子。
-
-    支持多种拟合模式：均值（avg）、中位数（median）、Weiszfeld 迭代加权。
-
-    Args:
-        gt_pts1 (Tensor): 第一组真实 3D 点，形状 (B, H, W, 3)。
-        gt_pts2 (Tensor | None): 第二组真实 3D 点，可为 ``None``。
-        pr_pts1 (Tensor): 第一组预测 3D 点，形状 (B, H, W, 3)。
-        pr_pts2 (Tensor | None): 第二组预测 3D 点，可为 ``None``。
-        fit_mode (str): 拟合模式，可选 ``"avg"``、``"median"``、
-            ``"weiszfeld"`` 或带 ``"_stop_grad"`` 后缀的变体。
-        valid1 (Tensor | None): 第一组有效掩码。
-        valid2 (Tensor | None): 第二组有效掩码。
-
-    Returns:
-        Tensor: 最优尺度因子，形状 (B,)。
-    """
     assert gt_pts1.ndim == pr_pts1.ndim == 4
     assert gt_pts1.shape == pr_pts1.shape
     if gt_pts2 is not None:

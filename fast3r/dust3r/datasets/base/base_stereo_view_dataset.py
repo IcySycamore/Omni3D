@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""立体视图基础数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -43,15 +41,7 @@ class BaseStereoViewDataset(EasyDataset):
         aug_crop=False,
         seed=None,
     ):
-        """初始化 BaseStereoViewDataset。
-
-        Args:
-            split (str | None): 数据集分割（'train'/'test'）。
-            resolution: 图像分辨率，可为整数、(W,H) 或列表。
-            transform: 图像变换。默认 ImgNorm。
-            aug_crop (bool): 是否使用数据增强裁剪。默认 False。
-            seed (int | None): 随机种子。
-        """
+        self.num_views = 2
         self.split = split
         self._set_resolutions(resolution)
 
@@ -63,14 +53,13 @@ class BaseStereoViewDataset(EasyDataset):
         self.seed = seed
 
     def __len__(self):
-        """返回场景数量。"""
         return len(self.scenes)
 
     def get_stats(self):
-        """返回数据集统计信息字符串。"""
+        return f"{len(self)} pairs"
 
     def __repr__(self):
-        """返回数据集的字符串表示。"""
+        resolutions_str = "[" + ";".join(f"{w}x{h}" for w, h in self._resolutions) + "]"
         return (
             f"""{type(self).__name__}({self.get_stats()},
             {self.split=},
@@ -84,20 +73,9 @@ class BaseStereoViewDataset(EasyDataset):
         )
 
     def _get_views(self, idx, resolution, rng):
-        """获取指定索引的视图数据（需子类实现）。
-
-        Args:
-            idx (int): 数据索引。
-            resolution (tuple): 目标分辨率 (W, H)。
-            rng: 随机数生成器。
-
-        Returns:
-            list[dict]: 视图字典列表。
-        """
         raise NotImplementedError()
 
     def __getitem__(self, idx):
-        """获取指定索引的数据，支持 (idx, aspect_ratio_idx) 元组索引。"""
         if isinstance(idx, tuple):
             # the idx is specifying the aspect-ratio
             idx, ar_idx = idx
@@ -164,7 +142,6 @@ class BaseStereoViewDataset(EasyDataset):
         return views
 
     def _set_resolutions(self, resolutions):
-        """设置并验证图像分辨率列表。"""
         assert resolutions is not None, "undefined resolution"
 
         if not isinstance(resolutions, list):
@@ -254,9 +231,7 @@ def is_good_type(key, v):
 
 
 def view_name(view, batch_index=None):
-    """返回视图的标识字符串（数据集/标签/实例）。"""
     def sel(x):
-        """辅助函数，根据 batch_index 选取元素。"""
         return x[batch_index] if batch_index not in (None, slice(None)) else x
 
     db = sel(view["dataset"])
@@ -266,7 +241,6 @@ def view_name(view, batch_index=None):
 
 
 def transpose_to_landscape(view):
-    """将竖屏视图转置为横屏，同步交换所有相关数组。"""
     height, width = view["true_shape"]
 
     if width < height:

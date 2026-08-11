@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -28,21 +26,6 @@ from .wildrgbd import WildRGBD  # noqa
 from fast3r.data.components.spann3r_datasets import *  # noqa
 
 def get_data_loader(dataset, batch_size, num_workers=8, shuffle=True, drop_last=True, pin_mem=True, persistent_workers=False, multiprocessing_context=None):
-    """获取数据集加载器。
-
-    Args:
-        dataset: 数据集对象或名称字符串。
-        batch_size: 每批样本数量。
-        num_workers: 数据加载线程数。
-        shuffle: 是否打乱数据。
-        drop_last: 是否丢弃不足一个 batch 的数据。
-        pin_mem: 是否使用锁页内存。
-        persistent_workers: 是否保持工作进程存活。
-        multiprocessing_context: 多进程上下文。
-
-    Returns:
-        torch.utils.data.DataLoader: 配置好的数据加载器。
-    """
     import torch
     from croco.utils.misc import get_world_size, get_rank
 

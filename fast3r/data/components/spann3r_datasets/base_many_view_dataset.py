@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""多视图基础数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -11,14 +9,10 @@ from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewD
 
 
 class BaseManyViewDataset(BaseStereoViewDataset):
-    """多视图数据集基类，提供序列化帧采样功能。"""
-
     def __init__(self, *args, **kwargs):
-        """初始化多视图数据集基类。"""
         super().__init__(*args, **kwargs)
 
     def sample_frames(self, img_idxs, rng):
-        """从图像索引列表中采样指定数量的帧，保证帧间距在阈值范围内。"""
         num_frames = self.num_frames
         thresh = int(self.min_thresh + self.train_ratio * (self.max_thresh - self.min_thresh))
                 
@@ -54,7 +48,6 @@ class BaseManyViewDataset(BaseStereoViewDataset):
     
 
     def sample_frame_idx(self, img_idxs, rng, full_video=False):
-        """根据模式采样帧索引，支持关键帧采样和全帧模式。"""
         if not full_video:
             img_idxs = self.sample_frames(img_idxs, rng)
         else:

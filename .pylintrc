@@ -1,0 +1,59 @@
+[MASTER]
+# PyQt5/vtk/cv2 是 C 扩展，pylint 静态分析读不到成员，需运行时 introspection
+extension-pkg-allow-list=PyQt5.QtCore,PyQt5.QtWidgets,PyQt5.QtGui,PyQt5.QtMultimedia,PyQt5.QtNetwork,PyQt5.QtMultimediaWidgets,vtk,vtk.qt,cv2,PIL.Image,PIL.ImageOps,matplotlib.cm
+
+[MESSAGES CONTROL]
+# 保留真实有效的检查（W0611 unused-import / W0612 unused-variable / E 类错误等）
+# 关闭噪音：C 扩展成员误报、docstring 约定、行长度、复杂度、命名风格
+disable=no-name-in-module,
+        c-extension-no-member,
+        missing-module-docstring,
+        missing-function-docstring,
+        missing-class-docstring,
+        line-too-long,
+        too-many-locals,
+        too-many-arguments,
+        too-many-instance-attributes,
+        too-few-public-methods,
+        too-many-branches,
+        too-many-statements,
+        too-many-return-statements,
+        invalid-name,
+        redefined-outer-name,
+        redefined-builtin,
+        duplicate-code,
+        fixme,
+        import-outside-toplevel,
+        wrong-import-order,
+        wrong-import-position,
+        unused-argument,
+        broad-except,
+        bare-except,
+        protected-access,
+        consider-using-f-string,
+        attribute-defined-outside-init,
+        no-member,
+        useless-object-inheritance,
+        missing-final-newline,
+        too-many-positional-arguments,
+        singleton-comparison,
+        global-statement,
+        possibly-used-before-assignment,
+        import-error,
+        super-with-arguments,
+        no-else-return,
+        consider-using-from-import,
+        consider-using-set-comprehension,
+        pointless-string-statement,
+        arguments-differ,
+        too-many-lines,
+        trailing-whitespace,
+        ungrouped-imports
+
+[DESIGN]
+max-locals=30
+max-args=15
+max-attributes=20
+
+[FORMAT]
+max-line-length=160
