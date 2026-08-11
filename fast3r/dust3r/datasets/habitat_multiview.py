@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""Habitat 多视图数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -18,17 +16,7 @@ import random
 from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewDataset
 
 class Habitat_Multiview(BaseStereoViewDataset):
-    """Habitat-Sim 多视图场景数据集。"""
-
     def __init__(self, size=1_000_000, num_views=4, data_scaling=1.0, *args, ROOT, **kwargs):
-        """初始化 Habitat 多视图数据集。
-
-        Args:
-            size (int): 场景规模。默认 1000000。
-            num_views (int): 每个样本的视图数量。默认 4。
-            data_scaling (float): 数据缩放比例。默认 1.0。
-            ROOT (str): 数据集根目录。
-        """
         super().__init__(*args, **kwargs)
         self.ROOT = ROOT
         self.num_views = num_views
@@ -47,7 +35,6 @@ class Habitat_Multiview(BaseStereoViewDataset):
         self.instances = list(range(1, 5))  # Instance views other than view 0
 
     def filter_scene(self, label, instance=None):
-        """按标签和实例过滤场景列表。"""
         if instance:
             subscene, instance = instance.split('_')
             label += '/' + subscene
@@ -57,7 +44,6 @@ class Habitat_Multiview(BaseStereoViewDataset):
         self.scenes = [scene for i, scene in enumerate(self.scenes) if valid[i]]
 
     def _get_views(self, idx, resolution, rng):
-        """获取指定索引的多个视图。"""
         scene = self.scenes[idx]
         data_path, key = osp.split(osp.join(self.ROOT, scene))
 
@@ -96,7 +82,6 @@ class Habitat_Multiview(BaseStereoViewDataset):
         return views
 
     def _load_one_view(self, data_path, key, view_index, resolution, rng):
-        """加载单个视图的图像、深度图、内参和位姿。"""
         view_index += 1  # File indices start at 1
         impath = osp.join(data_path, f"{key}_{view_index}.jpeg")
         image = Image.open(impath)

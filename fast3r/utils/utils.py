@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""工具函数。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -71,7 +69,7 @@ def task_wrapper(task_func: Callable) -> Callable:
     """
 
     def wrap(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """任务包装函数，执行任务并处理异常和日志关闭。"""
+        # execute the task
         try:
             metric_dict, object_dict = task_func(cfg=cfg)
 

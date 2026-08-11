@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""Dummy 多视图数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -11,7 +9,6 @@ import random
 from fast3r.dust3r.datasets.base.base_stereo_view_dataset import BaseStereoViewDataset
 
 class DummyMultiview(BaseStereoViewDataset):
-    """虚拟多视图数据集，生成随机张量用于测试和调试。"""
     def __init__(self, num_views=4, dataset_size=1000, *args, split=None, ROOT=None, **kwargs):
         """
         Args:
@@ -28,7 +25,6 @@ class DummyMultiview(BaseStereoViewDataset):
         self.combinations = [(i,) * num_views for i in range(dataset_size)]
 
     def __len__(self):
-        """返回数据集大小。"""
         return self.dataset_size
 
     def _get_views(self, idx, resolution, rng):

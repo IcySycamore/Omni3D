@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""数据增强。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -33,24 +31,6 @@ from torchvision.transforms import ColorJitter
 
 
 class StereoAugmentor(object):
-    """立体匹配数据增广器，依次执行缩放、裁剪、垂直翻转、右视图旋转抖动和颜色增广。
-
-    Args:
-        crop_size (tuple of int): 裁剪目标尺寸 ``(ch, cw)``。
-        scale_prob (float): 执行随机缩放的概率。默认 ``0.5``。
-        scale_xonly (bool): 仅在水平方向缩放。默认 ``True``。
-        lhth (float): 低分辨率阈值，低于此值使用低分辨率缩放范围。默认 ``800.0``。
-        lminscale (float): 低分辨率最小缩放指数。默认 ``0.0``。
-        lmaxscale (float): 低分辨率最大缩放指数。默认 ``1.0``。
-        hminscale (float): 高分辨率最小缩放指数。默认 ``-0.2``。
-        hmaxscale (float): 高分辨率最大缩放指数。默认 ``0.4``。
-        scale_interp_nearest (bool): 缩放视差时使用最近邻插值。默认 ``True``。
-        rightjitterprob (float): 右视图旋转抖动概率。默认 ``0.5``。
-        v_flip_prob (float): 垂直翻转概率。默认 ``0.5``。
-        color_aug_asym (bool): 颜色增广是否非对称（左右图独立扰动）。默认 ``True``。
-        color_choice_prob (float): 颜色增广选择单一变换而非组合的概率。默认 ``0.5``。
-    """
-
     def __init__(
         self,
         crop_size,
@@ -67,7 +47,6 @@ class StereoAugmentor(object):
         color_aug_asym=True,
         color_choice_prob=0.5,
     ):
-        """初始化立体匹配数据增广器。"""
         self.crop_size = crop_size
         self.scale_prob = scale_prob
         self.scale_xonly = scale_xonly
@@ -83,19 +62,6 @@ class StereoAugmentor(object):
         self.color_choice_prob = color_choice_prob
 
     def _random_scale(self, img1, img2, disp):
-        """随机缩放图像和视差图，并根据阈值选择缩放范围。
-
-        当图像较短边小于 :attr:`lhth` 时使用低分辨率缩放范围，否则使用高分辨率范围。
-        若不执行随机缩放，仍会在图像过小时进行最小缩放以保证能裁剪。
-
-        Args:
-            img1 (np.ndarray): 左视图，形状 ``(H, W, 3)``。
-            img2 (np.ndarray): 右视图，形状 ``(H, W, 3)``。
-            disp (np.ndarray): 视差图，形状 ``(H, W)``。
-
-        Returns:
-            tuple: 缩放后的 ``(img1, img2, disp)``。
-        """
         ch, cw = self.crop_size
         h, w = img1.shape[:2]
         if self.scale_prob > 0.0 and np.random.rand() < self.scale_prob:
@@ -155,16 +121,6 @@ class StereoAugmentor(object):
         return img1, img2, disp
 
     def _random_crop(self, img1, img2, disp):
-        """随机裁剪图像和视差图到 :attr:`crop_size` 指定的大小。
-
-        Args:
-            img1 (np.ndarray): 左视图。
-            img2 (np.ndarray): 右视图。
-            disp (np.ndarray): 视差图。
-
-        Returns:
-            tuple: 裁剪后的 ``(img1, img2, disp)``。
-        """
         h, w = img1.shape[:2]
         ch, cw = self.crop_size
         assert ch <= h and cw <= w, (img1.shape, h, w, ch, cw)
@@ -176,16 +132,6 @@ class StereoAugmentor(object):
         return img1, img2, disp
 
     def _random_vflip(self, img1, img2, disp):
-        """以概率 :attr:`v_flip_prob` 垂直翻转图像和视差图。
-
-        Args:
-            img1 (np.ndarray): 左视图。
-            img2 (np.ndarray): 右视图。
-            disp (np.ndarray): 视差图。
-
-        Returns:
-            tuple: 翻转后的 ``(img1, img2, disp)``。
-        """
         # vertical flip
         if self.v_flip_prob > 0 and np.random.rand() < self.v_flip_prob:
             img1 = np.copy(np.flipud(img1))
@@ -194,14 +140,6 @@ class StereoAugmentor(object):
         return img1, img2, disp
 
     def _random_rotate_shift_right(self, img2):
-        """以概率 :attr:`rightjitterprob` 对右视图施加微小旋转和垂直平移。
-
-        Args:
-            img2 (np.ndarray): 右视图。
-
-        Returns:
-            np.ndarray: 旋转/平移后的右视图。
-        """
         if self.rightjitterprob > 0.0 and np.random.rand() < self.rightjitterprob:
             angle, pixel = 0.1, 2
             px = np.random.uniform(-pixel, pixel)
@@ -221,15 +159,6 @@ class StereoAugmentor(object):
         return img2
 
     def _random_color_contrast(self, img1, img2):
-        """随机调整对比度，可非对称作用于左右图。
-
-        Args:
-            img1 (Image): 左图 PIL Image。
-            img2 (Image): 右图 PIL Image。
-
-        Returns:
-            tuple: 调整后的 ``(img1, img2)``。
-        """
         if np.random.random() < 0.5:
             contrast_factor = np.random.uniform(0.8, 1.2)
             img1 = FF.adjust_contrast(img1, contrast_factor)
@@ -239,15 +168,6 @@ class StereoAugmentor(object):
         return img1, img2
 
     def _random_color_gamma(self, img1, img2):
-        """随机调整伽马值，可非对称作用于左右图。
-
-        Args:
-            img1 (Image): 左图 PIL Image。
-            img2 (Image): 右图 PIL Image。
-
-        Returns:
-            tuple: 调整后的 ``(img1, img2)``。
-        """
         if np.random.random() < 0.5:
             gamma = np.random.uniform(0.7, 1.5)
             img1 = FF.adjust_gamma(img1, gamma)
@@ -257,15 +177,6 @@ class StereoAugmentor(object):
         return img1, img2
 
     def _random_color_brightness(self, img1, img2):
-        """随机调整亮度，可非对称作用于左右图。
-
-        Args:
-            img1 (Image): 左图 PIL Image。
-            img2 (Image): 右图 PIL Image。
-
-        Returns:
-            tuple: 调整后的 ``(img1, img2)``。
-        """
         if np.random.random() < 0.5:
             brightness = np.random.uniform(0.5, 2.0)
             img1 = FF.adjust_brightness(img1, brightness)
@@ -275,15 +186,6 @@ class StereoAugmentor(object):
         return img1, img2
 
     def _random_color_hue(self, img1, img2):
-        """随机调整色调，可非对称作用于左右图。
-
-        Args:
-            img1 (Image): 左图 PIL Image。
-            img2 (Image): 右图 PIL Image。
-
-        Returns:
-            tuple: 调整后的 ``(img1, img2)``。
-        """
         if np.random.random() < 0.5:
             hue = np.random.uniform(-0.1, 0.1)
             img1 = FF.adjust_hue(img1, hue)
@@ -293,15 +195,6 @@ class StereoAugmentor(object):
         return img1, img2
 
     def _random_color_saturation(self, img1, img2):
-        """随机调整饱和度，可非对称作用于左右图。
-
-        Args:
-            img1 (Image): 左图 PIL Image。
-            img2 (Image): 右图 PIL Image。
-
-        Returns:
-            tuple: 调整后的 ``(img1, img2)``。
-        """
         if np.random.random() < 0.5:
             saturation = np.random.uniform(0.8, 1.2)
             img1 = FF.adjust_saturation(img1, saturation)
@@ -311,18 +204,6 @@ class StereoAugmentor(object):
         return img1, img2
 
     def _random_color(self, img1, img2):
-        """随机应用一种或一组颜色增广变换。
-
-        以 :attr:`color_choice_prob` 的概率选取单一变换，否则以随机顺序依次应用
-        对比度、伽马、亮度、色调和饱和度变换。
-
-        Args:
-            img1 (np.ndarray): 左图，uint8 数组。
-            img2 (np.ndarray): 右图，uint8 数组。
-
-        Returns:
-            tuple: 增广后的 ``(img1, img2)``，float32 数组。
-        """
         trfs = [
             self._random_color_contrast,
             self._random_color_gamma,
@@ -347,19 +228,6 @@ class StereoAugmentor(object):
         return img1, img2
 
     def __call__(self, img1, img2, disp, dataset_name):
-        """执行完整的立体匹配增广流水线。
-
-        依次调用：随机缩放 → 随机裁剪 → 随机垂直翻转 → 右视图旋转抖动 → 颜色增广。
-
-        Args:
-            img1 (np.ndarray): 左视图，形状 ``(H, W, 3)``。
-            img2 (np.ndarray): 右视图，形状 ``(H, W, 3)``。
-            disp (np.ndarray): 视差图，形状 ``(H, W)``。
-            dataset_name (str): 数据集名称（用于特定数据集逻辑）。
-
-        Returns:
-            tuple: 增广后的 ``(img1, img2, disp)``。
-        """
         img1, img2, disp = self._random_scale(img1, img2, disp)
         img1, img2, disp = self._random_crop(img1, img2, disp)
         img1, img2, disp = self._random_vflip(img1, img2, disp)
@@ -369,20 +237,6 @@ class StereoAugmentor(object):
 
 
 class FlowAugmentor:
-    """光流数据增广器，依次执行空间增广（缩放/翻转/裁剪）和颜色增广。
-
-    Args:
-        crop_size (tuple of int): 裁剪目标尺寸 ``(ch, cw)``。
-        min_scale (float): 缩放指数下界。默认 ``-0.2``。
-        max_scale (float): 缩放指数上界。默认 ``0.5``。
-        spatial_aug_prob (float): 执行空间增广的概率。默认 ``0.8``。
-        stretch_prob (float): 拉伸增广概率。默认 ``0.8``。
-        max_stretch (float): 最大拉伸指数。默认 ``0.2``。
-        h_flip_prob (float): 水平翻转概率。默认 ``0.5``。
-        v_flip_prob (float): 垂直翻转概率。默认 ``0.1``。
-        asymmetric_color_aug_prob (float): 非对称颜色增广概率。默认 ``0.2``。
-    """
-
     def __init__(
         self,
         crop_size,
@@ -395,7 +249,6 @@ class FlowAugmentor:
         v_flip_prob=0.1,
         asymmetric_color_aug_prob=0.2,
     ):
-        """初始化光流数据增广器。"""
         # spatial augmentation params
         self.crop_size = crop_size
         self.min_scale = min_scale
@@ -416,17 +269,7 @@ class FlowAugmentor:
         self.asymmetric_color_aug_prob = asymmetric_color_aug_prob
 
     def color_transform(self, img1, img2):
-        """颜色增广：以一定概率非对称或对称地应用 ColorJitter。
-
-        非对称模式下左右图独立扰动；对称模式下先拼接再扰动以保证一致性。
-
-        Args:
-            img1 (np.ndarray): 左视图，uint8。
-            img2 (np.ndarray): 右视图，uint8。
-
-        Returns:
-            tuple: 增广后的 ``(img1, img2)``。
-        """
+        """Photometric augmentation"""
 
         # asymmetric
         if np.random.rand() < self.asymmetric_color_aug_prob:
@@ -444,20 +287,6 @@ class FlowAugmentor:
         return img1, img2
 
     def _resize_flow(self, flow, scale_x, scale_y, factor=1.0):
-        """缩放光流场，同步调整像素位置和位移量。
-
-        对稠密光流直接 ``cv2.resize`` 并乘以缩放因子；对稀疏光流（含 ``inf``）
-        使用坐标映射方式保留有效像素。
-
-        Args:
-            flow (np.ndarray): 光流，形状 ``(H, W, 2)``。
-            scale_x (float): 水平缩放因子。
-            scale_y (float): 垂直缩放因子。
-            factor (float): 额外分辨率因子（Spring 数据集使用 ``2.0``）。默认 ``1.0``。
-
-        Returns:
-            np.ndarray: 缩放后的光流。
-        """
         if np.all(np.isfinite(flow)):
             flow = cv2.resize(
                 flow,
@@ -502,17 +331,6 @@ class FlowAugmentor:
         return flow
 
     def spatial_transform(self, img1, img2, flow, dname):
-        """空间增广：随机缩放、水平/垂直翻转和随机裁剪。
-
-        Args:
-            img1 (np.ndarray): 左视图。
-            img2 (np.ndarray): 右视图。
-            flow (np.ndarray): 光流场，形状 ``(H, W, 2)``。
-            dname (str): 数据集名称（Spring 数据集需要特殊处理）。
-
-        Returns:
-            tuple: 增广后的 ``(img1, img2, flow)``。
-        """
         if np.random.rand() < self.spatial_aug_prob:
             # randomly sample scale
             ht, wd = img1.shape[:2]
@@ -568,17 +386,6 @@ class FlowAugmentor:
         return img1, img2, flow
 
     def __call__(self, img1, img2, flow, dname):
-        """执行完整的光流增广流水线：空间增广 → 颜色增广 → 连续内存对齐。
-
-        Args:
-            img1 (np.ndarray): 左视图，形状 ``(H, W, 3)``。
-            img2 (np.ndarray): 右视图，形状 ``(H, W, 3)``。
-            flow (np.ndarray): 光流场，形状 ``(H, W, 2)``。
-            dname (str): 数据集名称。
-
-        Returns:
-            tuple: 增广后的 ``(img1, img2, flow)``，均为连续内存数组。
-        """
         img1, img2, flow = self.spatial_transform(img1, img2, flow, dname)
         img1, img2 = self.color_transform(img1, img2)
         img1 = np.ascontiguousarray(img1)

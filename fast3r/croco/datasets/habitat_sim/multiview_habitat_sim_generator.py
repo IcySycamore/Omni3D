@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""多视图 Habitat 仿真生成器。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -25,31 +23,12 @@ DEG2RAD = np.pi / 180
 
 
 def compute_camera_intrinsics(height, width, hfov):
-    """根据图像尺寸和水平视场角计算相机内参。
-
-    Args:
-        height (int): 图像高度。
-        width (int): 图像宽度。
-        hfov (float): 水平视场角（度）。
-
-    Returns:
-        tuple: ``(f, cu, cv)`` 焦距和光心坐标。
-    """
     f = width / 2 / np.tan(hfov / 2 * np.pi / 180)
     cu, cv = width / 2, height / 2
     return f, cu, cv
 
 
 def compute_camera_pose_opencv_convention(camera_position, camera_orientation):
-    """将 Habitat 相机位姿转换为 OpenCV 相机坐标系。
-
-    Args:
-        camera_position (np.ndarray): 相机位置，形状 ``(3,)``。
-        camera_orientation (quaternion): 相机朝向四元数。
-
-    Returns:
-        tuple: ``(R_cam2world, t_cam2world)`` 旋转矩阵和平移向量。
-    """
     R_cam2world = quaternion.as_rotation_matrix(camera_orientation) @ R_OPENCV2HABITAT
     t_cam2world = np.asarray(camera_position)
     return R_cam2world, t_cam2world
@@ -143,33 +122,12 @@ def look_at(eye, center, up, return_cam2world=True):
 
 
 def look_at_for_habitat(eye, center, up, return_cam2world=True):
-    """计算朝向指定目标点的 Habitat 相机朝向四元数。
-
-    Args:
-        eye (np.ndarray): 相机位置。
-        center (np.ndarray): 目标点。
-        up (np.ndarray): 上方向。
-        return_cam2world (bool): 是否返回 cam2world 变换。默认 ``True``。
-
-    Returns:
-        tuple: ``(orientation, t)`` 四元数朝向和平移向量。
-    """
     R, t = look_at(eye, center, up)
     orientation = quaternion.from_rotation_matrix(R @ R_OPENCV2HABITAT.T)
     return orientation, t
 
 
 def generate_orientation_noise(pan_range, tilt_range, roll_range):
-    """生成随机相机朝向噪声四元数。
-
-    Args:
-        pan_range (tuple): 水平旋转范围（度）。
-        tilt_range (tuple): 俯仰范围（度）。
-        roll_range (tuple): 翻滚范围（度）。
-
-    Returns:
-        quaternion: 噪声四元数。
-    """
     return (
         quaternion.from_rotation_vector(
             np.random.uniform(*pan_range) * DEG2RAD * habitat_sim.geo.UP
@@ -184,32 +142,11 @@ def generate_orientation_noise(pan_range, tilt_range, roll_range):
 
 
 class NoNaviguableSpaceError(RuntimeError):
-    """当场景没有可导航空间时抛出。"""
-
     def __init__(self, *args):
-        """初始化异常。"""
         super().__init__(*args)
 
 
 class MultiviewHabitatSimGenerator:
-    """基于 Habitat-Sim 的多视图数据生成器。
-
-    在指定场景中随机采样共视的多相机位姿，渲染 RGB 和深度图，
-    并计算点云重叠度以确保视图间具有足够的共视区域。
-
-    Args:
-        scene (str): 场景文件路径。
-        navmesh (str): 导航网格文件路径。
-        scene_dataset_config_file (str): 场景数据集配置文件路径。
-        resolution (tuple): 渲染分辨率 ``(H, W)``。默认 ``(240, 320)``。
-        views_count (int): 每个样本的视图数量。默认 ``2``。
-        hfov (float): 水平视场角（度）。默认 ``60``。
-        gpu_id (int): GPU 设备 ID。默认 ``0``。
-        size (int): 数据集大小。默认 ``10000``。
-        minimum_covisibility (float): 最小共视比例。默认 ``0.5``。
-        transform (Callable | None): 数据变换。默认 ``None``。
-    """
-
     def __init__(
         self,
         scene,
@@ -223,7 +160,6 @@ class MultiviewHabitatSimGenerator:
         minimum_covisibility=0.5,
         transform=None,
     ):
-        """初始化多视图 Habitat-Sim 数据生成器。"""
         self.scene = scene
         self.navmesh = navmesh
         self.scene_dataset_config_file = scene_dataset_config_file
@@ -262,7 +198,6 @@ class MultiviewHabitatSimGenerator:
         self._lazy_initialization()
 
     def _lazy_initialization(self):
-        """延迟初始化：设置随机种子、Habitat 仿真器和导航网格。仅在首次访问时执行，以支持多进程。"""
         # Lazy random seeding and instantiation of the simulator to deal with multiprocessing properly
         if self.seed == None:
             # Re-seed numpy generator
@@ -318,15 +253,12 @@ class MultiviewHabitatSimGenerator:
             self.agent = self.sim.initialize_agent(agent_id=0)
 
     def close(self):
-        """关闭 Habitat 仿真器，释放资源。"""
         self.sim.close()
 
     def __del__(self):
-        """析构时自动关闭仿真器。"""
         self.sim.close()
 
     def __len__(self):
-        """返回数据集大小。"""
         return self.size
 
     def sample_random_viewpoint(self):
@@ -403,7 +335,6 @@ class MultiviewHabitatSimGenerator:
         return self.is_other_pointcloud_overlapping(ref_pointcloud, other_pointcloud)
 
     def render_viewpoint(self, viewpoint_position, viewpoint_orientation):
-        """在指定相机位姿渲染一帧 RGB 和深度观测。"""
         agent_state = habitat_sim.AgentState()
         agent_state.position = viewpoint_position
         agent_state.rotation = viewpoint_orientation
@@ -415,7 +346,6 @@ class MultiviewHabitatSimGenerator:
         return viewpoint_observations
 
     def __getitem__(self, useless_idx):
-        """采样并返回一个多视图样本，包含共视的 RGB/深度图及相机参数。"""
         ref_position, ref_orientation, nav_point = self.sample_random_viewpoint()
         ref_observations = self.render_viewpoint(ref_position, ref_orientation)
         # Extract point cloud

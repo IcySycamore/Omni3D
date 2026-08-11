@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.omni3d.capture"
+    android:versionName="0.1.0"
+    android:versionCode="1"
+    android:installLocation="auto">
+
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="33" />
+
+    <!-- 相机 / 网络（纯安卓原生方案，无需任何 AR 引擎） -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 高频传感器（游戏旋转向量） -->
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+
+    <!-- 华为 AREngine：声明依赖 Server 包 + SDK 服务（AAR 合并要求） -->
+    <queries>
+        <package android:name="com.huawei.arengine.service" />
+    </queries>
+
+    <application
+        android:name="org.qtproject.qt.android.bindings.QtApplication"
+        android:label="Omni3D 采集"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true">
+
+        <!-- 华为 AREngine SDK 服务声明 -->
+        <meta-data
+            android:name="com.huawei.hms.client.service.name:arenginesdk"
+            android:value="arenginesdk:4.0.0.5" />
+
+        <activity
+            android:name="org.qtproject.qt.android.bindings.QtActivity"
+            android:exported="true"
+            android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|density"
+            android:label="Omni3D 采集"
+            android:screenOrientation="unspecified"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.lib_name" android:value="omni3d_capture" />
+            <meta-data android:name="android.app.arguments" android:value="" />
+        </activity>
+    </application>
+</manifest>

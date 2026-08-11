@@ -1,0 +1,21 @@
+# 构建产物
+build*/
+*.user
+.cache/
+
+# Qt Creator
+CMakeLists.txt.user*
+
+# Android
+android/local.properties
+android/.gradle/
+android/build/
+*.apk
+*.aab
+
+# 临时迷你测试项目（保留本地，不入库）
+test_mini/
+
+# 华为 AREngine 运行时必需资产（构建/运行 APK 需要，强制入库）
+!android/assets/AREngine_Server.apk
+!android/assets/jni/arm64-v8a/libhuawei_arengine_ndk.so

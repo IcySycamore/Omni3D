@@ -167,3 +167,21 @@ configs/local/default.yaml
 
 # Aim logging
 .aim
+
+# ---- Omni3D 桌面应用产物 ----
+temp_preview_frames/
+demo_outputs/
+
+# ---- 模型权重本地缓存（HF，不进 git）----
+jedyang97/
+
+# ---- IDE ----
+.idea/
+
+# ---- 会话报告（需要版本控制时删掉这几行）----
+Omni3D_系统分析报告.html
+Omni3D_尺度方案审计与开发方向.html
+Omni3D_Cpp迁移审查与计划.html
+
+# ---- 本机 frp 部署配置（配置文档见 docs/frp/）----
+frp/frpc.toml

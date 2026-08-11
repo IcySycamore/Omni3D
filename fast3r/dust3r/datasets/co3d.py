@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""CO3D 数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -27,15 +25,7 @@ from fast3r.dust3r.utils.image import imread_cv2
 
 
 class Co3d(BaseStereoViewDataset):
-    """Co3D_v2 多物体类别数据集，用于双视图 3D 重建。"""
-
     def __init__(self, mask_bg=True, *args, ROOT, **kwargs):
-        """初始化 Co3D 数据集。
-
-        Args:
-            mask_bg (bool | str): 是否掩码背景。True/False/'rand'。默认 True。
-            ROOT (str): 数据集根目录。
-        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
         assert mask_bg in (True, False, "rand")
@@ -61,11 +51,9 @@ class Co3d(BaseStereoViewDataset):
         self.invalidate = {scene: {} for scene in self.scene_list}
 
     def __len__(self):
-        """返回场景数与视角组合数的乘积。"""
         return len(self.scene_list) * len(self.combinations)
 
     def _get_views(self, idx, resolution, rng):
-        """获取指定索引的两个视图。"""
         # choose a scene
         obj, instance = self.scene_list[idx // len(self.combinations)]
         image_pool = self.scenes[obj, instance]

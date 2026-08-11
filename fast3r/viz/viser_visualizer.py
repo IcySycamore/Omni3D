@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""Viser 可视化器。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -74,19 +72,6 @@ def detect_sky_mask(img_rgb):
     return (~mask).astype(np.int8)
 
 def is_outdoor_scene(frame_data_list):
-    """Detect whether the scene is outdoor by checking the proportion of sky pixels.
-
-    Computes the sky ratio for each frame and returns ``True`` when at least
-    25 % of the frames contain more than 20 % sky pixels.
-
-    Args:
-        frame_data_list (list of dict): Per-frame data dictionaries; each
-            must contain the key ``'sorted_not_sky_global'`` (a boolean-like
-            mask where 1 = not-sky, 0 = sky).
-
-    Returns:
-        bool: ``True`` if the scene is classified as outdoor, ``False`` otherwise.
-    """
     sky_ratios = []
     for fd in frame_data_list:
         mask = fd.get('sorted_not_sky_global', np.ones(1))
@@ -98,25 +83,6 @@ def is_outdoor_scene(frame_data_list):
 # ----------------- Update Handlers -----------------
 # These functions are lightweight and respond only to their respective events.
 def update_frame_visibility(server, frame_data_list, gui_timestep, num_frames, gui_show_global, gui_show_local, gui_show_high_conf, gui_show_low_conf):
-    """Update the visibility of all frame nodes based on the current timestep.
-
-    Shows frames with index ``<= gui_timestep.value``; the global and local
-    point cloud nodes are shown only when their respective checkboxes are
-    enabled.
-
-    Args:
-        server (viser.ViserServer): The running viser server.
-        frame_data_list (list of dict): Per-frame scene data including
-            ``'frame_node'``, ``'frustum_node'``, ``'point_node_global'``,
-            and ``'point_node_local'``.
-        gui_timestep (viser.GuiSliderHandle): Slider controlling the current
-            timestep.
-        num_frames (int): Total number of frames.
-        gui_show_global (viser.GuiCheckboxHandle): Toggle for global point clouds.
-        gui_show_local (viser.GuiCheckboxHandle): Toggle for local point clouds.
-        gui_show_high_conf (viser.GuiCheckboxHandle): Toggle for high-confidence views.
-        gui_show_low_conf (viser.GuiCheckboxHandle): Toggle for low-confidence views.
-    """
     current = int(gui_timestep.value)
     with server.atomic():
         for i in range(num_frames):
@@ -130,25 +96,6 @@ def update_frame_visibility(server, frame_data_list, gui_timestep, num_frames, g
         server.flush()
 
 def update_point_cloud_colors(server, frame_data_list, gui_timestep, gui_show_confidence_color, gui_rainbow_color_option, gui_show_global, gui_show_local):
-    """Swap point cloud colors for all frames based on the active color mode.
-
-    Three mutually exclusive color modes are supported (evaluated in order):
-    confidence heatmap, per-view rainbow color, and original RGB.
-
-    Args:
-        server (viser.ViserServer): The running viser server.
-        frame_data_list (list of dict): Per-frame scene data.
-        gui_timestep (viser.GuiSliderHandle): Current timestep slider (unused
-            directly but kept for API consistency).
-        gui_show_confidence_color (viser.GuiCheckboxHandle): Toggle confidence
-            coloring.
-        gui_rainbow_color_option (viser.GuiCheckboxHandle): Toggle rainbow
-            per-view coloring.
-        gui_show_global (viser.GuiCheckboxHandle): Toggle global point cloud
-            visibility.
-        gui_show_local (viser.GuiCheckboxHandle): Toggle local point cloud
-            visibility.
-    """
     with server.atomic():
         for i in range(len(frame_data_list)):
             fd = frame_data_list[i]
@@ -166,26 +113,6 @@ def update_point_cloud_colors(server, frame_data_list, gui_timestep, gui_show_co
             server.flush()
 
 def update_points_filtering(server, frame_data_list, gui_timestep, gui_min_conf_percentile, gui_mask_sky, gui_show_confidence_color, gui_rainbow_color_option):
-    """Filter and update point clouds based on confidence percentile and sky masking.
-
-    For each frame, the top ``(100 - gui_min_conf_percentile.value)`` percent
-    of points (sorted by descending confidence) are kept.  If sky masking is
-    enabled, sky pixels are additionally removed.
-
-    Args:
-        server (viser.ViserServer): The running viser server.
-        frame_data_list (list of dict): Per-frame scene data containing sorted
-            points, colors, and sky masks.
-        gui_timestep (viser.GuiSliderHandle): Current timestep slider (unused
-            directly but kept for API consistency).
-        gui_min_conf_percentile (viser.GuiSliderHandle): Slider controlling
-            the confidence percentile cut-off (0 = keep all, 100 = keep none).
-        gui_mask_sky (viser.GuiCheckboxHandle): Toggle sky-pixel removal.
-        gui_show_confidence_color (viser.GuiCheckboxHandle): Toggle confidence
-            heatmap coloring.
-        gui_rainbow_color_option (viser.GuiCheckboxHandle): Toggle per-view
-            rainbow coloring.
-    """
     for i in range(len(frame_data_list)):
         fd = frame_data_list[i]
         total_global = len(fd['sorted_pts3d_global'])
@@ -239,22 +166,6 @@ def update_points_filtering(server, frame_data_list, gui_timestep, gui_min_conf_
 
 # ---------------Helper Functions to save PLY--------------------
 def collect_visible_points(frame_data_list, current_timestep):
-    """Collect all currently visible 3D points and their colors up to *current_timestep*.
-
-    Iterates over global and local point cloud nodes for frames
-    ``0 .. current_timestep`` (inclusive) and concatenates the points/colors
-    of any node that is currently visible and non-empty.
-
-    Args:
-        frame_data_list (list of dict): Per-frame scene data with
-            ``'point_node_global'`` and ``'point_node_local'`` entries.
-        current_timestep (int): Index of the last frame to include.
-
-    Returns:
-        tuple: ``(points, colors)`` where both are ``np.ndarray`` of shapes
-        ``(N, 3)`` and ``(N, 3)`` respectively, or ``(None, None)`` if no
-        visible points are found.
-    """
     # collects all visible points up to the current timestep t
     points = []
     colors = []
@@ -292,22 +203,6 @@ def collect_visible_points(frame_data_list, current_timestep):
     return np.concatenate(points), np.concatenate(colors)
 
 def safe_color_conversion(colors):
-    """Convert an array of colors to uint8 format, handling multiple input ranges.
-
-    Supported input formats:
-
-    * ``float`` in [0, 1] – multiplied by 255.
-    * ``float`` in [-1, 1] – mapped from ``[-1, 1]`` to ``[0, 255]``.
-    * ``float`` outside the above ranges – linearly rescaled to ``[0, 255]``.
-    * Integer types – clipped to ``[0, 255]`` and cast to ``uint8``.
-
-    Args:
-        colors (np.ndarray): Color array of shape (N, 3) in any of the
-            formats described above.
-
-    Returns:
-        np.ndarray: Color array of shape (N, 3) with ``dtype=uint8``.
-    """
     # If colors are in float format (normalized)
     if colors.dtype in [np.float32, np.float64]:
         # Handle two common normalization ranges
@@ -331,19 +226,6 @@ def safe_color_conversion(colors):
     return colors_uint8
 
 def generate_ply_bytes(points, colors):
-    """Serialize a point cloud to binary PLY format.
-
-    Builds a PLY header and packs 3D coordinates (float32) together with
-    RGB colors (uint8) into a compact binary blob suitable for file download.
-
-    Args:
-        points (np.ndarray): Point coordinates of shape (N, 3), dtype float32.
-        colors (np.ndarray): Point colors of shape (N, 3) in any format
-            accepted by :func:`safe_color_conversion`.
-
-    Returns:
-        bytes: Binary PLY file content (header + vertex data).
-    """
     # generate binary ply object bytes from the point cloud and their color
     header = [
         "ply",
@@ -373,79 +255,22 @@ def generate_ply_bytes(points, colors):
 
 # ----------------- Playback Loop -----------------
 def playback_loop(gui_playing, gui_timestep, num_frames, gui_framerate):
-    """Continuously advance the timestep slider at the requested frame rate.
-
-    Runs in an infinite loop (intended for a background thread): increments
-    the timestep by one each tick when ``gui_playing`` is enabled, then
-    sleeps for ``1 / gui_framerate`` seconds.
-
-    Args:
-        gui_playing (viser.GuiCheckboxHandle): Checkbox that controls
-            whether playback is active.
-        gui_timestep (viser.GuiSliderHandle): Slider whose value is
-            incremented each frame.
-        num_frames (int): Total number of frames (used for modular wrap-around).
-        gui_framerate (viser.GuiSliderHandle): Slider that controls the
-            target playback speed in frames per second.
-    """
     while True:
         if gui_playing.value:
             gui_timestep.value = (int(gui_timestep.value) + 1) % num_frames
         time.sleep(1.0 / float(gui_framerate.value))
 
 def bind_update(widget, update_func):
-    """Attach an update callback to a GUI widget.
-
-    A thin wrapper around ``widget.on_update`` that ignores the event
-    argument and simply calls *update_func* with no arguments.
-
-    Args:
-        widget: Any viser GUI widget that supports the ``on_update`` method.
-        update_func (Callable): Zero-argument callable to invoke on every
-            widget update event.
-    """
     widget.on_update(lambda _: update_func())
 
 # ----------------- Main Visualization Function -----------------
 def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_value_to_drop_view=1.5, port=8020, point_size=0.0004):
-    """Launch an interactive viser-based 3D visualization server for Fast3R output.
-
-    Estimates camera poses from the model predictions, constructs per-frame
-    3D point clouds with RGB / confidence / rainbow coloring, registers all
-    GUI controls (playback, filtering, export), and starts a background
-    playback thread.
-
-    Args:
-        output (dict): Dictionary returned by the Fast3R pipeline, containing:
-
-            * ``'preds'`` (list of dict) – per-frame model predictions with
-              keys ``'pts3d_in_other_view'``, ``'conf'``,
-              ``'pts3d_local_aligned_to_global'``, ``'conf_local'``.
-            * ``'views'`` (list of dict) – per-frame view data with key
-              ``'img'`` (shape ``(1, 3, H, W)``).
-
-        min_conf_thr_percentile (int): Initial per-view confidence percentile
-            cut-off (0 = keep all points, 100 = keep none).
-            Defaults to ``10``.
-        global_conf_thr_value_to_drop_view (float): Global confidence
-            threshold used to separate high- and low-confidence views.
-            Defaults to ``1.5``.
-        port (int): TCP port for the viser server. Defaults to ``8020``.
-        point_size (float): Initial rendered size of each point in world
-            units. Defaults to ``0.0004``.
-
-    Returns:
-        viser.ViserServer: The running viser server instance (the visualization
-        will keep serving until the process is terminated or the server is
-        stopped).
-    """
     server = viser.ViserServer(host='127.0.0.1', port=port)
     server.gui.set_panel_label("Show Controls")
     server.gui.configure_theme(control_layout="floating", control_width="medium", show_logo=False)
 
     @server.on_client_connect
     def on_client_connect(client: viser.ClientHandle) -> None:
-        """客户端连接时设置初始相机位置。"""
         with client.atomic():
             client.camera.position = (-0.00141163, -0.01910395, -0.06794288)
             client.camera.look_at = (-0.00352821, -0.01143425, 0.0154939)
@@ -495,17 +320,14 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_next_frame.on_click
     def next_frame(_):
-        """切换到下一帧。"""
         gui_timestep.value = (gui_timestep.value + 1) % num_frames
 
     @gui_prev_frame.on_click
     def prev_frame(_):
-        """切换到上一帧。"""
         gui_timestep.value = (gui_timestep.value - 1) % num_frames
 
     @gui_playing.on_update
     def playing_update(_):
-        """播放状态切换时更新控件禁用状态。"""
         state = gui_playing.value
         gui_timestep.disabled = state
         gui_next_frame.disabled = state
@@ -513,7 +335,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_framerate_options.on_click
     def fps_options(_):
-        """帧率选项点击回调。"""
         gui_framerate.value = float(gui_framerate_options.value)
 
     server.scene.add_frame("/cams", show_axes=False)
@@ -557,7 +378,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
         colors_confidence_local = colormap(conf_norm_local)[:, :3]
 
         def rainbow_color(n, total):
-            """生成彩虹色调颜色。"""
             import colorsys
             hue = n / total
             return colorsys.hsv_to_rgb(hue, 1.0, 1.0)
@@ -717,7 +537,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
     # ----------------- GUI Callback Updates -----------------
     @gui_timestep.on_update
     def _(_):
-        """时间步滑块更新回调：控制帧/视锥/点云的可见性。"""
         current = int(gui_timestep.value)
         with server.atomic():
             for i in range(num_frames):
@@ -740,7 +559,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_point_size.on_update
     def _(_):
-        """点大小滑块更新回调：调整全局和局部点云的渲染点尺寸。"""
         with server.atomic():
             for fd in frame_data_list:
                 fd['point_node_global'].point_size = gui_point_size.value
@@ -749,7 +567,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_frustum_size_percent.on_update
     def _(_):
-        """视锥大小滑块更新回调：缩放所有相机视锥的显示尺寸。"""
         frustum_scale = max_extent * (gui_frustum_size_percent.value / 100.0)
         with server.atomic():
             for fd in frame_data_list:
@@ -758,7 +575,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_confidence_color.on_update
     def _(_):
-        """置信度着色开关回调：切换置信度颜色模式并更新点云颜色。"""
         # Make options mutually exclusive
         if gui_show_confidence_color.value and gui_rainbow_color_option.value:
             gui_rainbow_color_option.value = False
@@ -769,7 +585,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_rainbow_color_option.on_update
     def _(_):
-        """彩虹着色开关回调：切换彩虹颜色模式并更新点云颜色。"""
         # Make options mutually exclusive
         if gui_rainbow_color_option.value and gui_show_confidence_color.value:
             gui_show_confidence_color.value = False
@@ -780,20 +595,17 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_min_conf_percentile.on_update
     def _(_):
-        """最小置信度分位数滑块回调：更新点云过滤阈值。"""
         update_points_filtering(server, frame_data_list, gui_timestep, gui_min_conf_percentile, 
                                gui_mask_sky, gui_show_confidence_color, gui_rainbow_color_option)
 
     @gui_mask_sky.on_update
     def _(_):
-        """天空遮罩开关回调：切换天空区域过滤并更新点云显示。"""
         # For each visible frame, update filtering if mask sky changes.
         update_points_filtering(server, frame_data_list, gui_timestep, gui_min_conf_percentile, 
                                gui_mask_sky, gui_show_confidence_color, gui_rainbow_color_option)
 
     @gui_show_global.on_update
     def _(_):
-        """全局点云可见性开关回调：控制当前时间步内全局点云的显示。"""
         with server.atomic():
             for i in range(int(gui_timestep.value)+1):
                 frame_data_list[i]['point_node_global'].visible = gui_show_global.value
@@ -801,7 +613,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_local.on_update
     def _(_):
-        """局部点云可见性开关回调：控制当前时间步内局部点云的显示。"""
         with server.atomic():
             for i in range(int(gui_timestep.value)+1):
                 frame_data_list[i]['point_node_local'].visible = gui_show_local.value
@@ -809,7 +620,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_high_conf.on_update
     def _(_):
-        """高置信度视图开关回调：控制高置信度视图的视锥和点云可见性。"""
         with server.atomic():
             for i in range(num_frames):
                 fd = frame_data_list[i]
@@ -827,7 +637,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_show_low_conf.on_update
     def _(_):
-        """低置信度视图开关回调：控制低置信度视图的视锥和点云可见性。"""
         with server.atomic():
             for i in range(num_frames):
                 fd = frame_data_list[i]
@@ -845,14 +654,12 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @gui_global_conf_threshold.on_update
     def _(_):
-        """全局置信度阈值滑块回调：重新计算各帧的高低置信度标记。"""
         for fd in frame_data_list:
             fd['is_high_confidence'] = fd['max_conf_global'] >= gui_global_conf_threshold.value
         server.flush()
 
     # ----------------- Start Playback Loop -----------------
     def local_playback_loop():
-        """本地回放循环：在后台线程中持续推进时间步。"""
         while True:
             if gui_playing.value:
                 gui_timestep.value = (int(gui_timestep.value) + 1) % num_frames
@@ -862,7 +669,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @button_render_gif.on_click
     def _(event: viser.GuiEvent) -> None:
-        """渲染 GIF 按钮回调：逐帧截图并生成 GIF 动画发送给客户端下载。"""
         client = event.client
         if client is None:
             print("Error: No client connected.")
@@ -886,7 +692,6 @@ def start_visualization(output, min_conf_thr_percentile=10, global_conf_thr_valu
 
     @button_download_ply.on_click
     def _(event: viser.GuiEvent):
-        """下载 PLY 按钮回调：收集可见点云并生成 PLY 文件发送给客户端下载。"""
         client = event.client
         if client is None:
             print("No client connected; skipping download.")

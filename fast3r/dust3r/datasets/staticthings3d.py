@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""StaticThings3D 数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -25,12 +23,6 @@ class StaticThings3D (BaseStereoViewDataset):
     """ Dataset of indoor scenes, 5 images each time
     """
     def __init__(self, ROOT, *args, mask_bg='rand', **kwargs):
-        """初始化 StaticThings3D 数据集。
-
-        Args:
-            ROOT (str): 数据集根目录。
-            mask_bg (bool | str): 是否掩码背景。默认 'rand'。
-        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
 
@@ -42,15 +34,12 @@ class StaticThings3D (BaseStereoViewDataset):
         self.pairs = np.load(osp.join(ROOT, 'staticthings_pairs.npy'))
 
     def __len__(self):
-        """返回图像对数量。"""
         return len(self.pairs)
 
     def get_stats(self):
-        """返回数据集统计信息字符串。"""
         return f'{len(self)} pairs'
 
     def _get_views(self, pair_idx, resolution, rng):
-        """获取指定索引的两个视图。"""
         scene, seq, cam1, im1, cam2, im2 = self.pairs[pair_idx]
         seq_path = osp.join('TRAIN', scene.decode('ascii'), f'{seq:04d}')
 

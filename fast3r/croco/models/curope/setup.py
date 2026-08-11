@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""构建配置。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 

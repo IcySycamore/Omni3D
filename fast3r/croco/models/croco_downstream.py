@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""croco downstream。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -19,19 +17,6 @@ from .croco import CroCoNet
 
 
 def croco_args_from_ckpt(ckpt):
-    """从检查点中提取 CroCo 模型参数。
-
-    支持三种格式的检查点：
-    - CroCo v2: 直接存储 croco_kwargs
-    - 官方预训练: 从 args.model 字符串解析
-    - CroCo v1: 返回空字典
-
-    Args:
-        ckpt (dict): 模型检查点字典。
-
-    Returns:
-        dict: CroCo 模型参数。
-    """
     if "croco_kwargs" in ckpt:  # CroCo v2 released models
         return ckpt["croco_kwargs"]
     elif "args" in ckpt and hasattr(
@@ -49,7 +34,6 @@ def croco_args_from_ckpt(ckpt):
 
 
 class CroCoDownstreamMonocularEncoder(CroCoNet):
-    """单目下游任务编码器，仅使用 CroCo 的编码器部分。"""
     def __init__(self, head, **kwargs):
         """Build network for monocular downstream task, only using the encoder.
         It takes an extra argument head, that is called with the features
@@ -95,7 +79,6 @@ class CroCoDownstreamMonocularEncoder(CroCoNet):
 
 
 class CroCoDownstreamBinocular(CroCoNet):
-    """双目下游任务模型，使用 CroCo 的编码器+解码器。"""
     def __init__(self, head, **kwargs):
         """Build network for binocular downstream task
         It takes an extra argument head, that is called with the features
@@ -142,7 +125,6 @@ class CroCoDownstreamBinocular(CroCoNet):
         return out, out2, pos, pos2
 
     def forward(self, img1, img2):
-        """双目前向传播，编码图像对并通过解码器和预测头。"""
         B, C, H, W = img1.size()
         img_info = {"height": H, "width": W}
         return_all_blocks = (

@@ -40,15 +40,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         postprocess=None,
         **kwargs,
     ):
-        """初始化基于 DPT 的像素级预测头。
-
-        Args:
-            hooks_idx (list | None): 选取的 Transformer 层索引。默认自动计算。
-            layer_dims (list): 各层输出维度。默认 [96, 192, 384, 768]。
-            output_width_ratio (int): 输出宽度比例。默认 1。
-            num_channels (int): 输出通道数。默认 1。
-            postprocess: 后处理函数。默认 None。
-        """
         super(PixelwiseTaskWithDPT, self).__init__()
         self.return_all_blocks = True  # backbone needs to return all layers
         self.postprocess = postprocess
@@ -58,13 +49,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         self.layer_dims = layer_dims
 
     def setup(self, croconet):
-        """根据 CroCoNet 的参数配置 DPT 适配器。
-
-        自动计算 hook 索引并初始化 DPT 输出适配器。
-
-        Args:
-            croconet (CroCoNet): CroCo 模型实例。
-        """
         dpt_args = {
             "output_width_ratio": self.output_width_ratio,
             "num_channels": self.num_channels,
@@ -98,15 +82,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         self.dpt.init(**dpt_init_args)
 
     def forward(self, x, img_info):
-        """前向传播，通过 DPT 生成像素级预测。
-
-        Args:
-            x: 编码器/解码器输出的特征。
-            img_info (dict): 包含 'height' 和 'width' 的图像信息。
-
-        Returns:
-            Tensor: 像素级预测输出。
-        """
         out = self.dpt(x, image_size=(img_info["height"], img_info["width"]))
         if self.postprocess:
             out = self.postprocess(out)

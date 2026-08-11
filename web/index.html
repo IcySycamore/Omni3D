@@ -1,0 +1,3653 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Omni3D - 3D重建</title>
+
+    <!-- exif-js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.min.js"></script>
+
+    <!-- Three.js importmap -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <style>
+      :root {
+        --bg-deep: #0a0c14;
+        --bg-card: rgba(18, 20, 32, 0.75);
+        --bg-card-hover: rgba(24, 27, 42, 0.82);
+        --bg-sidebar: rgba(12, 14, 24, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.07);
+        --glass-border-active: rgba(255, 255, 255, 0.14);
+        --text-primary: #e8e8f0;
+        --text-secondary: #a0a4b8;
+        --text-muted: #6b6f85;
+        --accent-cyan: #00d4ff;
+        --accent-purple: #a855f7;
+        --accent-gradient: linear-gradient(135deg, #00d4ff, #a855f7);
+        --accent-gradient-warm: linear-gradient(135deg, #00d4ff, #7c3aed);
+        --danger: #f87171;
+        --success: #4ade80;
+        --warning: #fbbf24;
+        --radius-sm: 10px;
+        --radius: 14px;
+        --radius-lg: 20px;
+        --radius-xl: 24px;
+        --shadow-card:
+          0 4px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+        --shadow-glow:
+          0 0 40px rgba(0, 212, 255, 0.12), 0 0 80px rgba(168, 85, 247, 0.06);
+        --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --font-mono:
+          "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas",
+          monospace;
+        --sidebar-width: 236px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        background: var(--bg-deep);
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* ============ 星空背景 ============ */
+      .starfield {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .starfield canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ============ 主布局 ============ */
+      .app-layout {
+        display: flex;
+        height: 100%;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ============ 侧栏 ============ */
+      .sidebar {
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
+        height: 100%;
+        background: #0c0e18;
+        border-right: 1px solid var(--glass-border);
+        display: flex;
+        flex-direction: column;
+        /* 侧栏一律不启用 backdrop-filter：避免折叠/滑动时模糊错误残留（含 WebView 引擎差异） */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        z-index: 100;
+        transition:
+          transform var(--transition-smooth),
+          opacity var(--transition-smooth);
+      }
+      .sidebar-logo {
+        padding: 22px 20px 16px;
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        flex-shrink: 0;
+      }
+      .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 12px;
+        overflow-y: auto;
+      }
+      .sidebar-nav button {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        width: 100%;
+        padding: 11px 14px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 0.93rem;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        text-align: left;
+        font-family: inherit;
+        white-space: nowrap;
+        position: relative;
+      }
+      .sidebar-nav button:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-primary);
+      }
+      .sidebar-nav button.active {
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        box-shadow: inset 3px 0 0 var(--accent-cyan);
+        font-weight: 600;
+      }
+      .sidebar-nav button .nav-icon {
+        font-size: 1.15rem;
+        width: 22px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .sidebar-ar-badge {
+        flex-shrink: 0;
+        padding: 14px 16px;
+        border-top: 1px solid var(--glass-border);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: 0.02em;
+      }
+      .sidebar-ar-badge .ar-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        transition: all var(--transition-fast);
+      }
+      .ar-dot.connected {
+        background: var(--success);
+        box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+        animation: pulse-dot 2s infinite;
+      }
+      .ar-dot.disconnected {
+        background: #555;
+        box-shadow: none;
+      }
+      /* 云端模型服务状态灯 */
+      .cloud-dot.ready {
+        background: var(--success);
+        box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+      }
+      .cloud-dot.loading {
+        background: var(--warning);
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+        animation: pulse-dot 2s infinite;
+      }
+      .cloud-dot.offline {
+        background: var(--danger);
+      }
+      .page-head {
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        font-size: 1rem;
+        color: var(--text-primary);
+      }
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 18px rgba(74, 222, 128, 0.85);
+        }
+      }
+
+      /* ============ 汉堡菜单 ============ */
+      .hamburger {
+        display: none;
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 200;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid var(--glass-border);
+        background: #141624;
+        color: #fff;
+        font-size: 1.3rem;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-fast);
+        box-shadow: var(--shadow-card);
+      }
+      .hamburger:active {
+        scale: 0.93;
+      }
+
+      /* 遮罩 */
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99;
+        background: rgba(0, 0, 0, 0.6);
+        /* 不用 backdrop-filter：部分 WebView 引擎会把模糊错误应用到侧栏本身 */
+        transition: opacity var(--transition-smooth);
+      }
+
+      /* ============ 内容区 ============ */
+      .main-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 20px 24px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        scroll-behavior: smooth;
+      }
+      .main-content::-webkit-scrollbar {
+        width: 5px;
+      }
+      .main-content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .main-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+
+      /* ============ 页面容器 ============ */
+      .page {
+        display: none;
+        flex-direction: column;
+        gap: 18px;
+        animation: fadeSlideIn 0.35s ease;
+      }
+      .page.active {
+        display: flex;
+      }
+      @keyframes fadeSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ============ 玻璃卡片 ============ */
+      .glass-card {
+        background: var(--bg-card);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        padding: 20px 22px;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: var(--shadow-card);
+        transition: all var(--transition-smooth);
+      }
+      .glass-card:hover {
+        border-color: var(--glass-border-active);
+        box-shadow: var(--shadow-card), var(--shadow-glow);
+      }
+      .glass-card.card-accent {
+        border-left: 3px solid var(--accent-cyan);
+      }
+      .glass-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+        letter-spacing: 0.02em;
+      }
+      .glass-card .card-subtitle {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+
+      /* ============ 视频预览区 ============ */
+      .video-preview-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 560px;
+        aspect-ratio: 16/10;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: #0d0f18;
+        border: 1px solid var(--glass-border);
+        box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: default;
+      }
+      .video-preview-wrapper video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+      .video-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        pointer-events: none;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        transition: opacity var(--transition-fast);
+      }
+      .video-placeholder .placeholder-icon {
+        font-size: 2.8rem;
+        opacity: 0.5;
+      }
+      .video-placeholder.hidden {
+        opacity: 0;
+      }
+      .recording-badge {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        color: #fff;
+        pointer-events: none;
+        z-index: 5;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .recording-badge .rec-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ef4444;
+        animation: blink-red 0.8s infinite;
+      }
+      @keyframes blink-red {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.25;
+        }
+      }
+      .recording-badge.hidden {
+        display: none;
+      }
+
+      /* 元信息条 */
+      .meta-info-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        padding: 8px 14px;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        max-width: 560px;
+        transition: all var(--transition-fast);
+      }
+      .meta-info-bar.success {
+        border-color: rgba(74, 222, 128, 0.35);
+        color: var(--success);
+      }
+      .meta-info-bar.hidden {
+        display: none;
+      }
+      .meta-info-bar .meta-icon {
+        font-size: 1.1rem;
+      }
+
+      /* ============ 按钮 ============ */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 18px;
+        border-radius: 25px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        cursor: pointer;
+        font-size: 0.88rem;
+        font-family: inherit;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        letter-spacing: 0.02em;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--glass-border-active);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
+      }
+      .btn:active {
+        scale: 0.96;
+        transition: scale 0.08s;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+        filter: grayscale(30%);
+      }
+      .btn-primary {
+        background: var(--accent-gradient-warm);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+        letter-spacing: 0.03em;
+      }
+      .btn-primary:hover {
+        box-shadow: 0 6px 28px rgba(0, 212, 255, 0.35);
+        transform: translateY(-1px);
+      }
+      .btn-danger {
+        border-color: rgba(248, 113, 113, 0.4);
+        color: var(--danger);
+      }
+      .btn-danger:hover {
+        background: rgba(248, 113, 113, 0.1);
+        border-color: rgba(248, 113, 113, 0.6);
+      }
+      .btn-sm {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        border-radius: 20px;
+      }
+      .btn-xs {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+        border-radius: 16px;
+      }
+      .btn-icon {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      /* 采集页按钮：2 列等宽网格（更整齐） */
+      .btn-row.capture-btns {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .btn-row.capture-btns .btn {
+        justify-content: center;
+        width: 100%;
+        margin: 0;
+      }
+      .btn-row.capture-btns .btn:only-child {
+        grid-column: 1 / -1;
+      }
+
+      /* ============ 进度条 ============ */
+      .progress-container {
+        max-width: 560px;
+        height: 5px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+        transition: opacity var(--transition-fast);
+      }
+      .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        background: var(--accent-gradient);
+        transition: width 0.4s ease;
+        width: 0%;
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+      }
+      .progress-container.hidden {
+        opacity: 0;
+        pointer-events: none;
+        height: 0;
+        margin: 0;
+        transition: all 0.5s ease;
+      }
+      .stage-text {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        letter-spacing: 0.02em;
+        min-height: 1.2em;
+        transition: all var(--transition-fast);
+      }
+
+      /* ============ AR状态行 ============ */
+      .ar-status-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        padding: 6px 0;
+        flex-wrap: wrap;
+      }
+      .ar-status-row .status-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* ============ 3D查看器容器 ============ */
+      .viewer-container {
+        width: 100%;
+        height: 55vh;
+        min-height: 360px;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: #080a12;
+        border: 1px solid var(--glass-border);
+        position: relative;
+        cursor: grab;
+      }
+      .viewer-container:active {
+        cursor: grabbing;
+      }
+      .viewer-container.measuring {
+        cursor: crosshair;
+      }
+      .viewer-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        padding: 6px 0;
+      }
+      .measurement-chip {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 22px;
+        padding: 8px 18px;
+        font-size: 0.9rem;
+        color: #fff;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        pointer-events: none;
+        letter-spacing: 0.03em;
+        animation: popIn 0.25s ease;
+      }
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) scale(1);
+        }
+      }
+
+      /* ============ 标尺校准条 ============ */
+      .calibration-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px dashed var(--glass-border);
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        max-width: 560px;
+      }
+      .calibration-bar input {
+        width: 70px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        background: rgba(0, 0, 0, 0.35);
+        color: #fff;
+        font-size: 0.84rem;
+        text-align: center;
+        font-family: var(--font-mono);
+        transition: all var(--transition-fast);
+      }
+      .calibration-bar input:focus {
+        outline: none;
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+      }
+      .calibration-bar .cal-result {
+        font-weight: 600;
+        color: var(--accent-cyan);
+        font-family: var(--font-mono);
+      }
+
+      /* ============ 历史列表 ============ */
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 640px;
+      }
+      .task-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 16px;
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid var(--glass-border);
+        transition: all var(--transition-fast);
+        cursor: default;
+        flex-wrap: wrap;
+      }
+      .task-item:hover {
+        border-color: var(--glass-border-active);
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .task-item .task-status-icon {
+        font-size: 1.3rem;
+        flex-shrink: 0;
+      }
+      .task-item .task-info {
+        flex: 1;
+        min-width: 140px;
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+      }
+      .task-item .task-id {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        word-break: break-all;
+      }
+
+      /* ============ 设置页 ============ */
+      .setting-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .radio-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .radio-pill {
+        padding: 9px 16px;
+        border-radius: 22px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        transition: all var(--transition-fast);
+        font-family: inherit;
+        text-align: center;
+      }
+      .radio-pill:hover {
+        border-color: var(--glass-border-active);
+        color: #fff;
+      }
+      .radio-pill.selected {
+        background: rgba(0, 212, 255, 0.12);
+        border-color: var(--accent-cyan);
+        color: #fff;
+        box-shadow: 0 0 16px rgba(0, 212, 255, 0.15);
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
+        border-radius: 14px;
+        font-size: 0.78rem;
+        font-family: var(--font-mono);
+        letter-spacing: 0.02em;
+      }
+      .tag-ok {
+        background: rgba(74, 222, 128, 0.12);
+        color: var(--success);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+      }
+      .tag-warn {
+        background: rgba(251, 191, 36, 0.1);
+        color: var(--warning);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+      }
+      .tag-muted {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+        border: 1px solid var(--glass-border);
+      }
+
+      /* ============ 帮助页 ============ */
+      .help-section {
+        max-width: 680px;
+      }
+      .help-section h4 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 16px 0 6px;
+        color: var(--accent-cyan);
+        letter-spacing: 0.03em;
+      }
+      .help-section p,
+      .help-section li {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        margin-bottom: 4px;
+      }
+      .help-section ul {
+        padding-left: 18px;
+      }
+      .help-section code {
+        background: rgba(255, 255, 255, 0.06);
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--accent-cyan);
+      }
+
+      /* ============ Toast ============ */
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 300;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+      }
+      .toast {
+        padding: 11px 18px;
+        border-radius: 22px;
+        font-size: 0.85rem;
+        background: rgba(20, 22, 36, 0.9);
+        border: 1px solid var(--glass-border);
+        color: #fff;
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: var(--shadow-card);
+        animation:
+          slideInRight 0.3s ease,
+          fadeOutRight 0.3s ease 2.2s forwards;
+        pointer-events: auto;
+        max-width: 380px;
+      }
+      .toast.error {
+        border-color: rgba(248, 113, 113, 0.5);
+      }
+      .toast.success {
+        border-color: rgba(74, 222, 128, 0.5);
+      }
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes fadeOutRight {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+      }
+
+      /* ============ 响应式：移动端 ============ */
+      @media (max-width: 860px) {
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100%;
+          transform: translateX(-100%);
+          visibility: hidden;
+          box-shadow: 4px 0 30px rgba(0, 0, 0, 0.6);
+          border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+          /* 折叠时完全不渲染侧栏：彻底杜绝模糊残留/边缘伪影（Qt WebView 等引擎差异） */
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          background: #0c0e18;
+          transition:
+            transform var(--transition-smooth),
+            visibility 0s linear 0.3s;
+        }
+        .sidebar.open {
+          transform: translateX(0);
+          visibility: visible;
+          transition:
+            transform var(--transition-smooth),
+            visibility 0s;
+        }
+        .sidebar.open .sidebar-logo {
+          /* 左侧留出汉堡按钮的位置，避免品牌标被左上角按键遮挡 */
+          padding-left: 64px;
+        }
+        .sidebar-overlay.show {
+          display: block;
+        }
+        .hamburger {
+          display: flex;
+        }
+        .main-content {
+          padding: 16px 10px 24px;
+          gap: 12px;
+          padding-top: 60px;
+        }
+        .glass-card {
+          padding: 14px 14px;
+          border-radius: var(--radius);
+        }
+        .video-preview-wrapper {
+          max-width: 100%;
+          aspect-ratio: 4/3;
+        }
+        .btn {
+          padding: 8px 14px;
+          font-size: 0.82rem;
+        }
+        .viewer-container {
+          height: 40vh;
+          min-height: 260px;
+        }
+        .calibration-bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .task-item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 星空背景 -->
+    <div class="starfield"><canvas id="starCanvas"></canvas></div>
+
+    <!-- Toast容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 汉堡菜单按钮 -->
+    <button class="hamburger" id="hamburgerBtn" aria-label="菜单">☰</button>
+
+    <!-- 主布局 -->
+    <div class="app-layout">
+      <!-- 侧栏遮罩（必须在 app-layout 内，与侧栏同 stacking context，否则根级 z-index 会盖住整个 app-layout 含侧栏） -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <!-- 侧栏 -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">◈ Omni3D</div>
+        <nav class="sidebar-nav" id="sidebarNav">
+          <button data-page="capture" class="active">
+            <span class="nav-icon">📷</span> 采集
+          </button>
+          <button data-page="viewer">
+            <span class="nav-icon">🔍</span> 建模结果
+          </button>
+          <button data-page="history">
+            <span class="nav-icon">📋</span> 历史记录
+          </button>
+          <button data-page="settings">
+            <span class="nav-icon">⚙</span> 设置
+          </button>
+          <button data-page="help">
+            <span class="nav-icon">❓</span> 帮助
+          </button>
+        </nav>
+        <div class="sidebar-ar-badge" id="sidebarARBadge">
+          <span class="ar-dot disconnected" id="arDot"></span>
+          <span id="arBadgeText">AR 位姿 · 未连接</span>
+        </div>
+        <div class="sidebar-ar-badge" id="cloudStatusBadge">
+          <span class="ar-dot disconnected" id="cloudDot"></span>
+          <span id="cloudStatusText">云端模型 · 检测中</span>
+        </div>
+      </aside>
+
+      <!-- 主内容区 -->
+      <main class="main-content" id="mainContent">
+        <!-- ==================== 采集页 ==================== -->
+        <section class="page active" id="page-capture">
+          <!-- 卡片：采集视频 -->
+          <div class="glass-card">
+            <h3>① 采集视频</h3>
+            <div class="video-preview-wrapper" id="videoPreviewWrapper">
+              <video id="video" autoplay playsinline muted></video>
+              <div class="video-placeholder" id="videoPlaceholder">
+                <span class="placeholder-icon">🎥</span>
+                <span>未选择视频源</span>
+              </div>
+              <div class="recording-badge hidden" id="recordingBadge">
+                <span class="rec-dot"></span>
+                <span id="recordingTimer">00:00</span>
+              </div>
+            </div>
+            <div style="margin-top: 12px" class="btn-row capture-btns">
+              <button class="btn" id="recBtn">● 录制</button>
+              <button class="btn" id="photoBtn">📷 拍摄</button>
+              <button class="btn" id="pickBtn">🗂 本地视频</button>
+              <button class="btn btn-danger" id="clearBtn">✕ 清除</button>
+              <input
+                type="file"
+                id="fileInput"
+                accept="video/*,image/*"
+                style="display: none"
+                multiple
+              />
+            </div>
+            <div
+              class="meta-info-bar hidden"
+              id="metaInfoBar"
+              style="margin-top: 10px"
+            >
+              <span class="meta-icon">🎬</span>
+              <span id="metaInfoText"></span>
+            </div>
+            <!-- AR状态行（含扫描按钮） -->
+            <div class="ar-status-row" style="margin-top: 10px">
+              <span class="status-label">
+                <span>◈</span> AR 位姿：
+                <strong id="arStatusLabel">未连接</strong>
+              </span>
+              <span
+                style="font-size: 0.75rem; color: var(--text-muted)"
+                id="arStatusDetail"
+              ></span>
+              <button class="btn" id="arScanBtn" disabled>
+                📷 AR 扫描 · 仅限APP内使用
+              </button>
+            </div>
+            <!-- AR扫描状态区 -->
+            <div id="arScanStatusArea" style="margin-top: 8px; display: none">
+              <div
+                class="glass-card"
+                style="padding: 12px 16px; border-color: rgba(0, 212, 255, 0.3)"
+              >
+                <span id="arScanStatusText">扫描中...</span>
+                <div class="btn-row" style="margin-top: 8px">
+                  <button class="btn btn-sm btn-primary" id="arScanFinishBtn">
+                    ✓ 完成扫描
+                  </button>
+                  <button class="btn btn-sm btn-danger" id="arScanCancelBtn">
+                    ✕ 放弃
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 卡片：启动重建 -->
+          <div class="glass-card">
+            <h3>② 启动重建</h3>
+            <button class="btn btn-primary" id="submitBtn" disabled>
+              提交重建
+            </button>
+            <div
+              class="progress-container hidden"
+              id="progressContainer"
+              style="margin-top: 12px"
+            >
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="stage-text" id="stageText"></div>
+          </div>
+        </section>
+
+        <!-- ==================== 建模结果页 ==================== -->
+        <section class="page" id="page-viewer">
+          <div class="page-head">建模结果</div>
+          <div class="viewer-container" id="viewerContainer"></div>
+          <div class="viewer-stats" id="viewerStats">
+            <span>抽帧视图：<strong id="statViews">-</strong></span>
+            <span>点数：<strong id="statPoints">-</strong></span>
+            <span>耗时：<strong id="statElapsed">-</strong> s</span>
+          </div>
+          <!-- 测量chip（在viewerContainer内动态创建） -->
+          <div
+            class="calibration-bar"
+            id="calibrationBar"
+            style="display: none"
+          >
+            <span>标尺校准：</span>
+            <span>模型距离</span>
+            <input
+              type="number"
+              id="calModelDist"
+              placeholder="模型单位"
+              step="any"
+              min="0.001"
+            />
+            <span>= 真实(米)</span>
+            <input
+              type="number"
+              id="calRealDist"
+              placeholder="米"
+              step="any"
+              min="0.001"
+            />
+            <button class="btn btn-sm btn-primary" id="calApplyBtn">
+              校准
+            </button>
+            <span class="cal-result" id="calResult"></span>
+            <button
+              class="btn btn-sm"
+              id="calResetBtn"
+              style="margin-left: auto"
+            >
+              重置
+            </button>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="downloadPlyBtn">⬇ 下载 PLY</button>
+            <button class="btn" id="huaweiFusionBtn">◈ 融合华为点云：关</button>
+            <button class="btn" id="resetViewBtn">⤾ 重置视角</button>
+            <button class="btn btn-danger btn-sm" id="clearMeasureBtn">
+              ✕ 清除测量
+            </button>
+            <button class="btn btn-sm" id="toggleMeasureBtn">
+              开启测量模式
+            </button>
+          </div>
+        </section>
+
+        <!-- ==================== 历史记录页 ==================== -->
+        <section class="page" id="page-history">
+          <div class="glass-card">
+            <h3>历史记录</h3>
+            <p class="card-subtitle">服务器重建任务列表（最近20条）</p>
+            <div class="task-list" id="taskList">
+              <span style="color: var(--text-muted); font-size: 0.84rem"
+                >加载中...</span
+              >
+            </div>
+            <button
+              class="btn btn-sm"
+              id="refreshTasksBtn"
+              style="margin-top: 10px"
+            >
+              🔄 刷新
+            </button>
+          </div>
+        </section>
+
+        <!-- ==================== 设置页 ==================== -->
+        <section class="page" id="page-settings">
+          <div class="glass-card">
+            <h3>重建·抽帧</h3>
+            <div class="radio-group" id="frameCountGroup">
+              <button class="radio-pill" data-value="8">8 帧</button>
+              <button class="radio-pill selected" data-value="12">12 帧</button>
+              <button class="radio-pill" data-value="16">16 帧</button>
+            </div>
+          </div>
+          <div class="glass-card">
+            <h3>AR 扫描 · 采集分辨率</h3>
+            <div class="radio-group" id="arResGroup">
+              <button class="radio-pill" data-w="640" data-h="480">
+                标清 640×480
+              </button>
+              <button class="radio-pill selected" data-w="1280" data-h="720">
+                高清 1280×720
+              </button>
+              <button class="radio-pill" data-w="1920" data-h="1080">
+                全高清 1920×1080
+              </button>
+            </div>
+            <div style="margin-top: 10px">
+              <span class="tag tag-muted" id="arResHint"
+                >分辨率越高越清晰、点云越密，但采集与上传更慢；扫描前设置生效。</span
+              >
+            </div>
+          </div>
+          <div class="glass-card">
+            <h3>相机参数</h3>
+            <button class="btn" id="readCameraBtn">从设备读取内外参</button>
+            <div
+              style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px"
+              id="cameraTags"
+            >
+              <span class="tag tag-muted">未读取 · 模型自动估计位姿</span>
+            </div>
+          </div>
+          <div class="glass-card">
+            <h3>AR 桥状态</h3>
+            <div id="arBridgeStatusDetail">
+              <span class="tag tag-muted">未连接 · 请通过 App 访问本页</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 帮助页 ==================== -->
+        <section class="page help-section" id="page-help">
+          <div class="glass-card">
+            <h3>帮助</h3>
+            <h4>采集视频</h4>
+            <p>
+              支持三种方式采集：① 点击「●
+              录制」使用摄像头录制视频（需浏览器授权，推荐 Chrome/Edge）；②
+              点击「📷
+              拍摄」用摄像头拍照——每次点击拍一张，可连续拍摄多张不同角度照片，提交时走图片模式；③
+              点击「本地视频」从设备选择视频文件。录制/拍摄完成后或选择文件后，元信息条会显示文件状态。点击「✕
+              清除」可重置多媒体与提交状态。
+            </p>
+            <p>
+              <strong>拍摄建议：</strong
+              >围绕物体缓慢匀速移动，保持约30~60cm距离，采集10~20秒视频，覆盖物体各角度。避免快速晃动和强烈反光。
+            </p>
+
+            <h4>AR 扫描（真实尺度）</h4>
+            <p>
+              AR 扫描需要在 Omni3D App（Qt壳）内使用，利用华为 AREngine
+              提供真实米制位姿。点击「AR 扫描」后，App
+              弹出原生扫描页自动采集（约0.6s/帧），网页实时显示帧数和跟踪状态。扫描完成后自动替换视频输入，提交时走图片模式，附带真实尺度位姿。
+            </p>
+
+            <h4>启动重建</h4>
+            <p>
+              确认视频/图片已就绪后，点击「提交重建」。服务器接收后将依次排队、抽帧、推理、生成点云。进度条实时显示阶段和百分比。完成后自动跳转建模结果页；失败则提示错误信息。<strong
+                >进度条在完成/失败后自动清空归零。</strong
+              >
+            </p>
+
+            <h4>抽帧速度</h4>
+            <ul>
+              <li><strong>8 帧（快）：</strong>处理最快，适合快速预览。</li>
+              <li><strong>12 帧（均衡，默认）：</strong>速度与质量平衡。</li>
+              <li>
+                <strong>16 帧（精细）：</strong>更多视角，重建更精细但耗时更长。
+              </li>
+            </ul>
+
+            <h4>相机参数</h4>
+            <p>
+              点击「从设备读取内外参」尝试获取摄像头内参矩阵
+              K（焦距等）和设备陀螺仪外参旋转。读取成功则提交时附带参数辅助重建；未读取时由模型自动估计位姿。AR
+              连接时优先使用 AR 真实位姿。
+            </p>
+
+            <h4>建模结果操作</h4>
+            <ul>
+              <li><strong>旋转：</strong>鼠标拖拽 / 手指滑动。</li>
+              <li><strong>缩放：</strong>滚轮 / 双指捏合。</li>
+              <li><strong>平移：</strong>右键拖拽 / 双指平移。</li>
+              <li>
+                <strong>测量：</strong
+                >点击「开启测量模式」，在点云上依次点击两个点，显示两点距离。
+              </li>
+              <li>
+                <strong>标尺校准：</strong
+                >在模型上测量一段已知真实长度的参照物，输入模型距离和真实米数，点击校准后所有测量按真实尺寸显示。
+              </li>
+              <li><strong>下载 PLY：</strong>导出点云为 PLY 格式文件。</li>
+            </ul>
+
+            <h4>测量尺度原理</h4>
+            <p>
+              <strong>AR 米制：</strong>通过 AR 扫描获得的 poses
+              带有真实米制尺度（来自 AREngine
+              VIO），测量结果直接以米为单位显示，标注 <code>m (AR)</code>。
+            </p>
+            <p>
+              <strong>纯网页模型单位：</strong>无 AR
+              时模型为任意单位，需通过标尺校准：测量一段已知真实长度的参照物，输入模型距离与真实米数，系统计算缩放因子，后续测量自动转换。
+            </p>
+
+            <h4>历史记录</h4>
+            <p>
+              展示服务器最近20条重建任务。状态图标：✅ 完成 / ❌ 失败 / ⏳
+              处理中。已完成任务可点击「查看」加载点云到建模结果页；「删除」可移除该条记录（运行中的任务不可删除）。点「🔄
+              刷新」更新列表。
+            </p>
+
+            <h4>AR 桥说明</h4>
+            <p>
+              AR 桥运行在 <code>127.0.0.1:50687</code>，仅在 Omni3D App
+              内可访问。网页通过检测原生注入 (<code>window.omni3dAR</code>) 或
+              HTTP 桥 (<code>/ar/status</code>) 来判断连接状态。已连接 = 在 App
+              内，可使用 AR 扫描和真实尺度位姿。
+            </p>
+
+            <h4>关于</h4>
+            <p>
+              <strong>架构：</strong>FastAPI 服务器（本机127.0.0.1:50865）+
+              Fast3R GPU 重建引擎。Qt App 为可选壳（WebView），额外提供 AR
+              真实尺度位姿（华为 AREngine）和历史本地持久化。
+            </p>
+            <p>
+              <strong>引擎：</strong>Fast3R 多视图3D重建 | Three.js 点云渲染 |
+              华为 AREngine VIO
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      // ==================== 星空背景 ====================
+      (function initStarfield() {
+        const canvas = document.getElementById("starCanvas");
+        const ctx = canvas.getContext("2d");
+        let stars = [];
+        const STAR_COUNT = 180;
+
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener("resize", () => {
+          resize();
+          initStars();
+        });
+
+        function initStars() {
+          stars = [];
+          for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              r: Math.random() * 1.6 + 0.3,
+              twinkleSpeed: Math.random() * 0.015 + 0.004,
+              twinkleOffset: Math.random() * Math.PI * 2,
+              baseAlpha: Math.random() * 0.6 + 0.25,
+            });
+          }
+        }
+        initStars();
+
+        function draw(timestamp) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (const s of stars) {
+            const alpha =
+              s.baseAlpha +
+              Math.sin(timestamp * s.twinkleSpeed + s.twinkleOffset) * 0.3;
+            const a = Math.max(0.08, Math.min(1, alpha));
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200,220,255,${a.toFixed(2)})`;
+            ctx.fill();
+          }
+          // 微光晕
+          const cx = canvas.width * 0.5;
+          const cy = canvas.height * 0.35;
+          const grd = ctx.createRadialGradient(
+            cx,
+            cy,
+            0,
+            cx,
+            cy,
+            Math.max(canvas.width, canvas.height) * 0.7,
+          );
+          grd.addColorStop(0, "rgba(30,50,90,0.18)");
+          grd.addColorStop(0.5, "rgba(15,20,40,0.06)");
+          grd.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grd;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      // ==================== 导入 Three.js ====================
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      // ==================== 全局状态 ====================
+      const STATE = {
+        currentPage: "capture",
+        // 视频采集
+        videoSource: null, // 'camera' | 'file' | 'ar_scan' | null
+        videoFile: null, // File对象（本地视频）
+        arScanFrames: null, // AR扫描帧数据 { frameCount, scale, poses, intrinsics, frameBlobs }
+        arScanActive: false,
+        mediaRecorder: null,
+        recordedChunks: [],
+        recordingStartTime: null,
+        recordingTimerInterval: null,
+        recordedBlob: null,
+        recordedPreviewUrl: null,
+        clearing: false,
+        // 拍摄（照片模式）
+        capturedFrames: [], // 已拍摄照片 Blob[]
+        capturedPreviewUrl: null,
+        photoCameraStream: null, // 拍照用摄像头流
+        photoActive: false, // 拍照相机是否在预览
+        // AR桥
+        arConnected: false,
+        arMode: null, // 'native' | 'http' | null
+        arPose: null,
+        arScale: null,
+        arPollerInterval: null,
+        // 重建
+        currentTaskId: null,
+        pollInterval: null,
+        // 设置
+        frameCount: 12,
+        cameraIntrinsics: null,
+        cameraExtrinsics: null,
+        // AR 扫描
+        arRes: { width: 1280, height: 720 }, // 采集分辨率（设置页）
+        huaweiPoints: null, // 华为 SLAM 稀疏点云 [{x,y,z},...]
+        huaweiFusion: false, // 查看器是否融合华为点云
+        arScanFrameCount: 0,
+        // 建模结果
+        resultData: null,
+        plyData: null,
+        // 测量
+        measureMode: false,
+        measurePoints: [], // [{point: THREE.Vector3, marker: THREE.Mesh}]
+        measureLine: null,
+        calibrationScale: null, // null=未校准, number=缩放因子
+        // Three.js
+        viewerScene: null,
+        viewerCamera: null,
+        viewerRenderer: null,
+        viewerControls: null,
+        viewerPointCloud: null,
+        viewerContainer: null,
+        viewerInitialized: false,
+        viewerAnimationId: null,
+        // 从设备读取的相机参数
+        deviceIntrinsics: null,
+        deviceExtrinsics: null,
+      };
+
+      // ==================== DOM引用 ====================
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+
+      const dom = {
+        sidebar: $("#sidebar"),
+        sidebarNav: $("#sidebarNav"),
+        sidebarOverlay: $("#sidebarOverlay"),
+        hamburgerBtn: $("#hamburgerBtn"),
+        mainContent: $("#mainContent"),
+        arDot: $("#arDot"),
+        arBadgeText: $("#arBadgeText"),
+        // 采集页
+        video: $("#video"),
+        videoPreviewWrapper: $("#videoPreviewWrapper"),
+        videoPlaceholder: $("#videoPlaceholder"),
+        recordingBadge: $("#recordingBadge"),
+        recordingTimer: $("#recordingTimer"),
+        recBtn: $("#recBtn"),
+        photoBtn: $("#photoBtn"),
+        pickBtn: $("#pickBtn"),
+        clearBtn: $("#clearBtn"),
+        fileInput: $("#fileInput"),
+        metaInfoBar: $("#metaInfoBar"),
+        metaInfoText: $("#metaInfoText"),
+        arStatusLabel: $("#arStatusLabel"),
+        arStatusDetail: $("#arStatusDetail"),
+        arScanBtn: $("#arScanBtn"),
+        arScanStatusArea: $("#arScanStatusArea"),
+        arScanStatusText: $("#arScanStatusText"),
+        arScanFinishBtn: $("#arScanFinishBtn"),
+        arScanCancelBtn: $("#arScanCancelBtn"),
+        submitBtn: $("#submitBtn"),
+        progressContainer: $("#progressContainer"),
+        progressBar: $("#progressBar"),
+        stageText: $("#stageText"),
+        // 建模结果页
+        viewerContainer: $("#viewerContainer"),
+        viewerStats: $("#viewerStats"),
+        statViews: $("#statViews"),
+        statPoints: $("#statPoints"),
+        statElapsed: $("#statElapsed"),
+        calibrationBar: $("#calibrationBar"),
+        calModelDist: $("#calModelDist"),
+        calRealDist: $("#calRealDist"),
+        calApplyBtn: $("#calApplyBtn"),
+        calResult: $("#calResult"),
+        calResetBtn: $("#calResetBtn"),
+        downloadPlyBtn: $("#downloadPlyBtn"),
+        huaweiFusionBtn: $("#huaweiFusionBtn"),
+        resetViewBtn: $("#resetViewBtn"),
+        clearMeasureBtn: $("#clearMeasureBtn"),
+        toggleMeasureBtn: $("#toggleMeasureBtn"),
+        // 历史页
+        taskList: $("#taskList"),
+        refreshTasksBtn: $("#refreshTasksBtn"),
+        // 设置页
+        frameCountGroup: $("#frameCountGroup"),
+        arResGroup: $("#arResGroup"),
+        readCameraBtn: $("#readCameraBtn"),
+        cameraTags: $("#cameraTags"),
+        arBridgeStatusDetail: $("#arBridgeStatusDetail"),
+        // Toast
+        toastContainer: $("#toastContainer"),
+      };
+
+      // ==================== Toast ====================
+      function showToast(msg, type = "") {
+        const el = document.createElement("div");
+        el.className = `toast ${type}`;
+        el.textContent = msg;
+        dom.toastContainer.appendChild(el);
+        setTimeout(() => {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, 2600);
+      }
+
+      // ==================== 导航 ====================
+      function navigateTo(pageName) {
+        STATE.currentPage = pageName;
+        // 更新侧栏active
+        dom.sidebarNav.querySelectorAll("button").forEach((b) => {
+          b.classList.toggle("active", b.dataset.page === pageName);
+        });
+        // 切换页面
+        $$(".page").forEach((p) => p.classList.remove("active"));
+        const pageEl = $(`#page-${pageName}`);
+        if (pageEl) pageEl.classList.add("active");
+        // 滚动到顶部
+        dom.mainContent.scrollTop = 0;
+        // 关闭移动端侧栏
+        closeSidebar();
+        // 页面特定逻辑
+        if (pageName === "viewer") {
+          initViewer();
+          if (STATE.resultData) {
+            renderPointCloud(STATE.resultData);
+          }
+        }
+        if (pageName === "history") {
+          loadTaskList();
+        }
+        if (pageName === "settings") {
+          updateSettingsUI();
+        }
+        if (
+          pageName === "viewer" &&
+          STATE.viewerInitialized &&
+          STATE.viewerRenderer
+        ) {
+          requestAnimationFrame(() => resizeViewer());
+        }
+      }
+
+      function closeSidebar() {
+        dom.sidebar.classList.remove("open");
+        dom.sidebarOverlay.classList.remove("show");
+      }
+
+      function openSidebar() {
+        dom.sidebar.classList.add("open");
+        dom.sidebarOverlay.classList.add("show");
+      }
+
+      dom.sidebarNav.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn || !btn.dataset.page) return;
+        navigateTo(btn.dataset.page);
+      });
+
+      dom.hamburgerBtn.addEventListener("click", () => {
+        if (dom.sidebar.classList.contains("open")) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+      });
+
+      dom.sidebarOverlay.addEventListener("click", closeSidebar);
+
+      // ==================== 云端模型服务状态 ====================
+      const cloudDot = $("#cloudDot");
+      const cloudStatusText = $("#cloudStatusText");
+      async function checkCloudStatus() {
+        let state = "offline",
+          text = "云端模型 · 离线";
+        try {
+          const resp = await fetch("/health", {
+            signal: AbortSignal.timeout(4000),
+          });
+          if (resp.ok) {
+            const d = await resp.json();
+            if (d.ready) {
+              state = "ready";
+              text = "云端模型 · 就绪";
+            } else {
+              state = "loading";
+              text = "云端模型 · 加载中";
+            }
+          }
+        } catch {
+          /* 离线 */
+        }
+        if (cloudDot) {
+          cloudDot.classList.remove("ready", "loading", "offline");
+          cloudDot.classList.add("cloud-dot", state);
+        }
+        if (cloudStatusText) cloudStatusText.textContent = text;
+      }
+      checkCloudStatus();
+      setInterval(checkCloudStatus, 10000);
+
+      // ==================== AR桥检测 ====================
+      async function detectARBridge() {
+        // 方式①：原生注入
+        if (window.omni3dAR && typeof window.omni3dAR.getPose === "function") {
+          STATE.arConnected = true;
+          STATE.arMode = "native";
+          updateARUI();
+          startNativeARPolling();
+          return true;
+        }
+        // 方式②：HTTP桥（App 内本地 127.0.0.1:50687）
+        try {
+          const resp = await fetch("http://127.0.0.1:50687/ar/status", {
+            method: "GET",
+            signal: AbortSignal.timeout(2000),
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.ok) {
+              STATE.arConnected = true;
+              STATE.arMode = "http";
+              STATE.arScale = data.scale || null;
+              updateARUI();
+              startHTTPARPolling();
+              return true;
+            }
+          }
+        } catch {
+          // HTTPS 隧道（frp）场景：本地桥不可达多半是混合内容被 WebView 拦截
+          if (location.protocol === "https:") {
+            console.warn(
+              "[AR桥] https 页面访问本地 http 桥被拦截——请确认 App 已放行混合内容",
+            );
+          }
+        }
+        STATE.arConnected = false;
+        STATE.arMode = null;
+        updateARUI();
+        return false;
+      }
+
+      function updateARUI() {
+        const connected = STATE.arConnected;
+        // 侧栏徽标
+        dom.arDot.classList.toggle("connected", connected);
+        dom.arDot.classList.toggle("disconnected", !connected);
+        dom.arBadgeText.textContent = connected
+          ? "AR 位姿 · 已连接"
+          : "AR 位姿 · 未连接";
+        // 采集页
+        dom.arStatusLabel.textContent = connected
+          ? "已连接（App 本地桥）"
+          : "未连接";
+        dom.arStatusDetail.textContent = connected
+          ? STATE.arMode === "native"
+            ? "(原生注入)"
+            : "(HTTP桥 · 127.0.0.1:50687)"
+          : "";
+        dom.arScanBtn.disabled = !connected;
+        updateArScanButton();
+        // App 内（AR 桥已连接）：QtWebView 不支持网页 getUserMedia，
+        // 录制/拍摄禁用——App 内采集请走「AR 扫描」（原生相机）
+        dom.recBtn.disabled = connected;
+        dom.photoBtn.disabled = connected;
+        dom.recBtn.title = connected ? "App 内请使用「AR 扫描」采集" : "";
+        dom.photoBtn.title = connected ? "App 内请使用「AR 扫描」采集" : "";
+        // 设置页
+        if (connected) {
+          dom.arBridgeStatusDetail.innerHTML =
+            '<span class="tag tag-ok">已连接 · AR 位姿可用（真实尺度）</span>';
+        } else {
+          dom.arBridgeStatusDetail.innerHTML =
+            '<span class="tag tag-muted">未连接 · 请通过 App 访问本页</span>';
+        }
+        updateSubmitButton();
+      }
+
+      function startNativeARPolling() {
+        if (STATE.arPollerInterval) clearInterval(STATE.arPollerInterval);
+        STATE.arPollerInterval = setInterval(() => {
+          try {
+            if (
+              window.omni3dAR &&
+              typeof window.omni3dAR.getPose === "function"
+            ) {
+              const pose = window.omni3dAR.getPose();
+              if (pose) STATE.arPose = pose;
+            }
+          } catch {
+            /* ignore */
+          }
+        }, 500);
+      }
+
+      function startHTTPARPolling() {
+        if (STATE.arPollerInterval) clearInterval(STATE.arPollerInterval);
+        STATE.arPollerInterval = setInterval(async () => {
+          try {
+            const resp = await fetch("http://127.0.0.1:50687/ar/pose", {
+              signal: AbortSignal.timeout(1500),
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.ok && data.pose) {
+                STATE.arPose = data.pose;
+                STATE.arScale = STATE.arScale || data.scale || null;
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }, 500);
+      }
+
+      // 初始检测 + 3秒后重试
+      detectARBridge().then(() => {
+        setTimeout(() => {
+          if (!STATE.arConnected) detectARBridge();
+        }, 3000);
+      });
+
+      // ==================== 视频采集 ====================
+      function resetVideoSource() {
+        // 置清除标记：录制 stop() 后 ondataavailable 仍会触发，
+        // 不清除的话 onstop 会重新生成预览，导致「清除」被撤销
+        STATE.clearing = true;
+        if (STATE.mediaRecorder && STATE.mediaRecorder.state === "recording") {
+          STATE.mediaRecorder.stop();
+        }
+        if (STATE.recordingTimerInterval)
+          clearInterval(STATE.recordingTimerInterval);
+        // 停止拍照摄像头
+        stopPhotoCamera();
+        // 停止摄像头
+        if (dom.video.srcObject) {
+          const tracks = dom.video.srcObject.getTracks();
+          tracks.forEach((t) => t.stop());
+          dom.video.srcObject = null;
+        }
+        // 释放预览 URL
+        if (STATE.recordedPreviewUrl) {
+          URL.revokeObjectURL(STATE.recordedPreviewUrl);
+          STATE.recordedPreviewUrl = null;
+        }
+        if (STATE.capturedPreviewUrl) {
+          URL.revokeObjectURL(STATE.capturedPreviewUrl);
+          STATE.capturedPreviewUrl = null;
+        }
+        dom.video.removeAttribute("src");
+        dom.video.removeAttribute("controls");
+        dom.video.load();
+        STATE.videoSource = null;
+        STATE.videoFile = null;
+        STATE.recordedBlob = null;
+        STATE.recordedChunks = [];
+        STATE.arScanFrames = null;
+        STATE.arScanActive = false;
+        STATE.arScanFrameCount = 0;
+        STATE.huaweiPoints = null;
+        STATE.huaweiFusion = false;
+        updateFusionButton();
+        STATE.capturedFrames = [];
+        dom.videoPlaceholder.classList.remove("hidden");
+        dom.recordingBadge.classList.add("hidden");
+        dom.metaInfoBar.classList.add("hidden");
+        dom.arScanStatusArea.style.display = "none";
+        dom.recBtn.textContent = "● 录制";
+        dom.recBtn.classList.remove("btn-danger");
+        updateSubmitButton();
+        updateClearButton();
+      }
+
+      function updateSubmitButton() {
+        const hasSource =
+          STATE.videoSource === "camera" ||
+          STATE.videoSource === "file" ||
+          STATE.videoSource === "ar_scan";
+        dom.submitBtn.disabled = !hasSource;
+      }
+
+      function hasVisibleMedia() {
+        // 以 STATE 为准（resetVideoSource 已同步清空）；
+        // 不依赖 currentSrc/networkState——load() 后它们的变化是异步的，会导致清除按钮状态滞后
+        return (
+          !!dom.video.srcObject ||
+          !!STATE.recordedBlob ||
+          !!STATE.videoFile ||
+          STATE.capturedFrames.length > 0
+        );
+      }
+
+      function updateClearButton() {
+        dom.clearBtn.disabled =
+          !STATE.videoSource &&
+          !STATE.arScanActive &&
+          !STATE.photoActive &&
+          STATE.capturedFrames.length === 0 &&
+          !hasVisibleMedia();
+      }
+
+      // 重置提交相关状态（进度条/轮询/当前任务）
+      function resetSubmissionState() {
+        if (STATE.pollInterval) {
+          clearInterval(STATE.pollInterval);
+          STATE.pollInterval = null;
+        }
+        STATE.currentTaskId = null;
+        dom.progressContainer.classList.add("hidden");
+        dom.progressBar.style.width = "0%";
+        dom.stageText.textContent = "";
+        updateSubmitButton();
+      }
+
+      function showMetaInfo(text, success = true) {
+        dom.metaInfoText.textContent = text;
+        dom.metaInfoBar.classList.remove("hidden", "success");
+        if (success) dom.metaInfoBar.classList.add("success");
+      }
+
+      // 录制按钮
+      dom.recBtn.addEventListener("click", async () => {
+        if (STATE.mediaRecorder && STATE.mediaRecorder.state === "recording") {
+          // 停止录制
+          STATE.mediaRecorder.stop();
+          return;
+        }
+        // 开始录制
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "environment",
+            },
+            audio: false,
+          });
+          dom.video.srcObject = stream;
+          dom.video.play();
+          dom.videoPlaceholder.classList.add("hidden");
+          STATE.videoSource = "camera";
+          STATE.videoFile = null;
+          STATE.arScanFrames = null;
+          STATE.recordedChunks = [];
+
+          const mimeType = MediaRecorder.isTypeSupported(
+            "video/webm;codecs=vp9",
+          )
+            ? "video/webm;codecs=vp9"
+            : "video/webm";
+          STATE.mediaRecorder = new MediaRecorder(stream, {
+            mimeType,
+            videoBitsPerSecond: 2500000,
+          });
+          STATE.mediaRecorder.ondataavailable = (e) => {
+            if (STATE.clearing) return;
+            if (e.data.size > 0) STATE.recordedChunks.push(e.data);
+          };
+          STATE.mediaRecorder.onstop = () => {
+            if (STATE.recordingTimerInterval)
+              clearInterval(STATE.recordingTimerInterval);
+            dom.recordingBadge.classList.add("hidden");
+            dom.recBtn.textContent = "● 录制";
+            dom.recBtn.classList.remove("btn-danger");
+            if (!STATE.clearing && STATE.recordedChunks.length > 0) {
+              STATE.recordedBlob = new Blob(STATE.recordedChunks, {
+                type: "video/webm",
+              });
+              STATE.videoFile = new File(
+                [STATE.recordedBlob],
+                "recording.webm",
+                { type: "video/webm" },
+              );
+              // 显示录制的视频预览
+              const url = URL.createObjectURL(STATE.recordedBlob);
+              STATE.recordedPreviewUrl = url;
+              dom.video.srcObject = null;
+              dom.video.src = url;
+              dom.video.controls = true;
+              dom.video.play().catch(() => {});
+              showMetaInfo(
+                `🎬 recording.webm · ${formatBytes(STATE.recordedBlob.size)} · ✓ 已就绪`,
+              );
+            } else {
+              STATE.recordedBlob = null;
+              STATE.videoFile = null;
+            }
+            STATE.clearing = false;
+            updateSubmitButton();
+            updateClearButton();
+          };
+          STATE.mediaRecorder.start();
+          STATE.recordingStartTime = Date.now();
+          dom.recordingBadge.classList.remove("hidden");
+          dom.recBtn.textContent = "■ 停止";
+          dom.recBtn.classList.add("btn-danger");
+          updateRecordingTimer();
+          STATE.recordingTimerInterval = setInterval(updateRecordingTimer, 500);
+          updateSubmitButton();
+          updateClearButton();
+          showMetaInfo("🔴 录制中...", false);
+        } catch (err) {
+          showToast("无法访问摄像头：" + err.message, "error");
+        }
+      });
+
+      function updateRecordingTimer() {
+        if (!STATE.recordingStartTime) return;
+        const elapsed = Math.floor(
+          (Date.now() - STATE.recordingStartTime) / 1000,
+        );
+        const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+        const ss = String(elapsed % 60).padStart(2, "0");
+        dom.recordingTimer.textContent = `${mm}:${ss}`;
+      }
+
+      // 处理选中的媒体文件（PC 文件 input 与手机原生选择器共用）
+      function handlePickedFiles(files) {
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        resetVideoSource();
+        if (file.type.startsWith("video/")) {
+          STATE.videoSource = "file";
+          STATE.videoFile = file;
+          const url = URL.createObjectURL(file);
+          dom.video.srcObject = null;
+          dom.video.src = url;
+          dom.video.controls = true;
+          dom.video.play().catch(() => {});
+          dom.videoPlaceholder.classList.add("hidden");
+          showMetaInfo(
+            `🎬 ${file.name} · ${formatBytes(file.size)} · ✓ 已就绪`,
+          );
+        } else if (file.type.startsWith("image/")) {
+          // 图片模式（多文件）
+          STATE.videoSource = "file";
+          STATE.videoFile = file;
+          const allImages = Array.from(files).filter((f) =>
+            f.type.startsWith("image/"),
+          );
+          if (allImages.length > 0) {
+            STATE.arScanFrames = {
+              frameCount: allImages.length,
+              scale: null,
+              poses: null,
+              intrinsics: null,
+              frameBlobs: allImages,
+              isManualImages: true,
+            };
+            const url = URL.createObjectURL(allImages[0]);
+            dom.video.srcObject = null;
+            dom.video.src = url;
+            dom.video.controls = true;
+            dom.videoPlaceholder.classList.add("hidden");
+            showMetaInfo(`🖼 图片模式 · ${allImages.length} 帧 · ✓ 已就绪`);
+          }
+        }
+        updateSubmitButton();
+        updateClearButton();
+      }
+
+      // 本地视频选择：PC 用文件 input；App 内（AR 桥连接）走手机原生文件选择器
+      dom.pickBtn.addEventListener("click", async () => {
+        if (STATE.arConnected) {
+          try {
+            showToast("正在打开系统文件选择器...");
+            const resp = await fetch("http://127.0.0.1:50687/ar/file/pick", {
+              signal: AbortSignal.timeout(120000),
+            });
+            if (!resp.ok) throw new Error("选择失败");
+            // 取消/出错时桥返回 JSON 错误体（HTTP 200），必须先识别，
+            // 否则会被当作一个 32B 的"媒体文件"（历史 bug）
+            const ctype = resp.headers.get("Content-Type") || "";
+            if (ctype.includes("application/json")) {
+              const j = await resp.json().catch(() => ({}));
+              if (j && j.error) showToast(j.error, "error");
+              else showToast("未选择文件", "error");
+              return;
+            }
+            const blob = await resp.blob();
+            if (!blob.size) {
+              showToast("未选择文件", "error");
+              return;
+            }
+            // 文件名由桥经 X-Filename 头带回（CORS 已暴露）；取不到时给可辨识默认名
+            const nameEnc = resp.headers.get("X-Filename") || "";
+            const name = nameEnc
+              ? decodeURIComponent(nameEnc)
+              : "media_" + Date.now() + ".mp4";
+            const isImg = /\.(jpg|jpeg|png|webp)$/i.test(name);
+            handlePickedFiles([
+              new File([blob], name, {
+                type: isImg ? "image/jpeg" : "video/mp4",
+              }),
+            ]);
+          } catch (err) {
+            showToast("文件选择失败：" + err.message, "error");
+          }
+          return;
+        }
+        dom.fileInput.click();
+      });
+      dom.fileInput.addEventListener("change", (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        handlePickedFiles(Array.from(files));
+        dom.fileInput.value = "";
+      });
+
+      // ==================== 拍摄（照片模式） ====================
+      function stopPhotoCamera() {
+        if (STATE.photoCameraStream) {
+          STATE.photoCameraStream.getTracks().forEach((t) => t.stop());
+          STATE.photoCameraStream = null;
+        }
+        STATE.photoActive = false;
+      }
+
+      async function capturePhoto() {
+        const v = dom.video;
+        if (!v.videoWidth || !v.videoHeight) {
+          showToast("暂无画面可拍摄", "error");
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = v.videoWidth;
+        canvas.height = v.videoHeight;
+        canvas.getContext("2d").drawImage(v, 0, 0);
+        const blob = await new Promise((res) =>
+          canvas.toBlob(res, "image/jpeg", 0.92),
+        );
+        if (!blob) return;
+        STATE.capturedFrames.push(blob);
+        STATE.arScanFrames = {
+          frameCount: STATE.capturedFrames.length,
+          scale: null,
+          poses: null,
+          intrinsics: null,
+          frameBlobs: [...STATE.capturedFrames],
+          isManualImages: true,
+        };
+        STATE.videoSource = "file";
+        STATE.videoFile = null;
+        // 非实时预览时替换为最新照片预览（实时拍摄时保留相机画面）
+        if (!STATE.photoActive) {
+          if (STATE.capturedPreviewUrl)
+            URL.revokeObjectURL(STATE.capturedPreviewUrl);
+          STATE.capturedPreviewUrl = URL.createObjectURL(blob);
+          dom.video.srcObject = null;
+          dom.video.src = STATE.capturedPreviewUrl;
+          dom.video.removeAttribute("controls");
+          dom.videoPlaceholder.classList.add("hidden");
+        }
+        const n = STATE.capturedFrames.length;
+        showMetaInfo(
+          STATE.photoActive
+            ? `📷 已拍摄 ${n} 张 · 可继续拍摄或提交`
+            : `📷 已拍摄 ${n} 张 · ✓ 已就绪`,
+        );
+        updateSubmitButton();
+        updateClearButton();
+        showToast(`已拍摄第 ${n} 张照片`, "success");
+      }
+
+      dom.photoBtn.addEventListener("click", async () => {
+        // 若正在录制，先停止
+        if (STATE.mediaRecorder && STATE.mediaRecorder.state === "recording") {
+          STATE.mediaRecorder.stop();
+          dom.recBtn.textContent = "● 录制";
+          dom.recBtn.classList.remove("btn-danger");
+        }
+        // 拍照相机已开启 → 直接拍下一张
+        if (STATE.photoActive) {
+          await capturePhoto();
+          return;
+        }
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "environment",
+            },
+            audio: false,
+          });
+          STATE.photoCameraStream = stream;
+          STATE.photoActive = true;
+          dom.video.srcObject = stream;
+          dom.video.play();
+          dom.videoPlaceholder.classList.add("hidden");
+          // 画面就绪后自动拍第一张
+          if (dom.video.videoWidth && dom.video.videoHeight) {
+            capturePhoto();
+          } else {
+            dom.video.onloadedmetadata = () => {
+              dom.video.onloadedmetadata = null;
+              capturePhoto();
+            };
+          }
+          showMetaInfo("📷 相机已开启 · 点击「拍摄」继续拍照", false);
+        } catch (err) {
+          showToast("无法访问摄像头：" + err.message, "error");
+        }
+      });
+
+      // 清除按钮：重置多媒体容器 + 提交状态
+      dom.clearBtn.addEventListener("click", () => {
+        resetVideoSource();
+        resetSubmissionState();
+        showToast("已清除视频源与提交状态");
+      });
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / 1048576).toFixed(2) + " MB";
+      }
+
+      // ==================== AR扫描 ====================
+      let arScanPollInterval = null;
+
+      // AR 扫描按钮状态：禁用时提示仅限 App 内使用
+      function updateArScanButton() {
+        if (STATE.arScanActive) {
+          dom.arScanBtn.disabled = true;
+          dom.arScanBtn.textContent = "📷 扫描进行中...";
+        } else {
+          const connected = STATE.arConnected;
+          dom.arScanBtn.disabled = !connected;
+          dom.arScanBtn.textContent = connected
+            ? "📷 AR 扫描（真实尺度）"
+            : "📷 AR 扫描 · 仅限APP内使用";
+        }
+      }
+
+      dom.arScanBtn.addEventListener("click", async () => {
+        if (!STATE.arConnected) {
+          showToast("需要 App 连接才能使用 AR 扫描", "error");
+          return;
+        }
+        if (STATE.arScanActive) return;
+        try {
+          // 先应用设置页的分辨率
+          try {
+            await fetch("http://127.0.0.1:50687/ar/scan/settings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                width: STATE.arRes.width,
+                height: STATE.arRes.height,
+              }),
+              signal: AbortSignal.timeout(3000),
+            });
+          } catch {
+            /* 设置失败不阻塞扫描 */
+          }
+          const resp = await fetch("http://127.0.0.1:50687/ar/scan/start", {
+            method: "POST",
+          });
+          if (!resp.ok) throw new Error("启动扫描失败");
+          STATE.arScanActive = true;
+          STATE.arScanFrameCount = 0;
+          STATE.huaweiPoints = null;
+          dom.arScanStatusArea.style.display = "block";
+          dom.arScanStatusText.textContent = "预览中 · 0 帧 · 等待跟踪...";
+          updateArScanButton();
+          startARScanPolling();
+          updateClearButton();
+        } catch (err) {
+          showToast("AR 扫描启动失败：" + err.message, "error");
+        }
+      });
+
+      function startARScanPolling() {
+        if (arScanPollInterval) clearInterval(arScanPollInterval);
+        arScanPollInterval = setInterval(async () => {
+          try {
+            const resp = await fetch("http://127.0.0.1:50687/ar/scan/status", {
+              signal: AbortSignal.timeout(2000),
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (!data.available) return;
+            const trackingText = data.tracking ? "AR 跟踪" : "等待跟踪";
+            const modeText = data.scanning
+              ? "录制中"
+              : data.finished
+                ? "已完成"
+                : "预览中";
+            dom.arScanStatusText.textContent = `${modeText} · ${data.frameCount || 0} 帧 · ${trackingText}`;
+            STATE.arScanFrameCount = data.frameCount || 0;
+            // 用户在扫描页点了「完成」→ finished && 有帧 → 网页自动收数据
+            if (data.finished && data.frameCount > 0) {
+              await finishARScan();
+            }
+          } catch {
+            /* ignore */
+          }
+        }, 800);
+      }
+
+      async function finishARScan() {
+        if (arScanPollInterval) clearInterval(arScanPollInterval);
+        arScanPollInterval = null;
+        STATE.arScanActive = false;
+        dom.arScanStatusArea.style.display = "none";
+        updateArScanButton();
+        try {
+          // 获取元数据
+          const dataResp = await fetch("http://127.0.0.1:50687/ar/scan/data");
+          const meta = await dataResp.json();
+          const frameCount = meta.frameCount || 0;
+          const scale = meta.scale || null;
+          const poses = meta.poses || null;
+          const intrinsics = meta.intrinsics || null;
+          if (frameCount === 0) {
+            showToast("AR 扫描无帧数据", "error");
+            return;
+          }
+          // 获取所有帧
+          const frameBlobs = [];
+          for (let i = 0; i < frameCount; i++) {
+            const fResp = await fetch(
+              `http://127.0.0.1:50687/ar/scan/frames/${i}`,
+            );
+            if (fResp.ok) {
+              const blob = await fResp.blob();
+              frameBlobs.push(blob);
+            }
+          }
+          // 华为 SLAM 稀疏点云（世界坐标，真实尺度）——用于融合/扩充精度
+          let huaweiPoints = null;
+          try {
+            const pcResp = await fetch(
+              "http://127.0.0.1:50687/ar/scan/pointcloud",
+            );
+            if (
+              pcResp.ok &&
+              (pcResp.headers.get("Content-Type") || "").includes(
+                "octet-stream",
+              )
+            ) {
+              huaweiPoints = parsePlyPoints(await pcResp.arrayBuffer());
+            }
+          } catch {
+            /* ignore */
+          }
+          STATE.huaweiPoints = huaweiPoints;
+          STATE.arScanFrames = {
+            frameCount,
+            scale,
+            poses,
+            intrinsics,
+            frameBlobs,
+          };
+          STATE.videoSource = "ar_scan";
+          STATE.videoFile = null;
+          STATE.arScale = scale;
+          // 显示第一帧预览
+          if (frameBlobs.length > 0) {
+            const url = URL.createObjectURL(frameBlobs[0]);
+            dom.video.srcObject = null;
+            dom.video.src = url;
+            dom.video.controls = true;
+            dom.videoPlaceholder.classList.add("hidden");
+          }
+          const pcText =
+            huaweiPoints && huaweiPoints.length
+              ? ` · 华为点云 ${huaweiPoints.length.toLocaleString()} 点`
+              : "";
+          showMetaInfo(
+            `AR 扫描 · ${frameCount} 帧（真实尺度位姿）${pcText} ✓ 已就绪`,
+          );
+          updateFusionButton();
+          updateSubmitButton();
+          updateClearButton();
+          showToast(`AR 扫描完成：${frameCount} 帧`, "success");
+        } catch (err) {
+          showToast("获取 AR 扫描数据失败：" + err.message, "error");
+        }
+      }
+
+      // 解析 PLY（ASCII / binary_little_endian；只取 x/y/z 顶点）
+      function parsePlyPoints(buf) {
+        try {
+          const bytes = new Uint8Array(buf);
+          const head = new TextDecoder().decode(
+            bytes.subarray(0, Math.min(bytes.length, 65536)),
+          );
+          const endIdx = head.indexOf("end_header");
+          if (endIdx < 0) return null;
+          const lines = head.slice(0, endIdx).split("\n");
+          let format = "ascii",
+            vertexCount = 0,
+            props = [],
+            inVertex = false;
+          for (const raw of lines) {
+            const t = raw.trim();
+            if (!t) continue;
+            if (t.startsWith("format ")) format = t.split(/\s+/)[1];
+            else if (t.startsWith("element vertex ")) {
+              vertexCount = parseInt(t.split(/\s+/)[2], 10) || 0;
+              inVertex = true;
+              props = [];
+            } else if (t.startsWith("element ")) inVertex = false;
+            else if (inVertex && t.startsWith("property "))
+              props.push(t.split(/\s+/)[2]);
+          }
+          if (!vertexCount || vertexCount > 5000000) return null;
+          const xi = props.indexOf("x"),
+            yi = props.indexOf("y"),
+            zi = props.indexOf("z");
+          if (xi < 0 || yi < 0 || zi < 0) return null;
+          const offset = endIdx + "end_header".length + 1;
+          const pts = [];
+          if (format === "ascii") {
+            const nums = new TextDecoder()
+              .decode(bytes.subarray(offset))
+              .trim()
+              .split(/\s+/)
+              .map(Number);
+            const stride = props.length;
+            for (
+              let i = 0;
+              i < vertexCount && i * stride + 2 < nums.length;
+              i++
+            ) {
+              const o = i * stride;
+              pts.push([nums[o + xi], nums[o + yi], nums[o + zi]]);
+            }
+          } else {
+            const stride = props.length * 4;
+            const dv = new DataView(bytes.buffer, bytes.byteOffset + offset);
+            for (let i = 0; i < vertexCount; i++) {
+              const o = i * stride;
+              pts.push([
+                dv.getFloat32(o + xi * 4, true),
+                dv.getFloat32(o + yi * 4, true),
+                dv.getFloat32(o + zi * 4, true),
+              ]);
+            }
+          }
+          return pts.length ? pts : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function updateFusionButton() {
+        const has = STATE.huaweiPoints && STATE.huaweiPoints.length > 0;
+        dom.huaweiFusionBtn.disabled = !has;
+        dom.huaweiFusionBtn.textContent = has
+          ? `◈ 融合华为点云：${STATE.huaweiFusion ? "开" : "关"} (${STATE.huaweiPoints.length.toLocaleString()} 点)`
+          : "◈ 融合华为点云：关";
+      }
+
+      dom.arScanFinishBtn.addEventListener("click", async () => {
+        try {
+          await fetch("http://127.0.0.1:50687/ar/scan/stop", {
+            method: "POST",
+          });
+        } catch {
+          /* ignore */
+        }
+        await finishARScan();
+      });
+
+      dom.arScanCancelBtn.addEventListener("click", async () => {
+        if (arScanPollInterval) clearInterval(arScanPollInterval);
+        arScanPollInterval = null;
+        STATE.arScanActive = false;
+        dom.arScanStatusArea.style.display = "none";
+        updateArScanButton();
+        try {
+          await fetch("http://127.0.0.1:50687/ar/scan/reset", {
+            method: "POST",
+          });
+        } catch {
+          /* ignore */
+        }
+        updateClearButton();
+        showToast("AR 扫描已取消");
+      });
+
+      updateClearButton();
+
+      // ==================== 提交重建 ====================
+      dom.submitBtn.addEventListener("click", submitReconstruction);
+
+      async function submitReconstruction() {
+        if (!STATE.videoSource) return;
+        // 提交时停止拍照相机（帧已保存在 capturedFrames）
+        stopPhotoCamera();
+        dom.submitBtn.disabled = true;
+        dom.progressContainer.classList.remove("hidden");
+        dom.progressBar.style.width = "0%";
+        dom.stageText.textContent = "准备提交...";
+        // 强制回流
+        void dom.progressBar.offsetWidth;
+
+        const formData = new FormData();
+        formData.append("resolution", "224");
+
+        if (
+          STATE.videoSource === "ar_scan" &&
+          STATE.arScanFrames &&
+          !STATE.arScanFrames.isManualImages
+        ) {
+          // AR扫描图片模式
+          formData.append("is_video", "false");
+          formData.append("frame_count", String(STATE.arScanFrames.frameCount));
+          for (const blob of STATE.arScanFrames.frameBlobs) {
+            formData.append("files", blob, "frame.jpg");
+          }
+          if (STATE.arScanFrames.intrinsics) {
+            formData.append(
+              "intrinsics",
+              JSON.stringify(STATE.arScanFrames.intrinsics),
+            );
+          } else {
+            formData.append("intrinsics", "null");
+          }
+          if (STATE.arScanFrames.poses) {
+            formData.append(
+              "extrinsics",
+              JSON.stringify(STATE.arScanFrames.poses),
+            );
+          } else {
+            formData.append("extrinsics", "null");
+          }
+        } else if (STATE.arScanFrames && STATE.arScanFrames.isManualImages) {
+          // 手动选择的图片
+          formData.append("is_video", "false");
+          formData.append("frame_count", String(STATE.arScanFrames.frameCount));
+          for (const blob of STATE.arScanFrames.frameBlobs) {
+            formData.append("files", blob, "image.jpg");
+          }
+          formData.append(
+            "intrinsics",
+            STATE.cameraIntrinsics
+              ? JSON.stringify(STATE.cameraIntrinsics)
+              : "null",
+          );
+          formData.append(
+            "extrinsics",
+            STATE.cameraExtrinsics
+              ? JSON.stringify(STATE.cameraExtrinsics)
+              : "null",
+          );
+        } else {
+          // 视频模式
+          formData.append("is_video", "true");
+          formData.append("frame_count", String(STATE.frameCount));
+          if (STATE.videoFile) {
+            formData.append(
+              "files",
+              STATE.videoFile,
+              STATE.videoFile.name || "video.webm",
+            );
+          } else if (STATE.recordedBlob) {
+            formData.append("files", STATE.recordedBlob, "recording.webm");
+          }
+          formData.append(
+            "intrinsics",
+            STATE.cameraIntrinsics
+              ? JSON.stringify(STATE.cameraIntrinsics)
+              : "null",
+          );
+          formData.append(
+            "extrinsics",
+            STATE.cameraExtrinsics
+              ? JSON.stringify(STATE.cameraExtrinsics)
+              : "null",
+          );
+        }
+        // 附带AR位姿
+        if (STATE.arPose) {
+          formData.append("ar_pose", JSON.stringify(STATE.arPose));
+        }
+
+        try {
+          dom.stageText.textContent = "提交中...";
+          dom.progressBar.style.width = "10%";
+          const resp = await fetch("/api/tasks", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await resp.json();
+          if (!data.ok || !data.task_id)
+            throw new Error(data.detail || "提交失败");
+          STATE.currentTaskId = data.task_id;
+          dom.stageText.textContent = "排队中...";
+          dom.progressBar.style.width = "15%";
+          startPolling(data.task_id);
+        } catch (err) {
+          showToast("提交失败：" + err.message, "error");
+          dom.submitBtn.disabled = false;
+          dom.progressContainer.classList.add("hidden");
+          dom.progressBar.style.width = "0%";
+          dom.stageText.textContent = "";
+        }
+      }
+
+      function startPolling(taskId) {
+        if (STATE.pollInterval) clearInterval(STATE.pollInterval);
+        STATE.pollInterval = setInterval(async () => {
+          try {
+            const resp = await fetch(
+              `/api/tasks/${taskId}?include_result=true`,
+            );
+            const data = await resp.json();
+            const progress = data.progress || 0;
+            const stage = data.stage || "";
+            const status = data.status;
+            // 更新进度条
+            let pct = 15;
+            if (stage === "抽帧") pct = 20 + progress * 0.15;
+            else if (stage === "推理") pct = 35 + progress * 0.45;
+            else if (stage === "生成点云") pct = 80 + progress * 0.2;
+            else if (status === "done") pct = 100;
+            dom.progressBar.style.width = pct + "%";
+            dom.stageText.textContent = `${stage || status} · ${Math.round(progress * 100)}%`;
+            if (status === "done") {
+              clearInterval(STATE.pollInterval);
+              STATE.pollInterval = null;
+              dom.stageText.textContent = "✅ 完成！";
+              dom.progressBar.style.width = "100%";
+              STATE.resultData = data.result || null;
+              STATE.plyData = data.result?.ply || null;
+              // 延迟清空进度条
+              setTimeout(() => {
+                dom.progressContainer.classList.add("hidden");
+                dom.progressBar.style.width = "0%";
+                dom.stageText.textContent = "";
+              }, 800);
+              dom.submitBtn.disabled = false;
+              updateSubmitButton();
+              if (STATE.resultData) {
+                navigateTo("viewer");
+                renderPointCloud(STATE.resultData);
+              }
+              showToast("重建完成！", "success");
+            } else if (status === "failed") {
+              clearInterval(STATE.pollInterval);
+              STATE.pollInterval = null;
+              dom.stageText.textContent = "❌ 重建失败";
+              setTimeout(() => {
+                dom.progressContainer.classList.add("hidden");
+                dom.progressBar.style.width = "0%";
+                dom.stageText.textContent = "";
+              }, 1200);
+              dom.submitBtn.disabled = false;
+              updateSubmitButton();
+              showToast("重建失败，请重试", "error");
+            }
+          } catch (err) {
+            // 轮询出错，继续尝试
+            console.warn("Poll error:", err);
+          }
+        }, 1000);
+      }
+
+      // ==================== Three.js 查看器 ====================
+      function initViewer() {
+        if (STATE.viewerInitialized) return;
+        const container = dom.viewerContainer;
+        if (!container || container.clientWidth === 0) return;
+        STATE.viewerContainer = container;
+        // 清理旧实例
+        if (STATE.viewerRenderer) {
+          STATE.viewerRenderer.dispose();
+          if (STATE.viewerRenderer.domElement.parentNode) {
+            STATE.viewerRenderer.domElement.parentNode.removeChild(
+              STATE.viewerRenderer.domElement,
+            );
+          }
+        }
+        const w = container.clientWidth;
+        const h = container.clientHeight || 400;
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color("#080a12");
+        STATE.viewerScene = scene;
+        const camera = new THREE.PerspectiveCamera(
+          55,
+          w / Math.max(h, 1),
+          0.01,
+          50,
+        );
+        camera.position.set(1.2, 0.6, 1.8);
+        camera.lookAt(0, 0, 0);
+        STATE.viewerCamera = camera;
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(w, h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor("#080a12");
+        container.appendChild(renderer.domElement);
+        STATE.viewerRenderer = renderer;
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.12;
+        controls.target.set(0, 0, 0);
+        controls.update();
+        STATE.viewerControls = controls;
+        // 光照
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(1, 2, 1);
+        scene.add(dirLight);
+        // 网格地面参考
+        const gridHelper = new THREE.PolarGridHelper(
+          1.2,
+          24,
+          16,
+          64,
+          0x333355,
+          0x222244,
+        );
+        gridHelper.position.y = -0.6;
+        scene.add(gridHelper);
+        STATE.viewerInitialized = true;
+        // 点击事件
+        renderer.domElement.addEventListener("click", onViewerClick);
+        // 悬停高亮
+        renderer.domElement.addEventListener("mousemove", updateMeasureHover);
+        // 动画循环
+        function animate() {
+          STATE.viewerAnimationId = requestAnimationFrame(animate);
+          if (STATE.viewerControls) STATE.viewerControls.update();
+          if (STATE.viewerRenderer && STATE.viewerScene && STATE.viewerCamera) {
+            STATE.viewerRenderer.render(STATE.viewerScene, STATE.viewerCamera);
+          }
+        }
+        animate();
+        // 窗口大小调整
+        window.addEventListener("resize", resizeViewer);
+      }
+
+      function resizeViewer() {
+        if (
+          !STATE.viewerInitialized ||
+          !STATE.viewerRenderer ||
+          !STATE.viewerContainer
+        )
+          return;
+        const w = STATE.viewerContainer.clientWidth;
+        const h = STATE.viewerContainer.clientHeight || 400;
+        if (w <= 0 || h <= 0) return;
+        STATE.viewerRenderer.setSize(w, h);
+        if (STATE.viewerCamera) {
+          STATE.viewerCamera.aspect = w / Math.max(h, 1);
+          STATE.viewerCamera.updateProjectionMatrix();
+        }
+      }
+
+      function renderPointCloud(resultData) {
+        if (!STATE.viewerInitialized) {
+          initViewer();
+        }
+        if (!STATE.viewerInitialized || !STATE.viewerScene) return;
+        const scene = STATE.viewerScene;
+        // 清除旧点云
+        if (STATE.viewerPointCloud) {
+          scene.remove(STATE.viewerPointCloud);
+          if (STATE.viewerPointCloud.geometry)
+            STATE.viewerPointCloud.geometry.dispose();
+          if (STATE.viewerPointCloud.material)
+            STATE.viewerPointCloud.material.dispose();
+          STATE.viewerPointCloud = null;
+        }
+        clearMeasurementVisuals();
+        const points = resultData.points;
+        if (!points || points.length === 0) {
+          showToast("点云数据为空", "error");
+          return;
+        }
+        // 兼容两种数据格式：
+        //  A. 嵌套 [[x,y,z],...] 或 [[x,y,z,r,g,b],...]（服务器 _collect_points 实际格式）
+        //  B. 扁平 [x,y,z,...] 或 [x,y,z,r,g,b,...]
+        const first = points[0];
+        let positions, colors;
+        if (Array.isArray(first)) {
+          // ---- 嵌套格式 ----
+          const per = first.length; // 3 或 6
+          const n = points.length;
+          positions = new Float32Array(n * 3);
+          colors = new Float32Array(n * 3);
+          if (per >= 6) {
+            for (let i = 0; i < n; i++) {
+              const p = points[i];
+              positions[i * 3] = p[0];
+              positions[i * 3 + 1] = p[1];
+              positions[i * 3 + 2] = p[2];
+              colors[i * 3] = p[3] / 255;
+              colors[i * 3 + 1] = p[4] / 255;
+              colors[i * 3 + 2] = p[5] / 255;
+            }
+          } else {
+            let yMin = Infinity,
+              yMax = -Infinity;
+            for (let i = 0; i < n; i++) {
+              const y = points[i][1];
+              if (y < yMin) yMin = y;
+              if (y > yMax) yMax = y;
+            }
+            const yRange = yMax - yMin || 1;
+            for (let i = 0; i < n; i++) {
+              const p = points[i];
+              positions[i * 3] = p[0];
+              positions[i * 3 + 1] = p[1];
+              positions[i * 3 + 2] = p[2];
+              const c = heightColor((p[1] - yMin) / yRange);
+              colors[i * 3] = c[0];
+              colors[i * 3 + 1] = c[1];
+              colors[i * 3 + 2] = c[2];
+            }
+          }
+          STATE.resultData._pointCount = n;
+        } else {
+          // ---- 扁平格式（服务器也兼容：把嵌套展平）----
+          const numPoints = points.length;
+          let flat = points;
+          // 若扁平且不是 3/6 的倍数但元素本身是嵌套 → 展平
+          if (numPoints % 6 !== 0 && numPoints % 3 !== 0) {
+            showToast("点云数据格式无法识别", "error");
+            return;
+          }
+          if (numPoints % 6 === 0) {
+            const n = numPoints / 6;
+            positions = new Float32Array(n * 3);
+            colors = new Float32Array(n * 3);
+            for (let i = 0; i < n; i++) {
+              positions[i * 3] = flat[i * 6];
+              positions[i * 3 + 1] = flat[i * 6 + 1];
+              positions[i * 3 + 2] = flat[i * 6 + 2];
+              colors[i * 3] = flat[i * 6 + 3] / 255;
+              colors[i * 3 + 1] = flat[i * 6 + 4] / 255;
+              colors[i * 3 + 2] = flat[i * 6 + 5] / 255;
+            }
+            STATE.resultData._pointCount = n;
+          } else {
+            const n = numPoints / 3;
+            positions = new Float32Array(n * 3);
+            colors = new Float32Array(n * 3);
+            let yMin = Infinity,
+              yMax = -Infinity;
+            for (let i = 0; i < n; i++) {
+              const y = flat[i * 3 + 1];
+              if (y < yMin) yMin = y;
+              if (y > yMax) yMax = y;
+            }
+            const yRange = yMax - yMin || 1;
+            for (let i = 0; i < n; i++) {
+              positions[i * 3] = flat[i * 3];
+              positions[i * 3 + 1] = flat[i * 3 + 1];
+              positions[i * 3 + 2] = flat[i * 3 + 2];
+              const c = heightColor((flat[i * 3 + 1] - yMin) / yRange);
+              colors[i * 3] = c[0];
+              colors[i * 3 + 1] = c[1];
+              colors[i * 3 + 2] = c[2];
+            }
+            STATE.resultData._pointCount = n;
+          }
+        }
+        // 融合华为 SLAM 稀疏点云（世界坐标·真实尺度，与服务器模型同一坐标帧；
+        // 用亮黄色区分，扩充服务器重建的稀疏区域/精度）
+        if (
+          STATE.huaweiFusion &&
+          STATE.huaweiPoints &&
+          STATE.huaweiPoints.length
+        ) {
+          const hp = STATE.huaweiPoints;
+          const hn = hp.length;
+          const base = positions.length / 3;
+          const newPos = new Float32Array((base + hn) * 3);
+          const newCol = new Float32Array((base + hn) * 3);
+          newPos.set(positions);
+          newCol.set(colors);
+          for (let i = 0; i < hn; i++) {
+            const p = hp[i];
+            newPos[(base + i) * 3] = p[0];
+            newPos[(base + i) * 3 + 1] = p[1];
+            newPos[(base + i) * 3 + 2] = p[2];
+            newCol[(base + i) * 3] = 1.0;
+            newCol[(base + i) * 3 + 1] = 0.85;
+            newCol[(base + i) * 3 + 2] = 0.15;
+          }
+          positions = newPos;
+          colors = newCol;
+          STATE.resultData._pointCount =
+            (STATE.resultData._pointCount || 0) + hn;
+        }
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        geom.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+        const mat = new THREE.PointsMaterial({
+          size: 0.008,
+          vertexColors: true,
+          blending: THREE.NormalBlending,
+          depthWrite: true,
+          depthTest: true,
+        });
+        const pointCloud = new THREE.Points(geom, mat);
+        scene.add(pointCloud);
+        STATE.viewerPointCloud = pointCloud;
+        // 居中
+        geom.computeBoundingSphere();
+        if (geom.boundingSphere) {
+          const center = geom.boundingSphere.center;
+          const radius = geom.boundingSphere.radius;
+          STATE.viewerControls.target.copy(center);
+          STATE.viewerCamera.position.set(
+            center.x + radius * 2,
+            center.y + radius * 1.2,
+            center.z + radius * 2,
+          );
+          STATE.viewerCamera.lookAt(center);
+          STATE.viewerControls.update();
+        }
+        // 更新统计
+        dom.statViews.textContent = resultData.num_views || "-";
+        dom.statPoints.textContent = STATE.resultData._pointCount || "-";
+        dom.statElapsed.textContent =
+          resultData.elapsed_s != null
+            ? Number(resultData.elapsed_s).toFixed(1)
+            : "-";
+        // 标尺校准条（AR 有真实尺度时隐藏，否则显示供标尺校准）
+        const hasRealArScale =
+          STATE.arScanFrames?.scale && STATE.arScanFrames.scale !== 1;
+        dom.calibrationBar.style.display = hasRealArScale ? "none" : "flex";
+        STATE.calibrationScale = hasRealArScale
+          ? STATE.arScanFrames.scale
+          : null;
+        updateCalibrationUI();
+        STATE.measurePoints = [];
+        STATE.measureLine = null;
+      }
+
+      function heightColor(t) {
+        // 蓝(低) -> 青 -> 白(高)
+        const r = t < 0.5 ? t * 1.2 : 0.6 + t * 0.4;
+        const g = t < 0.5 ? t * 1.6 : 0.8 + t * 0.2;
+        const b = 0.5 + t * 0.5;
+        return [Math.min(1, r), Math.min(1, g), Math.min(1, b)];
+      }
+
+      // ==================== 测量：屏幕空间最近点拾取 ====================
+      // 把点云投到屏幕，找离鼠标最近的可见点 —— 比 raycaster 更可靠、手感更好
+      // （raycaster 对稀疏点云经常落空，且命中点可能与视线交点不一致）
+      let hoverMarker = null; // 悬停高亮圆环
+
+      function pickNearestPoint(event) {
+        if (
+          !STATE.viewerInitialized ||
+          !STATE.viewerPointCloud ||
+          !STATE.viewerCamera ||
+          !STATE.viewerRenderer
+        )
+          return null;
+        const geom = STATE.viewerPointCloud.geometry;
+        const pos = geom.attributes.position;
+        if (!pos || pos.count === 0) return null;
+        const rect = STATE.viewerRenderer.domElement.getBoundingClientRect();
+        const mx = event.clientX - rect.left;
+        const my = event.clientY - rect.top;
+        const MAX_PX = 36; // 拾取半径（像素）
+        const v = new THREE.Vector3();
+        const proj = new THREE.Vector3();
+        const mat = STATE.viewerPointCloud.matrixWorld;
+        let bestIdx = -1;
+        let bestD = Infinity;
+        for (let i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(mat);
+          proj.copy(v).project(STATE.viewerCamera);
+          if (proj.z < -1 || proj.z > 1) continue; // 视野外/背面剔除
+          const sx = (proj.x * 0.5 + 0.5) * rect.width;
+          const sy = (-proj.y * 0.5 + 0.5) * rect.height;
+          const dx = sx - mx;
+          const dy = sy - my;
+          const d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            bestIdx = i;
+          }
+        }
+        if (bestIdx === -1 || Math.sqrt(bestD) > MAX_PX) return null;
+        v.fromBufferAttribute(pos, bestIdx);
+        return v.clone();
+      }
+
+      function onViewerClick(event) {
+        if (!STATE.measureMode) return;
+        const point = pickNearestPoint(event);
+        if (!point) return;
+        if (STATE.measurePoints.length >= 2) {
+          clearMeasurementVisuals();
+        }
+        addMeasurementPoint(point);
+      }
+
+      // 悬停高亮：测量模式下把鼠标指向的最近点用圆环标出来
+      function updateMeasureHover(event) {
+        if (!STATE.measureMode) {
+          if (hoverMarker) hoverMarker.visible = false;
+          return;
+        }
+        const p = pickNearestPoint(event);
+        if (!hoverMarker) {
+          const ringGeom = new THREE.RingGeometry(0.02, 0.028, 32);
+          const ringMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.9,
+            side: THREE.DoubleSide,
+            depthTest: false,
+          });
+          hoverMarker = new THREE.Mesh(ringGeom, ringMat);
+          hoverMarker.renderOrder = 999;
+          STATE.viewerScene.add(hoverMarker);
+        }
+        if (p) {
+          hoverMarker.position.copy(p);
+          hoverMarker.visible = true;
+        } else {
+          hoverMarker.visible = false;
+        }
+      }
+
+      function addMeasurementPoint(point) {
+        const scene = STATE.viewerScene;
+        const sphereGeom = new THREE.SphereGeometry(0.015, 16, 16);
+        const color = STATE.measurePoints.length === 0 ? 0x00d4ff : 0xa855f7;
+        const sphereMat = new THREE.MeshBasicMaterial({
+          color,
+          depthTest: false,
+        });
+        const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+        sphere.position.copy(point);
+        sphere.renderOrder = 998;
+        scene.add(sphere);
+        STATE.measurePoints.push({ point, marker: sphere });
+        // 编号标签
+        const idx = STATE.measurePoints.length;
+        const label = makePointLabel(idx);
+        if (label) {
+          label.position.copy(point).add(new THREE.Vector3(0, 0.02, 0));
+          scene.add(label);
+          STATE.measurePoints[idx - 1].label = label;
+        }
+        if (STATE.measurePoints.length === 2) {
+          // 画线
+          const p1 = STATE.measurePoints[0].point;
+          const p2 = STATE.measurePoints[1].point;
+          const lineGeom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+          const lineMat = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+            linewidth: 1,
+            transparent: true,
+            opacity: 0.8,
+          });
+          const line = new THREE.Line(lineGeom, lineMat);
+          scene.add(line);
+          STATE.measureLine = line;
+          // 显示距离（含尺度依据标注）
+          const rawDist = p1.distanceTo(p2);
+          let displayDist = rawDist;
+          let unitLabel = "";
+          if (STATE.calibrationScale) {
+            displayDist = rawDist * STATE.calibrationScale;
+            unitLabel = " m";
+          } else if (
+            STATE.arScanFrames?.scale &&
+            STATE.arScanFrames.scale !== 1
+          ) {
+            displayDist = rawDist * STATE.arScanFrames.scale;
+            unitLabel = " m (AR)";
+          } else {
+            unitLabel = " 单位";
+          }
+          showMeasurementChip(displayDist, unitLabel, rawDist);
+        }
+      }
+
+      // 生成带数字的小标签（Canvas Sprite）
+      function makePointLabel(n) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, 64, 64);
+        ctx.beginPath();
+        ctx.arc(32, 32, 24, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = n === 1 ? "#00d4ff" : "#a855f7";
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 28px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(n), 32, 33);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.SpriteMaterial({
+          map: tex,
+          transparent: true,
+          depthTest: false,
+        });
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(0.06, 0.06, 1);
+        sprite.renderOrder = 997;
+        return sprite;
+      }
+
+      function showMeasurementChip(dist, unitLabel, rawDist) {
+        const container = STATE.viewerContainer;
+        let chip = container.querySelector(".measurement-chip");
+        if (!chip) {
+          chip = document.createElement("div");
+          chip.className = "measurement-chip";
+          container.appendChild(chip);
+        }
+        let text = `${dist.toFixed(4)}${unitLabel}`;
+        if (!unitLabel.includes("m") && rawDist != null) {
+          text += ` · 模型${rawDist.toFixed(4)}（标尺校准可转真实尺寸）`;
+        }
+        chip.textContent = text;
+        chip.style.display = "block";
+      }
+
+      function clearMeasurementVisuals() {
+        const scene = STATE.viewerScene;
+        if (!scene) return;
+        for (const mp of STATE.measurePoints) {
+          if (mp.marker) {
+            scene.remove(mp.marker);
+            if (mp.marker.geometry) mp.marker.geometry.dispose();
+            if (mp.marker.material) mp.marker.material.dispose();
+          }
+          if (mp.label) {
+            scene.remove(mp.label);
+            if (mp.label.material) mp.label.material.dispose();
+          }
+        }
+        STATE.measurePoints = [];
+        if (STATE.measureLine) {
+          scene.remove(STATE.measureLine);
+          if (STATE.measureLine.geometry) STATE.measureLine.geometry.dispose();
+          if (STATE.measureLine.material) STATE.measureLine.material.dispose();
+          STATE.measureLine = null;
+        }
+        if (hoverMarker) hoverMarker.visible = false;
+        const container = STATE.viewerContainer;
+        if (container) {
+          const chip = container.querySelector(".measurement-chip");
+          if (chip) chip.style.display = "none";
+        }
+      }
+
+      function updateCalibrationUI() {
+        if (STATE.calibrationScale) {
+          dom.calResult.textContent = `已校准 · 缩放因子: ${STATE.calibrationScale.toFixed(4)}`;
+        } else {
+          dom.calResult.textContent = "";
+        }
+      }
+
+      dom.toggleMeasureBtn.addEventListener("click", () => {
+        STATE.measureMode = !STATE.measureMode;
+        dom.toggleMeasureBtn.textContent = STATE.measureMode
+          ? "关闭测量模式"
+          : "开启测量模式";
+        dom.toggleMeasureBtn.classList.toggle("btn-primary", STATE.measureMode);
+        if (STATE.viewerContainer) {
+          STATE.viewerContainer.classList.toggle(
+            "measuring",
+            STATE.measureMode,
+          );
+        }
+        if (!STATE.measureMode) {
+          clearMeasurementVisuals();
+        }
+      });
+
+      dom.clearMeasureBtn.addEventListener("click", () => {
+        clearMeasurementVisuals();
+        STATE.measureMode = false;
+        dom.toggleMeasureBtn.textContent = "开启测量模式";
+        dom.toggleMeasureBtn.classList.remove("btn-primary");
+        if (STATE.viewerContainer) {
+          STATE.viewerContainer.classList.remove("measuring");
+        }
+      });
+
+      dom.resetViewBtn.addEventListener("click", () => {
+        if (!STATE.viewerInitialized || !STATE.viewerPointCloud) return;
+        const geom = STATE.viewerPointCloud.geometry;
+        if (!geom.boundingSphere) geom.computeBoundingSphere();
+        if (geom.boundingSphere) {
+          const center = geom.boundingSphere.center;
+          const radius = geom.boundingSphere.radius;
+          STATE.viewerControls.target.copy(center);
+          STATE.viewerCamera.position.set(
+            center.x + radius * 2,
+            center.y + radius * 1.2,
+            center.z + radius * 2,
+          );
+          STATE.viewerCamera.lookAt(center);
+          STATE.viewerControls.update();
+        }
+      });
+
+      dom.calApplyBtn.addEventListener("click", () => {
+        const modelDist = parseFloat(dom.calModelDist.value);
+        const realDist = parseFloat(dom.calRealDist.value);
+        if (!modelDist || !realDist || modelDist <= 0 || realDist <= 0) {
+          showToast("请输入有效的距离值", "error");
+          return;
+        }
+        STATE.calibrationScale = realDist / modelDist;
+        updateCalibrationUI();
+        // 更新当前测量
+        if (STATE.measurePoints.length === 2) {
+          const rawDist = STATE.measurePoints[0].point.distanceTo(
+            STATE.measurePoints[1].point,
+          );
+          const displayDist = rawDist * STATE.calibrationScale;
+          const container = STATE.viewerContainer;
+          const chip = container?.querySelector(".measurement-chip");
+          if (chip) {
+            chip.textContent = `${displayDist.toFixed(4)} m`;
+            chip.style.display = "block";
+          }
+        }
+        showToast("标尺校准完成", "success");
+      });
+
+      dom.calResetBtn.addEventListener("click", () => {
+        const hasRealArScale =
+          STATE.arScanFrames?.scale && STATE.arScanFrames.scale !== 1;
+        STATE.calibrationScale = hasRealArScale
+          ? STATE.arScanFrames.scale
+          : null;
+        dom.calModelDist.value = "";
+        dom.calRealDist.value = "";
+        updateCalibrationUI();
+        if (STATE.measurePoints.length === 2) {
+          const rawDist = STATE.measurePoints[0].point.distanceTo(
+            STATE.measurePoints[1].point,
+          );
+          let displayDist = rawDist;
+          let unitLabel = " 单位";
+          if (STATE.calibrationScale) {
+            displayDist = rawDist * STATE.calibrationScale;
+            unitLabel = " m";
+          }
+          const container = STATE.viewerContainer;
+          const chip = container?.querySelector(".measurement-chip");
+          if (chip) {
+            chip.textContent = `${displayDist.toFixed(4)}${unitLabel}`;
+          }
+        }
+        showToast("标尺已重置");
+      });
+
+      // 把华为 SLAM 点云合并进服务器 PLY（ASCII/binary_little_endian 通用）
+      async function mergeHuaweiIntoPly(blob, huaweiPoints) {
+        if (!huaweiPoints || !huaweiPoints.length) return blob;
+        try {
+          const buf = await blob.arrayBuffer();
+          const bytes = new Uint8Array(buf);
+          const head = new TextDecoder().decode(
+            bytes.subarray(0, Math.min(bytes.length, 65536)),
+          );
+          const endIdx = head.indexOf("end_header");
+          if (endIdx < 0) return blob; // 非标准 PLY，跳过合并
+          const lines = head.slice(0, endIdx).split("\n");
+          let format = "ascii",
+            vertexCount = 0,
+            props = [],
+            inVertex = false;
+          for (const raw of lines) {
+            const t = raw.trim();
+            if (!t) continue;
+            if (t.startsWith("format ")) format = t.split(/\s+/)[1];
+            else if (t.startsWith("element vertex ")) {
+              vertexCount = parseInt(t.split(/\s+/)[2], 10) || 0;
+              inVertex = true;
+              props = [];
+            } else if (t.startsWith("element ")) inVertex = false;
+            else if (inVertex && t.startsWith("property "))
+              props.push(t.split(/\s+/)[2]);
+          }
+          if (!vertexCount || vertexCount > 5000000) return blob;
+          const xi = props.indexOf("x"),
+            yi = props.indexOf("y"),
+            zi = props.indexOf("z");
+          if (xi < 0 || yi < 0 || zi < 0) return blob;
+          const add = huaweiPoints.length;
+          // 新头
+          let newHeader = "";
+          for (const raw of lines) {
+            let t = raw;
+            if (t.startsWith("element vertex "))
+              t = `element vertex ${vertexCount + add}`;
+            newHeader += t + "\n";
+          }
+          newHeader += "end_header\n";
+          const bodyStart = endIdx + "end_header".length + 1;
+          const body = bytes.subarray(bodyStart);
+          let extra;
+          if (format === "ascii") {
+            let s = "";
+            for (const p of huaweiPoints) {
+              const vals = new Array(props.length).fill("0");
+              vals[xi] = p[0].toFixed(6);
+              vals[yi] = p[1].toFixed(6);
+              vals[zi] = p[2].toFixed(6);
+              s += vals.join(" ") + "\n";
+            }
+            extra = new TextEncoder().encode(s);
+          } else {
+            const stride = props.length * 4;
+            extra = new ArrayBuffer(add * stride);
+            const dv = new DataView(extra);
+            for (let i = 0; i < add; i++) {
+              dv.setFloat32(i * stride + xi * 4, huaweiPoints[i][0], true);
+              dv.setFloat32(i * stride + yi * 4, huaweiPoints[i][1], true);
+              dv.setFloat32(i * stride + zi * 4, huaweiPoints[i][2], true);
+            }
+          }
+          const out = new Uint8Array(
+            new TextEncoder().encode(newHeader).length +
+              body.length +
+              extra.byteLength,
+          );
+          let o = 0;
+          const he = new TextEncoder().encode(newHeader);
+          out.set(he, o);
+          o += he.length;
+          out.set(body, o);
+          o += body.length;
+          out.set(new Uint8Array(extra), o);
+          return new Blob([out], { type: "application/octet-stream" });
+        } catch {
+          return blob;
+        }
+      }
+
+      dom.huaweiFusionBtn.addEventListener("click", () => {
+        if (!STATE.huaweiPoints || !STATE.huaweiPoints.length) {
+          showToast("暂无华为点云数据", "error");
+          return;
+        }
+        STATE.huaweiFusion = !STATE.huaweiFusion;
+        updateFusionButton();
+        // 有结果 → 重新渲染；否则仅更新按钮（扫描完成后查看器自然带出）
+        if (STATE.resultData) renderPointCloud(STATE.resultData);
+        showToast(
+          STATE.huaweiFusion
+            ? "已融合华为点云（亮黄色）"
+            : "已关闭华为点云融合",
+          "success",
+        );
+      });
+
+      dom.downloadPlyBtn.addEventListener("click", async () => {
+        if (!STATE.currentTaskId && !STATE.resultData) {
+          showToast("没有可下载的点云数据", "error");
+          return;
+        }
+        try {
+          let plyData = STATE.plyData;
+          if (!plyData && STATE.currentTaskId) {
+            const resp = await fetch(
+              `/api/tasks/${STATE.currentTaskId}?include_result=true`,
+            );
+            const data = await resp.json();
+            plyData = data.result?.ply;
+          }
+          if (!plyData) {
+            showToast("PLY 数据不可用", "error");
+            return;
+          }
+          // plyData可能是base64字符串或URL
+          let blob;
+          if (typeof plyData === "string" && plyData.startsWith("http")) {
+            const resp = await fetch(plyData);
+            blob = await resp.blob();
+          } else if (typeof plyData === "string") {
+            // base64
+            const byteStr = atob(plyData);
+            const bytes = new Uint8Array(byteStr.length);
+            for (let i = 0; i < byteStr.length; i++)
+              bytes[i] = byteStr.charCodeAt(i);
+            blob = new Blob([bytes], { type: "application/octet-stream" });
+          } else {
+            blob = new Blob([JSON.stringify(plyData)], {
+              type: "application/octet-stream",
+            });
+          }
+          // 融合开关打开 → 把华为点云合并进 PLY 一起下载
+          if (
+            STATE.huaweiFusion &&
+            STATE.huaweiPoints &&
+            STATE.huaweiPoints.length
+          ) {
+            blob = await mergeHuaweiIntoPly(blob, STATE.huaweiPoints);
+          }
+          const url = URL.createObjectURL(blob);
+          if (STATE.arConnected) {
+            // App 内：保存到手机系统下载目录（走原生 MediaStore）
+            URL.revokeObjectURL(url);
+            const buf = await blob.arrayBuffer();
+            const fname = "omni3d_" + (STATE.currentTaskId || "model") + ".ply";
+            const resp = await fetch(
+              `http://127.0.0.1:50687/ar/file/save?name=${encodeURIComponent(fname)}`,
+              { method: "POST", body: buf },
+            );
+            const r = await resp.json().catch(() => ({}));
+            if (r.ok) showToast(`已保存到 ${r.path || "下载目录"}`, "success");
+            else showToast("保存失败：" + (r.error || ""), "error");
+          } else {
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `omni3d_${STATE.currentTaskId || "model"}.ply`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("PLY 下载开始", "success");
+          }
+        } catch (err) {
+          showToast("下载失败：" + err.message, "error");
+        }
+      });
+
+      // ==================== 历史记录 ====================
+      async function loadTaskList() {
+        dom.taskList.innerHTML =
+          '<span style="color:var(--text-muted);font-size:0.84rem;">加载中...</span>';
+        try {
+          const resp = await fetch("/api/tasks?limit=20");
+          const data = await resp.json();
+          // 服务器返回 {tasks: [...]}
+          const tasks = Array.isArray(data) ? data : data.tasks || [];
+          if (tasks.length === 0) {
+            dom.taskList.innerHTML =
+              '<span style="color:var(--text-muted);font-size:0.84rem;">暂无历史记录</span>';
+            return;
+          }
+          dom.taskList.innerHTML = tasks
+            .map((t) => {
+              const statusIcon =
+                t.status === "done"
+                  ? "✅"
+                  : t.status === "failed"
+                    ? "❌"
+                    : "⏳";
+              const stageText = t.stage || t.status || "未知";
+              const viewsText =
+                t.result?.num_views != null
+                  ? ` · ${t.result.num_views} 视图`
+                  : "";
+              const canDelete = t.status !== "running"; // 运行中不可删
+              return `
+                <div class="task-item">
+                  <span class="task-status-icon">${statusIcon}</span>
+                  <div class="task-info">
+                    <span>${stageText}${viewsText}</span>
+                    <div class="task-id">${t.task_id || "-"}</div>
+                  </div>
+                  ${t.status === "done" ? `<button class="btn btn-xs btn-primary view-task-btn" data-task-id="${t.task_id}">查看</button>` : ""}
+                  ${canDelete ? `<button class="btn btn-xs btn-danger del-task-btn" data-task-id="${t.task_id}">删除</button>` : ""}
+                </div>`;
+            })
+            .join("");
+          // 绑定查看按钮
+          dom.taskList.querySelectorAll(".view-task-btn").forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+              const taskId = e.target.dataset.taskId;
+              await viewTask(taskId);
+            });
+          });
+          // 绑定删除按钮
+          dom.taskList.querySelectorAll(".del-task-btn").forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+              const taskId = e.target.dataset.taskId;
+              await deleteTask(taskId);
+            });
+          });
+        } catch (err) {
+          dom.taskList.innerHTML =
+            '<span style="color:var(--danger);font-size:0.84rem;">加载失败</span>';
+        }
+      }
+
+      async function deleteTask(taskId) {
+        if (!confirm(`确定删除任务 ${taskId} 吗？`)) return;
+        try {
+          const resp = await fetch(`/api/tasks/${taskId}`, {
+            method: "DELETE",
+          });
+          const data = await resp.json();
+          if (data.ok) {
+            showToast("已删除记录", "success");
+          } else {
+            showToast("删除失败：" + (data.error || "未知错误"), "error");
+          }
+        } catch (err) {
+          showToast("删除失败：" + err.message, "error");
+        }
+        loadTaskList();
+      }
+
+      async function viewTask(taskId) {
+        try {
+          showToast("加载中...");
+          const resp = await fetch(`/api/tasks/${taskId}?include_result=true`);
+          const data = await resp.json();
+          if (data.status === "done" && data.result) {
+            STATE.resultData = data.result;
+            STATE.plyData = data.result?.ply || null;
+            STATE.currentTaskId = taskId;
+            navigateTo("viewer");
+            renderPointCloud(STATE.resultData);
+            showToast("已加载历史任务", "success");
+          } else {
+            showToast("该任务尚未完成或数据不可用", "error");
+          }
+        } catch (err) {
+          showToast("加载失败：" + err.message, "error");
+        }
+      }
+
+      dom.refreshTasksBtn.addEventListener("click", loadTaskList);
+
+      // ==================== 设置页 ====================
+      function updateSettingsUI() {
+        // 更新抽帧选项
+        dom.frameCountGroup.querySelectorAll(".radio-pill").forEach((pill) => {
+          pill.classList.toggle(
+            "selected",
+            parseInt(pill.dataset.value) === STATE.frameCount,
+          );
+        });
+        // 更新 AR 扫描分辨率选项
+        if (dom.arResGroup) {
+          dom.arResGroup.querySelectorAll(".radio-pill").forEach((pill) => {
+            pill.classList.toggle(
+              "selected",
+              parseInt(pill.dataset.w) === STATE.arRes.width &&
+                parseInt(pill.dataset.h) === STATE.arRes.height,
+            );
+          });
+        }
+        // 更新相机参数标签
+        updateCameraTags();
+        // 融合开关状态
+        updateFusionButton();
+      }
+
+      dom.arResGroup.addEventListener("click", (e) => {
+        const pill = e.target.closest(".radio-pill");
+        if (!pill) return;
+        STATE.arRes = {
+          width: parseInt(pill.dataset.w, 10),
+          height: parseInt(pill.dataset.h, 10),
+        };
+        dom.arResGroup
+          .querySelectorAll(".radio-pill")
+          .forEach((p) => p.classList.remove("selected"));
+        pill.classList.add("selected");
+        const hint = dom.arResHint;
+        if (hint) {
+          hint.textContent =
+            STATE.arRes.width >= 1920
+              ? "全高清：最清晰但采集/上传最慢，设备不支持时自动回退默认。"
+              : "已选 " +
+                STATE.arRes.width +
+                "×" +
+                STATE.arRes.height +
+                " · 下次扫描生效。";
+        }
+        showToast(
+          `AR 扫描分辨率：${STATE.arRes.width}×${STATE.arRes.height}`,
+          "success",
+        );
+      });
+
+      function updateCameraTags() {
+        const tags = [];
+        if (STATE.deviceIntrinsics) {
+          tags.push('<span class="tag tag-ok">K ✓ 焦距</span>');
+        }
+        if (STATE.deviceExtrinsics) {
+          tags.push('<span class="tag tag-ok">R ✓ 陀螺仪</span>');
+        }
+        if (STATE.arConnected) {
+          tags.push('<span class="tag tag-ok">AR ✓ 真实位姿</span>');
+        }
+        if (tags.length === 0) {
+          tags.push(
+            '<span class="tag tag-muted">未读取 · 模型自动估计位姿</span>',
+          );
+        }
+        dom.cameraTags.innerHTML = tags.join(" ");
+        STATE.cameraIntrinsics = STATE.deviceIntrinsics || null;
+        STATE.cameraExtrinsics = STATE.deviceExtrinsics || null;
+      }
+
+      dom.frameCountGroup.addEventListener("click", (e) => {
+        const pill = e.target.closest(".radio-pill");
+        if (!pill) return;
+        STATE.frameCount = parseInt(pill.dataset.value);
+        dom.frameCountGroup
+          .querySelectorAll(".radio-pill")
+          .forEach((p) => p.classList.remove("selected"));
+        pill.classList.add("selected");
+      });
+
+      dom.readCameraBtn.addEventListener("click", async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "environment",
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
+          const track = stream.getVideoTracks()[0];
+          const settings = track.getSettings();
+          const width = settings.width || 1280;
+          const height = settings.height || 720;
+          // 尝试获取焦距
+          let focalLength = settings.focalLength;
+          if (!focalLength && track.getCapabilities) {
+            const caps = track.getCapabilities();
+            focalLength =
+              caps?.focalLength?.max || caps?.focalLength?.min || null;
+          }
+          // 构建内参K（近似）
+          if (focalLength && width && height) {
+            const fx = focalLength * (width / 36); // 近似35mm等效
+            const fy = fx;
+            const cx = width / 2;
+            const cy = height / 2;
+            STATE.deviceIntrinsics = [
+              [fx, 0, cx],
+              [0, fy, cy],
+              [0, 0, 1],
+            ];
+          } else if (width && height) {
+            const fApprox = Math.max(width, height) * 1.2;
+            STATE.deviceIntrinsics = [
+              [fApprox, 0, width / 2],
+              [0, fApprox, height / 2],
+              [0, 0, 1],
+            ];
+          }
+          // 尝试陀螺仪外参
+          if (window.DeviceOrientationEvent) {
+            try {
+              await new Promise((resolve, reject) => {
+                const handler = (event) => {
+                  if (event.alpha != null) {
+                    window.removeEventListener("deviceorientation", handler);
+                    const alpha = THREE.MathUtils.degToRad(event.alpha || 0);
+                    const beta = THREE.MathUtils.degToRad(event.beta || 0);
+                    const gamma = THREE.MathUtils.degToRad(event.gamma || 0);
+                    const euler = new THREE.Euler(beta, alpha, -gamma, "YXZ");
+                    const rotMatrix = new THREE.Matrix4().makeRotationFromEuler(
+                      euler,
+                    );
+                    STATE.deviceExtrinsics = rotMatrix.toArray();
+                    resolve();
+                  }
+                };
+                window.addEventListener("deviceorientation", handler);
+                setTimeout(() => {
+                  window.removeEventListener("deviceorientation", handler);
+                  reject(new Error("超时"));
+                }, 3000);
+              });
+            } catch {
+              STATE.deviceExtrinsics = null;
+            }
+          }
+          // 停止流
+          track.stop();
+          updateCameraTags();
+          updateSettingsUI();
+          showToast("相机参数读取完成", "success");
+        } catch (err) {
+          showToast("读取相机参数失败：" + err.message, "error");
+        }
+      });
+
+      // ==================== 初始化 ====================
+      function init() {
+        updateSubmitButton();
+        updateClearButton();
+        updateSettingsUI();
+        // 初始页面
+        navigateTo("capture");
+      }
+
+      // 页面可见性变化时处理viewer
+      document.addEventListener("visibilitychange", () => {
+        if (
+          document.hidden &&
+          STATE.viewerInitialized &&
+          STATE.viewerAnimationId
+        ) {
+          // 页面隐藏时可以降低渲染频率，但这里保持简单
+        }
+      });
+
+      // 窗口大小变化
+      window.addEventListener("resize", () => {
+        resizeViewer();
+      });
+
+      // 键盘快捷键
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (STATE.measureMode) {
+            STATE.measureMode = false;
+            dom.toggleMeasureBtn.textContent = "开启测量模式";
+            dom.toggleMeasureBtn.classList.remove("btn-primary");
+            if (STATE.viewerContainer)
+              STATE.viewerContainer.classList.remove("measuring");
+            clearMeasurementVisuals();
+          }
+        }
+        if (
+          e.key === "m" &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          STATE.currentPage === "viewer"
+        ) {
+          STATE.measureMode = !STATE.measureMode;
+          dom.toggleMeasureBtn.textContent = STATE.measureMode
+            ? "关闭测量模式"
+            : "开启测量模式";
+          dom.toggleMeasureBtn.classList.toggle(
+            "btn-primary",
+            STATE.measureMode,
+          );
+          if (STATE.viewerContainer)
+            STATE.viewerContainer.classList.toggle(
+              "measuring",
+              STATE.measureMode,
+            );
+          if (!STATE.measureMode) clearMeasurementVisuals();
+        }
+      });
+
+      init();
+      console.log("◈ Omni3D Web 已就绪");
+      console.log(
+        "  AR桥: " +
+          (STATE.arConnected ? "已连接 (" + STATE.arMode + ")" : "未连接"),
+      );
+      console.log("  服务器: FastAPI :50865 | AR桥: :50687");
+    </script>
+  </body>
+</html>

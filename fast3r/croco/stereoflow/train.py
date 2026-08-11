@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""训练入口。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -43,7 +41,6 @@ from utils.misc import NativeScalerWithGradNormCount as NativeScaler
 
 
 def get_args_parser():
-    """创建立体/光流微调训练命令行参数解析器，含 stereo 和 flow 两个子命令。"""
     # prepare subparsers
     parser = argparse.ArgumentParser(
         "Finetuning CroCo models on stereo or flow", add_help=False
@@ -57,7 +54,6 @@ def get_args_parser():
     def add_arg(
         name_or_flags, default=None, default_stereo=None, default_flow=None, **kwargs
     ):
-        """向 stereo 和 flow 两个子解析器同时添加参数，支持任务特定默认值。"""
         if default is not None:
             assert (
                 default_stereo is None and default_flow is None
@@ -203,7 +199,6 @@ def get_args_parser():
 
 
 def main(args):
-    """训练主函数：初始化分布式环境、数据集、模型、优化器，执行训练和验证循环。"""
     misc.init_distributed_mode(args)
     global_rank = misc.get_rank()
     num_tasks = misc.get_world_size()
@@ -305,7 +300,6 @@ def main(args):
     )(args.dataset, crop_size=args.crop)
 
     def _print_repr_dataset(d):
-        """递归打印 ConcatDataset 中各子数据集的信息。"""
         if isinstance(d, torch.utils.data.dataset.ConcatDataset):
             for dd in d.datasets:
                 _print_repr_dataset(dd)

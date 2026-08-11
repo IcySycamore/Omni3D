@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""光流数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -42,14 +40,11 @@ cache_dir = "./data/stereoflow/datasets_flow_cache/"
 
 
 def flow_to_tensor(disp):
-    """将光流转为张量。"""
     return torch.from_numpy(disp).float().permute(2, 0, 1)
 
 
 class FlowDataset(data.Dataset):
-    """光流数据集基类，提供通用的数据加载、增广、缓存机制。"""
     def __init__(self, split, augmentor=False, crop_size=None, totensor=True):
-        """初始化。"""
         self.split = split
         if not augmentor:
             assert crop_size is None
@@ -71,13 +66,11 @@ class FlowDataset(data.Dataset):
         raise NotImplementedError
 
     def __len__(self):
-        """返回数据集大小。"""
         return len(
             self.pairnames
         )  # each pairname is typically of the form (str, int1, int2)
 
     def __getitem__(self, index):
-        """获取指定索引的数据。"""
         pairname = self.pairnames[index]
 
         # get filenames
@@ -114,17 +107,14 @@ class FlowDataset(data.Dataset):
         return img1, img2, flow, pairname
 
     def __rmul__(self, v):
-        """将数据集重复 v 倍。"""
         self.rmul *= v
         self.pairnames = v * self.pairnames
         return self
 
     def __str__(self):
-        """返回字符串表示。"""
         return f"{self.__class__.__name__}_{self.split}"
 
     def __repr__(self):
-        """返回详细描述。"""
         s = f"{self.__class__.__name__}(split={self.split}, augmentor={self.augmentor_str}, crop_size={str(self.crop_size)}, totensor={self.totensor})"
         if self.rmul == 1:
             s += f"\n\tnum pairs: {len(self.pairnames)}"
@@ -133,14 +123,12 @@ class FlowDataset(data.Dataset):
         return s
 
     def _set_root(self):
-        """设置数据集根目录。"""
         self.root = dataset_to_root[self.name]
         assert os.path.isdir(
             self.root
         ), f"could not find root directory for dataset {self.name}: {self.root}"
 
     def _load_or_build_cache(self):
-        """加载或构建缓存。"""
         cache_file = osp.join(cache_dir, self.name + ".pkl")
         if osp.isfile(cache_file):
             with open(cache_file, "rb") as fid:
@@ -154,9 +142,7 @@ class FlowDataset(data.Dataset):
 
 
 class TartanAirDataset(FlowDataset):
-    """TartanAir 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "TartanAir"
         self._set_root()
         assert self.split in ["train"]
@@ -178,7 +164,6 @@ class TartanAirDataset(FlowDataset):
         self.load_flow = _read_numpy_flow
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         seqs = sorted(os.listdir(self.root))
         pairs = [
             (osp.join(s, s, difficulty, Pxxx), int(a[:6]), int(a[:6]) + 1)
@@ -195,9 +180,7 @@ class TartanAirDataset(FlowDataset):
 
 
 class FlyingChairsDataset(FlowDataset):
-    """FlyingChairs 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "FlyingChairs"
         self._set_root()
         assert self.split in ["train", "val"]
@@ -214,7 +197,6 @@ class FlyingChairsDataset(FlowDataset):
         self.load_flow = _read_flo_file
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         split_file = osp.join(self.root, "chairs_split.txt")
         split_list = np.loadtxt(split_file, dtype=np.int32)
         trainpairs = ["{:05d}".format(i) for i in np.where(split_list == 1)[0] + 1]
@@ -227,9 +209,7 @@ class FlyingChairsDataset(FlowDataset):
 
 
 class FlyingThingsDataset(FlowDataset):
-    """FlyingThings3D 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "FlyingThings"
         self._set_root()
         assert self.split in [
@@ -272,7 +252,6 @@ class FlyingThingsDataset(FlowDataset):
         self.load_flow = _read_pfm_flow
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         tosave = {}
         # train and test splits for the different passes
         for set_ in ["train", "test"]:
@@ -328,9 +307,7 @@ class FlyingThingsDataset(FlowDataset):
 
 
 class MPISintelDataset(FlowDataset):
-    """MPI Sintel 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "MPISintel"
         self._set_root()
         assert self.split in [
@@ -359,7 +336,6 @@ class MPISintelDataset(FlowDataset):
         self.load_flow = _read_flo_file
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         trainseqs = sorted(os.listdir(self.root + "training/clean"))
         trainpairs = [
             (osp.join("training/clean", s), i)
@@ -398,7 +374,6 @@ class MPISintelDataset(FlowDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, _time):
-        """保存单个图像对的预测结果。"""
         assert prediction.shape[2] == 2
         outfile = os.path.join(
             outdir, "submission", self.pairname_to_str(pairname) + ".flo"
@@ -407,7 +382,6 @@ class MPISintelDataset(FlowDataset):
         writeFlowFile(prediction, outfile)
 
     def finalize_submission(self, outdir):
-        """打包提交文件。"""
         assert self.split == "test_allpass"
         bundle_exe = "/nfs/data/ffs-3d/datasets/StereoFlow/MPI-Sintel/bundler/linux-x64/bundler"  # eg <bundle_exe> <path_to_results_for_clean> <path_to_results_for_final> <output/bundled.lzma>
         if os.path.isfile(bundle_exe):
@@ -424,9 +398,7 @@ class MPISintelDataset(FlowDataset):
 
 
 class SpringDataset(FlowDataset):
-    """Spring 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Spring"
         self._set_root()
         assert self.split in ["train", "test", "subtrain", "subval"]
@@ -466,7 +438,6 @@ class SpringDataset(FlowDataset):
         self.load_flow = _read_hdf5_flow
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         # train
         trainseqs = sorted(os.listdir(osp.join(self.root, "train")))
         trainpairs = []
@@ -535,7 +506,6 @@ class SpringDataset(FlowDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
-        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 3
         assert prediction.shape[2] == 2
         assert prediction.dtype == np.float32
@@ -550,7 +520,6 @@ class SpringDataset(FlowDataset):
         writeFlo5File(prediction, outfile)
 
     def finalize_submission(self, outdir):
-        """打包提交文件。"""
         assert self.split == "test"
         exe = "{self.root}/flow_subsampling"
         if os.path.isfile(exe):
@@ -565,9 +534,7 @@ class SpringDataset(FlowDataset):
 
 
 class Kitti12Dataset(FlowDataset):
-    """KITTI 2012 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Kitti12"
         self._set_root()
         assert self.split in ["train", "test"]
@@ -588,7 +555,6 @@ class Kitti12Dataset(FlowDataset):
         self.load_flow = _read_kitti_flow
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         trainseqs = ["training/colored_0/%06d" % (i) for i in range(194)]
         testseqs = ["testing/colored_0/%06d" % (i) for i in range(195)]
         assert (
@@ -598,7 +564,6 @@ class Kitti12Dataset(FlowDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
-        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 3
         assert prediction.shape[2] == 2
         outfile = os.path.join(outdir, pairname.split("/")[-1] + "_10.png")
@@ -606,7 +571,6 @@ class Kitti12Dataset(FlowDataset):
         writeFlowKitti(outfile, prediction)
 
     def finalize_submission(self, outdir):
-        """打包提交文件。"""
         assert self.split == "test"
         cmd = f'cd {outdir}/; zip -r "kitti12_flow_results.zip" .'
         print(cmd)
@@ -615,9 +579,7 @@ class Kitti12Dataset(FlowDataset):
 
 
 class Kitti15Dataset(FlowDataset):
-    """KITTI 2015 光流数据集。"""
     def _prepare_data(self):
-        """设置数据集名称、路径映射和读取函数。"""
         self.name = "Kitti15"
         self._set_root()
         assert self.split in ["train", "subtrain", "subval", "test"]
@@ -638,7 +600,6 @@ class Kitti15Dataset(FlowDataset):
         self.load_flow = _read_kitti_flow
 
     def _build_cache(self):
-        """扫描文件系统构建缓存字典。"""
         trainseqs = ["training/image_2/%06d" % (i) for i in range(200)]
         subtrainseqs = trainseqs[:-10]
         subvalseqs = trainseqs[-10:]
@@ -658,7 +619,6 @@ class Kitti15Dataset(FlowDataset):
         return tosave
 
     def submission_save_pairname(self, pairname, prediction, outdir, time):
-        """保存单个图像对的预测结果。"""
         assert prediction.ndim == 3
         assert prediction.shape[2] == 2
         outfile = os.path.join(outdir, "flow", pairname.split("/")[-1] + "_10.png")
@@ -666,7 +626,6 @@ class Kitti15Dataset(FlowDataset):
         writeFlowKitti(outfile, prediction)
 
     def finalize_submission(self, outdir):
-        """打包提交文件。"""
         assert self.split == "test"
         cmd = f'cd {outdir}/; zip -r "kitti15_flow_results.zip" flow'
         print(cmd)
@@ -678,12 +637,10 @@ import cv2
 
 
 def _read_numpy_flow(filename):
-    """读取 numpy 格式光流。"""
     return np.load(filename)
 
 
 def _read_pfm_flow(filename):
-    """读取 PFM 格式光流。"""
     f, _ = _read_pfm(filename)
     assert np.all(f[:, :, 2] == 0.0)
     return np.ascontiguousarray(f[:, :, :2])
@@ -781,7 +738,6 @@ _read_flo_file = readFlowFile
 
 
 def _read_kitti_flow(filename):
-    """读取 KITTI 格式光流。"""
     flow = cv2.imread(filename, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_COLOR)
     flow = flow[:, :, ::-1].astype(np.float32)
     valid = flow[:, :, 2] > 0
@@ -796,7 +752,6 @@ _read_hd1k_flow = _read_kitti_flow
 
 
 def writeFlowKitti(filename, uv):
-    """将光流写入 KITTI 格式文件。"""
     uv = 64.0 * uv + 2**15
     valid = np.ones([uv.shape[0], uv.shape[1], 1])
     uv = np.concatenate([uv, valid], axis=-1).astype(np.uint16)
@@ -804,13 +759,11 @@ def writeFlowKitti(filename, uv):
 
 
 def writeFlo5File(flow, filename):
-    """将光流写入 FLO5 (HDF5) 文件。"""
     with h5py.File(filename, "w") as f:
         f.create_dataset("flow", data=flow, compression="gzip", compression_opts=5)
 
 
 def _read_hdf5_flow(filename):
-    """读取 HDF5 格式光流。"""
     flow = np.asarray(h5py.File(filename)["flow"])
     flow[np.isnan(flow)] = np.inf  # make invalid values as +inf
     return flow.astype(np.float32)
@@ -966,7 +919,6 @@ def _computeColor(flow, saturate=True):
 
 
 def get_train_dataset_flow(dataset_str, augmentor=True, crop_size=None):
-    """根据字符串描述创建训练数据集。"""
     dataset_str = dataset_str.replace("(", "Dataset(")
     if augmentor:
         dataset_str = dataset_str.replace(")", ", augmentor=True)")
@@ -978,6 +930,5 @@ def get_train_dataset_flow(dataset_str, augmentor=True, crop_size=None):
 
 
 def get_test_datasets_flow(dataset_str):
-    """根据字符串描述创建测试数据集列表。"""
     dataset_str = dataset_str.replace("(", "Dataset(")
     return [eval(s) for s in dataset_str.split("+")]

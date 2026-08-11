@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""Plotly 可视化。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -15,13 +13,7 @@ from scipy.spatial.transform import Rotation
 
 
 class SceneViz:
-    """基于 Plotly 的 3D 场景可视化工具类。
-
-    提供添加点云、相机的接口，并支持导出 HTML 和交互式显示。
-    """
-
     def __init__(self):
-        """初始化 SceneViz，创建空的 Plotly Figure。"""
         self.fig = go.Figure()
 
     def export_html(self, filename="scene_visualization.html"):
@@ -79,7 +71,6 @@ class SceneViz:
     def add_cameras(self, poses, focals=None, images=None, imsizes=None, colors=None, cam_size=0.02, enable_color_image=True):
         """Add multiple cameras with adjustable frustum size."""
         def get(arr, idx):
-            """安全地获取数组中指定索引的元素。"""
             return None if arr is None else arr[idx]
 
         for i, pose_c2w in enumerate(poses):
@@ -96,15 +87,6 @@ class SceneViz:
         return self
 
     def show(self, point_size=1, viewer=None):
-        """显示 3D 场景。
-
-        Args:
-            point_size (int): 点云显示大小。默认 1。
-            viewer (str | None): 保留参数。
-
-        Returns:
-            SceneViz: 返回自身，支持链式调用。
-        """
         self.fig.update_layout(
             title="Camera Poses and Point Clouds",
             scene=dict(

@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
-"""CO3D 数据集。"""
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -19,31 +17,12 @@ from .base_many_view_dataset import BaseManyViewDataset
 
 
 class Co3d(BaseManyViewDataset):
-    """Co3D 多视图物体类别数据集，基于 SPlan3R 序列采样。"""
-
     def __init__(self, mask_bg=True, use_comb=True,
                  scene_class=None, scene_id=None,
                  num_seq=100, num_frames=5, 
                  min_thresh=10, max_thresh=100,
                  full_video=False, lb=0, ub=30,
                  kf_every=1, *args, ROOT, **kwargs):
-        """初始化 Co3d 数据集。
-
-        Args:
-            mask_bg (bool | str): 是否掩码背景。默认 True。
-            use_comb (bool): 是否使用组合采样。默认 True。
-            scene_class: 场景类别过滤。默认 None。
-            scene_id: 场景 ID 过滤。默认 None。
-            num_seq (int): 每个场景的序列数。默认 100。
-            num_frames (int): 每个序列的帧数。默认 5。
-            min_thresh (int): 帧间距最小阈值。默认 10。
-            max_thresh (int): 帧间距最大阈值。默认 100。
-            full_video (bool): 是否使用完整视频。默认 False。
-            lb (int): 组合下界。默认 0。
-            ub (int): 组合上界。默认 30。
-            kf_every (int): 关键帧间隔。默认 1。
-            ROOT (str): 数据集根目录。
-        """
         self.ROOT = ROOT
         super().__init__(*args, **kwargs)
 
@@ -66,7 +45,6 @@ class Co3d(BaseManyViewDataset):
     
 
     def get_combinations(self, use_comb, lb, ub):
-        """生成视角组合列表。"""
 
         if use_comb and not self.full_video:
             print('Using combinations')
@@ -83,7 +61,6 @@ class Co3d(BaseManyViewDataset):
     
 
     def load_scene(self, scene_class=None, scene_id=None):
-        """加载场景数据。"""
         print('Loading scenes')
         with open(osp.join(self.ROOT, f'selected_seqs_{self.split}.json'), 'r') as f:
             scenes = json.load(f)
@@ -103,11 +80,10 @@ class Co3d(BaseManyViewDataset):
         return scenes, scene_list
     
     def __len__(self):
-        """返回数据集大小。"""
+
         return len(self.scene_list) * self.num_seq
     
     def _get_views(self, idx, resolution, rng, attempts=0):
-        """获取指定索引的多视图数据。"""
         obj, instance = self.scene_list[idx // self.num_seq]
         image_pool = self.scenes[obj, instance]
 
@@ -214,4 +190,5 @@ class Co3d(BaseManyViewDataset):
 
 
     
+
 
