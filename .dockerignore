@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.mypy_cache
+
+# 运行时产物
+outputs/
+temp_preview_frames/
+demo_examples/
+*.log
+
+# 文档与资源（构建镜像不需要）
+docs/
+assets/
+notebooks/
+*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# 模型权重（通常单独挂载，不打包进镜像）
+*.bin
+*.safetensors
+*.pth
+*.ckpt

@@ -1,0 +1,45 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [main, develop/*]
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "requirements.txt"
+      - "scripts/docker-entrypoint.sh"
+      - ".github/workflows/docker-build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "requirements.txt"
+      - "scripts/docker-entrypoint.sh"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: omni3d:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test mock server starts
+        run: |
+          docker run -d --name omni3d-test -p 50865:50865 -e MOCK_MODE=true omni3d:latest
+          sleep 15
+          curl -f http://localhost:50865/health || (docker logs omni3d-test && exit 1)
+          docker stop omni3d-test
+          docker rm omni3d-test

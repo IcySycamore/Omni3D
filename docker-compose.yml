@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  omni3d:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # args:
+      #   INSTALL_PYTORCH3D: "true"
+    image: omni3d:latest
+    container_name: omni3d-server
+    ports:
+      - "50865:50865"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=50865
+      # 默认 mock 模式，无需 GPU 与模型权重即可启动
+      - MOCK_MODE=true
+      # 真实模式需要模型权重、CUDA、pytorch3d
+      # - MOCK_MODE=false
+    volumes:
+      - ./outputs:/app/outputs
+      - ./temp_preview_frames:/app/temp_preview_frames
+      # 如需使用本地模型权重，取消注释并映射到容器内
+      # - ./jedyang97/Fast3R_ViT_Large_512:/app/jedyang97/Fast3R_ViT_Large_512
+    # 真实模型推理时启用 GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
