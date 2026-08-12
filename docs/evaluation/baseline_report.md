@@ -1,7 +1,7 @@
 # Fast3R 量化评测 Baseline 报告
 
 > 报告生成时间：2026-07-16
-> 说明：当前运行环境无法安装 PyTorch / PyTorch3D（Python 3.13 + Intel Mac 无可用 wheel），因此本阶段使用 **mock 后端** 验证评测框架与指标计算流程。真实模型评测需在具备 CUDA/torch 的环境中运行。
+> 说明：当前环境（base 为 Python 3.13，conda `Omni3D` 环境为 torch 2.2.2）**无法满足项目对 PyTorch 2.3+ 及 PyTorch3D 的依赖**（项目代码使用 `torch.nn.attention`，且 Intel Mac 无 CUDA），因此本阶段使用 **mock 后端** 验证评测框架与指标计算流程。真实模型评测需在具备 CUDA / torch 2.3+ 的环境中运行。
 
 ## 1. 评测目标
 

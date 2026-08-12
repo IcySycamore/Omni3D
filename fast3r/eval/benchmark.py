@@ -2,7 +2,7 @@
 
 支持在以下两种模式下运行：
 
-1. **mock 模式**：不依赖 PyTorch，用随机/模拟数据验证评测指标与流程。
+1. **mock 模式**：不依赖真实模型推理，用随机/模拟数据验证评测指标与流程。
 2. **model 模式**：加载 Fast3R 模型进行真实推理（需要 torch/hydra 等依赖）。
 
 典型用法：
@@ -58,7 +58,7 @@ class InferenceBackend(ABC):
 
 
 class MockInferenceBackend(InferenceBackend):
-    """模拟推理后端，用于在无 PyTorch 环境下验证评测流程。"""
+    """模拟推理后端，用于在不满足真实模型依赖的环境下验证评测流程。"""
 
     def __init__(self, num_views: int = 10, num_points: int = 1000, seed: int = 0):
         self.num_views = num_views
@@ -179,7 +179,7 @@ class BenchmarkRunner:
         else:
             raise NotImplementedError(
                 f"Backend type {backend_cfg['type']} is not implemented in this environment. "
-                "Use 'mock' for pipeline validation without PyTorch."
+                "Use 'mock' for pipeline validation when real model dependencies are unavailable."
             )
 
         data_cfg = cfg["data"]

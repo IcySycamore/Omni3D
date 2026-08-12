@@ -1,7 +1,8 @@
 """纯 NumPy 实现的相机位姿评估指标。
 
-作为 ``cam_pose_metric.py`` 的 fallback，在无法安装 PyTorch / PyTorch3D
-的运行环境中使用。输入输出约定与 ``cam_pose_metric.py`` 保持一致。
+作为 ``cam_pose_metric.py`` 的 fallback，在无法满足项目所需 PyTorch /
+PyTorch3D 版本（例如缺少 torch 2.3+ 的 ``torch.nn.attention``）的运行环境
+中使用。输入输出约定与 ``cam_pose_metric.py`` 保持一致。
 """
 
 import numpy as np
