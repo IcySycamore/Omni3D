@@ -20,6 +20,11 @@ rich            # beautiful text formatting in terminal
 pytest          # tests
 nvitop
 
+# --------- web service --------- #
+fastapi
+uvicorn[standard]
+python-multipart
+
 # --------- project core --------- #
 trimesh
 roma
