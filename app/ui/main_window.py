@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
         self.widget_3.setMinimumSize(640, 600)
         v_layout.addWidget(self.widget_3, 1)
 
-        hint = QLabel("提示：左键点击点云放置标记；「两点测距」模式下连续点击两点即可测量。")
+        hint = QLabel("提示：左键点击点云放置标记；「两点测距」模式下连续点击两点即可测量；按住中键拖拽平移")
         hint.setObjectName("hint")
         v_layout.addWidget(hint)
 
@@ -248,6 +248,10 @@ class MainWindow(QMainWindow):
             self._set_state(AppState.ERROR, "请先上传图片或视频。")
             return
 
+        if hasattr(self,'widget_3'):
+            self.widget_3.renderer.RemoveAllViewProps()
+            self.widget_3.renderer.ResetCamera()
+            self.widget_3.render_window.Render()
         self._set_state(AppState.PROCESSING)
         self.inference_worker = InferenceWorker(
             self.image_paths,
@@ -298,3 +302,11 @@ def _section_label(text):
     label = QLabel(text)
     label.setObjectName("sectionTitle")
     return label
+
+if __name__ == "__main__":
+    import sys
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
