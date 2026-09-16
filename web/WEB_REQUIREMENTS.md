@@ -1,7 +1,7 @@
 # Omni3D 网页端需求文档（Web PRD）
 
 > 用途：交给前端 AI 重新设计/实现网页主体。
-> **基准实现**：`web/index.html`（星空背景 + 玻璃拟态 + 5 页导航，含录制/拍摄/上传/AR 扫描/3D 查看/历史(含删除)/设置/帮助）。
+> **基准实现**：`web/index.html`（星空背景 + 玻璃拟态 + 6 页导航：采集/建模结果/历史/设置/帮助/账号，含录制/拍摄/上传/AR 扫描/3D 查看/测量/标尺校准/历史(含删除)/账号登录）。
 > 服务器 FastAPI `web/server.py`（端口 50865，单一来源见 server.py SERVER_PORT），已实现删除记录 API。
 
 ---
@@ -29,7 +29,8 @@ Omni3D 是一个"从手机视频/图片重建 3D 模型"的服务：
 |---|---|
 | 采集 | 主页/默认页 |
 | 建模结果 | 3D 查看与测量 |
-| 历史记录 | 服务器任务列表 |
+| 历史记录 | 服务器会话层（`/api/history`，按账号/匿名 client_id 隔离） |
+| 账号 | 登录 / 注册 / 登出 / 匿名记录并入（`/api/auth/*`） |
 | 设置 | 抽帧/相机参数/AR 桥 |
 | 帮助 | 全部说明性内容（组件功能与用法） |
 
@@ -82,9 +83,16 @@ Omni3D 是一个"从手机视频/图片重建 3D 模型"的服务：
 
 ### 3.4 历史记录页
 
-- `GET /api/tasks?limit=20` 服务器任务列表（状态图标 ✅/❌/⏳ + stage + task_id + 视图数）。
-- 已完成任务点「查看」→ 拉 `GET /api/tasks/{id}?include_result=true` → 渲染到建模结果页。
-- **删除记录**：每条任务带「删除」按钮（运行中不可删）→ 确认后 `DELETE /api/tasks/{id}` → 刷新列表。
+> **数据源已切换**：历史读 **`GET /api/history`**（服务器会话层，SQLite 持久化 +
+> 按归属隔离），与桌面端一致；不再用内存任务表 `/api/tasks`（重启即丢、且不区分归属）。
+
+- `GET /api/history?limit=20` → `{owner, sessions:[{session_id, status, num_views,
+num_points, scale, created_at, …}]}`（登录 → 账号；匿名 → `client_id`）。
+- 已完成（`status=done`）记录点「查看」→ `GET /api/history/{id}?include_points=true`
+  → 合并 `meta` 后渲染到建模结果页（`scale` 存在时自动标定为米制）。
+- **删除记录**：`DELETE /api/history/{id}` → 刷新列表。
+- 未登录时页面生成随机 `client_id`（`localStorage`）作为匿名归属；
+  登录后可在账号页**手动确认**把本机匿名记录并入账号。
 
 ### 3.5 设置页（纯设置，无说明文字）
 

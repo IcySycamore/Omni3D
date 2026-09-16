@@ -14,6 +14,8 @@ include_directories(${ARCORE_HW_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 qt_add_executable(omni3d_capture
     src/main.cpp
+    src/server_config.h
+    src/server_config.cpp
     src/sensor_reader.h
     src/sensor_reader.cpp
     src/ar_bridge_server.h

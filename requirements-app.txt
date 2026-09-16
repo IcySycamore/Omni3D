@@ -1,0 +1,19 @@
+# Omni3D 应用依赖（server + 桌面客户端）
+#
+#   pip install -r requirements-app.txt
+#
+# 注意：vendored 模型仓库的依赖见 fast3r/requirements.txt / 根 requirements.txt，
+# 本文件只列「运行 Omni3D 应用」所需的包。
+
+# ---------- server（web/） ----------
+torch>=2.0              # 必须最先导入（本机 fbgemm.dll 存在加载顺序冲突）
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart        # FastAPI 表单 / 文件上传
+numpy
+opencv-python           # 视频均匀抽帧
+
+# ---------- 桌面客户端（desktop/） ----------
+PyQt5
+vtk
+requests

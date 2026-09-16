@@ -44,8 +44,10 @@ class Task:
     extrinsics: list | None = None
     is_video: bool = False
     frame_count: int = 12
+    owner: str = "anon:default"    # 归属：user:<username> / anon:<client_id>（会话层隔离依据）
     # 结果
     result: dict | None = None
+    ply_bytes: bytes | None = None  # 二进制 PLY（不进 JSON，直接落会话目录）
 
 
 class TaskQueue:
@@ -62,7 +64,7 @@ class TaskQueue:
 
     # ---- 提交 ----
     def submit(self, files, resolution, intrinsics, extrinsics,
-               is_video=False, frame_count=12) -> Task:
+               is_video=False, frame_count=12, owner="anon:default") -> Task:
         task = Task(
             task_id=uuid.uuid4().hex[:16],
             files=files,
@@ -71,6 +73,7 @@ class TaskQueue:
             extrinsics=extrinsics,
             is_video=is_video,
             frame_count=frame_count,
+            owner=owner,
         )
         with self._lock:
             task.queue_pos = len(self._queue)
@@ -86,12 +89,34 @@ class TaskQueue:
                     return t
             return self._cache.get(task_id)
 
-    def list_recent(self, limit: int = 20) -> list[Task]:
+    def list_recent(self, limit: int = 20, owner: str | None = None) -> list[Task]:
+        """最新 N 条任务。
+
+        ``owner`` 非空时只返回该归属的任务（``user:<username>`` /
+        ``anon:<client_id>``），用于把任务列表隔离到「登录用户或匿名 client」；
+        传 None 保持旧行为（列出全部，供调试脚本使用）。
+        """
         with self._lock:
             # 运行中 + 最近的已完成
             items = list(self._queue)
             items.extend(reversed(list(self._cache.values())))
+            if owner is not None:
+                items = [t for t in items if t.owner == owner]
             return items[:limit]
+
+    def rename_owner(self, old_owner: str, new_owner: str) -> int:
+        """把内存中某归属的任务改判给另一归属（匿名 → 账号）。
+
+        与 ``SessionStore.rename_owner`` 配对使用：历史既在 SQLite（持久）
+        也在内存任务表（未重启也能看到），两边必须一起迁。
+        """
+        moved = 0
+        with self._lock:
+            for task in list(self._queue) + list(self._cache.values()):
+                if task.owner == old_owner:
+                    task.owner = new_owner
+                    moved += 1
+        return moved
 
     # ---- 删除 ----
     def remove(self, task_id: str) -> bool:

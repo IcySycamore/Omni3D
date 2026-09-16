@@ -768,6 +768,67 @@
         border: 1px solid var(--glass-border);
       }
 
+      /* ============ 账号页（登录 / 注册 / 登出 / 并入匿名记录） ============ */
+      .auth-hidden {
+        display: none !important;
+      }
+      .auth-field {
+        display: block;
+        margin-bottom: 12px;
+      }
+      .auth-field label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        letter-spacing: 0.03em;
+      }
+      .auth-field input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: var(--font-mono);
+        outline: none;
+      }
+      .auth-field input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.18);
+      }
+      .auth-account-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--glass-border);
+        margin-bottom: 12px;
+      }
+      .auth-account-name {
+        font-family: var(--font-mono);
+        color: var(--accent-cyan);
+        font-size: 0.9rem;
+      }
+      .auth-claim {
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(251, 191, 36, 0.08);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        margin-top: 12px;
+      }
+      .auth-claim p {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        line-height: 1.6;
+      }
+
       /* ============ 帮助页 ============ */
       .help-section {
         max-width: 680px;
@@ -953,6 +1014,10 @@
           <button data-page="help">
             <span class="nav-icon">❓</span> 帮助
           </button>
+          <button data-page="login">
+            <span class="nav-icon">👤</span>
+            <span id="navAccountText">登录</span>
+          </button>
         </nav>
         <div class="sidebar-ar-badge" id="sidebarARBadge">
           <span class="ar-dot disconnected" id="arDot"></span>
@@ -1114,7 +1179,9 @@
         <section class="page" id="page-history">
           <div class="glass-card">
             <h3>历史记录</h3>
-            <p class="card-subtitle">服务器重建任务列表（最近20条）</p>
+            <p class="card-subtitle">
+              我的重建历史（登录后归属账号，未登录归属本浏览器；最近 20 条）
+            </p>
             <div class="task-list" id="taskList">
               <span style="color: var(--text-muted); font-size: 0.84rem"
                 >加载中...</span
@@ -1173,6 +1240,71 @@
             <h3>AR 桥状态</h3>
             <div id="arBridgeStatusDetail">
               <span class="tag tag-muted">未连接 · 请通过 App 访问本页</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 账号页 ==================== -->
+        <section class="page" id="page-login">
+          <div class="glass-card">
+            <h3>账号</h3>
+            <p class="card-subtitle">
+              登录后，重建历史会归属到你的账号。不登录也能继续匿名使用，
+              已产生的匿名记录可在登录后手动并入账号。
+            </p>
+
+            <!-- 未登录：登录 / 注册表单 -->
+            <div id="loginForm">
+              <div class="auth-field">
+                <label for="loginUsername">用户名</label>
+                <input
+                  id="loginUsername"
+                  type="text"
+                  autocomplete="username"
+                  placeholder="3–32 位字母/数字/._-"
+                />
+              </div>
+              <div class="auth-field">
+                <label for="loginPassword">密码</label>
+                <input
+                  id="loginPassword"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="至少 8 位"
+                />
+              </div>
+              <div class="auth-field auth-hidden" id="loginPassword2Row">
+                <label for="loginPassword2">确认密码（仅注册）</label>
+                <input
+                  id="loginPassword2"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="再次输入密码"
+                />
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" id="loginBtn">登录</button>
+                <button class="btn" id="registerBtn">注册</button>
+              </div>
+              <p class="card-subtitle" style="margin-top: 10px">
+                密码不上传：本机计算摘要后与服务端做挑战-应答校验，服务器从不接触明文密码。
+              </p>
+            </div>
+
+            <!-- 已登录：账号信息 + 登出 + 并入匿名记录 -->
+            <div id="accountPanel" class="auth-hidden">
+              <div class="auth-account-row">
+                <span class="auth-account-name" id="accountName">-</span>
+                <button class="btn btn-sm btn-danger" id="logoutBtn">
+                  登出
+                </button>
+              </div>
+              <div class="auth-claim auth-hidden" id="claimRow">
+                <p id="claimText">检测到本机存在匿名记录。</p>
+                <button class="btn btn-sm btn-primary" id="claimBtn">
+                  并入当前账号
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -1392,12 +1524,12 @@
         arScanFrameCount: 0,
         // 建模结果
         resultData: null,
-        plyData: null,
         // 测量
         measureMode: false,
         measurePoints: [], // [{point: THREE.Vector3, marker: THREE.Mesh}]
         measureLine: null,
         calibrationScale: null, // null=未校准, number=缩放因子
+        scaleSource: null, // "server" | "ar" | null —— 尺度来源
         // Three.js
         viewerScene: null,
         viewerCamera: null,
@@ -1476,7 +1608,448 @@
         arBridgeStatusDetail: $("#arBridgeStatusDetail"),
         // Toast
         toastContainer: $("#toastContainer"),
+        // 账号页
+        navAccountText: $("#navAccountText"),
+        loginForm: $("#loginForm"),
+        accountPanel: $("#accountPanel"),
+        loginUsername: $("#loginUsername"),
+        loginPassword: $("#loginPassword"),
+        loginPassword2Row: $("#loginPassword2Row"),
+        loginPassword2: $("#loginPassword2"),
+        loginBtn: $("#loginBtn"),
+        registerBtn: $("#registerBtn"),
+        logoutBtn: $("#logoutBtn"),
+        accountName: $("#accountName"),
+        claimRow: $("#claimRow"),
+        claimText: $("#claimText"),
+        claimBtn: $("#claimBtn"),
       };
+
+      // ==================== SHA-256（纯 JS 实现） ====================
+      // 不用 crypto.subtle：它只在「安全上下文」可用。手机浏览器通过
+      // http://<局域网IP>:50865 访问时并非安全上下文，crypto.subtle 为
+      // undefined，会直接导致登录失效。摘要数据量极小，纯 JS 完全够用。
+      const _SHA256_K = new Uint32Array([
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
+        0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+        0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786,
+        0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
+        0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+        0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+        0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
+        0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+        0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+      ]);
+
+      const _rotr = (x, n) => ((x >>> n) | (x << (32 - n))) >>> 0;
+
+      function sha256Hex(message) {
+        const msg = new TextEncoder().encode(message);
+        const len = msg.length;
+        // 填充：0x80 + 若干 0 + 8 字节大端长度 → 向上取整到 64 字节的整数倍
+        const total = ((len + 9 + 63) >> 6) << 6;
+        const buf = new Uint8Array(total);
+        buf.set(msg);
+        buf[len] = 0x80;
+        const view = new DataView(buf.buffer);
+        const bits = len * 8;
+        view.setUint32(total - 8, Math.floor(bits / 0x100000000));
+        view.setUint32(total - 4, bits >>> 0);
+
+        const H = new Uint32Array([
+          0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f,
+          0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+        ]);
+        const w = new Uint32Array(64);
+
+        for (let off = 0; off < total; off += 64) {
+          for (let i = 0; i < 16; i++) w[i] = view.getUint32(off + i * 4);
+          for (let i = 16; i < 64; i++) {
+            const s0 =
+              _rotr(w[i - 15], 7) ^ _rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+            const s1 =
+              _rotr(w[i - 2], 17) ^ _rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+            w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+          }
+          let a = H[0],
+            b = H[1],
+            c = H[2],
+            d = H[3];
+          let e = H[4],
+            f = H[5],
+            g = H[6],
+            h = H[7];
+          for (let i = 0; i < 64; i++) {
+            const S1 = _rotr(e, 6) ^ _rotr(e, 11) ^ _rotr(e, 25);
+            const ch = (e & f) ^ (~e & g);
+            const t1 = (h + S1 + ch + _SHA256_K[i] + w[i]) >>> 0;
+            const S0 = _rotr(a, 2) ^ _rotr(a, 13) ^ _rotr(a, 22);
+            const maj = (a & b) ^ (a & c) ^ (b & c);
+            const t2 = (S0 + maj) >>> 0;
+            h = g;
+            g = f;
+            f = e;
+            e = (d + t1) >>> 0;
+            d = c;
+            c = b;
+            b = a;
+            a = (t1 + t2) >>> 0;
+          }
+          H[0] = (H[0] + a) >>> 0;
+          H[1] = (H[1] + b) >>> 0;
+          H[2] = (H[2] + c) >>> 0;
+          H[3] = (H[3] + d) >>> 0;
+          H[4] = (H[4] + e) >>> 0;
+          H[5] = (H[5] + f) >>> 0;
+          H[6] = (H[6] + g) >>> 0;
+          H[7] = (H[7] + h) >>> 0;
+        }
+        return [...H].map((x) => x.toString(16).padStart(8, "0")).join("");
+      }
+
+      // ==================== 身份：client_id 与登录令牌 ====================
+      // 本页由服务器**同源**提供，所以页面里没有「服务器地址」概念；
+      // 登录后所有同源 API 调用会自动带上 X-Auth-Token。
+      const LS_CLIENT_ID = "omni3d.client_id";
+      const LS_TOKEN = "omni3d.token";
+
+      function readLS(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function writeLS(key, value) {
+        try {
+          if (value === null || value === undefined)
+            localStorage.removeItem(key);
+          else localStorage.setItem(key, value);
+        } catch (_) {
+          /* 隐私模式/存储受限：静默降级为「不持久化」 */
+        }
+      }
+
+      function randomId() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        const bytes = new Uint8Array(16);
+        if (window.crypto && crypto.getRandomValues) {
+          crypto.getRandomValues(bytes);
+        } else {
+          for (let i = 0; i < 16; i++)
+            bytes[i] = Math.floor(Math.random() * 256);
+        }
+        return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // 匿名身份：随机 client_id 并持久化（刷新后仍是同一个匿名桶）
+      const CLIENT_ID = (() => {
+        let id = readLS(LS_CLIENT_ID);
+        if (!id) {
+          id = randomId();
+          writeLS(LS_CLIENT_ID, id);
+        }
+        return id;
+      })();
+
+      const Auth = { token: readLS(LS_TOKEN), username: null };
+
+      function setToken(token, username) {
+        Auth.token = token || null;
+        Auth.username = username || null;
+        writeLS(LS_TOKEN, Auth.token);
+      }
+
+      // 与服务端 auth_store.py 中的常量保持一致（仅用于即时提示）
+      const USERNAME_MIN = 3,
+        USERNAME_MAX = 32,
+        PASSWORD_MIN = 8,
+        USERNAME_RE = /^[A-Za-z0-9_.\-]+$/;
+
+      function validateUsernameLocal(u) {
+        if (!u) return "用户名不能为空";
+        if (u.length < USERNAME_MIN || u.length > USERNAME_MAX)
+          return `用户名长度需为 ${USERNAME_MIN}–${USERNAME_MAX} 个字符`;
+        if (!USERNAME_RE.test(u))
+          return "用户名只能包含字母、数字、下划线、点或连字符";
+        return null;
+      }
+
+      function validatePasswordLocal(p) {
+        if (!p) return "密码不能为空";
+        if (p.length < PASSWORD_MIN) return `密码至少 ${PASSWORD_MIN} 个字符`;
+        if (!p.trim()) return "密码不能全为空白字符";
+        return null;
+      }
+
+      // ==================== 统一 fetch 拦截器 ====================
+      // 1) 仅对**同源**请求附加 X-Auth-Token；
+      //    本机 AR 桥（http://127.0.0.1:50687）是跨源，绝不能被带上 token；
+      // 2) 同源 GET/DELETE 自动补 client_id；同源 FormData 自动补 client_id；
+      // 3) 同源 401（且确实带了 token）→ 全局登出并提示重登。
+      const SERVER_ORIGIN = window.location.origin;
+      const nativeFetch = window.fetch.bind(window);
+
+      function isSameOrigin(url) {
+        try {
+          return new URL(url, window.location.href).origin === SERVER_ORIGIN;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function withClientId(url) {
+        // /api/auth/* 自身就是身份接口，不需要匿名 client_id
+        if (!url.startsWith("/api/") || url.startsWith("/api/auth/"))
+          return url;
+        if (/[?&]client_id=/.test(url)) return url;
+        return (
+          url +
+          (url.includes("?") ? "&" : "?") +
+          "client_id=" +
+          encodeURIComponent(CLIENT_ID)
+        );
+      }
+
+      let authExpiredHandling = false;
+
+      function onAuthExpired() {
+        if (authExpiredHandling) return;
+        authExpiredHandling = true;
+        setToken(null, null);
+        renderAccountUI();
+        showToast("登录状态已过期，请重新登录", "error");
+        setTimeout(() => {
+          authExpiredHandling = false;
+        }, 1500);
+      }
+
+      window.fetch = async function (input, init) {
+        const rawUrl =
+          typeof input === "string" ? input : (input && input.url) || "";
+        if (!isSameOrigin(rawUrl)) return nativeFetch(input, init);
+
+        const isRequest = typeof input !== "string" && input instanceof Request;
+        const method = (
+          (init && init.method) ||
+          (isRequest ? input.method : "GET") ||
+          "GET"
+        ).toUpperCase();
+
+        const opts = Object.assign({}, init);
+        // 表单上传（重建提交）补 client_id
+        if (opts.body instanceof FormData && !opts.body.has("client_id")) {
+          opts.body.append("client_id", CLIENT_ID);
+        }
+        // GET/DELETE 用查询参数补 client_id
+        let target = input;
+        if (method === "GET" || method === "DELETE") {
+          target = withClientId(rawUrl);
+        }
+
+        const headers = new Headers(
+          (init && init.headers) || (isRequest ? input.headers : undefined),
+        );
+        if (Auth.token && !headers.has("X-Auth-Token")) {
+          headers.set("X-Auth-Token", Auth.token);
+        }
+        opts.headers = headers;
+
+        const resp = await nativeFetch(target, opts);
+        if (resp.status === 401 && Auth.token) onAuthExpired();
+        return resp;
+      };
+
+      // ==================== 账号逻辑 ====================
+      async function jsonPost(path, payload) {
+        const resp = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        let data = {};
+        try {
+          data = await resp.json();
+        } catch (_) {
+          /* 非 JSON 响应 */
+        }
+        if (!resp.ok)
+          throw new Error(data.error || `请求失败（HTTP ${resp.status}）`);
+        return data;
+      }
+
+      async function doLogin(username, password) {
+        const ch = await jsonPost("/api/auth/challenge", { username });
+        const verifier = sha256Hex(ch.salt + password);
+        const proof = sha256Hex(ch.nonce + verifier);
+        const out = await jsonPost("/api/auth/login", {
+          username,
+          nonce: ch.nonce,
+          proof,
+        });
+        setToken(out.token, out.username);
+        return out;
+      }
+
+      async function doRegister(username, password) {
+        const { salt } = await jsonPost("/api/auth/salt", { username });
+        const verifier = sha256Hex(salt + password);
+        await jsonPost("/api/auth/register", { username, salt, verifier });
+        return doLogin(username, password);
+      }
+
+      async function restoreSession() {
+        if (!Auth.token) {
+          renderAccountUI();
+          return;
+        }
+        try {
+          const resp = await fetch("/api/auth/me");
+          if (!resp.ok) throw new Error("token 已失效");
+          const data = await resp.json();
+          Auth.username = data.username;
+        } catch (_) {
+          setToken(null, null);
+        }
+        renderAccountUI();
+      }
+
+      function renderAccountUI() {
+        const logged = !!(Auth.token && Auth.username);
+        dom.loginForm.classList.toggle("auth-hidden", logged);
+        dom.accountPanel.classList.toggle("auth-hidden", !logged);
+        dom.navAccountText.textContent = logged ? Auth.username : "登录";
+        if (logged) {
+          dom.accountName.textContent = Auth.username;
+          refreshAnonPreview();
+        } else {
+          dom.claimRow.classList.add("auth-hidden");
+        }
+      }
+
+      // 匿名记录并入采用**手动确认**：同一设备换账号登录时不会把别人的记录带走
+      async function refreshAnonPreview() {
+        try {
+          const resp = await fetch(
+            `/api/auth/claim/preview?client_id=${encodeURIComponent(CLIENT_ID)}`,
+          );
+          if (!resp.ok) {
+            dom.claimRow.classList.add("auth-hidden");
+            return;
+          }
+          const data = await resp.json();
+          if (data.count > 0) {
+            dom.claimText.textContent = `检测到本机有 ${data.count} 条匿名记录，是否并入当前账号？`;
+            dom.claimRow.classList.remove("auth-hidden");
+          } else {
+            dom.claimRow.classList.add("auth-hidden");
+          }
+        } catch (_) {
+          dom.claimRow.classList.add("auth-hidden");
+        }
+      }
+
+      let registerMode = false;
+
+      function setRegisterMode(on) {
+        registerMode = on;
+        dom.loginPassword2Row.classList.toggle("auth-hidden", !on);
+        dom.loginBtn.textContent = on ? "注册并登录" : "登录";
+        dom.registerBtn.textContent = on ? "返回登录" : "注册";
+        dom.loginPassword2.value = "";
+      }
+
+      dom.registerBtn.addEventListener("click", () =>
+        setRegisterMode(!registerMode),
+      );
+
+      dom.loginBtn.addEventListener("click", async () => {
+        const username = dom.loginUsername.value.trim();
+        const password = dom.loginPassword.value;
+        const uErr = validateUsernameLocal(username);
+        if (uErr) {
+          showToast(uErr, "error");
+          return;
+        }
+        const pErr = validatePasswordLocal(password);
+        if (pErr) {
+          showToast(pErr, "error");
+          return;
+        }
+        if (registerMode) {
+          if (password !== dom.loginPassword2.value) {
+            showToast("两次输入的密码不一致", "error");
+            return;
+          }
+          if (
+            !confirm(
+              `确定注册新账号「${username}」吗？\n密码一旦遗忘无法找回。`,
+            )
+          )
+            return;
+        }
+
+        dom.loginBtn.disabled = true;
+        try {
+          if (registerMode) await doRegister(username, password);
+          else await doLogin(username, password);
+          dom.loginPassword.value = "";
+          dom.loginPassword2.value = "";
+          setRegisterMode(false);
+          showToast(`已登录：${Auth.username}`, "success");
+          renderAccountUI();
+          loadTaskList();
+        } catch (err) {
+          showToast(
+            (registerMode ? "注册失败：" : "登录失败：") + err.message,
+            "error",
+          );
+        } finally {
+          dom.loginBtn.disabled = false;
+        }
+      });
+
+      dom.logoutBtn.addEventListener("click", async () => {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch (_) {
+          /* 服务端不可达也要本地登出 */
+        }
+        setToken(null, null);
+        renderAccountUI();
+        showToast("已登出", "success");
+        loadTaskList();
+      });
+
+      dom.claimBtn.addEventListener("click", async () => {
+        dom.claimBtn.disabled = true;
+        try {
+          const resp = await fetch(
+            `/api/auth/claim?client_id=${encodeURIComponent(CLIENT_ID)}`,
+            { method: "POST" },
+          );
+          let data = {};
+          try {
+            data = await resp.json();
+          } catch (_) {
+            /* ignore */
+          }
+          if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+          showToast(`已并入 ${data.moved || 0} 条记录`, "success");
+          dom.claimRow.classList.add("auth-hidden");
+          loadTaskList();
+        } catch (err) {
+          showToast("并入失败：" + err.message, "error");
+        } finally {
+          dom.claimBtn.disabled = false;
+        }
+      });
+
+      // 启动时复验 token：失效则自动清除（由拦截器提示）
+      restoreSession();
 
       // ==================== Toast ====================
       function showToast(msg, type = "") {
@@ -2511,7 +3084,6 @@
               dom.stageText.textContent = "✅ 完成！";
               dom.progressBar.style.width = "100%";
               STATE.resultData = data.result || null;
-              STATE.plyData = data.result?.ply || null;
               // 延迟清空进度条
               setTimeout(() => {
                 dom.progressContainer.classList.add("hidden");
@@ -2653,99 +3225,14 @@
           STATE.viewerPointCloud = null;
         }
         clearMeasurementVisuals();
-        const points = resultData.points;
-        if (!points || points.length === 0) {
-          showToast("点云数据为空", "error");
+        const decoded = decodePointCloud(resultData.points);
+        if (!decoded) {
+          showToast("点云数据为空或格式无法识别", "error");
           return;
         }
-        // 兼容两种数据格式：
-        //  A. 嵌套 [[x,y,z],...] 或 [[x,y,z,r,g,b],...]（服务器 _collect_points 实际格式）
-        //  B. 扁平 [x,y,z,...] 或 [x,y,z,r,g,b,...]
-        const first = points[0];
-        let positions, colors;
-        if (Array.isArray(first)) {
-          // ---- 嵌套格式 ----
-          const per = first.length; // 3 或 6
-          const n = points.length;
-          positions = new Float32Array(n * 3);
-          colors = new Float32Array(n * 3);
-          if (per >= 6) {
-            for (let i = 0; i < n; i++) {
-              const p = points[i];
-              positions[i * 3] = p[0];
-              positions[i * 3 + 1] = p[1];
-              positions[i * 3 + 2] = p[2];
-              colors[i * 3] = p[3] / 255;
-              colors[i * 3 + 1] = p[4] / 255;
-              colors[i * 3 + 2] = p[5] / 255;
-            }
-          } else {
-            let yMin = Infinity,
-              yMax = -Infinity;
-            for (let i = 0; i < n; i++) {
-              const y = points[i][1];
-              if (y < yMin) yMin = y;
-              if (y > yMax) yMax = y;
-            }
-            const yRange = yMax - yMin || 1;
-            for (let i = 0; i < n; i++) {
-              const p = points[i];
-              positions[i * 3] = p[0];
-              positions[i * 3 + 1] = p[1];
-              positions[i * 3 + 2] = p[2];
-              const c = heightColor((p[1] - yMin) / yRange);
-              colors[i * 3] = c[0];
-              colors[i * 3 + 1] = c[1];
-              colors[i * 3 + 2] = c[2];
-            }
-          }
-          STATE.resultData._pointCount = n;
-        } else {
-          // ---- 扁平格式（服务器也兼容：把嵌套展平）----
-          const numPoints = points.length;
-          let flat = points;
-          // 若扁平且不是 3/6 的倍数但元素本身是嵌套 → 展平
-          if (numPoints % 6 !== 0 && numPoints % 3 !== 0) {
-            showToast("点云数据格式无法识别", "error");
-            return;
-          }
-          if (numPoints % 6 === 0) {
-            const n = numPoints / 6;
-            positions = new Float32Array(n * 3);
-            colors = new Float32Array(n * 3);
-            for (let i = 0; i < n; i++) {
-              positions[i * 3] = flat[i * 6];
-              positions[i * 3 + 1] = flat[i * 6 + 1];
-              positions[i * 3 + 2] = flat[i * 6 + 2];
-              colors[i * 3] = flat[i * 6 + 3] / 255;
-              colors[i * 3 + 1] = flat[i * 6 + 4] / 255;
-              colors[i * 3 + 2] = flat[i * 6 + 5] / 255;
-            }
-            STATE.resultData._pointCount = n;
-          } else {
-            const n = numPoints / 3;
-            positions = new Float32Array(n * 3);
-            colors = new Float32Array(n * 3);
-            let yMin = Infinity,
-              yMax = -Infinity;
-            for (let i = 0; i < n; i++) {
-              const y = flat[i * 3 + 1];
-              if (y < yMin) yMin = y;
-              if (y > yMax) yMax = y;
-            }
-            const yRange = yMax - yMin || 1;
-            for (let i = 0; i < n; i++) {
-              positions[i * 3] = flat[i * 3];
-              positions[i * 3 + 1] = flat[i * 3 + 1];
-              positions[i * 3 + 2] = flat[i * 3 + 2];
-              const c = heightColor((flat[i * 3 + 1] - yMin) / yRange);
-              colors[i * 3] = c[0];
-              colors[i * 3 + 1] = c[1];
-              colors[i * 3 + 2] = c[2];
-            }
-            STATE.resultData._pointCount = n;
-          }
-        }
+        let positions = decoded.positions;
+        let colors = decoded.colors;
+        STATE.resultData._pointCount = decoded.count;
         // 融合华为 SLAM 稀疏点云（世界坐标·真实尺度，与服务器模型同一坐标帧；
         // 用亮黄色区分，扩充服务器重建的稀疏区域/精度）
         if (
@@ -2808,16 +3295,100 @@
           resultData.elapsed_s != null
             ? Number(resultData.elapsed_s).toFixed(1)
             : "-";
-        // 标尺校准条（AR 有真实尺度时隐藏，否则显示供标尺校准）
-        const hasRealArScale =
-          STATE.arScanFrames?.scale && STATE.arScanFrames.scale !== 1;
-        dom.calibrationBar.style.display = hasRealArScale ? "none" : "flex";
-        STATE.calibrationScale = hasRealArScale
-          ? STATE.arScanFrames.scale
-          : null;
+        // 真实尺度来源：优先服务器按 AR 位姿对齐的结果（result.scale），
+        // 其次 AR 桥上报的 scale。有真实尺度时隐藏标尺校准条。
+        const serverScale =
+          resultData.scale && resultData.scale !== 1 ? resultData.scale : null;
+        const arScale =
+          STATE.arScanFrames?.scale && STATE.arScanFrames.scale !== 1
+            ? STATE.arScanFrames.scale
+            : null;
+        const realScale = serverScale || arScale;
+        dom.calibrationBar.style.display = realScale ? "none" : "flex";
+        STATE.calibrationScale = realScale;
+        STATE.scaleSource = serverScale ? "server" : arScale ? "ar" : null;
         updateCalibrationUI();
         STATE.measurePoints = [];
         STATE.measureLine = null;
+      }
+
+      // ==================== 点云解码（纯函数，便于测试） ====================
+      // 服务器返回的点云有两种形态，统一解码成 three.js 需要的 Float32Array：
+      //   A. 嵌套 [[x,y,z], ...] 或 [[x,y,z,r,g,b], ...]  ← 服务器现在默认给后者
+      //   B. 扁平 [x,y,z,...] 或 [x,y,z,r,g,b,...]
+      // 没有 RGB 时退回「按高度着色」，保证任何输入都有可读的渲染结果。
+      function decodePointCloud(points) {
+        if (!points || points.length === 0) return null;
+
+        const first = points[0];
+        if (Array.isArray(first)) {
+          // ---- A. 嵌套格式 ----
+          const per = first.length; // 3 或 6
+          const n = points.length;
+          const positions = new Float32Array(n * 3);
+          const colors = new Float32Array(n * 3);
+          if (per >= 6) {
+            for (let i = 0; i < n; i++) {
+              const p = points[i];
+              positions[i * 3] = p[0];
+              positions[i * 3 + 1] = p[1];
+              positions[i * 3 + 2] = p[2];
+              colors[i * 3] = p[3] / 255;
+              colors[i * 3 + 1] = p[4] / 255;
+              colors[i * 3 + 2] = p[5] / 255;
+            }
+            return { positions, colors, count: n, hasRgb: true };
+          }
+          fillHeightColors(positions, colors, (i, k) => points[i][k]);
+          return { positions, colors, count: n, hasRgb: false };
+        }
+
+        // ---- B. 扁平格式 ----
+        const total = points.length;
+        if (total % 6 !== 0 && total % 3 !== 0) return null;
+        if (total % 6 === 0) {
+          // 6 元素优先（旧行为保持一致）
+          const n = total / 6;
+          const positions = new Float32Array(n * 3);
+          const colors = new Float32Array(n * 3);
+          for (let i = 0; i < n; i++) {
+            positions[i * 3] = points[i * 6];
+            positions[i * 3 + 1] = points[i * 6 + 1];
+            positions[i * 3 + 2] = points[i * 6 + 2];
+            colors[i * 3] = points[i * 6 + 3] / 255;
+            colors[i * 3 + 1] = points[i * 6 + 4] / 255;
+            colors[i * 3 + 2] = points[i * 6 + 5] / 255;
+          }
+          return { positions, colors, count: n, hasRgb: true };
+        }
+        const n = total / 3;
+        const positions = new Float32Array(n * 3);
+        const colors = new Float32Array(n * 3);
+        fillHeightColors(positions, colors, (i, k) => points[i * 3 + k]);
+        return { positions, colors, count: n, hasRgb: false };
+      }
+
+      // 无 RGB 时的回退着色：按 Y 高度映射为蓝 → 白渐变
+      function fillHeightColors(positions, colors, get) {
+        const n = positions.length / 3;
+        let yMin = Infinity;
+        let yMax = -Infinity;
+        for (let i = 0; i < n; i++) {
+          const y = get(i, 1);
+          if (y < yMin) yMin = y;
+          if (y > yMax) yMax = y;
+        }
+        const yRange = yMax - yMin || 1;
+        for (let i = 0; i < n; i++) {
+          const y = get(i, 1);
+          positions[i * 3] = get(i, 0);
+          positions[i * 3 + 1] = y;
+          positions[i * 3 + 2] = get(i, 2);
+          const c = heightColor((y - yMin) / yRange);
+          colors[i * 3] = c[0];
+          colors[i * 3 + 1] = c[1];
+          colors[i * 3 + 2] = c[2];
+        }
       }
 
       function heightColor(t) {
@@ -3042,11 +3613,18 @@
       }
 
       function updateCalibrationUI() {
-        if (STATE.calibrationScale) {
-          dom.calResult.textContent = `已校准 · 缩放因子: ${STATE.calibrationScale.toFixed(4)}`;
-        } else {
+        if (!STATE.calibrationScale) {
           dom.calResult.textContent = "";
+          return;
         }
+        const factor = STATE.calibrationScale.toFixed(4);
+        const src =
+          STATE.scaleSource === "server"
+            ? "服务器按 AR 位姿对齐"
+            : STATE.scaleSource === "ar"
+              ? "AR 位姿"
+              : "标尺校准";
+        dom.calResult.textContent = `已标定（${src}）· 缩放因子: ${factor}`;
       }
 
       dom.toggleMeasureBtn.addEventListener("click", () => {
@@ -3147,7 +3725,7 @@
         showToast("标尺已重置");
       });
 
-      // 把华为 SLAM 点云合并进服务器 PLY（ASCII/binary_little_endian 通用）
+      // 把华为 SLAM 点云合并进服务器 PLY（ASCII / binary_little_endian 通用）
       async function mergeHuaweiIntoPly(blob, huaweiPoints) {
         if (!huaweiPoints || !huaweiPoints.length) return blob;
         try {
@@ -3159,10 +3737,11 @@
           const endIdx = head.indexOf("end_header");
           if (endIdx < 0) return blob; // 非标准 PLY，跳过合并
           const lines = head.slice(0, endIdx).split("\n");
-          let format = "ascii",
-            vertexCount = 0,
-            props = [],
-            inVertex = false;
+
+          let format = "ascii";
+          let vertexCount = 0;
+          let inVertex = false;
+          let props = []; // [{ type, name }]
           for (const raw of lines) {
             const t = raw.trim();
             if (!t) continue;
@@ -3172,26 +3751,33 @@
               inVertex = true;
               props = [];
             } else if (t.startsWith("element ")) inVertex = false;
-            else if (inVertex && t.startsWith("property "))
-              props.push(t.split(/\s+/)[2]);
+            else if (inVertex && t.startsWith("property ")) {
+              const parts = t.split(/\s+/); // property <type> <name>
+              if (parts.length >= 3)
+                props.push({ type: parts[1], name: parts[2] });
+            }
           }
           if (!vertexCount || vertexCount > 5000000) return blob;
-          const xi = props.indexOf("x"),
-            yi = props.indexOf("y"),
-            zi = props.indexOf("z");
+
+          const xi = props.findIndex((p) => p.name === "x");
+          const yi = props.findIndex((p) => p.name === "y");
+          const zi = props.findIndex((p) => p.name === "z");
           if (xi < 0 || yi < 0 || zi < 0) return blob;
+          const ri = props.findIndex((p) => p.name === "red");
+          const gi = props.findIndex((p) => p.name === "green");
+          const bi = props.findIndex((p) => p.name === "blue");
+
           const add = huaweiPoints.length;
-          // 新头
-          let newHeader = "";
-          for (const raw of lines) {
-            let t = raw;
-            if (t.startsWith("element vertex "))
-              t = `element vertex ${vertexCount + add}`;
-            newHeader += t + "\n";
-          }
-          newHeader += "end_header\n";
+          // 头按原字节重建，只改点数 —— 避免空白/换行漂移导致二进制错位
           const bodyStart = endIdx + "end_header".length + 1;
+          const newHeader = head
+            .slice(0, bodyStart)
+            .replace(
+              /element vertex \d+/,
+              `element vertex ${vertexCount + add}`,
+            );
           const body = bytes.subarray(bodyStart);
+
           let extra;
           if (format === "ascii") {
             let s = "";
@@ -3200,31 +3786,65 @@
               vals[xi] = p[0].toFixed(6);
               vals[yi] = p[1].toFixed(6);
               vals[zi] = p[2].toFixed(6);
+              if (ri >= 0) vals[ri] = "255";
+              if (gi >= 0) vals[gi] = "255";
+              if (bi >= 0) vals[bi] = "0";
               s += vals.join(" ") + "\n";
             }
             extra = new TextEncoder().encode(s);
           } else {
-            const stride = props.length * 4;
+            // 二进制：stride/偏移必须按属性**类型**算，不能一律按 float32
+            const SIZE = {
+              char: 1,
+              uchar: 1,
+              int8: 1,
+              uint8: 1,
+              short: 2,
+              ushort: 2,
+              int16: 2,
+              uint16: 2,
+              int: 4,
+              uint: 4,
+              int32: 4,
+              uint32: 4,
+              float: 4,
+              float32: 4,
+              double: 8,
+              float64: 8,
+            };
+            const offsets = [];
+            let stride = 0;
+            for (const q of props) {
+              const sz = SIZE[q.type];
+              if (!sz) return blob; // 出现不认识的类型 → 放弃合并，返回原始 PLY
+              offsets.push(stride);
+              stride += sz;
+            }
             extra = new ArrayBuffer(add * stride);
             const dv = new DataView(extra);
+            const writeCoord = (dst, prop, value) => {
+              if (prop.type === "double" || prop.type === "float64")
+                dv.setFloat64(dst, value, true);
+              else dv.setFloat32(dst, value, true);
+            };
             for (let i = 0; i < add; i++) {
-              dv.setFloat32(i * stride + xi * 4, huaweiPoints[i][0], true);
-              dv.setFloat32(i * stride + yi * 4, huaweiPoints[i][1], true);
-              dv.setFloat32(i * stride + zi * 4, huaweiPoints[i][2], true);
+              const base = i * stride;
+              writeCoord(base + offsets[xi], props[xi], huaweiPoints[i][0]);
+              writeCoord(base + offsets[yi], props[yi], huaweiPoints[i][1]);
+              writeCoord(base + offsets[zi], props[zi], huaweiPoints[i][2]);
+              if (ri >= 0) dv.setUint8(base + offsets[ri], 255);
+              if (gi >= 0) dv.setUint8(base + offsets[gi], 255);
+              if (bi >= 0) dv.setUint8(base + offsets[bi], 0);
             }
           }
-          const out = new Uint8Array(
-            new TextEncoder().encode(newHeader).length +
-              body.length +
-              extra.byteLength,
-          );
-          let o = 0;
+
           const he = new TextEncoder().encode(newHeader);
-          out.set(he, o);
-          o += he.length;
-          out.set(body, o);
-          o += body.length;
-          out.set(new Uint8Array(extra), o);
+          const out = new Uint8Array(
+            he.length + body.length + extra.byteLength,
+          );
+          out.set(he, 0);
+          out.set(body, he.length);
+          out.set(new Uint8Array(extra), he.length + body.length);
           return new Blob([out], { type: "application/octet-stream" });
         } catch {
           return blob;
@@ -3254,34 +3874,23 @@
           return;
         }
         try {
-          let plyData = STATE.plyData;
-          if (!plyData && STATE.currentTaskId) {
-            const resp = await fetch(
-              `/api/tasks/${STATE.currentTaskId}?include_result=true`,
-            );
-            const data = await resp.json();
-            plyData = data.result?.ply;
-          }
-          if (!plyData) {
-            showToast("PLY 数据不可用", "error");
+          const sid = STATE.currentTaskId;
+          if (!sid) {
+            showToast("该结果还没有服务器存档，无法下载 PLY", "error");
             return;
           }
-          // plyData可能是base64字符串或URL
-          let blob;
-          if (typeof plyData === "string" && plyData.startsWith("http")) {
-            const resp = await fetch(plyData);
-            blob = await resp.blob();
-          } else if (typeof plyData === "string") {
-            // base64
-            const byteStr = atob(plyData);
-            const bytes = new Uint8Array(byteStr.length);
-            for (let i = 0; i < byteStr.length; i++)
-              bytes[i] = byteStr.charCodeAt(i);
-            blob = new Blob([bytes], { type: "application/octet-stream" });
-          } else {
-            blob = new Blob([JSON.stringify(plyData)], {
-              type: "application/octet-stream",
-            });
+          // PLY 一律走服务器文件接口：**二进制、全量点云 + 真实 RGB**。
+          // 不再从 JSON 的 ply 字段拼装 —— 百万点的 ASCII PLY 会让响应体
+          // 膨胀到几十 MB，手机端解析直接卡死。
+          const resp = await fetch(`/api/history/${sid}/ply`);
+          if (!resp.ok) {
+            showToast(`PLY 不可用（HTTP ${resp.status}）`, "error");
+            return;
+          }
+          let blob = await resp.blob();
+          if (!blob || blob.size === 0) {
+            showToast("PLY 数据不可用", "error");
+            return;
           }
           // 融合开关打开 → 把华为点云合并进 PLY 一起下载
           if (
@@ -3320,42 +3929,53 @@
       });
 
       // ==================== 历史记录 ====================
+      // 数据源是服务器**会话层** /api/history：
+      //  - 按归属隔离（登录用户 → 其账号；匿名 → client_id）
+      //  - SQLite 持久化（重启不丢），与桌面客户端完全一致
+      // 不再用内存任务表 /api/tasks（重启即丢、且不区分归属）。
+      function formatTime(ts) {
+        if (!ts) return "-";
+        const d = new Date(Number(ts) * 1000);
+        const p = (n) => String(n).padStart(2, "0");
+        return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+
       async function loadTaskList() {
         dom.taskList.innerHTML =
           '<span style="color:var(--text-muted);font-size:0.84rem;">加载中...</span>';
         try {
-          const resp = await fetch("/api/tasks?limit=20");
+          const resp = await fetch("/api/history?limit=20");
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           const data = await resp.json();
-          // 服务器返回 {tasks: [...]}
-          const tasks = Array.isArray(data) ? data : data.tasks || [];
-          if (tasks.length === 0) {
+          const sessions = data.sessions || [];
+          if (sessions.length === 0) {
             dom.taskList.innerHTML =
               '<span style="color:var(--text-muted);font-size:0.84rem;">暂无历史记录</span>';
             return;
           }
-          dom.taskList.innerHTML = tasks
-            .map((t) => {
+          dom.taskList.innerHTML = sessions
+            .map((s) => {
               const statusIcon =
-                t.status === "done"
+                s.status === "done"
                   ? "✅"
-                  : t.status === "failed"
+                  : s.status === "failed"
                     ? "❌"
                     : "⏳";
-              const stageText = t.stage || t.status || "未知";
               const viewsText =
-                t.result?.num_views != null
-                  ? ` · ${t.result.num_views} 视图`
-                  : "";
-              const canDelete = t.status !== "running"; // 运行中不可删
+                s.num_views != null ? ` · ${s.num_views} 视图` : "";
+              const scaleText = s.scale
+                ? ` · scale=${Number(s.scale).toPrecision(3)}`
+                : "";
+              const sid = s.session_id || "-";
               return `
                 <div class="task-item">
                   <span class="task-status-icon">${statusIcon}</span>
                   <div class="task-info">
-                    <span>${stageText}${viewsText}</span>
-                    <div class="task-id">${t.task_id || "-"}</div>
+                    <span>${formatTime(s.created_at)}${viewsText}${scaleText}</span>
+                    <div class="task-id">${sid}</div>
                   </div>
-                  ${t.status === "done" ? `<button class="btn btn-xs btn-primary view-task-btn" data-task-id="${t.task_id}">查看</button>` : ""}
-                  ${canDelete ? `<button class="btn btn-xs btn-danger del-task-btn" data-task-id="${t.task_id}">删除</button>` : ""}
+                  ${s.status === "done" ? `<button class="btn btn-xs btn-primary view-task-btn" data-task-id="${sid}">查看</button>` : ""}
+                  <button class="btn btn-xs btn-danger del-task-btn" data-task-id="${sid}">删除</button>
                 </div>`;
             })
             .join("");
@@ -3380,9 +4000,9 @@
       }
 
       async function deleteTask(taskId) {
-        if (!confirm(`确定删除任务 ${taskId} 吗？`)) return;
+        if (!confirm(`确定删除历史 ${taskId} 吗？`)) return;
         try {
-          const resp = await fetch(`/api/tasks/${taskId}`, {
+          const resp = await fetch(`/api/history/${taskId}`, {
             method: "DELETE",
           });
           const data = await resp.json();
@@ -3400,18 +4020,20 @@
       async function viewTask(taskId) {
         try {
           showToast("加载中...");
-          const resp = await fetch(`/api/tasks/${taskId}?include_result=true`);
-          const data = await resp.json();
-          if (data.status === "done" && data.result) {
-            STATE.resultData = data.result;
-            STATE.plyData = data.result?.ply || null;
-            STATE.currentTaskId = taskId;
-            navigateTo("viewer");
-            renderPointCloud(STATE.resultData);
-            showToast("已加载历史任务", "success");
-          } else {
-            showToast("该任务尚未完成或数据不可用", "error");
-          }
+          const resp = await fetch(
+            `/api/history/${taskId}?include_points=true`,
+          );
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const sess = await resp.json();
+          const meta = sess.meta || {};
+          // meta 里保存了重建结果的其他字段（ply/intrinsics/quality…）
+          STATE.resultData = Object.assign({}, meta, sess, {
+            points: sess.points || [],
+          });
+          STATE.currentTaskId = sess.session_id || taskId;
+          navigateTo("viewer");
+          renderPointCloud(STATE.resultData);
+          showToast("已加载历史任务", "success");
         } catch (err) {
           showToast("加载失败：" + err.message, "error");
         }

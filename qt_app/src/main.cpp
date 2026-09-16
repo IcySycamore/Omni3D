@@ -19,6 +19,7 @@
 #include "ar_scan_controller.h"
 #include "ar_scan_preview.h"
 #include "hw_ar_engine_session.h"
+#include "server_config.h"
 
 #ifdef Q_OS_ANDROID
 #include <android/log.h>
@@ -190,6 +191,9 @@ int main(int argc, char *argv[])
             return ArScanController::instance();
         });
     qmlRegisterType<ArScanPreview>("Omni3D", 1, 0, "ArScanPreview");
+    // 服务器地址配置（WebShell 顶部 ⚙）：地址填错时页面加载不出来，
+    // 必须有一个不依赖网页的原生入口才能改回来
+    qmlRegisterType<ServerConfig>("Omni3D", 1, 0, "ServerConfig");
 
     // 本地 HTTP 桥（AR 位姿 + 历史持久化）；端口避开 50685/50686
     const bool bridgeOk = ArBridgeServer::instance()->start(50687);
