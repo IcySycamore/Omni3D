@@ -124,13 +124,13 @@ num_points, scale, created_at, …}]}`（登录 → 账号；匿名 → `client_
 
 ## 5. 服务器 API（FastAPI，本机 127.0.0.1:50865，已实现勿改）
 
-| 接口                                      | 说明                                                                                                                                                                                   |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /health`                             | `{ready, device}` 模型就绪状态                                                                                                                                                         |
+| 接口                                      | 说明                                                                                                                                                                                                           |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /health`                             | `{ready, device}` 模型就绪状态                                                                                                                                                                                 |
 | `POST /api/tasks`                         | multipart：`files[]` + `resolution`(设置页值，默认 512) + `is_video`("true"/"false" 字符串) + `frame_count`(int，默认 16) + `intrinsics`(JSON 或 "null") + `extrinsics`(JSON 或 "null") → `{ok, task_id}`(202) |
-| `GET /api/tasks/{id}?include_result=true` | `{status: queued/running/done/failed, progress, stage, result:{num_views, num_points, elapsed_s, points[:20000], ply}}`                                                                |
-| `GET /api/tasks?limit=20`                 | 任务列表（返回 `{tasks:[...]}` 对象，勿当数组处理）                                                                                                                                    |
-| `DELETE /api/tasks/{id}`                  | 删除一条任务记录（运行中不可删，返回 404）→ `{ok:true}` / `{ok:false,error}`                                                                                                           |
+| `GET /api/tasks/{id}?include_result=true` | `{status: queued/running/done/failed, progress, stage, result:{num_views, num_points, elapsed_s, points[:20000], ply}}`                                                                                        |
+| `GET /api/tasks?limit=20`                 | 任务列表（返回 `{tasks:[...]}` 对象，勿当数组处理）                                                                                                                                                            |
+| `DELETE /api/tasks/{id}`                  | 删除一条任务记录（运行中不可删，返回 404）→ `{ok:true}` / `{ok:false,error}`                                                                                                                                   |
 
 - intrinsics：每视图 3×3 K JSON；extrinsics：每视图 4×4 相机位姿 JSON。
 

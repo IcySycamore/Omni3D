@@ -84,16 +84,16 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 
 **上传契约**（`multipart/form-data`，两个重建接口一致）：
 
-| 字段              | 类型        | 说明                                             |
-| ----------------- | ----------- | ------------------------------------------------ |
-| `files`           | file[]      | 图片序列，或**单个视频**（配合 `is_video=true`） |
+| 字段              | 类型        | 说明                                                                      |
+| ----------------- | ----------- | ------------------------------------------------------------------------- |
+| `files`           | file[]      | 图片序列，或**单个视频**（配合 `is_video=true`）                          |
 | `resolution`      | int         | `512`（默认，完整画幅）或 `224`（**仅预览，勿用于测量**；会被裁成正方形） |
-| `intrinsics`      | JSON 字符串 | 可选，每视图 3×3 内参                            |
-| `extrinsics`      | JSON 字符串 | 可选，每视图 **col-major 4×4** 位姿              |
-| `is_video`        | bool        | `/api/tasks` 专用                                |
-| `frame_count`     | int         | `/api/tasks` 专用，视频均匀抽帧数（默认 16）     |
-| `client_id`       | str         | 未登录时的匿名归属键                             |
-| 头 `X-Auth-Token` | str         | 可选；提供则历史归到该 username                  |
+| `intrinsics`      | JSON 字符串 | 可选，每视图 3×3 内参                                                     |
+| `extrinsics`      | JSON 字符串 | 可选，每视图 **col-major 4×4** 位姿                                       |
+| `is_video`        | bool        | `/api/tasks` 专用                                                         |
+| `frame_count`     | int         | `/api/tasks` 专用，视频均匀抽帧数（默认 16）                              |
+| `client_id`       | str         | 未登录时的匿名归属键                                                      |
+| 头 `X-Auth-Token` | str         | 可选；提供则历史归到该 username                                           |
 
 **任务状态**：`queued` → `running` → `done` / `failed`
 
@@ -160,7 +160,49 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 - 不匹配归属一律 **404**（历史隔离）。
 - 响应含 `owner`、`username`、`scale`、`real_distance`、`status` 等字段。
 
-### 1.5 真实尺度
+### 1.5 全量点云吸附（`POST /api/sessions/{id}/snap`）
+
+**为什么需要**：客户端拿到的 `points` 是**渲染子集**（默认 6 万 / 全量约 200 万），
+等于每约 24 个点只留 1 个、点距被放大约 5 倍。直接用渲染点选点，量出的距离会天然
+带上采样误差。所以选点后要拿坐标回来**吸附到全量点云**上（SOR 之后、与 PLY 下载
+完全一致的那一份）。
+
+```http
+POST /api/sessions/{session_id}/snap?client_id=alice
+Content-Type: application/json
+X-Auth-Token: <可选>
+
+{ "points": [[x, y, z], ...], "max_distance": 0.05 }
+```
+
+| 字段           | 类型              | 说明                                                         |
+| -------------- | ----------------- | ------------------------------------------------------------ |
+| `points`       | `[[x,y,z], ...]`  | **批量**：框选 / 多选一次请求多个点，一次最多 `500` 个        |
+| `max_distance` | number \| `null`  | 超过该距离判为未命中；`null`（或不传）表示不限制              |
+
+```json
+{
+  "ok": true,
+  "hits": 1,
+  "elapsed_ms": 3.1,
+  "results": [
+    { "hit": true, "point": [1.001, -0.02, 0.5], "distance": 0.0013 },
+    { "hit": false, "reason": "out_of_range", "distance": 12.7 }
+  ]
+}
+```
+
+- `results` 与请求的 `points` **等长且同序**。
+- 未命中区分两种 `reason`：`out_of_range`（超 `max_distance`）与 `empty`（该会话
+  没有点云）。**绝不**硬给一个远处的点 —— 宁可明说「这里没点到东西」。
+- 实现：`scipy.spatial.cKDTree` + 按会话 **LRU 缓存**（`OMNI3D_SNAP_CACHE`，默认 3），
+  详见 `web/snap_index.py`。缓存以「文件大小 + mtime」为签名，PLY 被覆盖会自动重建。
+- 资源与实测数字见 [`PERFORMANCE.md`](PERFORMANCE.md) 的吸附一节。
+
+**状态码**：`400` 入参非法（空数组 / 非 3 维 / 含 NaN / 超过 500 点 / `max_distance` 非数字）；
+`404` 会话不存在**或归属不匹配**（两者不可区分，避免探测 id 是否存在）。
+
+### 1.6 真实尺度
 
 有**两条路径**，结果都以 `scale`（及 `metric`）体现：
 

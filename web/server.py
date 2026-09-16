@@ -62,6 +62,7 @@ from auth_store import (  # noqa: E402
 )
 from session_manager import SessionManager  # noqa: E402
 from session_store import SessionStore, anon_owner, user_owner  # noqa: E402
+from snap_index import snap_index  # noqa: E402
 
 app = FastAPI(title="Omni3D 重建服务", version="0.4.0")
 
@@ -878,7 +879,67 @@ def delete_history(session_id: str, client_id: str = "default",
     ok = session_store.delete_session(session_id, owner)
     if not ok:
         return JSONResponse({"ok": False, "error": "会话不存在"}, status_code=404)
+    # 点云文件已删 → 必须失效吸附缓存，否则后续 snap 会命中已删除会话的树
+    snap_index.invalidate(session_id)
     return JSONResponse({"ok": True})
+
+
+# ---- 全量点云吸附（测量必须作用在全量点上，实现见 web/snap_index.py）----
+_SNAP_MAX_QUERIES = 500
+
+
+@app.post("/api/sessions/{session_id}/snap")
+def snap_to_session(session_id: str, body: dict = Body(...),
+                    client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """把客户端给出的坐标**吸附到该会话的全量点云**上。
+
+    客户端只拿到渲染子集（抽样后点距放大约 5 倍），直接用它选点会带采样误差；
+    这里用 SOR 之后、与 PLY 下载完全一致的那一份全量点云做最近邻查询。
+
+    Body: ``{"points": [[x,y,z], ...], "max_distance": 0.05 | null}``
+
+    返回：``{"ok": true, "results": [...]}``，每项命中为
+    ``{"hit": true, "point": [...], "distance": d}``，未命中为
+    ``{"hit": false, "reason": "out_of_range"|"empty", ...}``。
+    """
+    owner = _owner_of(x_auth_token, client_id)
+    ply_path = session_store.get_ply_path(session_id, owner)
+    if not ply_path:
+        # 归属不匹配与「不存在」都返回 404：不泄露「这个 id 存在但不属于你」
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+
+    payload = body or {}
+    points = payload.get("points") or []
+    if not isinstance(points, list) or not points:
+        return JSONResponse({"error": "points 必须是非空数组"}, status_code=400)
+    if len(points) > _SNAP_MAX_QUERIES:
+        return JSONResponse(
+            {"error": f"points 超过上限 {_SNAP_MAX_QUERIES}"}, status_code=400)
+    try:
+        queries = np.asarray(points, dtype=np.float64).reshape(-1, 3)
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "points 需为 [[x,y,z], ...]"},
+                            status_code=400)
+    if not np.isfinite(queries).all():
+        return JSONResponse({"error": "points 含 NaN/Inf"}, status_code=400)
+
+    max_distance = payload.get("max_distance")
+    if max_distance is not None:
+        try:
+            max_distance = float(max_distance)
+        except (TypeError, ValueError):
+            return JSONResponse({"error": "max_distance 需为数字或 null"},
+                                status_code=400)
+
+    t0 = time.time()
+    results = snap_index.query(session_id, ply_path, queries, max_distance)
+    return JSONResponse({
+        "ok": True,
+        "results": results,
+        "hits": sum(1 for r in results if r.get("hit")),
+        "elapsed_ms": round((time.time() - t0) * 1000.0, 2),
+    })
 
 
 # ---- 真实尺度反推：选两点 + 已知真实距离 → 尺度因子 ----

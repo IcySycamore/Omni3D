@@ -11,6 +11,7 @@ import sys
 import time
 
 import torch  # noqa: F401  必须最先导入（fbgemm.dll 加载顺序）
+import numpy as np  # 必须在 torch 之后
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
@@ -55,6 +56,48 @@ def _sor_stats_k(points, k, std):
     removed = int(points.shape[0] - int(keep.sum()))
     ratio = removed / max(1, points.shape[0]) * 100.0
     return int(keep.sum()), removed, ratio, dt
+
+
+def _snap_bench(ply_bytes, n_queries=200):
+    """建树 / 查询耗时（#25）：把 PLY 落成临时文件后走**真实吸附路径**。"""
+    import tempfile
+
+    from snap_index import SnapIndex, read_ply_xyz
+
+    with tempfile.TemporaryDirectory() as td:
+        path = os.path.join(td, "cloud.ply")
+        with open(path, "wb") as fh:
+            fh.write(ply_bytes)
+
+        t0 = time.time()
+        cloud = read_ply_xyz(path)
+        t_read = time.time() - t0
+
+        idx = SnapIndex()
+        t0 = time.time()
+        idx.query("bench", path, [[0.0, 0.0, 0.0]])
+        t_build = time.time() - t0
+
+        rng = np.random.default_rng(0)
+        probes = rng.normal(scale=1.0, size=(n_queries, 3)).tolist()
+        t0 = time.time()
+        res = idx.query("bench", path, probes, max_distance=None)
+        t_query = time.time() - t0
+        hits = sum(1 for r in res if r["hit"])
+        stats = idx.stats()
+
+    n = int(cloud.shape[0])
+    print("\n=== 全量点云吸附（#25）===")
+    print(f"  点数              : {n:,}")
+    print(f"  读 PLY            : {t_read:.2f} s")
+    print(f"  首次请求（含建树）: {t_build:.2f} s")
+    print(f"  批量查询 {n_queries:>3} 点 : {t_query * 1000:.1f} ms "
+          f"（{t_query / max(1, n_queries) * 1e6:.0f} µs/点）")
+    print(f"  命中              : {hits}/{n_queries}")
+    print(f"  坐标内存(float64) : {cloud.nbytes / 1024 / 1024:.1f} MiB"
+          f"（cKDTree 另存一份，量级相近）")
+    print(f"  缓存              : hits={stats['hits']} misses={stats['misses']}"
+          f" sessions={stats['cached_sessions']}/{stats['capacity']}")
 
 
 def main():
@@ -111,6 +154,8 @@ def main():
     for k, std in [(8, 1.0), (8, 2.0), (8, 3.0), (16, 2.0), (4, 2.0)]:
         _kept, _rm, r, t = _sor_stats_k(points, k, std)
         print(f"{k:>4} {std:>6.1f} {r:>12.3f} {t:>9.2f}")
+
+    _snap_bench(ply)
 
 
 if __name__ == "__main__":
