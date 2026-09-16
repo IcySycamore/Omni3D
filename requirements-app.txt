@@ -1,4 +1,4 @@
-# Omni3D 应用依赖（server + 桌面客户端）
+# Omni3D 应用依赖（server）
 #
 #   pip install -r requirements-app.txt
 #
@@ -13,7 +13,8 @@ python-multipart        # FastAPI 表单 / 文件上传
 numpy
 opencv-python           # 视频均匀抽帧
 
-# ---------- 桌面客户端（desktop/） ----------
+# ---------- 已归档的桌面客户端（archive/desktop-pyqt-vtk/，可选）----------
+# 仅当你要运行归档代码时才需要安装；正常使用（浏览器客户端）不需要。
 PyQt5
 vtk
 requests

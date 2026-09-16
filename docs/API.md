@@ -62,7 +62,7 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 - **用户名规则**（服务端强制）：3–32 个字符，仅 `[A-Za-z0-9_.-]`。
 - **密码规则**（至少 8 位、不得全空白）：**只能在客户端校验**。
   协议只上行 `verifier`，服务器从未接触明文密码，因此无法复核密码强度；
-  网页端与桌面端各自实同名规则（`web/index.html` / `desktop/api_client.py`）。
+  网页端实同名规则（`web/index.html`）；服务端额外强制**用户名**规则。
 - `claim` 同时迁移 **SQLite 会话层**与**内存任务表**的归属，保证并入后立即在历史列表可见。
 
 ### 1.3 重建任务
@@ -257,4 +257,4 @@ curl -s "http://127.0.0.1:50865/api/tasks/<task_id>?include_result=true" -H "X-A
 curl -s "http://127.0.0.1:50865/api/history" -H "X-Auth-Token: <token>"
 ```
 
-> 桌面端无需手写这些：`python desktop/main.py` → 登录 → 选示例 → 开始重建。
+> 客户端无需手写这些：浏览器打开 <http://127.0.0.1:50865/> → 选择示例或本地视频 → 开始重建。

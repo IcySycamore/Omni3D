@@ -9,9 +9,9 @@
 ```
 
 - **server**：FastAPI 单机推理（Fast3R 稠密重建）+ 账号 / 会话层 / 历史。
-- **web client**：产品主体。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、提交、3D 查看、两点测量、标尺校准、历史记录、设置，全部在浏览器完成。
-- **desktop client**：`desktop/`（PyQt5 + VTK）。登录后历史按用户名保存，VTK 视图中测距 / 标尺校准。
-- **Mobile APP(Qt webview+web client)**:① 华为 AREngine 真实尺度、位姿（VIO 米制）② 华为 SLAM 稀疏点云；系统文件支持与 PLY 直存手机。
+- **web client**：**唯一的客户端实现**。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、提交、3D 查看、测量、标尺校准、历史、账号，全部在浏览器完成。
+- **移动端 App**：不是第二种 client，而是 web client 的 **WebView 壳 + 本地桥**（额外提供 AR 米制位姿、华为 SLAM 稀疏点云、系统文件对话框）。
+- 旧的 PyQt5 + VTK 桌面客户端已**归档**（`archive/desktop-pyqt-vtk/`），不再维护。
 
 ---
 
@@ -30,19 +30,18 @@
 
 ## 🚀 运行
 
-**只有 1 个 server，2 种 client；移动端 App 是「网页 client 的原生壳」。**
+**只有 1 个 server、1 个客户端实现；移动端 App 是它的 WebView 壳。**
 
 ```
                       ┌────────────────────┐
    浏览器 ───────────► │      server       │
-   （web client）     │  web/server.py     │ ──►  Fast3R（GPU 稠密重建）
+  （web client）      │  web/server.py     │ ──►  Fast3R（GPU 稠密重建）
                       │      :50865        │
-   桌面客户端 ───────► │                    │
-   （desktop client） │                    │
-                      └────────────────────┘
-                                 ▲
-   移动端 App（qt_app/）──────┘  加载的**就是网页 client**，
-   + 本地桥 :50687                额外提供 AR 米制位姿 / 华为点云 / 系统文件
+   移动端 App ───────► │                    │
+  （同一个 web client │                    │
+    + 本地桥 :50687）  └────────────────────┘
+
+  桌面端 = 浏览器直接打开同一个地址，无需安装任何客户端
 ```
 
 ### 0. 准备
@@ -56,7 +55,7 @@
 git clone https://github.com/IcySycamore/Omni3D.git
 cd Omni3D
 
-# 依赖（server + 桌面客户端）
+# 依赖（server）
 <你的环境>\python.exe -m pip install -r requirements-app.txt
 
 # 模型权重：从 HuggingFace 下载 jedyang97/Fast3R_ViT_Large_512 到
@@ -75,7 +74,7 @@ $env:HOST='0.0.0.0'; $env:PORT='8000'; .\run.ps1 server    # 局域网 / 自定�
 
 模型首次加载需数分钟，用 <http://127.0.0.1:50865/health> 查就绪状态（`ready: true`）。
 
-### 2.使用 网页 client
+### 2. 使用网页 client（唯一客户端）
 
 浏览器打开 <http://127.0.0.1:50865/> 即可：采集（录制 / 连拍 / 本地文件）→ 提交重建 →
 3D 查看 → 两点测距 → 标尺校准 → 历史记录。
@@ -87,17 +86,7 @@ $env:HOST='0.0.0.0'; $env:PORT='8000'; .\run.ps1 server    # 局域网 / 自定�
 > 网页由服务器**同源**托管，所以页面里没有也不需要「服务器地址」输入框；
 > 移动端 App 的服务器地址在 App 顶部工具条 ⚙ 里配置。
 
-### 3. 使用 桌面 client
-
-```powershell
-.\run.ps1 desktop
-```
-
-首次点「注册」建号 → 登录 → 左侧选 `demo_examples` 示例或本地视频 → 「开始重建」→
-VTK 视图中查看 / 测距 / 标尺校准。**服务器地址在登录窗右上角 ⚙ 里配置**。
-详见 [desktop/README.md](desktop/README.md)。
-
-### 4. 使用 移动端 App
+### 3. 使用 移动端 App（可选）
 
 构建见 [构建移动端 App](#-构建移动端-app)。App 内 WebView 加载的**就是第 2 步的网页 client**，
 所以网页端功能全部可用；此外多出两样网页拿不到的：
@@ -119,29 +108,24 @@ VTK 视图中查看 / 测距 / 标尺校准。**服务器地址在登录窗右�
 > ⚠️ `224` 模式为了贴合训练设定会**按短边裁成 224×224 正方形**
 > （横幅丢左右、竖幅丢上下）；想要完整画幅请用 `512`。
 
-### 两个 client 的功能对照
+### 功能一览（一个 client，三种运行环境）
 
-| 功能                          | 网页 client | 桌面 client | 备注                                       |
-| ----------------------------- | :---------: | :---------: | ------------------------------------------ |
-| 采集：本地视频 / 图片         |     ✅      |     ✅      |                                            |
-| 采集：摄像头录制 / 连拍       |     ✅      |     ❌      | 桌面端用本地文件代替                       |
-| 采集：**AR 扫描**（米制位姿） |     ✅      |     ❌      | 仅移动端有 AREngine，桌面无法提供          |
-| 提交重建 + 实时进度           |     ✅      |     ✅      | 同一套 `/api/tasks`                        |
-| 3D 点云查看                   | ✅ three.js |   ✅ VTK    |                                            |
-| 两点测距                      |     ✅      |     ✅      |                                            |
-| 真实尺度                      |     ✅      |     ✅      | 服务器对齐后自动采用；无 AR 时手动标尺校准 |
-| PLY 下载                      |     ✅      |     ✅      | `GET /api/history/{id}/ply`                |
-| 历史：列表 / 加载 / 删除      |     ✅      |     ✅      |                                            |
-| 抽帧数 / 分辨率(512、224)     |     ✅      |     ✅      |                                            |
-| **账号：注册 / 登录 / 登出**  |     ✅      |     ✅      | 同一套挑战-应答；页面内登录页 / 原生登录窗 |
-| 账号：匿名记录并入账号        |     ✅      |     ✅      | 均需手动确认（`/api/auth/claim`）          |
-| 帮助页                        |     ✅      |     ❌      |                                            |
+| 功能                                         | 浏览器 | 移动端 App | 备注                                                     |
+| -------------------------------------------- | :----: | :--------: | -------------------------------------------------------- |
+| 本地视频 / 图片采集                          |   ✅   |     ✅     |                                                          |
+| 摄像头录制 / 连拍                            |   ✅   |     ❌     | App 内 WebView 通常拿不到 `getUserMedia`，用 AR 扫描代替 |
+| **AR 扫描**（米制位姿 + 华为 SLAM 稀疏点云） |   ❌   |     ✅     | 需要 AREngine，只有 App 有                               |
+| 提交重建 + 实时进度                          |   ✅   |     ✅     | `/api/tasks`                                             |
+| 3D 点云查看 / 两点测距 / 标尺校准            |   ✅   |     ✅     | three.js                                                 |
+| 真实尺度                                     |   ✅   |     ✅     | AR 位姿自动对齐；无 AR 时手动标尺校准                    |
+| PLY 下载                                     |   ✅   |     ✅     | App 内直写手机下载目录                                   |
+| 历史：列表 / 加载 / 删除                     |   ✅   |     ✅     | `/api/history`，按 `owner` 隔离                          |
+| 账号：注册 / 登录 / 登出、匿名记录并入       |   ✅   |     ✅     | 同一套挑战-应答                                          |
+| 帮助页                                       |   ✅   |     ✅     |                                                          |
 
-> **共同点**：测量、尺度换算、历史归属、账号、认证协议**全在 server**，两个 client 行为一致；
-> 差异只在**采集方式**与**呈现**。AR 只有移动端能做。
->
-> **移动端 App 的账号能力来自网页**：App 加载的就是 `web/index.html`，
-> 所以网页端一加登录，浏览器与 App 就同时有了，不需要在 App 里再写一套登录界面。
+> **只有一份客户端实现**：`web/index.html`。浏览器与 App 共用它，因此网页侧的改动
+> 两个环境同时生效，不存在「两套客户端行为不一致」的问题；差异只在**采集能力**
+> （AR 只有 App 有）与**原生外壳**（App 多一个本地桥 `:50687`）。
 
 ---
 
@@ -215,12 +199,8 @@ Omni3D/
 │   ├── task_queue.py     # 单 worker 任务队列
 │   ├── index.html        # 前端主体（采集/查看/测量/历史/设置）
 │   └── WEB_REQUIREMENTS.md  # 前端需求契约
-├── desktop/              # 桌面客户端（PyQt5 + VTK）
-│   ├── main.py           # 入口：登录窗 ↔ 主窗
-│   ├── login_window.py   # 无边框登录窗（⚙ 服务器设置 / — / ✕）
-│   ├── main_window.py    # 重建 + 历史 + VTK 视图
-│   ├── vtk_view.py       # VTK 点云渲染 + 两点测距
-│   └── api_client.py     # HTTP + 认证协议（verifier/proof）
+├── archive/              # 已废弃的实现（保留供查阅）
+│   └── desktop-pyqt-vtk/ # 旧的 PyQt5 + VTK 桌面客户端，见其 README
 ├── app/core/             # 共享核心（server 使用）
 │   ├── pipeline.py       # 重建管线（加载→推理→对齐）
 │   ├── scale.py          # 真实尺度反推（纯函数）
@@ -248,10 +228,12 @@ Omni3D/
 > 📦 **部署**：部署指南、frp 隧道、容器（Dockerfile）与打包配置在开发阶段已移除，
 > 将于**发布（release）阶段**重建。详见 `docs/ARCHITECTURE.md`。
 
-> 🖥 **桌面客户端**：`desktop/`（PyQt5 + VTK）。登录后可用 `demo_examples` 验证重建效果，
-> 并在 VTK 视图中测距 / 标尺校准；见 [其 README](desktop/README.md)。
+> 🖥 **客户端只有一个**：`web/index.html`。桌面端就是浏览器直接打开
+> <http://127.0.0.1:50865/>（无需安装）；移动端 App 加载的也是它。
+> 旧的 PyQt5 + VTK 桌面客户端已归档到
+> [`archive/desktop-pyqt-vtk/`](archive/desktop-pyqt-vtk/README.md)。
 
-> 📦 **依赖**：应用侧（server + 桌面端）见 [requirements-app.txt](requirements-app.txt)；
+> 📦 **依赖**：应用侧（server）见 [requirements-app.txt](requirements-app.txt)；
 > vendored 模型仓库依赖见 `requirements.txt`。
 
 ## 🤝 贡献

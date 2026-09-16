@@ -7,21 +7,25 @@
 ## 1. 目标架构
 
 ```
-┌─ client ───────────────────────────────┐        ┌─ server（唯一） ──────────────┐
+┌─ client（只有一份实现）───────────────┐        ┌─ server（唯一） ──────────────┐
 │  web client     web/index.html         │        │  web/server.py  :50865        │
-│  desktop client desktop/（PyQt5+VTK）  │◄──HTTP─►│  ├ auth_store（账号）         │
-│  ─────────────────────────────────────│        │  ├ session_manager（token）   │
-│  移动端 App = web client 的壳 + 桥      │        │  ├ task_queue（实时进度）     │
-│  （qt_app/，本地桥 :50687）             │        │  ├ session_store（历史 SQLite）│
-└────────────────────────────────────────┘        │  └ app/core/pipeline（重建）  │
+│  ─────────────────────────────────────│◄──HTTP─►│  ├ auth_store（账号）         │
+│  移动端 App = web client 的壳 + 桥      │        │  ├ session_manager（token）   │
+│  （qt_app/，本地桥 :50687）             │        │  ├ task_queue（实时进度）     │
+└────────────────────────────────────────┘        │  ├ session_store（历史 SQLite）│
+                                                  │  └ app/core/pipeline（重建）  │
                                                   └──────────────┬────────────────┘
                                                                  │
                                                            fast3r（model）
 ```
 
-**原则**：server 只有一种；网页 client 与桌面 client 都只是它的 client；
-移动端 App 是**网页 client 的原生壳**（不另做 UI，只补 AR / 文件等原生能力）。
-重建 / 尺度 / 历史逻辑只在 server 实现一次。
+**原则**：server 只有一种；**客户端只有一份实现**（`web/index.html`）；
+移动端 App 是它的**原生壳**（不另做 UI，只补 AR / 文件等原生能力）。
+重建 / 尺度 / 历史 / 测量逻辑只在 server 实现一次。
+
+> 桌面端 = 浏览器直接打开同一个地址。旧的 PyQt5 + VTK 客户端已归档到
+> `archive/desktop-pyqt-vtk/`（原因：两套客户端必须写两遍几何与交互，
+> 而 Python 与 JS 之间无法字面共享代码；「一套 Qt 跨平台」因 VTK 无 Android 支持而被否决）。
 
 ---
 
@@ -42,14 +46,14 @@
 
 ### client
 
-| 模块                                | 职责                                                                |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `web/index.html`                    | web client 主体（采集 / 查看 / 测量 / 历史 / 设置）                 |
-| `qt_app/qml/WebShell.qml`           | WebView 壳，加载 web client（Android）                              |
-| `desktop/`                          | **桌面客户端**（PyQt5 + VTK）：登录 + demo_examples 重建 + VTK 测距 |
-| `qt_app/src/ar_bridge_server.*`     | 本地 HTTP 桥 `:50687`（`/ar/*`、`/ar/scan/*`、`/ar/file/*`）        |
-| `qt_app/src/ar_scan_controller.*`   | AR 扫描：抓帧 + 米制位姿 + 华为稀疏点云累积（Android）              |
-| `qt_app/src/hw_ar_engine_session.*` | 华为 AREngine 适配（`ArSessionBackend` 子类，Android）              |
+| 模块                                | 职责                                                            |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `web/index.html`                    | **唯一的客户端实现**（采集 / 查看 / 测量 / 历史 / 账号 / 设置） |
+| `qt_app/qml/WebShell.qml`           | WebView 壳，加载 web client（Android）                          |
+| `archive/desktop-pyqt-vtk/`         | 已废弃的 PyQt5 + VTK 桌面客户端（不再维护，见其 README）        |
+| `qt_app/src/ar_bridge_server.*`     | 本地 HTTP 桥 `:50687`（`/ar/*`、`/ar/scan/*`、`/ar/file/*`）    |
+| `qt_app/src/ar_scan_controller.*`   | AR 扫描：抓帧 + 米制位姿 + 华为稀疏点云累积（Android）          |
+| `qt_app/src/hw_ar_engine_session.*` | 华为 AREngine 适配（`ArSessionBackend` 子类，Android）          |
 
 ---
 
@@ -95,7 +99,7 @@
 八个认证接口（`/api/auth/*`）的完整定义见 **[`docs/API.md`](API.md)**。
 
 - **服务端**：`web/session_manager.py` 维护 `token → username`（权威映射）。
-- **客户端**：`desktop/session.py` 持有 token；`desktop/api_client.py` 实现同一套 verifier/proof。
+- **客户端**：`web/index.html` 的 `fetch` 拦截器统一携带 `X-Auth-Token` 并处理 401。
 - **历史归属**：`_owner_of(token, client_id)` 优先取 token 的 username，使历史**对应到 username**。
 
 ### 5.1 网页 / 移动端如何接入
@@ -208,12 +212,12 @@ run_reconstruction → output_dict{preds, views}
 
 **关键约定**
 
-| 项 | 约定 | 理由 |
-| --- | --- | --- |
-| 渲染点数上限 | `config.MAX_RENDER_POINTS`（`OMNI3D_MAX_RENDER_POINTS` 可覆盖，默认 60000） | 上限过高会让手机端 JSON 解析变慢 |
-| PLY 运输 | **不进 JSON**，只落盘 + `GET /api/history/{id}/ply` | 百万点 ASCII ≈ 60~80MB，内嵌会让响应体爆掉 |
-| PLY 格式 | `binary_little_endian`（x/y/z float32 + RGB uchar） | 同点数 20.9MB vs ASCII 62.7MB |
-| 点云元素 | 有颜色时 `[x,y,z,r,g,b]`，否则 `[x,y,z]` 由客户端按高度着色 | 两端共用一套解码（网页 `decodePointCloud` / 桌面 `PointCloudView.set_points`） |
+| 项           | 约定                                                                        | 理由                                                                           |
+| ------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 渲染点数上限 | `config.MAX_RENDER_POINTS`（`OMNI3D_MAX_RENDER_POINTS` 可覆盖，默认 60000） | 上限过高会让手机端 JSON 解析变慢                                               |
+| PLY 运输     | **不进 JSON**，只落盘 + `GET /api/history/{id}/ply`                         | 百万点 ASCII ≈ 60~80MB，内嵌会让响应体爆掉                                     |
+| PLY 格式     | `binary_little_endian`（x/y/z float32 + RGB uchar）                         | 同点数 20.9MB vs ASCII 62.7MB                                                  |
+| 点云元素     | 有颜色时 `[x,y,z,r,g,b]`，否则 `[x,y,z]` 由客户端按高度着色                 | 两端共用一套解码（网页 `decodePointCloud` / 桌面 `PointCloudView.set_points`） |
 
 **实测（family 12 帧 @512）**：全量 1,460,540 点 → 渲染 60,000 点，结果 JSON **4.6MB**，
 PLY **20.9MB**（二进制）。前 5000 个渲染点的唯一颜色数 4091（旧实现为 **1**）。
@@ -237,7 +241,7 @@ PLY **20.9MB**（二进制）。前 5000 个渲染点的唯一颜色数 4091（�
 - [x] 尺度反推纯函数 `app/core/scale.py` + API `POST /api/tasks/{id}/scale`
 - [x] 认证与会话管理：`auth_store.py`（salt+verifier）+ `session_manager.py`（token→username）
 - [x] 历史**对应到 username**（`owner = user:<name>` / `anon:<client_id>`）
-- [x] 桌面客户端：`desktop/`（PyQt5 + VTK，登录窗 ⚙ 设置服务器）
+- [x] 桌面客户端：`desktop/`（PyQt5 + VTK，登录窗 ⚙ 设置服务器）→ **已于 Phase 1.6 归档**
 - [x] 废弃物清理（`__pycache__`、`temp_preview_frames/`）
 - [x] 补 `CONTEXT.md`（领域词汇）与本文件
 
@@ -250,22 +254,31 @@ PLY **20.9MB**（二进制）。前 5000 个渲染点的唯一颜色数 4091（�
 - [x] 会话令牌 **30 分钟滑动过期**（`OMNI3D_SESSION_TTL` 可覆盖）
 - [x] 用户名规则服务端强制；密码规则在客户端（协议不上行明文密码）
 - [x] 任务列表按归属隔离（`GET /api/tasks?client_id=`）；网页历史页改用 `/api/history`
-- [x] 桌面端 401 → `AuthExpiredError` → 退回登录窗
+- [x] 桌面端 401 → `AuthExpiredError` → 退回登录窗（该客户端已在 Phase 1.7 归档）
 - [x] 移动端 App 顶部工具条 ⚙：**原生**修改服务器地址（写 `home_url.txt` 后重载）
 
 ### ✅ Phase 1.6（本 PR）——点云质量
 
-- [x] 点云上**真实 RGB**（网页 vertexColors / 桌面 VTK direct scalars / PLY）
+- [x] 点云上**真实 RGB**（网页 vertexColors / PLY）
 - [x] 去掉 `stride=8` 抽稀与 `points[:20000]` 硬编码，上限改为 `OMNI3D_MAX_RENDER_POINTS`
 - [x] 接通置信度过滤（原 `VIS_CONF_PERCENTILE` 是死配置，从未生效）
 - [x] PLY 改**二进制小端**且不再内嵌 JSON（响应体从几十 MB 降到 MB 级）
 - [x] 网页点云解码抽成纯函数 `decodePointCloud`，由 `tests/tools/web_pointcloud_check.js` 守住
 
+### ✅ Phase 1.7（本 PR）——收敛为单一客户端
+
+- [x] `desktop/` → `archive/desktop-pyqt-vtk/`（保留历史与可复用点，不再维护）
+- [x] `run.ps1` 移除 `desktop` 目标；`CONTEXT.md` / `README.md` / `docs/API.md` /
+      `docs/ARCHITECTURE.md` / `CONTRIBUTING.md` / `qt_app/README.md` 口径统一为「一个 web client」
+- [x] 测试去掉对归档代码的依赖，改为**跨语言固定向量**：
+      `tests/test_auth.py` 与 `tests/tools/web_sha256_check.js` 共用同一组 verifier/proof 字面量；
+      另增加「网页端账号规则常量 == 服务端常量」的断言
+
 ### ⏳ Phase 2（独立 PR）——物理重组
 
 - [ ] `web/` → `server/`（`server/app.py` / `auth_store.py` / `session_manager.py` / `session_store.py` / `task_queue.py`）
 - [ ] 前端 `web/index.html` → `client/web/`
-- [ ] `desktop/`、`qt_app/` → `client/{desktop,qt}/`
+- [ ] `qt_app/` → `client/qt/`（**桌面端已在 Phase 1.6 归档，不再有 `client/desktop/`**）
 - [ ] 同步修改 `qt_app/build_apk.ps1`、`CMakeLists.txt`、`sys.path`、所有 import
 - [ ] Qt 桥的 `omni3d_history.json` 改为调用 server `/api/history`（去掉重复实现）
 

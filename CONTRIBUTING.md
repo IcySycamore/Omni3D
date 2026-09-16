@@ -43,7 +43,7 @@ git push -u origin feature/简短描述
 | `chore`    | 杂项     |
 | `test`     | 测试     |
 
-例：`feat: 桌面客户端支持两点测距`、`fix: 修正历史记录的 owner 归属`
+例：`feat: 网页端支持两点测距`、`fix: 修正历史记录的 owner 归属`
 
 ## 3. 改代码前请先读
 
@@ -53,8 +53,9 @@ git push -u origin feature/简短描述
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 模块地图、会话层、认证、尺度反推 | 调整模块职责或数据流    |
 | [`docs/API.md`](docs/API.md)                   | **接口清单（唯一权威来源）**     | **新增 / 修改任何接口** |
 
-**最重要的硬约束（摘自 `CONTEXT.md`）**：`server 只有一种`——重建 / 尺度 / 历史逻辑
-只在服务器实现一次；网页与桌面客户端都只是它的 client，**不得重复实现**。
+**最重要的硬约束（摘自 `CONTEXT.md`）**：`server 只有一种`、`客户端只有一份实现`——
+重建 / 尺度 / 历史 / 测量逻辑只在服务器实现一次；客户端（浏览器）只负责采集与呈现，
+**不得重复实现**，也**不要为桌面再起一套客户端**（浏览器就是桌面端）。
 
 ## 4. 本地运行与自测
 
@@ -65,7 +66,7 @@ git push -u origin feature/简短描述
 <你的环境>\python.exe -m pip install -r requirements-app.txt   # 一次即可
 
 .\run.ps1 server      # ① 起服务器（模型首次加载需数分钟）
-.\run.ps1 desktop     # ② 起桌面客户端：注册/登录 → 提交 demo_examples 里的视频
+# ② 客户端就是浏览器：打开 http://127.0.0.1:50865/（无需单独启动）
 .\run.ps1 test        # 跑单元 + 集成测试
 .\run.ps1 bench       # 重建速度/质量基准（见 docs/PERFORMANCE.md）
 ```
@@ -80,7 +81,7 @@ git push -u origin feature/简短描述
 ## 5. 代码风格
 
 - 文档与注释用中文；Python 用 `from __future__ import annotations` + 类型标注
-- 分层：`web/`（server，核心逻辑）、`desktop/`（桌面 client）、`app/core/`（server 共享核心）
+- 分层：`web/`（server，核心逻辑）、`app/core/`（server 共享核心）、`web/index.html`（唯一客户端）
 - **不要修改 `fast3r/` 内的 vendored 代码**；确有必要请在 PR 中单独说明理由
 - 生成物不提交：`build/`、`dist/`、`__pycache__/`、`data/`、`demo_outputs/`（见 `.gitignore`）
 

@@ -1,8 +1,8 @@
 """认证 / 会话 / 历史归属的单元测试（不加载模型，秒级完成）。
 
 覆盖：
-- 用户名 / 密码规则的边界值（网页与桌面端只做「提示」，服务端是唯一强制点）
-- 三端（服务端 auth_store / 桌面端 api_client）握手算法一致性
+- 用户名 / 密码规则的边界值（客户端只做「提示」，服务端是唯一强制点）
+- 握手协议的**固定向量**（与 tests/tools/web_sha256_check.js 共用同一组字面量）
 - SessionManager 的 **30 分钟滑动过期** 语义
 - 匿名历史并入账号的 **归属隔离**（不会误并别人的记录）
 """
@@ -14,11 +14,11 @@ import time
 
 import pytest
 
-# web/ 与 desktop/ 按运行时的方式加入导入路径
+# web/ 按运行时的方式加入导入路径
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _path in (os.path.join(_ROOT, "web"), os.path.join(_ROOT, "desktop")):
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
+_WEB = os.path.join(_ROOT, "web")
+if _WEB not in sys.path:
+    sys.path.insert(0, _WEB)
 
 import auth_store  # noqa: E402
 import session_manager as sm  # noqa: E402
@@ -61,35 +61,43 @@ class TestPasswordRules:
         assert auth_store.validate_password("中文密码足够长了") is None  # 8 字
 
 
-# ---------------------------------------------------- 握手算法三端一致性
-class TestProtocolConsistency:
-    """服务端与桌面端的 verifier/proof 必须逐字节一致，否则登录必然失败。"""
+# ---------------------------------------------------- 握手协议固定向量
+# 与 tests/tools/web_sha256_check.js 中的同名向量 **必须逐字节一致**：
+# 服务端（Python）与客户端（JS）各自用同一组字面量计算，任何一端改了拼接顺序
+# 或编码（salt/nonce 按 ASCII、密码按 UTF-8）都会在这里暴露。
+PROTOCOL_VECTORS = [
+    # (salt, password, nonce, verifier, proof)
+    (
+        "a1b2",
+        "abcd1234",
+        "n0nce",
+        "6accaac343825c6fe00011f5a0e55b510252c8df35a16c47eae1db8830c611fe",
+        "7c76e8231e4666a2dc2dae3308b4248553b4a9fb37fdaf2cb8d27f387cdef0d7",
+    ),
+    (
+        "salt-deadbeef",
+        "p@ssw0rd-2026",
+        "nonce-xyz",
+        "8854270f53b29e8a68e5c4d9410438673190a680604cc4e39c6596c79cc7e350",
+        "9f634ba9ddb269bdf66b7719d834bb5965bcddaf0112f0e1eba7b56da0419cfc",
+    ),
+    (
+        "00ff",
+        "____longer_pw_9",
+        "n1",
+        "e72d7857f0f6995d96f35751afd5c8220da905cadb2f7ba025c099be55b4bc04",
+        "08d394462887142fb0f3e004c3765f286dd4e9862485b3447bf387a40819aa8d",
+    ),
+]
 
-    def test_verifier_and_proof_match_desktop_client(self):
-        import api_client
 
-        salt = auth_store.new_salt()
-        nonce = auth_store.new_nonce()
-        password = "p@ssw0rd中文"
+class TestProtocolVectors:
+    """verifier / proof 的拼接顺序与编码被固定向量锁死。"""
 
-        v_server = auth_store.compute_verifier(salt, password)
-        v_desktop = api_client.compute_verifier(salt, password)
-        assert v_server == v_desktop
-
-        assert auth_store.compute_proof(nonce, v_server) == api_client.compute_proof(
-            nonce, v_desktop
-        )
-
-    def test_desktop_client_shares_username_rules(self):
-        import api_client
-
-        assert api_client.USERNAME_MIN == auth_store.USERNAME_MIN
-        assert api_client.USERNAME_MAX == auth_store.USERNAME_MAX
-        assert api_client.PASSWORD_MIN == auth_store.PASSWORD_MIN
-        for name in ["ab", "a b", "user.name", "a" * 32]:
-            assert bool(api_client.validate_username(name)) == bool(
-                auth_store.validate_username(name)
-            )
+    @pytest.mark.parametrize("salt,password,nonce,verifier,proof", PROTOCOL_VECTORS)
+    def test_verifier_and_proof(self, salt, password, nonce, verifier, proof):
+        assert auth_store.compute_verifier(salt, password) == verifier
+        assert auth_store.compute_proof(nonce, verifier) == proof
 
 
 # ------------------------------------------------------------ 会话滑动过期

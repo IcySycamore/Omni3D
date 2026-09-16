@@ -9,8 +9,7 @@
  *
  * 用法：node tests/tools/web_sha256_check.js
  * 退出码非 0 表示实现不一致。
- */
-const fs = require("fs");
+ */ const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
 
@@ -55,6 +54,62 @@ for (const v of vectors) {
     );
   }
 }
+
+// ---- 握手协议固定向量 ----
+// **必须与 tests/test_auth.py 的 PROTOCOL_VECTORS 完全一致**。
+// 网页端登录算的就是这两步：
+//     verifier = sha256(salt + password)
+//     proof    = sha256(nonce + verifier)
+// 拼接顺序与编码（salt/nonce 按 ASCII、密码按 UTF-8）一旦写错，
+// 服务器会一律判为「用户名或密码错误」，非常难查。
+const PROTOCOL_VECTORS = [
+  {
+    salt: "a1b2",
+    password: "abcd1234",
+    nonce: "n0nce",
+    verifier:
+      "6accaac343825c6fe00011f5a0e55b510252c8df35a16c47eae1db8830c611fe",
+    proof: "7c76e8231e4666a2dc2dae3308b4248553b4a9fb37fdaf2cb8d27f387cdef0d7",
+  },
+  {
+    salt: "salt-deadbeef",
+    password: "p@ssw0rd-2026",
+    nonce: "nonce-xyz",
+    verifier:
+      "8854270f53b29e8a68e5c4d9410438673190a680604cc4e39c6596c79cc7e350",
+    proof: "9f634ba9ddb269bdf66b7719d834bb5965bcddaf0112f0e1eba7b56da0419cfc",
+  },
+  {
+    salt: "00ff",
+    password: "____longer_pw_9",
+    nonce: "n1",
+    verifier:
+      "e72d7857f0f6995d96f35751afd5c8220da905cadb2f7ba025c099be55b4bc04",
+    proof: "08d394462887142fb0f3e004c3765f286dd4e9862485b3447bf387a40819aa8d",
+  },
+];
+
+let protocolFailed = 0;
+for (const v of PROTOCOL_VECTORS) {
+  const verifier = sha256Hex(v.salt + v.password);
+  const proof = sha256Hex(v.nonce + verifier);
+  if (verifier !== v.verifier) {
+    protocolFailed++;
+    console.error(
+      `协议向量 verifier 不符 salt=${v.salt}\n  got      ${verifier}\n  expected ${v.verifier}`,
+    );
+  }
+  if (proof !== v.proof) {
+    protocolFailed++;
+    console.error(
+      `协议向量 proof 不符 salt=${v.salt}\n  got      ${proof}\n  expected ${v.proof}`,
+    );
+  }
+}
+if (protocolFailed === 0) {
+  console.log(`协议向量 OK (${PROTOCOL_VECTORS.length} 组)`);
+}
+failed += protocolFailed;
 
 if (failed) {
   console.error(`SHA256 校验失败：${failed}/${vectors.length}`);

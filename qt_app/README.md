@@ -9,7 +9,8 @@
 | **额外提供** | ① 华为 AREngine 米制位姿（真实尺度）② 华为 SLAM 稀疏点云 ③ 系统文件对话框 ④ PLY 直存手机下载目录 ⑤ 本地历史 |
 | **不做**     | 不做推理（推理只在服务器）；不实现独立 UI                                                                   |
 
-桌面端是另一种客户端实现（PyQt5 + VTK），见 [`../desktop/README.md`](../desktop/README.md)。
+桌面端**不是**另一种客户端——它就是浏览器直接打开同一个地址；旧的 PyQt5 + VTK 实现已归档，
+见 [`../archive/desktop-pyqt-vtk/README.md`](../archive/desktop-pyqt-vtk/README.md)。
 
 ---
 

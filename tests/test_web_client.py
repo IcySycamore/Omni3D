@@ -9,8 +9,10 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -18,6 +20,12 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _INDEX = os.path.join(_ROOT, "web", "index.html")
 _SHA_SCRIPT = os.path.join(_ROOT, "tests", "tools", "web_sha256_check.js")
 _POINTCLOUD_SCRIPT = os.path.join(_ROOT, "tests", "tools", "web_pointcloud_check.js")
+
+_WEB = os.path.join(_ROOT, "web")
+if _WEB not in sys.path:
+    sys.path.insert(0, _WEB)
+
+import auth_store  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -93,3 +101,15 @@ class TestAuthWiring:
         assert "omni3d.password" not in index_html
         assert "omni3d.verifier" not in index_html
         assert "writeLS(LS_TOKEN, Auth.token)" in index_html
+
+    def test_auth_rules_match_server(self, index_html):
+        """网页端的账号规则常量必须与服务端一致，否则提示与实际不符。"""
+
+        def _const(name: str) -> int:
+            m = re.search(rf"\b{name}\s*=\s*(\d+)", index_html)
+            assert m, f"未在 index.html 中找到常量 {name}"
+            return int(m.group(1))
+
+        assert _const("USERNAME_MIN") == auth_store.USERNAME_MIN
+        assert _const("USERNAME_MAX") == auth_store.USERNAME_MAX
+        assert _const("PASSWORD_MIN") == auth_store.PASSWORD_MIN
