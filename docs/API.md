@@ -87,11 +87,11 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 | 字段              | 类型        | 说明                                             |
 | ----------------- | ----------- | ------------------------------------------------ |
 | `files`           | file[]      | 图片序列，或**单个视频**（配合 `is_video=true`） |
-| `resolution`      | int         | `512`（默认）或 `224`                            |
+| `resolution`      | int         | `512`（默认，完整画幅）或 `224`（**仅预览，勿用于测量**；会被裁成正方形） |
 | `intrinsics`      | JSON 字符串 | 可选，每视图 3×3 内参                            |
 | `extrinsics`      | JSON 字符串 | 可选，每视图 **col-major 4×4** 位姿              |
 | `is_video`        | bool        | `/api/tasks` 专用                                |
-| `frame_count`     | int         | `/api/tasks` 专用，视频均匀抽帧数（默认 12）     |
+| `frame_count`     | int         | `/api/tasks` 专用，视频均匀抽帧数（默认 16）     |
 | `client_id`       | str         | 未登录时的匿名归属键                             |
 | 头 `X-Auth-Token` | str         | 可选；提供则历史归到该 username                  |
 
@@ -138,7 +138,8 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 > - **完整点云不走 JSON**：早期版本把整份 ASCII PLY 放进 `result.ply`，
 >   百万点时响应体会膨胀到几十 MB，手机端解析直接卡死。
 >   现在 PLY 落盘为**二进制小端**文件，客户端统一用 `GET /api/history/{id}/ply` 下载。
-> - 服务端会先用 `config.VIS_CONF_PERCENTILE`（默认 10）**过滤置信度最低的点**，
+> - 服务端会先用 `OMNI3D_CONF_PERCENTILE`（对应 `config.VIS_CONF_PERCENTILE`，默认 10，
+>   `0` = 不过滤）**过滤置信度最低的点**，
 >   再按 `config.SOR_K` / `config.SOR_STD`（`OMNI3D_SOR_K` / `OMNI3D_SOR_STD`，
 >   默认 8 / 2.0，任一为 `0` 即关闭）做 **SOR 统计离群点剔除**。
 >   - `num_points_raw` = 置信度过滤后、SOR **前**的点数

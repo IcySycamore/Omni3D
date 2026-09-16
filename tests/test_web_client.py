@@ -113,3 +113,25 @@ class TestAuthWiring:
         assert _const("USERNAME_MIN") == auth_store.USERNAME_MIN
         assert _const("USERNAME_MAX") == auth_store.USERNAME_MAX
         assert _const("PASSWORD_MIN") == auth_store.PASSWORD_MIN
+
+
+class TestQualityDefaults:
+    """「精度优先」档位的网页端接线（#23）—— 防止悄悄退回 224 / 12 帧。"""
+
+    def test_defaults_to_512_full_frame(self, index_html):
+        """网页必须默认提交 512，且分辨率是**可切换的状态**而非硬编码。"""
+        assert "resolution: 512," in index_html
+        assert 'formData.append("resolution", String(STATE.resolution))' in index_html
+        # 回归保护：曾经就是这里写死 224，导致测量全带上裁切误差
+        assert 'formData.append("resolution", "224")' not in index_html
+
+    def test_224_is_marked_preview_only(self, index_html):
+        """224 必须在设置页可见地标注「仅预览，勿用于测量」，并有告警样式。"""
+        assert "仅预览" in index_html
+        assert "勿用于测量" in index_html
+        assert "裁成 224×224 正方形" in index_html
+        assert "radio-pill radio-warn" in index_html
+
+    def test_defaults_to_16_frames(self, index_html):
+        assert "frameCount: 16," in index_html
+        assert 'class="radio-pill selected" data-value="16"' in index_html

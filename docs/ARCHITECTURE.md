@@ -200,12 +200,18 @@ run_reconstruction → output_dict{preds, views}
         │
         ├─ _collect_points
         │     ① 全分辨率（不再 stride=8）
-        │     ② 用 pred["conf"] 过滤最低的 VIS_CONF_PERCENTILE%（默认 10）
+        │     ② 用 pred[conf_key] 过滤最低的 VIS_CONF_PERCENTILE%（默认 10，可配）
+        │        （conf_key 随点云来源变：conf_local / conf，见 pointcloud_keys）
         │     ③ 从 views[i]["img"] 取**真实 RGB**
         │        （img 是 ImgNorm 过的张量：(x/255-0.5)/0.5 → 反归一化 (x+1)/2*255）
+        ├─ _reject_outliers
+        │     ④ SOR 统计离群点剔除（SOR_K/SOR_STD，任一为 0 关闭）
+        │        置信度过滤挡不住几何飞点（背景飞点置信度常常不低）
         ▼
-   (points, colors)                         ┌─ 均匀抽样到 MAX_RENDER_POINTS（默认 6 万）
+   (points, colors)                         ┌─ _sample_for_render：均匀抽样到
+        │                                    │   MAX_RENDER_POINTS（默认 6 万）
         │                                    │   → 合并成 [x,y,z,r,g,b] 回传（渲染用）
+        │                                    │   ⚠ 抽样必须在剔除**之后**
         └─ _pts_to_ply → binary_little_endian┘
               向量化 numpy 结构化数组，落盘到 data/sessions/{id}.ply
 ```

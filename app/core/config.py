@@ -53,7 +53,13 @@ CHECKPOINT_DIR = os.path.join(PROJECT_ROOT, "jedyang97", "Fast3R_ViT_Large_512")
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 默认图像分辨率（UI 可选 512 / 224）
+# ⚠️ `224` 在 vendored 的 `fast3r/dust3r/utils/image.py` 里会**按短边裁成
+# 224×224 正方形**（横幅丢左右、竖幅丢上下），不是等比缩放 → **仅用于快速预览，
+# 勿用于测量**。属 vendored 行为，不能修改。Web 设置页对它给了告警文案。
 DEFAULT_RESOLUTION = 512
+
+# 视频默认抽帧数。视角冗余比单帧清晰度更能改善自洽性（见 docs/PERFORMANCE.md）。
+DEFAULT_FRAME_COUNT = _env_int("OMNI3D_DEFAULT_FRAME_COUNT", 16)
 
 # 推理参数
 INFERENCE_DTYPE = torch.float32
@@ -61,7 +67,9 @@ ALIGN_CONF_PERCENTILE = 85       # 局部→全局对齐的置信度百分位
 
 # ---- 点云输出（可视化 / PLY）----
 # 置信度过滤：丢弃置信度最低的 N% 点（0 = 不过滤）。
-VIS_CONF_PERCENTILE = 10
+# 上限 99：再往上会把点云削到几乎空，超范围一律回退默认值。
+_conf_percentile = _env_int("OMNI3D_CONF_PERCENTILE", 10, allow_zero=True)
+VIS_CONF_PERCENTILE = _conf_percentile if _conf_percentile <= 99 else 10
 # 单次返回给客户端的**渲染**点数上限（PLY 始终为全量）。
 # 上限过高会让手机端 JSON 解析与上传变慢；旧默认值 20000 明显偏小。
 MAX_RENDER_POINTS = _env_int("OMNI3D_MAX_RENDER_POINTS", 60000)

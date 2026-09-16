@@ -8,17 +8,26 @@
 设计：
 - 单 worker 后台线程顺序处理（GPU 推理串行，避免显存竞争）
 - 任务结果缓存内存中，带过期清理（默认 30 分钟）
-- 视频包：上传 mp4 → cv2 均匀抽帧（默认 12 帧）当图片处理
+- 视频包：上传 mp4 → cv2 均匀抽帧（默认 16 帧，见 `config.DEFAULT_FRAME_COUNT`）当图片处理
 """
 from __future__ import annotations
 
 import os
+import sys
 import threading
 import time
 import traceback
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
+
+# 确保项目根目录在 sys.path（web/ 的上一级），以便引用 app.core 的单一配置来源。
+# server.py 也会插入，这里再插一次是为了让本模块能被单独导入（测试 / 脚本）而不炸。
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
+from app.core import config  # noqa: E402
 
 # ---- 任务状态常量 ----
 STATUS_QUEUED = "queued"
@@ -43,7 +52,7 @@ class Task:
     intrinsics: list | None = None
     extrinsics: list | None = None
     is_video: bool = False
-    frame_count: int = 12
+    frame_count: int = config.DEFAULT_FRAME_COUNT
     owner: str = "anon:default"    # 归属：user:<username> / anon:<client_id>（会话层隔离依据）
     # 结果
     result: dict | None = None
@@ -64,7 +73,8 @@ class TaskQueue:
 
     # ---- 提交 ----
     def submit(self, files, resolution, intrinsics, extrinsics,
-               is_video=False, frame_count=12, owner="anon:default") -> Task:
+               is_video=False, frame_count=config.DEFAULT_FRAME_COUNT,
+               owner="anon:default") -> Task:
         task = Task(
             task_id=uuid.uuid4().hex[:16],
             files=files,

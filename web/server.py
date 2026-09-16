@@ -593,7 +593,7 @@ async def create_task(
     intrinsics: str = Form("null"),
     extrinsics: str = Form("null"),
     is_video: str = Form("false"),
-    frame_count: int = Form(12),
+    frame_count: int = Form(config.DEFAULT_FRAME_COUNT),
     client_id: str = Form("default"),
     x_auth_token: Optional[str] = Header(default=None),
 ):

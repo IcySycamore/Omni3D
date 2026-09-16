@@ -742,6 +742,17 @@
         color: #fff;
         box-shadow: 0 0 16px rgba(0, 212, 255, 0.15);
       }
+      /* 有风险的选项（如 224：会被裁成正方形，仅适合快速预览） */
+      .radio-pill.radio-warn {
+        border-color: rgba(251, 191, 36, 0.45);
+        color: var(--warning);
+      }
+      .radio-pill.radio-warn.selected {
+        background: rgba(251, 191, 36, 0.14);
+        border-color: var(--warning);
+        color: #fde68a;
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.22);
+      }
       .tag {
         display: inline-flex;
         align-items: center;
@@ -891,6 +902,9 @@
       }
       .toast.success {
         border-color: rgba(74, 222, 128, 0.5);
+      }
+      .toast.warn {
+        border-color: rgba(251, 191, 36, 0.55);
       }
       @keyframes slideInRight {
         from {
@@ -1200,11 +1214,34 @@
         <!-- ==================== 设置页 ==================== -->
         <section class="page" id="page-settings">
           <div class="glass-card">
-            <h3>重建·抽帧</h3>
+            <h3>重建 · 分辨率</h3>
+            <div class="radio-group" id="resGroup">
+              <button class="radio-pill selected" data-value="512">
+                512 · 完整画幅
+              </button>
+              <button class="radio-pill radio-warn" data-value="224">
+                224 · 仅预览
+              </button>
+            </div>
+            <div style="margin-top: 10px">
+              <span class="tag tag-muted" id="resHint"
+                >512 保留完整画幅，测量请用这一档。</span
+              >
+            </div>
+          </div>
+          <div class="glass-card">
+            <h3>重建 · 抽帧</h3>
             <div class="radio-group" id="frameCountGroup">
               <button class="radio-pill" data-value="8">8 帧</button>
-              <button class="radio-pill selected" data-value="12">12 帧</button>
-              <button class="radio-pill" data-value="16">16 帧</button>
+              <button class="radio-pill" data-value="12">12 帧</button>
+              <button class="radio-pill selected" data-value="16">
+                16 帧
+              </button>
+            </div>
+            <div style="margin-top: 10px">
+              <span class="tag tag-muted"
+                >视角冗余比单帧清晰度更能改善自洽性，16 帧为默认。</span
+              >
             </div>
           </div>
           <div class="glass-card">
@@ -1514,7 +1551,8 @@
         currentTaskId: null,
         pollInterval: null,
         // 设置
-        frameCount: 12,
+        resolution: 512, // 重建分辨率：512=完整画幅（测量用）/ 224=仅预览
+        frameCount: 16,
         cameraIntrinsics: null,
         cameraExtrinsics: null,
         // AR 扫描
@@ -1601,6 +1639,8 @@
         taskList: $("#taskList"),
         refreshTasksBtn: $("#refreshTasksBtn"),
         // 设置页
+        resGroup: $("#resGroup"),
+        resHint: $("#resHint"),
         frameCountGroup: $("#frameCountGroup"),
         arResGroup: $("#arResGroup"),
         readCameraBtn: $("#readCameraBtn"),
@@ -2957,7 +2997,7 @@
         void dom.progressBar.offsetWidth;
 
         const formData = new FormData();
-        formData.append("resolution", "224");
+        formData.append("resolution", String(STATE.resolution));
 
         if (
           STATE.videoSource === "ar_scan" &&
@@ -4043,6 +4083,16 @@
 
       // ==================== 设置页 ====================
       function updateSettingsUI() {
+        // 更新重建分辨率选项
+        if (dom.resGroup) {
+          dom.resGroup.querySelectorAll(".radio-pill").forEach((pill) => {
+            pill.classList.toggle(
+              "selected",
+              parseInt(pill.dataset.value) === STATE.resolution,
+            );
+          });
+          updateResHint();
+        }
         // 更新抽帧选项
         dom.frameCountGroup.querySelectorAll(".radio-pill").forEach((pill) => {
           pill.classList.toggle(
@@ -4113,6 +4163,38 @@
         dom.cameraTags.innerHTML = tags.join(" ");
         STATE.cameraIntrinsics = STATE.deviceIntrinsics || null;
         STATE.cameraExtrinsics = STATE.deviceExtrinsics || null;
+      }
+
+      function updateResHint() {
+        const hint = dom.resHint;
+        if (!hint) return;
+        if (STATE.resolution === 224) {
+          hint.className = "tag tag-warn";
+          hint.textContent =
+            "⚠ 224 会被裁成 224×224 正方形（横幅丢左右、竖幅丢上下），仅用于快速预览，勿用于测量。";
+        } else {
+          hint.className = "tag tag-muted";
+          hint.textContent = "512 保留完整画幅，测量请用这一档。";
+        }
+      }
+
+      if (dom.resGroup) {
+        dom.resGroup.addEventListener("click", (e) => {
+          const pill = e.target.closest(".radio-pill");
+          if (!pill) return;
+          STATE.resolution = parseInt(pill.dataset.value, 10);
+          dom.resGroup
+            .querySelectorAll(".radio-pill")
+            .forEach((p) => p.classList.remove("selected"));
+          pill.classList.add("selected");
+          updateResHint();
+          showToast(
+            STATE.resolution === 224
+              ? "224 · 仅预览，勿用于测量"
+              : "512 · 完整画幅，用于测量",
+            STATE.resolution === 224 ? "warn" : "success",
+          );
+        });
       }
 
       dom.frameCountGroup.addEventListener("click", (e) => {
