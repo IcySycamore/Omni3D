@@ -47,7 +47,7 @@ from fastapi import Body, FastAPI, File, Form, Header, UploadFile  # noqa: E402
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: E402
 
 from app.core import config  # noqa: E402
-from app.core.pipeline import run_reconstruction  # noqa: E402
+from app.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
 from app.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
 
 from task_queue import task_queue  # noqa: E402
@@ -221,11 +221,12 @@ def _collect_points(output_dict, conf_percentile=None, max_render_points=None,
 
     preds = output_dict["preds"]
     views = output_dict.get("views") or []
+    pts_key, conf_key = pointcloud_keys()
 
     pts_parts: list = []
     rgb_parts: list = []
     for index, pred in enumerate(preds):
-        pts = pred["pts3d_in_other_view"]
+        pts = pred[pts_key]
         if hasattr(pts, "detach"):
             pts = pts.detach().cpu().numpy()
         pts = np.asarray(pts, dtype=np.float32)
@@ -238,7 +239,7 @@ def _collect_points(output_dict, conf_percentile=None, max_render_points=None,
 
         keep = np.isfinite(pts).all(axis=1)
 
-        conf = pred.get("conf")
+        conf = pred.get(conf_key)
         if conf is not None and conf_percentile > 0:
             if hasattr(conf, "detach"):
                 conf = conf.detach().cpu().numpy()

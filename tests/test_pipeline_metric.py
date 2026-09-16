@@ -12,8 +12,12 @@ from app.core.pipeline import (
     apply_similarity,
     extrinsics_to_cam2world,
     metric_alignment,
+    pointcloud_keys,
+    resolve_pts3d_source,
     summarize_intrinsics,
 )
+
+from app.core import config
 
 
 # ─────────────── 工具 ───────────────
@@ -192,3 +196,34 @@ def test_summarize_intrinsics_invalid():
     assert summarize_intrinsics(None) is None
     assert summarize_intrinsics([]) is None
     assert summarize_intrinsics([[1.0, 2.0, 3.0]]) is None
+
+
+# ─────────────── 点云来源：local head / global head（#21） ───────────────
+
+class TestPts3dSource:
+    """上游重建评测用的是 **local head**，这里把「选哪个 head」的契约钉住。"""
+
+    def test_repo_default_is_local(self):
+        """回归保护：仓库默认为 local，与上游 `eval_use_pts3d_from_local_head` 一致。"""
+        assert config.PTS3D_SOURCE == "local"
+        assert resolve_pts3d_source(None) == "local"
+
+    def test_local_keys(self):
+        assert resolve_pts3d_source("local") == "local"
+        assert pointcloud_keys("local") == (
+            "pts3d_local_aligned_to_global",
+            "conf_local",
+        )
+
+    def test_global_keys(self):
+        assert resolve_pts3d_source("global") == "global"
+        assert pointcloud_keys("global") == ("pts3d_in_other_view", "conf")
+
+    def test_case_and_whitespace_insensitive(self):
+        assert resolve_pts3d_source("  GLOBAL ") == "global"
+        assert resolve_pts3d_source(" LOCAL\t") == "local"
+
+    @pytest.mark.parametrize("bad", ["", "   ", "xyz", "loc", "globalhead"])
+    def test_invalid_falls_back_to_local(self, bad):
+        assert resolve_pts3d_source(bad) == "local"
+        assert pointcloud_keys(bad)[1] == "conf_local"

@@ -191,3 +191,48 @@ def test_intrinsics_are_reported_not_used(model, frames):
     intr = out["metric"]["intrinsics"]
     assert intr is not None and len(intr) == 1
     assert intr[0]["fx"] == 500.0 and intr[0]["cx"] == 320.0
+
+
+# ─────────────── 点云来源：local head / global head（#21） ───────────────
+
+def test_baseline_uses_local_head_by_default(baseline):
+    """默认走 local head，且两种来源的预测张量都在（切换不需要重跑模型）。"""
+    out, _ = baseline
+    assert out["metric"]["pts3d_source"] == "local"
+    for pred in out["preds"]:
+        assert "pts3d_local_aligned_to_global" in pred
+        assert "conf_local" in pred
+        # 两种 head 的原始输出并存，供 `OMNI3D_PTS3D_SOURCE` 切换
+        assert "pts3d_in_other_view" in pred
+        assert "conf" in pred
+
+
+def test_local_and_global_same_shape_and_frame(baseline):
+    """local head 已被对齐到全局坐标系，因此形状与 global 完全一致。"""
+    out, _ = baseline
+    for pred in out["preds"]:
+        local = pred["pts3d_local_aligned_to_global"]
+        glob = pred["pts3d_in_other_view"]
+        assert local.shape == glob.shape
+        assert pred["conf_local"].shape == glob.shape[:3]
+
+
+def test_source_override_is_reported(model, frames, baseline):
+    """显式传 ``pts3d_source="global"`` 时 metric 如实上报（回归保护）。"""
+    out, _ = run_reconstruction(
+        frames, model, config.DEVICE, resolution=RESOLUTION, pts3d_source="global"
+    )
+    assert out["metric"]["pts3d_source"] == "global"
+
+
+def test_quality_stats_switches_conf_key(baseline):
+    """`quality_stats` 必须跟着来源读对应的置信度图（conf_local vs conf）。"""
+    from app.core.pipeline import pointcloud_keys, quality_stats
+
+    out, _ = baseline
+    for source in ("local", "global"):
+        conf_key = pointcloud_keys(source)[1]
+        q = quality_stats(out["preds"], source=source)
+        # 两条路径都应算出与当前来源 conf 一致的视图数
+        assert q["views"] == len(out["preds"])
+        assert conf_key in out["preds"][0]

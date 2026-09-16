@@ -22,6 +22,8 @@ import torch
 from fast3r.dust3r.utils.image import load_images
 from fast3r.dust3r.inference_multiview import inference
 
+from app.core import config
+
 
 # ══════════════════ 外部位姿 / 内参 解析 ══════════════════
 
@@ -168,17 +170,18 @@ def align_local_pts3d_to_global(preds, views, min_conf_thr_percentile=0):
         )
 
 
-def quality_stats(preds) -> dict:
+def quality_stats(preds, source: Optional[str] = None) -> dict:
     """汇总**质量代理指标**（无 GT 时用于横向/纵向对比，非绝对精度）。
 
     - ``local_scale_mean/std``：各视图 local→global 拟合出的缩放。理想应≈1 且离散度小。
     - ``residual_ratio_median``：局部/全局两个 head 对齐后的残差比（越小越自洽）。
-    - ``mean_conf``：模型全局 head 的平均置信度（仅作参考）。
+    - ``mean_conf``：**所选 head** 的平均置信度（仅作参考，跟 ``source`` 走）。
     """
     scales = [float(p["align_scale"]) for p in preds if p.get("align_scale") is not None]
     ratios = [float(p["align_residual_ratio"]) for p in preds
               if p.get("align_residual_ratio") is not None]
-    confs = [float(p["conf"].mean()) for p in preds if p.get("conf") is not None]
+    conf_key = pointcloud_keys(source)[1]
+    confs = [float(p[conf_key].mean()) for p in preds if p.get(conf_key) is not None]
 
     def _mean(v):
         return float(sum(v) / len(v)) if v else None
@@ -203,6 +206,34 @@ def quality_stats(preds) -> dict:
         "residual_ratio_median": _median(ratios),
         "mean_conf": _mean(confs),
     }
+
+
+# ══════════════════ 点云来源（local head / global head） ══════════════════
+
+def resolve_pts3d_source(source: Optional[str] = None) -> str:
+    """归一化点云来源名：``"local"``（默认）或 ``"global"``。
+
+    默认跟随上游重建评测的取值（`config.PTS3D_SOURCE`，可由
+    ``OMNI3D_PTS3D_SOURCE`` 环境变量覆盖）。
+    """
+    value = source if source is not None else config.PTS3D_SOURCE
+    value = str(value or "local").strip().lower()
+    return value if value in ("local", "global") else "local"
+
+
+def pointcloud_keys(source: Optional[str] = None) -> tuple:
+    """返回 ``(点云键, 置信度键)``。
+
+    - ``local``（默认）：``pts3d_local_aligned_to_global`` + ``conf_local``
+      —— 由 `align_local_pts3d_to_global` 把 local head 对齐到全局坐标系后产生。
+    - ``global``：``pts3d_in_other_view`` + ``conf``（Fast3R 全局 head 原始输出）。
+
+    两种来源的点都处在**同一个全局坐标系**中，因此下游（米制尺度变换、
+    置信度过滤、PLY、渲染）无需区分。
+    """
+    if resolve_pts3d_source(source) == "global":
+        return "pts3d_in_other_view", "conf"
+    return "pts3d_local_aligned_to_global", "conf_local"
 
 
 # ══════════════════ 模型坐标系 → 真实米制（extrinsics 驱动） ══════════════════
@@ -269,6 +300,7 @@ def run_reconstruction(
     align_conf_percentile=85,
     extrinsics=None,
     intrinsics=None,
+    pts3d_source=None,
     progress_callback=None,
 ):
     """执行完整重建管线。
@@ -283,13 +315,15 @@ def run_reconstruction(
         extrinsics: 每帧外部相机位姿（col-major 4×4 cam2world，米制）。
             提供且可用时，点云会被换算到**真实尺度 + AR 世界坐标系**。
         intrinsics: 每帧 3×3 内参（当前用于校验与结果报告）。
+        pts3d_source: 点云来源 ``"local"`` / ``"global"``（None 时取
+            `config.PTS3D_SOURCE`，默认 ``local``，跟随上游重建评测）。
         progress_callback: 可选进度回调 progress_callback(阶段字符串)。
 
     Returns:
         tuple: ``(output_dict, profiling_info)``。``output_dict["metric"]`` 记录
         尺度换算结果：``{"aligned", "scale", "n_views", "source",
-        "extrinsics_provided", "intrinsics"}``；``output_dict["quality"]`` 记录
-        质量代理指标（见 `quality_stats`）。
+        "extrinsics_provided", "intrinsics", "pts3d_source"}``；
+        ``output_dict["quality"]`` 记录质量代理指标（见 `quality_stats`）。
     """
     def report(stage):
         if progress_callback:
@@ -323,6 +357,7 @@ def run_reconstruction(
         "source": "none",
         "extrinsics_provided": bool(extrinsics),
         "intrinsics": summarize_intrinsics(intrinsics),
+        "pts3d_source": resolve_pts3d_source(pts3d_source),
     }
     if extrinsics:
         report("按真实尺度对齐（AR 位姿）...")
@@ -342,6 +377,6 @@ def run_reconstruction(
             print(f"[pipeline] 已按 AR 位姿对齐到米制：scale={s:.6g}（{fit['n_views']} 帧）")
 
     output_dict["metric"] = metric
-    output_dict["quality"] = quality_stats(output_dict["preds"])
+    output_dict["quality"] = quality_stats(output_dict["preds"], source=pts3d_source)
     report("完成")
     return output_dict, profiling_info

@@ -86,6 +86,8 @@ client（web / desktop）  ──HTTP──►  server（唯一一种）  ──
 - **结果**：`points`（渲染子集，`[x,y,z,r,g,b]`，上限 `OMNI3D_MAX_RENDER_POINTS` 默认 6 万）
   - `num_points`（全量，已按置信度过滤）+ `elapsed_s` + `scale`；完整点云**不进 JSON**，
     用 `GET /api/history/{id}/ply` 下载（二进制小端 PLY，含真实 RGB）
+  - 点云来源：`OMNI3D_PTS3D_SOURCE` = `local`（默认，跟随上游评测的 local head）
+    或 `global`（全局 head 原始输出）；两档共用同一全局坐标系，切换零成本
 - **认证头**：登录后请求携带 `X-Auth-Token: <token>`；历史归属该 token 对应的 username
 - **认证接口**：`/api/auth/{salt,register,challenge,login,logout,me,claim}`
   （+ `GET /api/auth/claim/preview` 预览可并入条数）
