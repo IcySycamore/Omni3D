@@ -47,6 +47,15 @@ from fastapi import Body, FastAPI, File, Form, Header, UploadFile  # noqa: E402
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: E402
 
 from app.core import config  # noqa: E402
+from app.core.geometry import (  # noqa: E402
+    OPS,
+    GeometryError,
+    apply_scale_factor,
+    compute,
+    refresh_measurements,
+    resolve_points,
+    unit_for,
+)
 from app.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
 from app.core.pointcloud import statistical_outlier_removal  # noqa: E402
 from app.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
@@ -856,6 +865,10 @@ def get_history(session_id: str, client_id: str = "default",
     data = session_store.get_session(session_id, owner, include_points=include_points)
     if data is None:
         return JSONResponse({"error": "会话不存在"}, status_code=404)
+    # 测量值**不存死**：按几何 + 当前 scale 重算后再返回 —— 重新标定后所有已有
+    # 测量会自动跟着变，不需要回写任何记录（#28）。
+    data["annotations"] = refresh_measurements(
+        data.get("annotations"), data.get("scale"))
     return JSONResponse(data)
 
 
@@ -900,10 +913,99 @@ def put_annotations(session_id: str, body: Any = Body(...),
     owner = _owner_of(x_auth_token, client_id)
     if not isinstance(body, dict):
         return JSONResponse({"error": "请求体需为 JSON 对象"}, status_code=400)
-    if not session_store.save_annotations(session_id, owner, body):
+    session = session_store.get_session(session_id, owner)
+    if session is None:
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    # 客户端提交的测量值不作数：按几何 + 当前 scale 重算后再落库（#28），
+    # 否则「客户端说的数值」会与「服务器算的数值」两套真相共存。
+    normalized = refresh_measurements(body, session.get("scale")) or body
+    if not session_store.save_annotations(session_id, owner, normalized):
         return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
     return JSONResponse({"ok": True, "session_id": session_id,
-                         "annotations": body})
+                         "annotations": normalized})
+
+
+# ---- 测量：在服务器上按元素坐标计算并落标注（#28）----
+_MEASURE_MAX_ELEMENTS = 8
+
+
+@app.post("/api/sessions/{session_id}/measure")
+def measure_session(session_id: str, body: Any = Body(...),
+                    client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """按元素坐标计算长度 / 面积 / 体积，**同时**持久化为标注。
+
+    Body: ``{"op": "length"|"triangle_area"|"area"|"volume",
+              "element_ids": ["e1", "e2"]}``
+
+    为什么在服务器算：长度/面积/体积必须有**唯一实现**，否则「显示的数值」与
+    「存的标注」会出现两套真相；而且重新标定 `scale` 后要能自动重算。
+
+    坐标来自标注元素（客户端已把它们吸附到**全量点云**，见 /snap），
+    未标定时返回 `u`/`u²`/`u³` 并在结果上标记 `calibrated: false`。
+    """
+    owner = _owner_of(x_auth_token, client_id)
+    session = session_store.get_session(session_id, owner)
+    if session is None:
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "请求体需为 JSON 对象"}, status_code=400)
+
+    op = body.get("op")
+    ids = body.get("element_ids") or []
+    if not isinstance(ids, list) or not ids:
+        return JSONResponse({"error": "element_ids 必须是非空数组"},
+                            status_code=400)
+    if len(ids) > _MEASURE_MAX_ELEMENTS:
+        return JSONResponse(
+            {"error": f"element_ids 超过上限 {_MEASURE_MAX_ELEMENTS}"},
+            status_code=400)
+
+    annotations = session.get("annotations")
+    if not annotations:
+        return JSONResponse(
+            {"error": "该会话还没有标注，请先 PUT /api/sessions/{id}/annotations"},
+            status_code=400)
+    elements = annotations.get("elements") or []
+    by_id = {e.get("id"): e for e in elements
+             if isinstance(e, dict) and e.get("id")}
+
+    try:
+        points: list = []
+        for element_id in ids:
+            points.extend(resolve_points(by_id, element_id))
+        raw = compute(op, points)
+        dim = OPS[op][1]
+    except GeometryError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+    scale = session.get("scale")
+    calibrated = scale is not None
+    measurement = {
+        "id": f"m_{uuid.uuid4().hex[:8]}",
+        "kind": "measurement",
+        "op": op,
+        "refs": list(ids),
+        "dim": dim,
+        "points": points,
+        "raw": raw,
+        "value": apply_scale_factor(raw, dim, scale),
+        "unit": unit_for(dim, calibrated),
+        "calibrated": calibrated,
+        "scale": scale,
+        "created_at": time.time(),
+    }
+    elements.append(measurement)
+    if not session_store.save_annotations(session_id, owner, annotations):
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    return JSONResponse({
+        "ok": True,
+        "session_id": session_id,
+        "measurement": measurement,
+        "points": points,
+        "count": len([e for e in elements
+                      if isinstance(e, dict) and e.get("kind") == "measurement"]),
+    })
 
 
 # ---- 全量点云吸附（测量必须作用在全量点上，实现见 web/snap_index.py）----
@@ -973,15 +1075,43 @@ def infer_scale(task_id: str, payload: dict = Body(...),
                 x_auth_token: Optional[str] = Header(default=None)):
     """从「模型内两点 + 已知真实距离(米)」反推真实尺度因子并持久化。
 
-    Body: {"point_a": [x,y,z], "point_b": [x,y,z], "real_distance": 1.23}
-    返回 scale 后，客户端后续测量按 scale 换算为米制（web / 桌面端共用同一实现）。
+    Body: ``{"element_ids": ["e1", "e2"], "real_distance": 1.23}``
+    （兼容旧形式：直接传 ``point_a`` / ``point_b`` 裸坐标）
+
+    返回 scale 后，客户端后续测量按 scale 换算为米制。
+    为什么改成传**元素 id**：服务器已经有元素已吸附的全量点坐标，
+    再让客户端传一份裸坐标就等于把坐标复制一遍，两边还可能不一致（#28）。
     """
+    real_distance = payload.get("real_distance")
+    element_ids = payload.get("element_ids")
     point_a = payload.get("point_a")
     point_b = payload.get("point_b")
-    real_distance = payload.get("real_distance")
+
+    if element_ids:
+        # 新形式：两个元素 id（每个元素取其第一个点）
+        owner = _owner_of(x_auth_token, client_id)
+        session = session_store.get_session(task_id, owner)
+        if session is None:
+            return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+        annotations = session.get("annotations")
+        if not annotations:
+            return JSONResponse({"error": "该会话还没有标注"}, status_code=400)
+        by_id = {e.get("id"): e for e in (annotations.get("elements") or [])
+                 if isinstance(e, dict) and e.get("id")}
+        try:
+            resolved = [resolve_points(by_id, eid) for eid in element_ids]
+        except GeometryError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=400)
+        if len(resolved) != 2 or any(not pts for pts in resolved):
+            return JSONResponse(
+                {"error": "element_ids 需要两个元素，且每个至少能解出一个点"},
+                status_code=400)
+        point_a, point_b = resolved[0][0], resolved[1][0]
+
     if point_a is None or point_b is None or real_distance is None:
         return JSONResponse(
-            {"error": "缺少参数：需 point_a, point_b, real_distance"}, status_code=400
+            {"error": "缺少参数：需 element_ids 或 point_a/point_b，以及 real_distance"},
+            status_code=400,
         )
     try:
         result = infer_scale_from_measurement(point_a, point_b, real_distance)

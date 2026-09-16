@@ -229,7 +229,51 @@ X-Auth-Token: <可选>
 **状态码**：`400` 入参非法（空数组 / 非 3 维 / 含 NaN / 超过 500 点 / `max_distance` 非数字）；
 `404` 会话不存在**或归属不匹配**（两者不可区分，避免探测 id 是否存在）。
 
-### 1.6 真实尺度
+### 1.6 测量（`POST /api/sessions/{id}/measure`）
+
+按**元素坐标**计算长度 / 面积 / 体积，**同时**把结果作为标注持久化。
+坐标取自标注元素（客户端已把它们吸附到全量点云，见 §1.5）。
+
+```http
+POST /api/sessions/{id}/measure?client_id=alice
+Content-Type: application/json
+
+{ "op": "length", "element_ids": ["e1", "e2"] }
+```
+
+| `op` | 点数 | 量纲 | 定义 |
+| --- | ---: | ---: | --- |
+| `length` | 2 | 1 | `\|AB\|` |
+| `triangle_area` | 3 | 2 | `½·\|AB × AC\|` |
+| `area` | 3 | 2 | `\|AB × AC\|` —— **恰为三角形面积的 2 倍**（UI 必须写清，避免误用） |
+| `volume` | 4 | 3 | `\|det[AB, AC, AD]\|`（与「长×宽×高」同值） |
+
+```json
+{
+  "ok": true,
+  "measurement": {
+    "id": "m_1a2b3c4d", "kind": "measurement",
+    "op": "length", "refs": ["e1", "e2"], "dim": 1,
+    "points": [[x,y,z], [x,y,z]],
+    "raw": 1.027,          // 模型单位值
+    "value": 1.231,        // 按 scale 换算后
+    "unit": "m", "calibrated": true, "scale": 1.198
+  }
+}
+```
+
+- **`element_ids` 可以是点元素，也可以直接是派生元素**（线段 / 面 / 立体）：
+  服务器沿 `refs` 递归展开成点列。点数必须**恰好等于**该 `op` 的需点数，多了少了都报 400
+  （静默忽略多余点会掩盖选错）。
+- **未标定**（`scale` 为 `null`）时单位是 `u` / `u²` / `u³`，且 `calibrated: false`。
+- **值不存死**：测量元素只存 `op` + `refs`；`raw`/`value`/`points`/`unit` 都在
+  **读取时由几何 + 当前 scale 重算** —— 所以重新标定后所有已有测量会**自动跟着变**。
+- 客户端在 `PUT /annotations` 里塞的 `value` **不作数**，服务器会按几何重算
+  （避免「显示的数值」与「存的标注」两套真相）。
+- 状态码：`400` 入参非法 / 该会话还没有标注 / 点数不匹配 / 元素不存在；
+  `404` 会话不存在或归属不匹配。
+
+### 1.7 真实尺度
 
 有**两条路径**，结果都以 `scale`（及 `metric`）体现：
 
@@ -245,10 +289,12 @@ X-Auth-Token: <可选>
 
 | 方法 | 路径                    | 说明                                           |
 | ---- | ----------------------- | ---------------------------------------------- |
-| POST | `/api/tasks/{id}/scale` | 由「两点 + 已知真实距离」反推 `scale` 并持久化 |
+| POST | `/api/tasks/{id}/scale` | 由「两个元素 + 已知真实距离」反推 `scale` 并持久化 |
 
 ```jsonc
-// 请求体
+// 推荐：传两个元素 id（服务器已有它们的全量点坐标，不必再复制一份）
+{ "element_ids": ["e1", "e2"], "real_distance": 1.23 }
+// 兼容：仍可直接传裸坐标
 { "point_a": [x, y, z], "point_b": [x, y, z], "real_distance": 1.23 }
 // 响应
 { "ok": true, "task_id": "...", "persisted": true,
