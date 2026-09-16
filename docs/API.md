@@ -154,11 +154,38 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 | GET    | `/api/history?client_id=&limit=50`             | 列出归属的历史（轻量，无点云/PLY）         |
 | GET    | `/api/history/{id}?client_id=&include_points=` | 单条；`include_points=true` 时带渲染点云   |
 | GET    | `/api/history/{id}/ply?client_id=`             | 下载完整 PLY（**二进制小端**，含真实 RGB） |
-| DELETE | `/api/history/{id}?client_id=`                 | 删除一条                                   |
+| DELETE | `/api/history/{id}?client_id=`                 | 删除一条（**级联删除标注**）               |
+| PUT    | `/api/sessions/{id}/annotations`               | **幂等整体替换**该会话的标注（见下）       |
 
 - 归属由 `_owner_of(token, client_id)` 决定：登录 → `user:<username>`，匿名 → `anon:<client_id>`。
 - 不匹配归属一律 **404**（历史隔离）。
 - 响应含 `owner`、`username`、`scale`、`real_distance`、`status` 等字段。
+- `GET /api/history/{id}` 还附带 **`annotations`**（该会话的标注整体，无则 `null`）。
+
+#### 标注：`PUT /api/sessions/{id}/annotations`
+
+```http
+PUT /api/sessions/{id}/annotations?client_id=alice
+Content-Type: application/json
+
+{
+  "version": 1,
+  "elements": [
+    { "id": "e1", "kind": "point",   "points": [[x, y, z]] },
+    { "id": "e2", "kind": "point",   "points": [[x, y, z]] },
+    { "id": "e3", "kind": "segment", "refs": ["e1", "e2"] }
+  ]
+}
+```
+
+- **幂等整体替换**：请求体就是该会话标注的**全部内容**，`session_id` 是主键，
+  所以**重复提交不会产生重复数据**；新载荷里没有的元素会消失（不是合并）。
+- 为什么不做事件溯源：测量结果是**产物**，客户端撤销 = 回写上一快照；
+  单用户工具不需要操作日志 / 补偿 / 版本冲突解决。
+- **必须按会话隔离**：`scale` 是会话级因子、各会话坐标系不同，跨会话连点没有几何意义。
+- 未落盘的临时选择只存在于客户端内存，不走这个接口。
+- 状态码：`200` 成功（回显存储的标注）；`400` 请求体不是 JSON 对象；
+  `404` 会话不存在**或**归属不匹配。
 
 ### 1.5 全量点云吸附（`POST /api/sessions/{id}/snap`）
 

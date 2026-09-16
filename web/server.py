@@ -32,7 +32,7 @@ import threading
 import time
 import traceback
 import uuid
-from typing import Optional
+from typing import Any, Optional
 
 # 确保项目根目录在 sys.path（web/ 的上一级）
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -882,6 +882,28 @@ def delete_history(session_id: str, client_id: str = "default",
     # 点云文件已删 → 必须失效吸附缓存，否则后续 snap 会命中已删除会话的树
     snap_index.invalidate(session_id)
     return JSONResponse({"ok": True})
+
+
+@app.put("/api/sessions/{session_id}/annotations")
+def put_annotations(session_id: str, body: Any = Body(...),
+                    client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """**幂等整体替换**该会话的标注（元素 = 基础点 + 派生形）。
+
+    为什么是整体替换：客户端撤销 = 回写上一快照；服务器不实现操作日志 /
+    补偿 / 版本冲突解决（单用户工具，成本与收益不匹配）。
+    `session_id` 是主键，所以**重复提交不会产生重复数据**。
+
+    标注必须按会话隔离：`scale` 是会话级因子、各会话坐标系不同，跨会话连点
+    没有几何意义。未落盘的临时选择只存客户端内存，不走这里。
+    """
+    owner = _owner_of(x_auth_token, client_id)
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "请求体需为 JSON 对象"}, status_code=400)
+    if not session_store.save_annotations(session_id, owner, body):
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    return JSONResponse({"ok": True, "session_id": session_id,
+                         "annotations": body})
 
 
 # ---- 全量点云吸附（测量必须作用在全量点上，实现见 web/snap_index.py）----

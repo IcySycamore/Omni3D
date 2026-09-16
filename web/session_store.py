@@ -25,6 +25,17 @@
         points_blob  BLOB,               -- zlib 压缩的降采样点云 JSON
         ply_path     TEXT
     )
+    annotations(
+        session_id   TEXT PRIMARY KEY,   -- 与 sessions 一一对应
+        owner        TEXT NOT NULL,
+        payload      TEXT NOT NULL,      -- 标注整体（JSON 字符串）
+        updated_at   REAL NOT NULL
+    )
+
+标注为什么是**整体替换**而不是事件流：测量结果是**产物**（元素 = 基础点 + 派生形），
+客户端撤销 = 回写上一快照。单用户工具不需要操作日志 / 补偿 / 版本冲突解决，
+但**必须按会话隔离** —— `scale` 是会话级因子、各会话坐标系不同，
+跨会话连点没有几何意义。
 
 线程安全：单连接 + 互斥锁（FastAPI 多线程 + 队列 worker 并发访问）。
 """
@@ -56,6 +67,13 @@ CREATE TABLE IF NOT EXISTS sessions (
     ply_path      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_owner ON sessions(owner, created_at DESC);
+CREATE TABLE IF NOT EXISTS annotations (
+    session_id  TEXT PRIMARY KEY,
+    owner       TEXT NOT NULL,
+    payload     TEXT NOT NULL,
+    updated_at  REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_annotations_owner ON annotations(owner);
 """
 
 
@@ -217,13 +235,72 @@ class SessionStore:
                 "SELECT * FROM sessions WHERE session_id=? AND owner=?",
                 (session_id, owner),
             ).fetchone()
+            ann_row = None
+            if row is not None:
+                # 必须在同一把锁内取：`_lock` 不是可重入锁，不能再调 get_annotations
+                ann_row = self._conn.execute(
+                    "SELECT payload FROM annotations WHERE session_id=? AND owner=?",
+                    (session_id, owner),
+                ).fetchone()
         if row is None:
             return None
         data = self._row_to_dict(row)
         if include_points:
             data["points"] = self._loads_points(row["points_blob"])
         data["has_ply"] = bool(row["ply_path"]) and os.path.exists(row["ply_path"] or "")
+        data["annotations"] = self._decode_payload(ann_row["payload"]) if ann_row else None
         return data
+
+    @staticmethod
+    def _decode_payload(text) -> Optional[dict]:
+        if not text:
+            return None
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            return None
+
+    # ---- 标注（整体替换，按会话隔离）----
+    def save_annotations(self, session_id: str, owner: str, payload) -> bool:
+        """**幂等整体替换**该会话的标注。
+
+        重复提交不会产生重复数据（`session_id` 是主键）。
+        会话不存在或不属于该 owner → 返回 False（由端点转成 404）。
+        """
+        text = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+        with self._lock:
+            exists = self._conn.execute(
+                "SELECT 1 FROM sessions WHERE session_id=? AND owner=?",
+                (session_id, owner),
+            ).fetchone()
+            if not exists:
+                return False
+            self._conn.execute(
+                "INSERT INTO annotations (session_id, owner, payload, updated_at) "
+                "VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(session_id) DO UPDATE SET "
+                "owner=excluded.owner, payload=excluded.payload, "
+                "updated_at=excluded.updated_at",
+                (session_id, owner, text, time.time()),
+            )
+            self._conn.commit()
+        return True
+
+    def get_annotations(self, session_id: str, owner: str) -> Optional[dict]:
+        """该会话的标注（整体）；没有则返回 None。"""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload FROM annotations WHERE session_id=? AND owner=?",
+                (session_id, owner),
+            ).fetchone()
+        return self._decode_payload(row["payload"]) if row else None
+
+    def count_annotations(self, owner: str) -> int:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT COUNT(*) AS n FROM annotations WHERE owner=?", (owner,)
+            ).fetchone()
+        return int(row["n"]) if row else 0
 
     def get_ply_path(self, session_id: str, owner: str) -> Optional[str]:
         """返回该会话 PLY 文件路径（校验归属）。"""
@@ -237,10 +314,16 @@ class SessionStore:
         return None
 
     def rename_owner(self, old_owner: str, new_owner: str) -> int:
-        """把某归属的所有历史改挂到另一归属（例如匿名历史并入账号）。"""
+        """把某归属的所有历史改挂到另一归属（例如匿名历史并入账号）。
+
+        标注也必须一起改，否则并入账号后历史在、标注却不见了。
+        """
         with self._lock:
             cur = self._conn.execute(
                 "UPDATE sessions SET owner=? WHERE owner=?", (new_owner, old_owner)
+            )
+            self._conn.execute(
+                "UPDATE annotations SET owner=? WHERE owner=?", (new_owner, old_owner)
             )
             self._conn.commit()
             return cur.rowcount
@@ -250,6 +333,11 @@ class SessionStore:
         with self._lock:
             cur = self._conn.execute(
                 "DELETE FROM sessions WHERE session_id=? AND owner=?",
+                (session_id, owner),
+            )
+            # 级联删标注（没有声明 FK，所以显式删；同一事务保证一致）
+            self._conn.execute(
+                "DELETE FROM annotations WHERE session_id=? AND owner=?",
                 (session_id, owner),
             )
             self._conn.commit()
