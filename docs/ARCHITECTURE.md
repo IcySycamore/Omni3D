@@ -223,11 +223,11 @@ run_reconstruction → output_dict{preds, views}
 | 渲染点数上限 | `config.MAX_RENDER_POINTS`（`OMNI3D_MAX_RENDER_POINTS` 可覆盖，默认 60000） | 上限过高会让手机端 JSON 解析变慢                                                                                           |
 | 点云来源     | `config.PTS3D_SOURCE`（`OMNI3D_PTS3D_SOURCE` 可覆盖，默认 `local`）         | 跟随上游重建评测口径（`eval_use_pts3d_from_local_head: true`）；两档共用同一全局坐标系，且一次前向同时产出，切换**零成本** |
 | PLY 运输     | **不进 JSON**，只落盘 + `GET /api/history/{id}/ply`                         | 百万点 ASCII ≈ 60~80MB，内嵌会让响应体爆掉                                                                                 |
-| PLY 格式     | `binary_little_endian`（x/y/z float32 + RGB uchar）                         | 同点数 20.9MB vs ASCII 62.7MB                                                                                              |
+| PLY 格式     | `binary_little_endian`（x/y/z **double** + RGB uchar）                     | 27B/点；double 是为了不把 float64 变换结果再舍回 float32（#24），**不是**精度瓶颈修复  |
 | 点云元素     | 有颜色时 `[x,y,z,r,g,b]`，否则 `[x,y,z]` 由客户端按高度着色                 | 两端共用一套解码（网页 `decodePointCloud` / `fillHeightColors`）                                                           |
 
 **实测（family 12 帧 @512）**：全量 1,460,540 点 → 渲染 60,000 点，结果 JSON **4.6MB**，
-PLY **20.9MB**（二进制）。前 5000 个渲染点的唯一颜色数 4091（旧实现为 **1**）。
+PLY **52.2MB**（二进制，double 坐标）。前 5000 个渲染点的唯一颜色数 4091（旧实现为 **1**）。
 
 **已知限制**
 

@@ -165,10 +165,14 @@ def test_apply_similarity_roundtrip():
     assert np.allclose(out.numpy(), c_gt, atol=1e-9)
 
 
-def test_apply_similarity_keeps_dtype():
+def test_apply_similarity_returns_float64():
+    """#24：内部以 float64 计算，就不该再回写 float32（那是无谓的二次舍入）。
+
+    注意这条**反转**了旧行为（旧代码显式 `.to(dtype=points.dtype)`）。
+    """
     pts = torch.zeros((2, 3), dtype=torch.float32)
     out = apply_similarity(pts, torch.eye(3), torch.zeros(3), 2.0)
-    assert out.dtype == torch.float32
+    assert out.dtype == torch.float64
 
 
 def test_apply_similarity_scales_distance():

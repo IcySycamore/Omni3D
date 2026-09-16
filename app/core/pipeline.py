@@ -281,12 +281,16 @@ def metric_alignment(preds, extrinsics, min_spread_m=1e-3) -> Optional[dict]:
 
 
 def apply_similarity(points: torch.Tensor, R, T, s) -> torch.Tensor:
-    """把模型坐标系的点云变换到米制/AR 世界坐标系：``p' = s · R · p + T``。"""
+    """把模型坐标系的点云变换到米制/AR 世界坐标系：``p' = s · R · p + T``。
+
+    返回**始终是 float64**：内部本来就以 float64 计算，之前再回写输入 dtype
+    属于无谓的二次舍入（#24）。PLY 导出也用 float64（`property double`），
+    于是整条导出链路不再经过 float32。
+    """
     p = points.to(torch.float64)
     r = torch.as_tensor(R, dtype=torch.float64, device=p.device)
     t = torch.as_tensor(T, dtype=torch.float64, device=p.device).reshape(-1)[:3]
-    out = float(s) * (p @ r.T) + t
-    return out.to(dtype=points.dtype)
+    return float(s) * (p @ r.T) + t
 
 
 # ══════════════════ 顶层管线 ══════════════════

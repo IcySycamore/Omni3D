@@ -98,6 +98,13 @@ def main():
     render_pts, _ = web_server._sample_for_render(points[keep], cleaned_cols)
     print(f"  抽样后渲染点数: {len(render_pts):,}（上限 {config.MAX_RENDER_POINTS:,}）")
 
+    # PLY 体积（#24：坐标从 float32 升到 float64 后每点 27B，旧为 15B）
+    ply = web_server._pts_to_ply(points[keep], cleaned_cols)
+    n_ply = int(points[keep].shape[0])
+    print(f"  PLY 体积    : {len(ply):,} 字节 ({len(ply) / 1024 / 1024:.1f} MiB)")
+    if n_ply:
+        print(f"  PLY 每点    : {len(ply) / n_ply:.1f} 字节/点（float32 时为 15）")
+
     # 参数敏感性：std 越小剔得越多
     print("\n=== 参数敏感性（同一份点云）===")
     print(f"{'k':>4} {'std':>6} {'剔除比例 %':>12} {'耗时 s':>9}")
