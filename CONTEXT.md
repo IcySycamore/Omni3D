@@ -84,8 +84,11 @@ client（web / desktop）  ──HTTP──►  server（唯一一种）  ──
   `is_video`、`frame_count`、`client_id`
 - **内外参格式**：`extrinsics` = col-major 4×4；`intrinsics` = 9 元素 K（`fx 0 cx / 0 fy cy / 0 0 1`）
 - **结果**：`points`（渲染子集，`[x,y,z,r,g,b]`，上限 `OMNI3D_MAX_RENDER_POINTS` 默认 6 万）
-  - `num_points`（全量，已按置信度过滤）+ `elapsed_s` + `scale`；完整点云**不进 JSON**，
+  - `num_points`（全量，已按置信度过滤 + SOR 剔除）+ `elapsed_s` + `scale`；完整点云**不进 JSON**，
     用 `GET /api/history/{id}/ply` 下载（二进制小端 PLY，含真实 RGB）
+  - 另有 `num_points_raw`（SOR 前）/ `num_points_removed`（被剔数）
+  - 离群点剔除：`OMNI3D_SOR_K` / `OMNI3D_SOR_STD`（默认 8 / 2.0，**任一为 0 即关闭**）；
+    剔除后**显示 / PLY / 测量”用同一份点云**（看到的 = 量到的 = 导出的）
   - 点云来源：`OMNI3D_PTS3D_SOURCE` = `local`（默认，跟随上游评测的 local head）
     或 `global`（全局 head 原始输出）；两档共用同一全局坐标系，切换零成本
 - **认证头**：登录后请求携带 `X-Auth-Token: <token>`；历史归属该 token 对应的 username

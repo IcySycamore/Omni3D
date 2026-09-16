@@ -9,8 +9,12 @@ import os
 import torch
 
 
-def _env_int(name: str, default: int) -> int:
-    """读取正整数环境变量；缺失/非法/非正时回退到默认值。"""
+def _env_int(name: str, default: int, allow_zero: bool = False) -> int:
+    """读取整数环境变量；缺失/非法/越界时回退到默认值。
+
+    ``allow_zero=True`` 时 ``0`` 是**合法值**（用于表示「关闭」这类开关）；
+    默认 ``False`` 时分 ``0`` 视为非法（如点数上限为 0 没意义）。
+    """
     raw = (os.environ.get(name) or "").strip()
     if not raw:
         return default
@@ -18,7 +22,19 @@ def _env_int(name: str, default: int) -> int:
         value = int(raw)
     except ValueError:
         return default
-    return value if value > 0 else default
+    return value if value >= (0 if allow_zero else 1) else default
+
+
+def _env_float(name: str, default: float, allow_zero: bool = False) -> float:
+    """读取浮点环境变量；缺失/非法/越界时回退到默认值（语义同 `_env_int`）。"""
+    raw = (os.environ.get(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        return default
+    return value if value >= (0.0 if allow_zero else 1e-12) else default
 
 
 def _env_choice(name: str, allowed: tuple, default: str) -> str:
@@ -59,3 +75,13 @@ VIS_POINT_SIZE = 0.0004          # 点云点大小
 # 两者处在**同一个全局坐标系**（local head 已被对齐过去），所以下游无差别；
 # 可用 OMNI3D_PTS3D_SOURCE=local|global 切换，便于 A/B 对比与回退。
 PTS3D_SOURCE = _env_choice("OMNI3D_PTS3D_SOURCE", ("local", "global"), "local")
+
+# ---- 离群点剔除（SOR：statistical outlier removal）----
+# 面积误差 ~ 平方级、体积误差 ~ 立方级放大，几何飞点必须先剔除。
+# 与置信度过滤**互补**：置信度过滤删的是「模型没把握的点」，
+# 而背景飞点往往置信度并不低，只能靠几何孤立性识别。
+# `0` 表示**关闭**（`allow_zero=True` 才会把 0 当成合法值）。
+# 代价：在**全量**点上建 cKDTree 并查 k 近邻，百万点是秒级开销，
+# 属「宁可要精度不要速度」的取舍。
+SOR_K = _env_int("OMNI3D_SOR_K", 8, allow_zero=True)
+SOR_STD = _env_float("OMNI3D_SOR_STD", 2.0, allow_zero=True)

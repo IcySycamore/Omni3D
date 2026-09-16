@@ -48,6 +48,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: 
 
 from app.core import config  # noqa: E402
 from app.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
+from app.core.pointcloud import statistical_outlier_removal  # noqa: E402
 from app.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
 
 from task_queue import task_queue  # noqa: E402
@@ -203,21 +204,19 @@ def _view_colors(views, index: int, height: int, width: int):
     return rgb.astype(np.uint8).reshape(-1, 3)
 
 
-def _collect_points(output_dict, conf_percentile=None, max_render_points=None,
-                    seed: int = 0):
+def _collect_points(output_dict, conf_percentile=None):
     """收集各视图点云（**全分辨率 + 真实 RGB + 置信度过滤**）。
 
-    Returns:
-        ``(points, colors, render_points, render_colors)``
+    只负责「收集」。流程顺序固定为 **收集 → 剔除离群点 → 抽样渲染**：
+    `_reject_outliers` 与 `_sample_for_render` 分开调用，保证显示、PLY 导出与
+    测量三者看到的是**同一份**点云（看到的 = 量到的 = 导出的）。
 
-        - ``points``/``colors``：过滤后的**全量**点与其 RGB（用于落盘 PLY）
-        - ``render_points``/``render_colors``：均匀抽样到 ``max_render_points``
-          的子集（用于返回给客户端渲染，避免手机端一次吃几百万点）
+    Returns:
+        ``(points, colors)`` —— 置信度过滤后的**全量**点 ``(N, 3)`` float32 与
+        其 RGB ``(N, 3)`` uint8；任一视图取不到颜色时整体为 ``None``。
     """
     if conf_percentile is None:
         conf_percentile = config.VIS_CONF_PERCENTILE
-    if max_render_points is None:
-        max_render_points = config.MAX_RENDER_POINTS
 
     preds = output_dict["preds"]
     views = output_dict.get("views") or []
@@ -258,23 +257,53 @@ def _collect_points(output_dict, conf_percentile=None, max_render_points=None,
         rgb_parts.append(colors[keep] if colors is not None else None)
 
     if not pts_parts:
-        return ([], None, [], None)
+        return np.zeros((0, 3), dtype=np.float32), None
 
     points = np.concatenate(pts_parts, axis=0)
     has_colors = all(part is not None for part in rgb_parts)
     colors = np.concatenate(rgb_parts, axis=0) if has_colors else None
+    return points, colors
 
-    # 均匀抽样（确定性，可复现），只影响**渲染**，不影响 PLY
-    if max_render_points and points.shape[0] > max_render_points:
-        idx = np.linspace(0, points.shape[0] - 1, max_render_points).astype(np.int64)
-    else:
-        idx = None
-    render_points = points if idx is None else points[idx]
-    render_colors = None if colors is None else (colors if idx is None else colors[idx])
 
-    return (points.tolist(), None if colors is None else colors.tolist(),
-            render_points.tolist(),
-            None if render_colors is None else render_colors.tolist())
+def _reject_outliers(points, colors):
+    """统计离群点剔除（SOR，实现见 `app.core.pointcloud`）。
+
+    `config.SOR_K` / `config.SOR_STD` 任一 ``<= 0`` 即**关闭**。
+    为什么不能只靠置信度过滤：置信度删的是「模型没把握的点」，而背景飞点往往
+    置信度并不低，只能靠**几何孤立性**识别，两者互补。
+
+    Returns:
+        ``(points, colors, removed)`` —— ``removed`` 为被剔除的点数（关闭时为 0）。
+    """
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3)
+    rgb = None if colors is None else np.asarray(colors, dtype=np.uint8).reshape(-1, 3)
+    if config.SOR_K <= 0 or config.SOR_STD <= 0 or pts.shape[0] < 2:
+        return pts, rgb, 0
+    keep = statistical_outlier_removal(pts, k=config.SOR_K, std=config.SOR_STD)
+    removed = int(pts.shape[0] - int(keep.sum()))
+    if removed == 0:
+        return pts, rgb, 0
+    return pts[keep], (None if rgb is None else rgb[keep]), removed
+
+
+def _sample_for_render(points, colors, max_render_points=None):
+    """把全量点云**确定性均匀抽样**到 ``max_render_points``（仅用于客户端渲染）。
+
+    抽样必须在离群点剔除**之后**做，否则渲染子集里会残留已被剔除的飞点，
+    出现「屏幕上还在、PLY 里没有」的不一致。
+
+    Returns:
+        ``(render_points, render_colors)``（已 ``.tolist()``，供直接进 JSON）。
+    """
+    if max_render_points is None:
+        max_render_points = config.MAX_RENDER_POINTS
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3)
+    rgb = None if colors is None else np.asarray(colors, dtype=np.uint8).reshape(-1, 3)
+    if max_render_points and pts.shape[0] > max_render_points:
+        idx = np.linspace(0, pts.shape[0] - 1, max_render_points).astype(np.int64)
+        pts = pts[idx]
+        rgb = None if rgb is None else rgb[idx]
+    return pts.tolist(), (None if rgb is None else rgb.tolist())
 
 
 def _reconstruct_to_result(image_paths, resolution, intrinsics=None, extrinsics=None,
@@ -300,8 +329,12 @@ def _reconstruct_to_result(image_paths, resolution, intrinsics=None, extrinsics=
         intrinsics=intrinsics,
     )
     metric = output_dict.get("metric") or {}
-    points, colors, render_points, render_colors = _collect_points(output_dict)
+    points, colors = _collect_points(output_dict)
+    num_points_raw = int(points.shape[0])
+    # 剔除离群点后再落盘 / 抽样：看到的 = 量到的 = 导出的
+    points, colors, num_removed = _reject_outliers(points, colors)
     ply_bytes = _pts_to_ply(points, colors)
+    render_points, render_colors = _sample_for_render(points, colors)
     # 渲染用点云带上颜色：与网页/桌面端约定的 [x,y,z,r,g,b] 形式一致
     if render_colors is not None and render_points:
         render_payload = np.concatenate(
@@ -315,6 +348,8 @@ def _reconstruct_to_result(image_paths, resolution, intrinsics=None, extrinsics=
         "ok": True,
         "num_views": len(image_paths),
         "num_points": len(points),
+        "num_points_raw": num_points_raw,
+        "num_points_removed": num_removed,
         "render_points": len(render_points),
         "elapsed_s": round(elapsed, 2),
         "points": render_payload,

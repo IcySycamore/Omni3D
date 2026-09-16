@@ -109,6 +109,8 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
   "num_views": 5,
   "result": {
     "ok": true, "num_views": 5, "num_points": 1460540, "elapsed_s": 2.3,
+    "num_points_raw": 1532000,     // SOR（离群点剔除）**之前**的点数
+    "num_points_removed": 71460,   // 被 SOR 剔除的点数
     "render_points": 60000,        // 实际回传给客户端的渲染点数
     "points": [[x, y, z, r, g, b], "..."],   // 6 元素：坐标 + **真实 RGB**（0~255）
     "has_colors": true,            // false → 客户端自行按高度着色
@@ -137,7 +139,12 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 >   百万点时响应体会膨胀到几十 MB，手机端解析直接卡死。
 >   现在 PLY 落盘为**二进制小端**文件，客户端统一用 `GET /api/history/{id}/ply` 下载。
 > - 服务端会先用 `config.VIS_CONF_PERCENTILE`（默认 10）**过滤置信度最低的点**，
->   `num_points` 是过滤后的全量点数。
+>   再按 `config.SOR_K` / `config.SOR_STD`（`OMNI3D_SOR_K` / `OMNI3D_SOR_STD`，
+>   默认 8 / 2.0，任一为 `0` 即关闭）做 **SOR 统计离群点剔除**。
+>   - `num_points_raw` = 置信度过滤后、SOR **前**的点数
+>   - `num_points` = SOR **后**的点数（即 PLY 与测量使用的点数）
+>   - `num_points_removed` = `num_points_raw - num_points`
+>   - 剔除后的点云**同时**用于渲染、PLY 导出与测量（看到的 = 量到的 = 导出的）
 
 ### 1.4 历史（按 username 隔离）
 
