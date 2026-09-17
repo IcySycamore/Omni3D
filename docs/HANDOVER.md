@@ -182,6 +182,9 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 
 ### 5.1 协议复用清单（**不发明新协议**）
 
+> 五个同类产品的逐项能力对比（WebODM / NodeODM / Potree / SuperSplat vs 我们的 panel）
+> 与"该抄什么、只有我们有什么、许可红线"见 [`docs/RELATED-WORK.md`](RELATED-WORK.md)。
+
 三类现成标准，各管一层：
 
 | 层次                | 采用                                                                                                              | 从中拿到什么                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 要避开 / 替换                                                                                                                                   |
