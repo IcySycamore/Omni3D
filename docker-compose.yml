@@ -1,29 +1,36 @@
 version: "3.8"
 
+# Omni3D v1.0.0-mvp —— 三服务（同一镜像，按 ROLE 起不同进程）。
+#   只想要"能重建的服务"：起 api（+ pages 让浏览器能打开面板）
+#   要卖服务（账号 / 计费 / API Key）：再起 portal
+# 共享数据：data/ 是三个服务共同的状态目录（SQLite）。
+
+x-omni3d-image: &omni3d-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: omni3d:latest
+  restart: unless-stopped
+
 services:
-  omni3d:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      # args:
-      #   INSTALL_PYTORCH3D: "true"
-    image: omni3d:latest
-    container_name: omni3d-server
+  # ---- 服务商 API（重建，需 GPU；MOCK_MODE=true 可无 GPU 跑通前端）----
+  api:
+    <<: *omni3d-image
+    container_name: omni3d-api
     ports:
       - "50865:50865"
     environment:
+      - ROLE=api
       - HOST=0.0.0.0
       - PORT=50865
-      # 默认 mock 模式，无需 GPU 与模型权重即可启动
-      - MOCK_MODE=true
-      # 真实模式需要模型权重、CUDA、pytorch3d
-      # - MOCK_MODE=false
+      - SERVE_PAGE=0 # 页面交给 pages 服务（想合并就把这行删掉）
+      - MOCK_MODE=true # 默认无模型即可启动；真实推理改 false + 开下面 GPU
+      - OMNI3D_CHECKPOINT_DIR=/models/Fast3R_ViT_Large_512
     volumes:
-      - ./outputs:/app/outputs
+      - ./data:/app/data
       - ./temp_preview_frames:/app/temp_preview_frames
-      # 如需使用本地模型权重，取消注释并映射到容器内
-      # - ./jedyang97/Fast3R_ViT_Large_512:/app/jedyang97/Fast3R_ViT_Large_512
-    # 真实模型推理时启用 GPU
+      - ./models:/models # 权重挂载卷（2.5GB 不要进镜像）
+    # 真实模型推理时启用 GPU：
     # deploy:
     #   resources:
     #     reservations:
@@ -31,3 +38,32 @@ services:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
+
+  # ---- 面板页面（纯静态，无 torch，不占显存）----
+  pages:
+    <<: *omni3d-image
+    container_name: omni3d-pages
+    ports:
+      - "50866:50866"
+    environment:
+      - ROLE=pages
+      - PAGES_HOST=0.0.0.0
+      - PAGES_PORT=50866
+      # 页面要连的 API 绝对地址（留空 = 按"页面同主机 + API 端口"推）
+      # - API_ORIGIN=http://127.0.0.1:50865
+    volumes:
+      - ./data:/app/data
+
+  # ---- 官网（控制面：账号 / 计费 / API Key / 流水）----
+  portal:
+    <<: *omni3d-image
+    container_name: omni3d-portal
+    ports:
+      - "50867:50867"
+    environment:
+      - ROLE=portal
+      - PORTAL_HOST=0.0.0.0
+      - PORTAL_PORT=50867
+      - API_ORIGIN=http://127.0.0.1:50865
+    volumes:
+      - ./data:/app/data

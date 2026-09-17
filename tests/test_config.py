@@ -83,3 +83,23 @@ class TestEnvChoice:
     def test_illegal_uses_default(self, monkeypatch):
         monkeypatch.setenv("OMNI3D_TEST_CHOICE", "zzz")
         assert config._env_choice("OMNI3D_TEST_CHOICE", ("a", "b"), "a") == "a"
+
+
+class TestCheckpointDir:
+    """权重目录：默认在仓库内，但必须能用环境变量指到挂载卷（部署必需）。"""
+
+    def test_env_path_overrides(self, monkeypatch):
+        monkeypatch.setenv("OMNI3D_TEST_PATH", "/models/whatever")
+        assert config._env_path("OMNI3D_TEST_PATH", "/default") == "/models/whatever"
+
+    def test_env_path_missing_and_blank_fall_back(self, monkeypatch):
+        monkeypatch.delenv("OMNI3D_TEST_PATH", raising=False)
+        assert config._env_path("OMNI3D_TEST_PATH", "/default") == "/default"
+        monkeypatch.setenv("OMNI3D_TEST_PATH", "   ")
+        assert config._env_path("OMNI3D_TEST_PATH", "/default") == "/default"
+
+    def test_default_points_into_the_repo_cache(self):
+        """默认值是 ignore 掉的本地缓存目录（权重不进仓）。"""
+        assert config.CHECKPOINT_DIR.replace("\\", "/").endswith(
+            "jedyang97/Fast3R_ViT_Large_512"
+        )

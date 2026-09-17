@@ -32,3 +32,10 @@ notebooks/
 *.safetensors
 *.pth
 *.ckpt
+
+# 权重目录与挂载点（约 2.5GB，一律挂卷）
+jedyang97/
+models/
+
+# 本地状态（SQLite 会话/账号/计费 + PLY 产物；容器里用 ./data 卷）
+data/

@@ -43,11 +43,22 @@ def _env_choice(name: str, allowed: tuple, default: str) -> str:
     return raw if raw in allowed else default
 
 
+def _env_path(name: str, default: str) -> str:
+    """读取路径型环境变量；空串/缺失 → 默认值（不做存在性检查）。"""
+    raw = (os.environ.get(name) or "").strip()
+    return raw or default
+
+
 # 项目根目录（app/ 的上两级）
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Fast3R 预训练模型：HF 仓库名，或相对项目根目录的本地权重目录
-CHECKPOINT_DIR = os.path.join(PROJECT_ROOT, "jedyang97", "Fast3R_ViT_Large_512")
+# Fast3R 预训练权重目录（HF 目录或任意本地目录）。
+# 默认是仓库内的 jedyang97/（已 gitignore）；**容器 / 客户环境请用
+# OMNI3D_CHECKPOINT_DIR 指向挂载卷**，不要把 2.5GB 权重塞进源码树。
+CHECKPOINT_DIR = _env_path(
+    "OMNI3D_CHECKPOINT_DIR",
+    os.path.join(PROJECT_ROOT, "jedyang97", "Fast3R_ViT_Large_512"),
+)
 
 # 计算设备：优先 CUDA
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
