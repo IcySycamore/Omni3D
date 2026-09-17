@@ -1,31 +1,90 @@
-# Contributing to Fast3R
-We want to make contributing to this project as easy and transparent as
-possible.
+# 贡献指南（Omni3D）
 
-## Pull Requests
-We actively welcome your pull requests.
+> 本文件适用于 **Omni3D 本仓库**。
+> 仓库内 `fast3r/` 是 vendored 的上游代码，若要向上游贡献，请遵循其各自的流程。
 
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
-5. Make sure your code lints.
-6. If you haven't already, complete the Contributor License Agreement ("CLA").
+本项目启用了 **分支保护 + PR 审核**，`main` 不接受直接推送。请按下述流程提交改动。
 
-## Contributor License Agreement ("CLA")
-In order to accept your pull request, we need you to submit a CLA. You only need
-to do this once to work on any of Meta's open source projects.
+---
 
-Complete your CLA here: <https://code.facebook.com/cla>
+## 1. 开发流程
 
-## Issues
-We use GitHub issues to track public bugs. Please ensure your description is
-clear and has sufficient instructions to be able to reproduce the issue.
+```powershell
+# ① 从最新 main 切出功能分支（不要直接在 main 上改）
+git checkout main
+git pull origin main
+git checkout -b feature/简短描述     # 或 fix/xxx、docs/xxx、refactor/xxx
 
-Meta has a [bounty program](https://www.facebook.com/whitehat/) for the safe
-disclosure of security bugs. In those cases, please go through the process
-outlined on that page and do not file a public issue.
+# ② 改动 + 提交（保持原子化）
+git add .
+git commit -m "feat: 简述做了什么"
 
-## License
-By contributing to Fast3R, you agree that your contributions will be licensed
-under the LICENSE file in the root directory of this source tree.
+# ③ 推送
+git push -u origin feature/简短描述
+```
+
+④ 在 GitHub 上开 **Pull Request**（base = `main`）。
+⑤ 按审核意见在**同一分支**追加提交并推送，PR 会自动更新。
+⑥ 审核通过后合并，并删除已合并的分支。
+
+> 直接 `git push origin main` 会被拒绝：
+> `remote: error: GH006: Protected branch update failed ... Changes must be made through a pull request.`
+
+## 2. 提交信息约定
+
+格式：`type: 简述`，`type` 取下列之一。
+
+| type       | 用于     |
+| ---------- | -------- |
+| `feat`     | 新功能   |
+| `fix`      | 缺陷修复 |
+| `docs`     | 文档     |
+| `refactor` | 重构     |
+| `chore`    | 杂项     |
+| `test`     | 测试     |
+
+例：`feat: 网页端支持两点测距`、`fix: 修正历史记录的 owner 归属`
+
+## 3. 改代码前请先读
+
+| 文档                                           | 内容                             | 何时必须同步更新        |
+| ---------------------------------------------- | -------------------------------- | ----------------------- |
+| [`CONTEXT.md`](CONTEXT.md)                     | 领域词汇 + **分层硬约束**        | 引入新术语 / 新分层     |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 模块地图、会话层、认证、尺度反推 | 调整模块职责或数据流    |
+| [`docs/API.md`](docs/API.md)                   | **接口清单（唯一权威来源）**     | **新增 / 修改任何接口** |
+
+**最重要的硬约束（摘自 `CONTEXT.md`）**：`server 只有一种`、`客户端只有一份实现`——
+重建 / 尺度 / 历史 / 测量逻辑只在服务器实现一次；客户端（浏览器）只负责采集与呈现，
+**不得重复实现**，也**不要为桌面再起一套客户端**（浏览器就是桌面端）。
+
+## 4. 本地运行与自测
+
+完整步骤见 [README「运行」](README.md#-运行)。统一入口 `run.ps1`
+（自动选用带依赖的解释器；若报 `No module named 'fastapi'`，说明用了全局 python）：
+
+```powershell
+<你的环境>\python.exe -m pip install -r requirements-app.txt   # 一次即可
+
+.\run.ps1 server      # ① 起服务器（模型首次加载需数分钟）
+# ② 客户端就是浏览器：打开 http://127.0.0.1:50865/（无需单独启动）
+.\run.ps1 test        # 跑单元 + 集成测试
+.\run.ps1 bench       # 重建速度/质量基准（见 docs/PERFORMANCE.md）
+```
+
+提交 PR 前请确认：
+
+- `.\run.ps1 test` 通过（新增纯逻辑请补 `tests/` 下的用例）
+- `python -m py_compile <改动的 .py>` 通过（不引入语法错误）
+- 关键改动有对应验证；**把验证方式/结果写进 PR 描述**（如 family.mp4 → 5 视图 92160 点）
+- 未引入新的重复实现（先查 `CONTEXT.md` 的约束）
+
+## 5. 代码风格
+
+- 文档与注释用中文；Python 用 `from __future__ import annotations` + 类型标注
+- 分层：`web/`（server，核心逻辑）、`app/core/`（server 共享核心）、`web/index.html`（唯一客户端）
+- **不要修改 `fast3r/` 内的 vendored 代码**；确有必要请在 PR 中单独说明理由
+- 生成物不提交：`build/`、`dist/`、`__pycache__/`、`data/`、`demo_outputs/`（见 `.gitignore`）
+
+## 6. Issue
+
+用 GitHub Issues 记录缺陷与需求。描述请包含：**复现步骤 / 期望结果 / 实际结果 / 环境**（OS、GPU、版本）。

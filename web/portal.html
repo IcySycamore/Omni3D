@@ -1,0 +1,1421 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Omni3D 官网 · 定价 / 控制台 / 账户</title>
+    <style>
+      :root {
+        --bg: #0a0c14;
+        --card: rgba(255, 255, 255, 0.04);
+        --border: rgba(255, 255, 255, 0.1);
+        --text: #e8ecf6;
+        --muted: #8792a8;
+        --accent: #00d4ff;
+        --ok: #34d399;
+        --warn: #fbbf24;
+        --danger: #f87171;
+        --radius: 14px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: radial-gradient(
+          1200px 600px at 20% -10%,
+          #16203a 0%,
+          var(--bg) 60%
+        );
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        min-height: 100vh;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px 64px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .brand img {
+        width: 28px;
+        height: 28px;
+      }
+      nav {
+        display: flex;
+        gap: 14px;
+        font-size: 0.86rem;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+      nav a:hover {
+        color: var(--text);
+      }
+      h1 {
+        font-size: 1.9rem;
+        margin: 42px 0 10px;
+        letter-spacing: 0.01em;
+      }
+      h1 span {
+        color: var(--accent);
+      }
+      .lead {
+        color: var(--muted);
+        max-width: 620px;
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin: 40px 0 14px;
+        color: var(--text);
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 18px 16px;
+        backdrop-filter: blur(12px);
+      }
+      /* 右上角 FREE 角标：验证阶段所有方案都免费 */
+      .badge-free {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #04121a;
+        background: linear-gradient(180deg, #7ef0d0, #34d399);
+        border-radius: 999px;
+        padding: 2px 9px;
+      }
+      .card.disabled {
+        opacity: 0.62;
+      }
+      .card.cur {
+        border-color: rgba(0, 212, 255, 0.55);
+      }
+      .card h3 {
+        font-size: 1rem;
+        margin-bottom: 6px;
+      }
+      .price {
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin: 4px 0 2px;
+      }
+      .price em {
+        font-size: 0.8rem;
+        font-style: normal;
+        color: var(--muted);
+        margin-left: 4px;
+      }
+      .desc {
+        color: var(--muted);
+        font-size: 0.82rem;
+        min-height: 36px;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        border-radius: 9px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+        padding: 8px 14px;
+      }
+      button:hover:not(:disabled) {
+        border-color: rgba(0, 212, 255, 0.5);
+      }
+      button.primary {
+        background: linear-gradient(180deg, #00d4ff, #0090c8);
+        border-color: transparent;
+        color: #04121a;
+        font-weight: 600;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      button.danger {
+        color: var(--danger);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      label.field {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      input[type="text"],
+      input[type="password"] {
+        font: inherit;
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 9px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .tag.ok {
+        color: var(--ok);
+        border-color: rgba(52, 211, 153, 0.5);
+      }
+      .tag.warn {
+        color: var(--warn);
+        border-color: rgba(251, 191, 36, 0.5);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.84rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 6px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 0.76rem;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.8rem;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .toast-box {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .toast {
+        background: rgba(10, 14, 24, 0.92);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.84rem;
+        max-width: 320px;
+      }
+      .toast.err {
+        border-left-color: var(--danger);
+      }
+      .toast.ok {
+        border-left-color: var(--ok);
+      }
+      .note {
+        border-left: 3px solid var(--warn);
+        padding-left: 10px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        margin-top: 10px;
+      }
+      /* ---------- 视图与 tab ---------- */
+      .view {
+        display: block;
+      }
+      .auth-card {
+        max-width: 560px;
+        margin-top: 26px;
+      }
+      nav.tabs {
+        display: flex;
+        gap: 8px;
+        margin: 32px 0 18px;
+        flex-wrap: wrap;
+      }
+      .tab,
+      .subtab {
+        border-radius: 999px;
+        padding: 7px 16px;
+        color: var(--muted);
+      }
+      .tab.active,
+      .subtab.active {
+        color: #04121a;
+        background: linear-gradient(180deg, #00d4ff, #0090c8);
+        border-color: transparent;
+        font-weight: 600;
+      }
+      nav.subtabs {
+        display: flex;
+        gap: 8px;
+        margin: 4px 0 16px;
+      }
+      button.ghost {
+        background: transparent;
+        border-color: transparent;
+        color: var(--muted);
+        padding: 4px 6px;
+      }
+      button.ghost:hover {
+        color: var(--text);
+      }
+      /* 额度包卡片：右上角角标 + 进度条 */
+      .badge-corner {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 0.68rem;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 9px;
+      }
+      .badge-corner.inf {
+        color: var(--accent);
+        border-color: rgba(0, 212, 255, 0.5);
+      }
+      .bar {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+        margin: 10px 0 8px;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #00d4ff, #34d399);
+      }
+      .summary .price {
+        font-size: 1.35rem;
+      }
+      .strike {
+        color: var(--muted);
+        text-decoration: line-through;
+        font-size: 0.82rem;
+        margin-left: 6px;
+      }
+      footer {
+        margin-top: 56px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <img src="/assets/logo-mark.png" alt="" onerror="this.remove()" />
+          <span>Omni3D</span>
+        </div>
+        <nav id="siteNav">
+          <a id="panelLink" href="#" target="_blank" rel="noopener"
+            >打开面板 →</a
+          >
+        </nav>
+      </header>
+
+      <!-- ==================== 未登录：官网入口就是登录页 ==================== -->
+      <section class="view" id="viewLogin">
+        <h1>多视图<span>三维重建</span>，按量计费</h1>
+        <p class="lead">
+          拍一段视频，拿到可测量的三维点云。账号、额度与 API Key 都在这里管理；
+          面板（web client）填上 API Key 就能直接开始重建。
+        </p>
+
+        <div class="card auth-card" id="authCard">
+          <div class="row" style="justify-content: space-between">
+            <strong id="authTitle">登录</strong>
+            <button class="ghost" id="toggleMode">没有账号？去注册</button>
+          </div>
+          <div class="grid2" style="margin-top: 12px">
+            <div>
+              <label class="field" for="username">用户名</label>
+              <input
+                id="username"
+                type="text"
+                autocomplete="username"
+                placeholder="3–32 位字母/数字/._-"
+              />
+            </div>
+            <div>
+              <label class="field" for="password">密码</label>
+              <input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="至少 8 位"
+              />
+            </div>
+          </div>
+          <div id="password2Row" class="hidden" style="margin-top: 12px">
+            <label class="field" for="password2">确认密码</label>
+            <input id="password2" type="password" autocomplete="new-password" />
+          </div>
+          <div class="row" style="margin-top: 14px">
+            <button class="primary" id="submitAuth">登录</button>
+            <span class="muted" id="authHint">
+              明文密码不上传：本地先算哈希，服务器只存 verifier。
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 已登录：定价 / 控制台 / 账户 ==================== -->
+      <section class="view hidden" id="viewApp">
+        <nav class="tabs" id="mainTabs">
+          <button class="tab active" data-tab="pricing">定价</button>
+          <button class="tab" data-tab="console">控制台</button>
+          <button class="tab" data-tab="account">账户</button>
+        </nav>
+
+        <!-- ---------------- 定价 ---------------- -->
+        <div class="tabpanel" id="tab-pricing">
+          <nav class="subtabs" id="pricingTabs">
+            <button class="subtab active" data-sub="metered">按用量</button>
+            <button class="subtab" data-sub="plan">按计划</button>
+          </nav>
+
+          <div id="sub-metered">
+            <div class="cards" id="meteredCards"></div>
+            <h2>用量包</h2>
+            <div class="cards" id="packCards"></div>
+            <p class="note" id="packNote"></p>
+          </div>
+
+          <div id="sub-plan" class="hidden">
+            <div class="cards" id="planCards"></div>
+            <p class="note" id="planNote"></p>
+          </div>
+        </div>
+
+        <!-- ---------------- 控制台 ---------------- -->
+        <div class="tabpanel hidden" id="tab-console">
+          <div class="cards summary" id="summaryCards"></div>
+
+          <h2>我的额度包</h2>
+          <div class="cards" id="packList"></div>
+          <div class="muted" id="packEmpty" style="margin-top: 8px">
+            还没有额度包：计划包在「定价 → 按计划」，用量包在「定价 → 按用量」。
+          </div>
+
+          <h2>API Key</h2>
+          <div class="card">
+            <div class="row">
+              <div style="flex: 1 1 220px">
+                <label class="field" for="keyLabel"
+                  >备注（例如：家里台式）</label
+                >
+                <input id="keyLabel" type="text" maxlength="40" />
+              </div>
+              <button
+                class="primary"
+                id="createKey"
+                style="align-self: flex-end"
+              >
+                新建 API Key
+              </button>
+            </div>
+            <div id="newKeyBox" class="hidden" style="margin-top: 14px">
+              <div class="muted">
+                新 Key（<strong>只显示这一次</strong>，请立刻复制到面板的 「设置
+                → 服务 → API Key」）：
+              </div>
+              <div class="row" style="margin-top: 6px">
+                <code id="newKeyValue" style="flex: 1 1 240px"></code>
+                <button id="copyKey">复制</button>
+              </div>
+            </div>
+            <table style="margin-top: 14px">
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>备注</th>
+                  <th>创建</th>
+                  <th>最近使用</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="keyRows"></tbody>
+            </table>
+            <div class="muted" id="keyEmpty" style="margin-top: 8px">
+              还没有 API Key，新建一个就能在面板里用了。
+            </div>
+          </div>
+
+          <h2>流水</h2>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>类型</th>
+                  <th>说明</th>
+                  <th>余额变动</th>
+                  <th>余额</th>
+                </tr>
+              </thead>
+              <tbody id="ledgerRows"></tbody>
+            </table>
+            <div class="muted" id="ledgerEmpty" style="margin-top: 8px">
+              还没有流水：充值、购买额度包、每次重建的扣减都会记在这里。
+            </div>
+          </div>
+
+          <h2>订单</h2>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>项目</th>
+                  <th>数量</th>
+                  <th>实付</th>
+                  <th>标价</th>
+                  <th>时间</th>
+                </tr>
+              </thead>
+              <tbody id="orderRows"></tbody>
+            </table>
+            <div class="muted" id="orderEmpty" style="margin-top: 8px">
+              还没有订单。
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------------- 账户 ---------------- -->
+        <div class="tabpanel hidden" id="tab-account">
+          <div class="card">
+            <div class="row" style="justify-content: space-between">
+              <div>
+                <div class="muted">当前账号</div>
+                <strong id="accountName">-</strong>
+              </div>
+              <div class="row">
+                <span class="tag" id="planTag">-</span>
+                <button id="logoutBtn">退出登录</button>
+              </div>
+            </div>
+            <div class="muted" style="margin-top: 10px" id="usageLine"></div>
+          </div>
+
+          <h2>余额充值</h2>
+          <div class="card">
+            <div class="row" style="justify-content: space-between">
+              <div>
+                <div class="muted">可用余额</div>
+                <div class="price" id="balanceBig">$0.00</div>
+              </div>
+              <div class="muted" id="balanceHint">
+                按量计费时，用量包不够的部分从这里扣。
+              </div>
+            </div>
+            <div class="row" id="topupRow" style="margin-top: 14px"></div>
+          </div>
+
+          <h2>账号信息</h2>
+          <div class="card">
+            <div class="grid2">
+              <div>
+                <label class="field" for="displayName">显示名</label>
+                <input
+                  id="displayName"
+                  type="text"
+                  maxlength="40"
+                  placeholder="可留空"
+                />
+              </div>
+              <div>
+                <label class="field" for="email">邮箱</label>
+                <input
+                  id="email"
+                  type="text"
+                  maxlength="120"
+                  placeholder="可留空"
+                />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 12px">
+              <button id="saveProfile">保存资料</button>
+              <span class="muted" id="profileHint"
+                >邮箱只用于联系，不做登录。</span
+              >
+            </div>
+          </div>
+
+          <h2>修改密码</h2>
+          <div class="card">
+            <div class="grid2">
+              <div>
+                <label class="field" for="oldPassword">原密码</label>
+                <input
+                  id="oldPassword"
+                  type="password"
+                  autocomplete="current-password"
+                />
+              </div>
+              <div>
+                <label class="field" for="newPassword">新密码</label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="至少 8 位"
+                />
+              </div>
+            </div>
+            <div class="row" style="margin-top: 12px">
+              <button id="changePassword">修改密码</button>
+              <span class="muted"
+                >改密需要原密码证明；明文密码依然不上网。</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Omni3D 官网 · 面板在 <code id="pagesAddr">-</code> · 重建 API 在
+        <code id="apiAddr">-</code>
+        <div class="muted" style="margin-top: 6px">
+          本页只负责账号 / 额度（计划包 · 用量包 · 余额）/ 流水 / Key；
+          真正的重建在服务商进程里跑，两者共享同一份数据库。
+        </div>
+      </footer>
+    </div>
+
+    <div class="toast-box" id="toasts"></div>
+
+    <script type="module">
+      // ==================== Omni3D 官网 · 定价 / 控制台 / 账户 ====================
+      // 登录协议与服务商完全一致（挑战-应答）：本地算哈希，明文密码不上网。
+      // 面板里有纯 JS 的 SHA-256（页面可能跑在非安全上下文）；
+      // 官网跑在本机 / HTTPS，用平台的 crypto.subtle 就够。
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+      const LS_TOKEN = "omni3d.portal_token";
+      const LS_TAB = "omni3d.portal_tab";
+      const LS_SUBTAB = "omni3d.portal_subtab";
+      let token = localStorage.getItem(LS_TOKEN) || null;
+      let registerMode = false;
+      let account = null;
+      let config = { plans: [], metered: [], packs: [], topup_tiers: [] };
+      const METRIC_UNIT = { points: "点", voxels: "体素", mesh: "三角面" };
+      const KIND_LABEL = {
+        topup: "余额充值",
+        buy_pack: "购买用量包",
+        buy_plan: "购买计划包",
+        usage: "用量扣费",
+        grant: "计划重置",
+      };
+
+      // ---- 小工具 ----
+      const usd = (cents) => `$${((cents || 0) / 100).toFixed(2)}`;
+      const fmtUnits = (n) => (n || 0).toLocaleString();
+      function fmtTime(sec) {
+        if (!sec) return "—";
+        return new Date(sec * 1000).toLocaleString();
+      }
+      /** 新 salt（16 字节 hex）——改密时本地生成，明文密码不外传。 */
+      function randomSalt() {
+        const buf = crypto.getRandomValues(new Uint8Array(16));
+        return [...buf].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      // ---- 主 tab / 定价子 tab ----
+      function setTab(name, { silent = false } = {}) {
+        for (const b of $$("#mainTabs .tab")) {
+          b.classList.toggle("active", b.dataset.tab === name);
+        }
+        for (const p of $$(".tabpanel")) {
+          p.classList.toggle("hidden", p.id !== "tab-" + name);
+        }
+        if (!silent) localStorage.setItem(LS_TAB, name);
+      }
+      function setPricingSub(name, { silent = false } = {}) {
+        for (const b of $$("#pricingTabs .subtab")) {
+          b.classList.toggle("active", b.dataset.sub === name);
+        }
+        $("#sub-metered").classList.toggle("hidden", name !== "metered");
+        $("#sub-plan").classList.toggle("hidden", name !== "plan");
+        if (!silent) localStorage.setItem(LS_SUBTAB, name);
+      }
+      $$("#mainTabs .tab").forEach((b) =>
+        b.addEventListener("click", () => setTab(b.dataset.tab)),
+      );
+      $$("#pricingTabs .subtab").forEach((b) =>
+        b.addEventListener("click", () => setPricingSub(b.dataset.sub)),
+      );
+
+      function toast(msg, kind = "") {
+        const el = document.createElement("div");
+        el.className = `toast ${kind}`;
+        el.textContent = msg;
+        $("#toasts").appendChild(el);
+        setTimeout(() => el.remove(), 4200);
+      }
+
+      async function sha256Hex(text) {
+        if (!window.crypto || !crypto.subtle) {
+          throw new Error(
+            "当前地址不是安全上下文（HTTPS 或 localhost），浏览器不提供 SHA-256；请改用 https 或 localhost 访问官网。",
+          );
+        }
+        const buf = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(text),
+        );
+        return [...new Uint8Array(buf)]
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      async function api(path, opts = {}) {
+        const headers = new Headers(opts.headers || {});
+        if (token) headers.set("X-Auth-Token", token);
+        const resp = await fetch(path, { ...opts, headers });
+        let data = {};
+        try {
+          data = await resp.json();
+        } catch (_) {
+          /* 非 JSON */
+        }
+        if (resp.status === 401 && token) {
+          setToken(null);
+          account = null;
+          renderAll();
+        }
+        if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+        return data;
+      }
+
+      function jsonPost(path, body) {
+        return api(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body || {}),
+        });
+      }
+
+      function setToken(next) {
+        token = next || null;
+        if (token) localStorage.setItem(LS_TOKEN, token);
+        else localStorage.removeItem(LS_TOKEN);
+      }
+
+      // ---- 面板 / API 地址（给「打开面板」链接和页脚）----
+      function panelUrl() {
+        const host = location.hostname || "127.0.0.1";
+        return `${location.protocol}//${host}:${config.pages_port || 50866}/`;
+      }
+
+      function renderAddresses() {
+        $("#panelLink").href = panelUrl();
+        $("#pagesAddr").textContent = `:${config.pages_port || 50866}`;
+        $("#apiAddr").textContent = config.api_origin
+          ? config.api_origin
+          : `:${config.api_port || 50865}`;
+        const notes = [];
+        if (config.beta_free) {
+          notes.push("验证阶段：所有额度均免费发放，用量照记。");
+        }
+        if (config.payment === "demo") {
+          notes.push("演示环境：未接支付网关，下单不实际扣款。");
+        }
+        $("#planNote").textContent =
+          notes.join(" ") +
+          ` 计划包每月自动重置（每 ${config.plan_period_days || 30} 天）。`;
+        $("#packNote").textContent =
+          `用量包按计量单位预付（${config.beta_free ? "验证阶段免费领取" : "9 折"}）、` +
+          "不过期（∞）、每包独立计算；一次重建的扣减顺序是「先计划包 → 再用量包 → 最后余额」。";
+      }
+
+      /** 右上角 FREE：验证阶段所有卡片都免费。 */
+      function freeBadge() {
+        return config.beta_free ? '<span class="badge-free">FREE</span>' : "";
+      }
+
+      function cardEl(html, cls = "") {
+        const el = document.createElement("div");
+        el.className = "card" + (cls ? " " + cls : "");
+        el.innerHTML = html;
+        return el;
+      }
+
+      /** 额度包进度条（剩余 / 总量）。 */
+      function packBar(total, remaining) {
+        const pct =
+          total > 0
+            ? Math.max(0, Math.min(100, Math.round((remaining / total) * 100)))
+            : 0;
+        return `<div class="bar"><i style="width:${pct}%"></i></div>`;
+      }
+
+      // ---- 定价 · 按用量（三种计量的量化计费）----
+      function renderMetered() {
+        const host = $("#meteredCards");
+        host.innerHTML = "";
+        for (const m of config.metered || []) {
+          host.appendChild(
+            cardEl(
+              `${freeBadge()}<h3>按${m.name}</h3>
+               <div class="price" style="font-size:1.15rem">${fmtUnits(
+                 m.units_per_cent,
+               )} ${m.unit} = 1 分</div>
+               <div class="desc">${m.desc || ""}<br /><span class="muted">$0.01 / ${fmtUnits(
+                 m.units_per_cent,
+               )} ${m.unit}</span></div>`,
+            ),
+          );
+        }
+      }
+
+      // ---- 定价 · 用量包（预付折扣包，不过期）----
+      function renderPackSkus() {
+        const host = $("#packCards");
+        host.innerHTML = "";
+        for (const s of config.packs || []) {
+          const card = cardEl(
+            `${freeBadge()}<h3>${s.name}</h3>
+             <div class="price">${fmtUnits(s.units)}<em> ${s.unit}</em></div>
+             <div class="desc">$${s.price.toFixed(2)}<span class="strike">$${s.list_amount.toFixed(
+               2,
+             )}</span><br /><span class="muted">不过期（∞）· 每包独立计算</span></div>`,
+          );
+          const btn = document.createElement("button");
+          btn.className = "primary";
+          btn.style.marginTop = "10px";
+          btn.textContent = config.beta_free
+            ? "免费领取（验证阶段）"
+            : `购买 $${s.price.toFixed(2)}`;
+          btn.addEventListener("click", () => buyPack(s));
+          card.appendChild(btn);
+          host.appendChild(card);
+        }
+      }
+
+      // ---- 定价 · 按计划（Personal / Professional）----
+      function renderPlans() {
+        const host = $("#planCards");
+        host.innerHTML = "";
+        for (const p of config.plans || []) {
+          const isCur = !!account && account.plan === p.id;
+          const days =
+            isCur && account.plan_days_left != null
+              ? `<span class="badge-corner">${account.plan_days_left} 天后重置</span>`
+              : "";
+          const card = cardEl(
+            `${freeBadge()}${days}<h3>${p.name}</h3>
+             <div class="price">$${p.price}<em> / ${p.period || "月"}</em></div>
+             <div class="desc">${p.desc || ""}<br /><span class="muted">每 ${
+               p.period_days
+             } 天重置一次额度</span></div>`,
+            isCur ? "cur" : "",
+          );
+          const btn = document.createElement("button");
+          btn.className = "primary";
+          btn.style.marginTop = "10px";
+          btn.textContent = isCur
+            ? "当前计划"
+            : config.beta_free
+              ? "免费开通（验证阶段）"
+              : `购买 ${p.calls} 次`;
+          btn.disabled = isCur;
+          btn.addEventListener("click", () => buyPlan(p));
+          card.appendChild(btn);
+          host.appendChild(card);
+        }
+        // 切回按量计费（不买计划包）
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.gridColumn = "1 / -1";
+        const back = document.createElement("button");
+        back.textContent = "切回按量计费（不买计划包）";
+        back.disabled = !account || account.plan === "points";
+        back.addEventListener("click", () =>
+          buyPlan({ id: "points", name: "按量计费" }),
+        );
+        row.appendChild(back);
+        host.appendChild(row);
+      }
+
+      async function buyPack(sku) {
+        if (!token) {
+          toast("请先登录 / 注册", "err");
+          $("#username").focus();
+          return;
+        }
+        const priceText = `$${sku.price.toFixed(2)}（标价 $${sku.list_amount.toFixed(
+          2,
+        )}）`;
+        if (
+          !confirm(
+            `购买${sku.name}：${fmtUnits(sku.units)} ${sku.unit}，${priceText}？\n` +
+              `不过期、每包独立计算。${
+                config.beta_free ? "\n验证阶段免费领取。" : ""
+              }`,
+          )
+        )
+          return;
+        try {
+          await jsonPost("/api/p/packs", { pack_id: sku.id });
+          toast(`已到账：${sku.name}`, "ok");
+          await refreshAll();
+        } catch (err) {
+          toast("购买失败：" + err.message, "err");
+        }
+      }
+
+      async function buyPlan(plan) {
+        if (!token) {
+          toast("请先登录 / 注册", "err");
+          $("#username").focus();
+          return;
+        }
+        const metered = plan.id === "points";
+        const priceText = metered
+          ? "按量计费（不买计划包）"
+          : `$${plan.price} / ${plan.period || "月"}`;
+        if (
+          !confirm(
+            `开通「${plan.name}」（${priceText}）？${
+              config.beta_free && !metered ? "\n验证阶段免费。" : ""
+            }`,
+          )
+        )
+          return;
+        try {
+          await jsonPost("/api/p/purchase", { plan_id: plan.id });
+          toast(metered ? "已切回按量计费" : `已开通：${plan.name}`, "ok");
+          await refreshAll();
+        } catch (err) {
+          toast("开通失败：" + err.message, "err");
+        }
+      }
+
+      // ---- 登录 / 注册 ----
+      function setMode(on) {
+        registerMode = on;
+        $("#authTitle").textContent = on ? "注册" : "登录";
+        $("#toggleMode").textContent = on
+          ? "已有账号？去登录"
+          : "没有账号？去注册";
+        $("#submitAuth").textContent = on ? "注册并登录" : "登录";
+        $("#password2Row").classList.toggle("hidden", !on);
+        $("#password").autocomplete = on ? "new-password" : "current-password";
+      }
+
+      async function doLogin(username, password) {
+        const ch = await jsonPost("/api/auth/challenge", { username });
+        const verifier = await sha256Hex(ch.salt + password);
+        const proof = await sha256Hex(ch.nonce + verifier);
+        const out = await jsonPost("/api/auth/login", {
+          username,
+          nonce: ch.nonce,
+          proof,
+        });
+        setToken(out.token);
+        return out;
+      }
+
+      async function doRegister(username, password) {
+        const { salt } = await jsonPost("/api/auth/salt", { username });
+        const verifier = await sha256Hex(salt + password);
+        await jsonPost("/api/auth/register", { username, salt, verifier });
+        return doLogin(username, password);
+      }
+
+      $("#toggleMode").addEventListener("click", () => setMode(!registerMode));
+
+      $("#submitAuth").addEventListener("click", async () => {
+        const username = $("#username").value.trim();
+        const password = $("#password").value;
+        if (!username || !password) {
+          toast("用户名和密码都要填", "err");
+          return;
+        }
+        if (registerMode && password !== $("#password2").value) {
+          toast("两次输入的密码不一致", "err");
+          return;
+        }
+        const btn = $("#submitAuth");
+        btn.disabled = true;
+        try {
+          if (registerMode) {
+            if (!confirm(`注册新账号「${username}」？密码遗忘无法找回。`))
+              return;
+            await doRegister(username, password);
+          } else {
+            await doLogin(username, password);
+          }
+          $("#password").value = "";
+          $("#password2").value = "";
+          setMode(false);
+          toast(`已登录：${username}`, "ok");
+          await refreshAll();
+        } catch (err) {
+          toast(
+            (registerMode ? "注册失败：" : "登录失败：") + err.message,
+            "err",
+          );
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      $("#logoutBtn").addEventListener("click", async () => {
+        try {
+          await api("/api/auth/logout", { method: "POST" });
+        } catch (_) {
+          /* 服务端不可达也本地登出 */
+        }
+        setToken(null);
+        account = null;
+        renderAll();
+        toast("已退出", "ok");
+      });
+
+      // ---- 登录视图 / 主视图切换 ----
+      function renderAll() {
+        const logged = !!token && !!account;
+        $("#viewLogin").classList.toggle("hidden", logged);
+        $("#viewApp").classList.toggle("hidden", !logged);
+        if (logged) {
+          renderConsole();
+          renderAccountTab();
+        }
+        renderMetered();
+        renderPackSkus();
+        renderPlans();
+      }
+
+      async function loadAccount() {
+        if (!token) {
+          account = null;
+          return;
+        }
+        try {
+          account = await api("/api/p/me");
+        } catch (err) {
+          toast("读取账号失败：" + err.message, "err");
+        }
+      }
+
+      /** 拉数据 → 重画（下单 / 充值 / 改资料后都走这里）。 */
+      async function refreshAll() {
+        await loadAccount();
+        renderAll();
+        if (token && account) {
+          await Promise.all([loadKeys(), loadLedger(), loadOrders()]);
+        }
+      }
+
+      // ---- 控制台：概览 + 我的额度包 ----
+      function renderConsole() {
+        const u = (account && account.usage) || {
+          calls: 0,
+          usd: 0,
+          by_metric: {},
+        };
+        const plan = account && account.plan_pack;
+        const host = $("#summaryCards");
+        host.innerHTML = "";
+        host.appendChild(
+          cardEl(
+            `<span class="badge-corner">余额</span><h3>${usd(
+              account ? account.balance_cents : 0,
+            )}</h3><div class="muted">充值在「账户」；按量扣费从这里出</div>`,
+          ),
+        );
+        host.appendChild(
+          cardEl(
+            `<span class="badge-corner${plan ? "" : " inf"}">${
+              plan ? `${plan.days_left} 天后重置` : "无计划包"
+            }</span><h3>${
+              plan ? `${plan.name} · 剩余 ${plan.remaining} 次` : "按量计费"
+            }</h3><div class="muted">${
+              plan
+                ? `每 ${plan.period_days} 天重置回 ${plan.total} 次`
+                : "没有计划包，直接消耗用量包 / 余额"
+            }</div>`,
+          ),
+        );
+        const metricText = Object.entries(u.by_metric || {})
+          .map(
+            ([k, v]) =>
+              `${k === "points" ? "点云" : k === "voxels" ? "体素" : "网格"} ${fmtUnits(
+                v.units,
+              )} ${METRIC_UNIT[k] || ""}`,
+          )
+          .join(" · ");
+        host.appendChild(
+          cardEl(
+            `<span class="badge-corner">累计用量</span><h3>${
+              u.calls
+            } 次调用</h3><div class="muted">折 $${(u.usd || 0).toFixed(2)}${
+              account && account.beta_free ? "（验证阶段未扣费）" : ""
+            }</div>`,
+          ),
+        );
+        host.appendChild(
+          cardEl(
+            `<span class="badge-corner">计量构成</span><h3 style="font-size:0.95rem">${
+              metricText || "—"
+            }</h3><div class="muted">按点云 / 体素 / 网格分别累计</div>`,
+          ),
+        );
+
+        // 额度包：计划包（会重置）+ 每个用量包（不过期，独立计算）
+        const list = $("#packList");
+        list.innerHTML = "";
+        const rows = [];
+        if (plan) rows.push(plan);
+        rows.push(...((account && account.packs) || []));
+        $("#packEmpty").classList.toggle("hidden", rows.length > 0);
+        for (const p of rows) {
+          const badge = p.infinite
+            ? '<span class="badge-corner inf">∞ 不过期</span>'
+            : `<span class="badge-corner">${p.days_left} 天后重置</span>`;
+          list.appendChild(
+            cardEl(
+              `${badge}<h3>${p.name}</h3>
+               <div class="price" style="font-size:1.2rem">${fmtUnits(
+                 p.remaining,
+               )}<em> / ${fmtUnits(p.total)} ${p.unit}</em></div>
+               ${packBar(p.total, p.remaining)}
+               <div class="desc">${
+                 p.kind === "plan"
+                   ? `计划包 · 每 ${p.period_days} 天重置`
+                   : `用量包 · 独立计算 · 已用 ${fmtUnits(p.used)}`
+               }</div>`,
+            ),
+          );
+        }
+      }
+
+      // ---- 账户页 ----
+      function renderAccountTab() {
+        if (!account) return;
+        $("#accountName").textContent = account.display_name
+          ? `${account.display_name}（${account.username}）`
+          : account.username;
+        const plan = account.plan_pack;
+        $("#planTag").textContent = plan ? `计划：${plan.name}` : "按量计费";
+        $("#balanceBig").textContent = usd(account.balance_cents);
+        const u = account.usage || { calls: 0, points: 0, usd: 0 };
+        $("#usageLine").textContent =
+          `已用 ${u.calls} 次 · ${fmtUnits(u.points)} 点 ≈ $${(
+            u.usd || 0
+          ).toFixed(2)}` +
+          (account.beta_free ? "（验证阶段免费，未扣费）" : "");
+        // 别抢用户正在输入的内容
+        if (document.activeElement !== $("#displayName")) {
+          $("#displayName").value = account.display_name || "";
+        }
+        if (document.activeElement !== $("#email")) {
+          $("#email").value = account.email || "";
+        }
+        const row = $("#topupRow");
+        row.innerHTML = "";
+        for (const cents of config.topup_tiers || []) {
+          const b = document.createElement("button");
+          b.textContent = config.beta_free
+            ? `充值 ${usd(cents)}（免费）`
+            : `充值 ${usd(cents)}`;
+          b.addEventListener("click", () => topup(cents));
+          row.appendChild(b);
+        }
+      }
+
+      async function topup(cents) {
+        if (
+          !confirm(
+            `充值 ${usd(cents)} 到余额？${config.beta_free ? "\n验证阶段免费到账。" : ""}`,
+          )
+        ) {
+          return;
+        }
+        try {
+          await jsonPost("/api/p/topup", { amount_cents: cents });
+          toast(`已充值 ${usd(cents)}`, "ok");
+          await refreshAll();
+        } catch (err) {
+          toast("充值失败：" + err.message, "err");
+        }
+      }
+
+      $("#saveProfile").addEventListener("click", async () => {
+        try {
+          await jsonPost("/api/p/profile", {
+            display_name: $("#displayName").value,
+            email: $("#email").value,
+          });
+          toast("已保存", "ok");
+          await refreshAll();
+        } catch (err) {
+          toast("保存失败：" + err.message, "err");
+        }
+      });
+
+      $("#changePassword").addEventListener("click", async () => {
+        if (!account) return;
+        const oldPwd = $("#oldPassword").value;
+        const newPwd = $("#newPassword").value;
+        if (!oldPwd || !newPwd) {
+          toast("原密码和新密码都要填", "err");
+          return;
+        }
+        if (newPwd.length < 8) {
+          toast("新密码至少 8 位", "err");
+          return;
+        }
+        try {
+          // 先用原密码做一次挑战-应答（证明是本人），再提交新的 salt + verifier
+          const ch = await jsonPost("/api/auth/challenge", {
+            username: account.username,
+          });
+          const proof = await sha256Hex(
+            ch.nonce + (await sha256Hex(ch.salt + oldPwd)),
+          );
+          const salt = randomSalt();
+          await jsonPost("/api/auth/password", {
+            username: account.username,
+            nonce: ch.nonce,
+            proof,
+            salt,
+            verifier: await sha256Hex(salt + newPwd),
+          });
+          $("#oldPassword").value = "";
+          $("#newPassword").value = "";
+          toast("密码已修改，下次登录请用新密码", "ok");
+        } catch (err) {
+          toast("改密失败：" + err.message, "err");
+        }
+      });
+
+      // ---- 流水 ----
+      async function loadLedger() {
+        if (!token) return;
+        let rows = [];
+        try {
+          rows = (await api("/api/p/ledger?limit=100")).ledger || [];
+        } catch (err) {
+          toast("读取流水失败：" + err.message, "err");
+        }
+        const body = $("#ledgerRows");
+        body.innerHTML = "";
+        $("#ledgerEmpty").classList.toggle("hidden", rows.length > 0);
+        for (const e of rows) {
+          const delta = e.amount_cents
+            ? `<span style="color:${
+                e.amount_cents > 0 ? "var(--ok)" : "var(--danger)"
+              }">${e.amount_cents > 0 ? "+" : "-"}${usd(
+                Math.abs(e.amount_cents),
+              )}</span>`
+            : '<span class="muted">—</span>';
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="muted">${fmtTime(e.created_at)}</td>
+            <td>${KIND_LABEL[e.kind] || e.kind}</td>
+            <td class="muted">${e.note || "—"}</td>
+            <td>${delta}</td>
+            <td class="muted">${usd(e.balance_after)}</td>`;
+          body.appendChild(tr);
+        }
+      }
+
+      // ---- API Key ----
+      async function loadKeys() {
+        if (!token) return;
+        let keys = [];
+        try {
+          keys = (await api("/api/p/keys")).keys || [];
+        } catch (err) {
+          toast("读取 Key 失败：" + err.message, "err");
+        }
+        const body = $("#keyRows");
+        body.innerHTML = "";
+        $("#keyEmpty").classList.toggle("hidden", keys.length > 0);
+        for (const k of keys) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><code>${k.prefix}</code></td>
+            <td>${k.label || "—"}</td>
+            <td class="muted">${fmtTime(k.created_at)}</td>
+            <td class="muted">${fmtTime(k.last_used_at)}</td>`;
+          const td = document.createElement("td");
+          if (k.revoked) {
+            td.innerHTML = '<span class="tag">已吊销</span>';
+          } else {
+            const b = document.createElement("button");
+            b.className = "danger";
+            b.textContent = "吊销";
+            b.addEventListener("click", async () => {
+              if (!confirm(`吊销 ${k.prefix}？用到它的面板会立刻失效。`))
+                return;
+              try {
+                await jsonPost(`/api/p/keys/${k.key_id}/revoke`, {});
+                toast("已吊销", "ok");
+                loadKeys();
+              } catch (err) {
+                toast("吊销失败：" + err.message, "err");
+              }
+            });
+            td.appendChild(b);
+          }
+          tr.appendChild(td);
+          body.appendChild(tr);
+        }
+      }
+
+      $("#createKey").addEventListener("click", async () => {
+        if (!token) {
+          toast("请先登录 / 注册", "err");
+          return;
+        }
+        const btn = $("#createKey");
+        btn.disabled = true;
+        try {
+          const out = await jsonPost("/api/p/keys", {
+            label: $("#keyLabel").value.trim(),
+          });
+          $("#newKeyValue").textContent = out.key;
+          $("#newKeyBox").classList.remove("hidden");
+          $("#keyLabel").value = "";
+          toast("已创建 API Key（只显示这一次）", "ok");
+          loadKeys();
+        } catch (err) {
+          toast("创建失败：" + err.message, "err");
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      $("#copyKey").addEventListener("click", async () => {
+        const text = $("#newKeyValue").textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("已复制", "ok");
+        } catch (_) {
+          toast("复制失败，请手动选中", "err");
+        }
+      });
+
+      // ---- 订单 ----
+      function orderItemName(o) {
+        if (o.kind === "topup") return "余额充值";
+        const plan = (config.plans || []).find((p) => p.id === o.plan);
+        if (plan) return `计划包 ${plan.name}`;
+        const pack = (config.packs || []).find((p) => p.id === o.plan);
+        if (pack) return pack.name;
+        return o.plan;
+      }
+
+      async function loadOrders() {
+        if (!token) return;
+        let orders = [];
+        try {
+          orders = (await api("/api/p/orders")).orders || [];
+        } catch (_) {
+          /* 忽略 */
+        }
+        const body = $("#orderRows");
+        body.innerHTML = "";
+        $("#orderEmpty").classList.toggle("hidden", orders.length > 0);
+        for (const o of orders) {
+          const unit =
+            o.kind === "topup"
+              ? ""
+              : o.metric === "calls"
+                ? " 次"
+                : ` ${METRIC_UNIT[o.metric] || ""}`;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><code>${o.order_id}</code></td>
+            <td>${orderItemName(o)}</td>
+            <td>${o.quantity ? "+" + fmtUnits(o.quantity) + unit : "—"}</td>
+            <td>${o.amount ? "$" + o.amount : "免费"}</td>
+            <td class="muted">${o.list_amount ? "$" + o.list_amount : "—"}</td>
+            <td class="muted">${fmtTime(o.created_at)}</td>`;
+          body.appendChild(tr);
+        }
+      }
+
+      // ---- 启动 ----
+      (async function boot() {
+        try {
+          config = await api("/api/p/config");
+        } catch (_) {
+          /* 用默认值也能跑 */
+        }
+        renderAddresses();
+        setTab(localStorage.getItem(LS_TAB) || "pricing", { silent: true });
+        setPricingSub(localStorage.getItem(LS_SUBTAB) || "metered", {
+          silent: true,
+        });
+        if (token) {
+          await refreshAll();
+        } else {
+          renderAll();
+        }
+      })();
+    </script>
+  </body>
+</html>
