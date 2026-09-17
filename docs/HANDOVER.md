@@ -150,7 +150,8 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 | 热路径     | **提交时不查配额**（可用性优先）：完成后 `Charge`；靠限流 + 并发上限 + 输入上限 + `arrears` + **扣押产物**兜底          |
 | 传输       | 对外 **HTTPS REST + WebSocket**（每用户一个 async 会话）；内部 gRPC/TCP 到 **每 GPU 一个 worker**                       |
 | 数据面     | Api 自己的 Postgres（独立 schema/角色）+ **S3/MinIO** 产物（provider 模式可回落本地卷）                                 |
-| 对外协议   | **自研 job 风格 REST**：`/v1` + Bearer + 预签名上传 + 幂等键 + SSE/WS 进度 + webhook + problem+json；**不抄 chat 语义** |
+| 对外协议 | **复用行业标准**（不发明新协议）：作业语义走 **OGC API - Processes Part 1: Core**，领域词汇与形状对齐 **NodeODM REST**（`/info` 能力自述 / `/options` 参数自述 / init→upload→commit / 队列状态码 / webhook）；凭据改用 Bearer，错误改用 problem+json + 幂等键；**不抄 chat 语义**（详见 §5.1） |
+| 内部 worker 契约 | **KServe Open Inference Protocol (V2)**（gRPC `ModelInfer`，Triton/TorchServe/KServe 均实现）或极简自定义 gRPC |
 | 前端       | **TS + Vite + Vue 3**；three.js 走 npm，THREE 对象必须 `markRaw` 出响应式系统                                           |
 | 任务模型   | 每用户一个通信会话（async，不是 OS 线程）；总队列 + 执行单元（GPU）分配，队列满 → 429                                   |
 
@@ -178,6 +179,25 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 
 ⚠️ **`/api/sessions/{id}/annotations` 的幂等整体替换语义、面积/体积公式、PLY 格式不要改** ——
 改了就是数据契约变更，老客户端与已有历史都会对不上。
+
+### 5.1 协议复用清单（**不发明新协议**）
+
+三类现成标准，各管一层：
+
+| 层次 | 采用 | 从中拿到什么 | 要避开 / 替换 |
+| --- | --- | --- | --- |
+| **作业语义** | **OGC API - Processes Part 1: Core**（OGC 正式标准 18-062r2，有 OpenAPI 定义 + Schema 仓库 + **合规测试与认证**） | “把计算任务包装成 process、客户端 REST+JSON 执行、返回 job 资源可查状态/结果/删除”——正是我们要的形状；白拿语义定义与合规套件 | 它的数据模型偏 GIS（coverages/vector），只需取其 **job 生命周期**部分，不必引入其数据编码 |
+| **领域词汇与形状** | **NodeODM REST v2.2.1**（AGPL-3.0；航测开源界事实标准，WebODM 就是它的客户端） | `GET /info`（`engine/engineVersion/maxImages/maxParallelTasks/taskQueueCount/cpuCores/availableMemory`）← **“执行单元与硬件相关 + 队列深度”就是它**；`GET /options` ← 处理参数**运行时协商**；`POST /task/new`（`options` JSON 数组 + `webhook` URL）；`init → upload/{uuid}（可多次）→ commit/{uuid}` 预上传；`GET /task/{uuid}/info` 的 `status.code` = 10 QUEUED/20 RUNNING/30 FAILED/40 COMPLETED/50 CANCELED + `progress` + `processingTime`；`GET /task/{uuid}/output?line=N` 增量拉日志；`cancel/restart/remove/list`；`download/{asset}` | ⚠️ token 走 **query 参数**（我们改 Bearer）；⚠️ 错误是裸 `{error: string}` / `{success: bool}`（我们改 **RFC 9457 problem+json** + 稳定错误码） |
+| **worker 内部契约** | **KServe Open Inference Protocol (V2)**（gRPC `ModelInfer` + REST 双协议） | 成文的“推理服务”接口，生态工具直接可用 | 若只传帧+参数（不跑多模型/多版本），可用极简自定义 gRPC，别为协议而协议 |
+
+**零碎但成型的部件**（直接用，不要自造）：CloudEvents（webhook 事件信封）、RFC 9457 `problem+json`、`Idempotency-Key`（重试去重——在“提交时不查配额”的方案下尤其重要）、
+**tus** 或 S3 预签名 multipart（上传）、AsyncAPI（描述推送接口）；
+产物与流式加载：**3D Tiles 1.1 / glTF 2.0 / PLY / COPC / EPT / Potree 八叉树**
+（现在是一次性渲染子集 JSON，大点云会顶到 `OMNI3D_MAX_RENDER_POINTS` 上限）。
+
+**市场缺口（也就是我们必须自己造的部分）**：开源界**没有**“官方服务商 = 账号 + 计量计费 + 发 Key + 流水 + 面板”这一整条
+（WebODM 有账号/配额但**无计费**；Replicate 的 cog / HF / Fal 有托管契约但**无计费逻辑**）。
+→ **控制面（Portal）与计费模型是我们的产品资产；协议层一律站到已有标准上。**
 
 ---
 
