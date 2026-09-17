@@ -2,29 +2,39 @@
 
 > 本文是**接口的唯一权威来源**。领域词汇见 `CONTEXT.md`，分层与模块地图见 `docs/ARCHITECTURE.md`。
 
-当前项目对外提供 **两个服务**：
+当前项目对外提供 **三个服务**（+ 一个 App 本地桥）：
 
-| 服务           | 地址                                             | 实现                              | 何时存在                       |
-| -------------- | ------------------------------------------------ | --------------------------------- | ------------------------------ |
-| **重建服务器** | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `web/server.py`（FastAPI）        | 总是（`python web/server.py`） |
-| **App 本地桥** | `http://127.0.0.1:50687`                         | `qt_app/src/ar_bridge_server.cpp` | 仅移动端 App 内                |
+| 服务               | 地址                                             | 实现                              | 何时存在                            |
+| ------------------ | ------------------------------------------------ | --------------------------------- | ----------------------------------- |
+| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `web/server.py`（FastAPI）        | 总是（`python web/server.py`）      |
+| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `web/pages.py`（无 torch）        | 需要页面时（`python web/pages.py`） |
+| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `web/portal.py`                   | 卖服务时（账号 / 计费 / API Key）   |
+| **App 本地桥**     | `http://127.0.0.1:50687`                         | `qt_app/src/ar_bridge_server.cpp` | 仅移动端 App 内                     |
 
-> 原则：**重建能力只在服务器实现一次**；web / desktop / qt_app 都只是它的 client。
+> 端口常量只在 `web/hosting.py` 定义一次；`SERVE_PAGE=1`（默认）时服务商 API **顺便**也托管面板页面。
+> 原则：**重建能力只在服务商实现一次**；面板 / 官网 / App 都只是它的 client 或控制面。
 
 ---
 
-## 一、重建服务器（:50865）
+## 一、服务商 API（:50865）
 
 ### 1.1 页面与健康
 
-| 方法 | 路径      | 说明                          |
-| ---- | --------- | ----------------------------- |
-| GET  | `/`       | 返回前端页面 `web/index.html` |
-| GET  | `/health` | 模型就绪状态                  |
+| 方法 | 路径               | 说明                                                          |
+| ---- | ------------------ | ------------------------------------------------------------- |
+| GET  | `/`                | 返回面板页面 `web/index.html`（`SERVE_PAGE`）                 |
+| GET  | `/app-config.json` | 客户端引导：`{api_origin, api_port, pages_port, portal_port}` |
+| GET  | `/health`          | 模型就绪状态（+ 是否支持 API Key）                            |
 
 ```jsonc
 // GET /health
-{ "ready": true, "device": "cuda", "error": null }
+{
+  "ready": true,
+  "device": "cuda",
+  "error": null,
+  "api_key": true,
+  "static_api_keys": false,
+}
 ```
 
 - `ready=false` 时，重建接口返回 **503**（模型首次加载需数分钟）。
@@ -307,7 +317,47 @@ Content-Type: application/json
 
 ---
 
-## 二、App 本地桥（:50687，仅 Android）
+## 二、面板页面（:50866）
+
+| 方法 | 路径               | 说明                                                        |
+| ---- | ------------------ | ----------------------------------------------------------- |
+| GET  | `/`                | 面板页面（读 `web/index.html`）                             |
+| GET  | `/app-config.json` | 与 §1.1 同一份引导信息                                      |
+| GET  | `/assets/*`        | 静态资源（品牌图等）                                        |
+| GET  | `/health`          | `{role: "pages", api_origin, api_port}` —— **不是**模型健康 |
+
+> 这个服务**不加载模型**：手机 / 别的机器可以只连页面服务，API 指向任意一台服务商
+> （以前“必须先在本机跑起 server 才能用页面”的问题就是这一步解掉的）。
+
+---
+
+## 三、官网（portal，:50867）
+
+控制面：账号 / 计费 / API Key / 流水。**认证端点与服务商共用同一份实现**（`web/auth_api.py`），
+路径与 §1.2 完全一致：`/api/auth/{salt,register,challenge,login,logout,me,password}`。
+
+| 方法     | 路径                          | 说明                                                                                                |
+| -------- | ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| GET      | `/`                           | 官网页面（登录优先；登录后为「定价 / 控制台 / 账户」三 tab）                                        |
+| GET      | `/assets/*`                   | 与面板共用同一份品牌资源                                                                            |
+| GET      | `/api/p/config`               | `{plans, metered, packs, topup_tiers, plan_period_days, beta_free, points_per_cent, payment, 端口}` |
+| GET      | `/api/p/me`                   | 账号 + 余额 + `plan_pack` + `packs` + `usage`（首次访问建账号）                                     |
+| POST     | `/api/p/purchase`             | 买计划包 `{plan_id}`（`points` = 切回按量）                                                         |
+| POST     | `/api/p/packs`                | 买用量包 `{pack_id: "pack_points"}`                                                                 |
+| GET      | `/api/p/packs`                | 我的用量包（每包独立；`infinite` = 不过期）                                                         |
+| POST     | `/api/p/topup`                | 余额充值 `{amount_cents}`（档位见 config）                                                          |
+| GET      | `/api/p/ledger`               | 流水（充值 / 购买 / 用量扣减 / 计划重置，带余额快照）                                               |
+| GET      | `/api/p/orders`               | 订单（计划包 / 用量包 / 充值）                                                                      |
+| POST     | `/api/p/profile`              | 改显示名 / 邮箱 `{display_name, email}`                                                             |
+| GET/POST | `/api/p/keys`                 | 列出 / 新建 API Key（**明文只在新建响应里出现一次**）                                               |
+| POST     | `/api/p/keys/{key_id}/revoke` | 吊销                                                                                                |
+
+计费常量（单价 / 包规格 / 折扣 / 充值档 / 重置周期）全部在 `web/portal_store.py` 顶部；
+扣减顺序（计划包 → 用量包 → 余额）与 `BETA_FREE` 语义见 `CONTEXT.md` §3。
+
+---
+
+## 四、App 本地桥（:50687，仅 Android）
 
 让网页访问手机原生能力（AR 位姿、系统文件对话框、华为点云）。
 所有响应带 CORS 头。**桌面端运行时装出来的同一批接口对 `/ar/file/*` 与 `/ar/scan/*` 返回“仅 App 内可用”**。
@@ -333,7 +383,7 @@ Content-Type: application/json
 
 ---
 
-## 三、状态码速查
+## 五、状态码速查
 
 | 码  | 场景                                                             |
 | --- | ---------------------------------------------------------------- |
@@ -343,11 +393,12 @@ Content-Type: application/json
 | 401 | 认证失败（用户名密码错 / nonce 失效 / 未登录 / **令牌过期**）    |
 | 404 | 资源不存在、归属不匹配、运行中不可删                             |
 | 409 | 用户名已存在                                                     |
+| 402 | 额度不足（服务商侧，仅正式计费时；验证阶段不拦）                 |
 | 503 | 模型仍在加载                                                     |
 
 ---
 
-## 四、快速上手（curl）
+## 六、快速上手（curl）
 
 ```bash
 # 0) 就绪检查

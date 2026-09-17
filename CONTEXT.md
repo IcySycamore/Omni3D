@@ -15,17 +15,21 @@ Omni3D 从**手机视频 / 图片**重建**真实尺度 3D 点云**：网页采�
 
 ```
 client（web / desktop）  ──HTTP──►  server（唯一一种）  ──►  model（Fast3R）
-        ▲
+        ▲                                  ▲
   移动端 App 壳 = 复用 web client + 本地桥 :50687
+                                            └─ 控制面（官网 portal）：账号 / 计费 / 发 Key
 ```
 
-**客户端构成（务必分清）：**
+**角色构成（务必分清）：**
 
-| 角色            | 是什么                                               | 位置                        |
-| --------------- | ---------------------------------------------------- | --------------------------- |
-| **web client**  | **唯一的客户端实现**（在浏览器里跑）                 | `web/index.html`            |
-| **移动端 App**  | 不是第二种 client：web client 的 WebView 壳 + 本地桥 | `qt_app/`                   |
-| ~~桌面 client~~ | 已归档：PyQt5 + VTK 的旧实现，不再维护               | `archive/desktop-pyqt-vtk/` |
+| 角色                   | 是什么                                                     | 位置                        |
+| ---------------------- | ---------------------------------------------------------- | --------------------------- |
+| **web client**         | **唯一的客户端实现**（在浏览器里跑）                       | `web/index.html`            |
+| **面板（panel）**      | 静态页面宿主，只交付页面（无模型依赖）                     | `web/pages.py`              |
+| **服务商（provider）** | 重建 API（数据面）：任务编排 / 会话 / 点云 / 测量          | `web/server.py`             |
+| **官网（portal）**     | 账号 / 计费 / API Key / 流水（控制面），即“官方服务商”本身 | `web/portal.py`             |
+| **移动端 App**         | 不是第二种 client：web client 的 WebView 壳 + 本地桥       | `qt_app/`                   |
+| ~~桌面 client~~        | 已归档：PyQt5 + VTK 的旧实现，不再维护                     | `archive/desktop-pyqt-vtk/` |
 
 **硬约束：**
 
@@ -35,44 +39,62 @@ client（web / desktop）  ──HTTP──►  server（唯一一种）  ──
 3. **移动端 App 不实现独立 UI**（它就是 web client 的壳）。新增功能优先做在网页侧，
    不要在 App 里另起一套界面。
 4. **model 层（`fast3r/`）是 vendored 第三方代码**，只消费其推理入口，不在其中做业务改动。
+5. **控制面与数据面分离**：账号 / 计费 / 发 Key 只在**官网**（`web/portal.py`）；重建与会话只在
+   **服务商**（`web/server.py`）。两者**共享同一套认证实现**（`web/auth_api.py`）与同一份 SQLite，
+   但职责不互串：服务商不自己管账号，官网不自己跑重建。
 
 ---
 
 ## 3. 领域词汇表
 
-| 术语                     | 定义                                                                      | 实现位置                                           |
-| ------------------------ | ------------------------------------------------------------------------- | -------------------------------------------------- | --- | ------------ | ------------------------------------------------------------------ | ---------------------------------------- |
-| **采集**                 | 获取输入图像。四种方式（录制 / 连拍 / 本地文件 / AR 扫描）**互斥**        | `web/index.html`、`qt_app`                         |
-| **提交重建**             | 把采集包以 multipart 契约提交给服务器                                     | `POST /api/tasks`（异步）或 `/reconstruct`（同步） |
-| **任务 / 会话**          | 一次重建请求。`task_id` 同时也是会话层里的 `session_id`                   | `web/task_queue.py`、`web/session_store.py`        |
-| **稠密点云**             | Fast3R 输出的逐像素 3D 点（`pts3d_in_other_view`）                        | `app/core/pipeline.py`                             |
-| **模型坐标系**           | 重建得到的点云所在坐标系，**任意单位**                                    | —                                                  |
-| **真实尺度**             | 把模型坐标换算为**米**的因子 `scale`                                      | `app/core/scale.py`                                |
-| **尺度反推**             | 用户点选两点 + 输入已知真实距离 → 反推 `scale`                            | `POST /api/tasks/{id}/scale`                       |     | **米制对齐** | 用外部 AR 位姿把点云从模型坐标系换算到米制世界系：`p' = s·R·p + T` | `app/core/pipeline.py: metric_alignment` |
-| **metric 块**            | 结果里的 `result.metric`：`{aligned, scale, n_views, source, intrinsics}` | `app/core/pipeline.py`                             |     | **标尺校准** | 尺度反推的产品化说法（无 AR 时的手动路径）                         | 前端交互 + 上述 API                      |
-| **AR 扫描**              | App 内用华为 AREngine 采集，帧携带**米制 VIO 位姿**（前置提供 scale）     | `qt_app/src/ar_scan_controller.*`                  |
-| **稀疏点云融合**         | 华为 SLAM 稀疏点云与服务器稠密点云同帧叠加                                | `qt_app/src/ar_scan_controller.*`                  |
-| **桥（bridge）**         | App 本地 HTTP 服务 `:50687`，让网页访问原生能力（AR / 文件 / 本地历史）   | `qt_app/src/ar_bridge_server.*`                    |
-| **会话层**               | 服务器端统一的重建历史持久化（SQLite，按 owner 隔离）                     | `web/session_store.py`                             |
-| **client_id**            | 未登录时的匿名归属键；由 client **首次访问生成并持久化**                  | 网页：`localStorage`；桌面：固定 `desktop`         |
-| **匿名认领（claim）**    | 登录后把本机匿名历史改挂到账号名下；**需用户手动确认**                    | `POST /api/auth/claim` + `/claim/preview`          |
-| **桌面客户端**（已归档） | 旧的 PyQt5 + VTK 客户端；已废弃，仅供查阅                                 | `archive/desktop-pyqt-vtk/`                        |
-| **账号**                 | 用户名 + salt + verifier；明文密码不落库                                  | `web/auth_store.py`                                |
-| **用户名规则**           | 3–32 字符、仅 `[A-Za-z0-9_.-]`；**服务端强制**                            | `web/auth_store.validate_username`                 |
-| **密码规则**             | ≥ 8 位且非全空白；**只能在客户端校验**（协议不上行明文密码）              | `web/index.html`                                   |
-| **verifier**             | `sha256(salt + password)`，注册时由**客户端**计算上行                     | `web/auth_store.py` / `web/index.html`             |
-| **nonce / proof**        | 登录挑战-应答：`proof = sha256(nonce + verifier)`，nonce 一次性           | 同上                                               |
-| **token**                | 登录成功后签发的会话令牌，请求经 `X-Auth-Token` 头携带                    | `web/session_manager.py`                           |
-| **滑动过期**             | 令牌 **30 分钟**闲置才失效；每次带 token 的请求都续期                     | `web/session_manager.py`（`OMNI3D_SESSION_TTL`）   |
+| 术语                      | 定义                                                                      | 实现位置                                           |
+| ------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------- | --- | ------------ | ------------------------------------------------------------------ | ---------------------------------------- |
+| **采集**                  | 获取输入图像。四种方式（录制 / 连拍 / 本地文件 / AR 扫描）**互斥**        | `web/index.html`、`qt_app`                         |
+| **提交重建**              | 把采集包以 multipart 契约提交给服务器                                     | `POST /api/tasks`（异步）或 `/reconstruct`（同步） |
+| **任务 / 会话**           | 一次重建请求。`task_id` 同时也是会话层里的 `session_id`                   | `web/task_queue.py`、`web/session_store.py`        |
+| **稠密点云**              | Fast3R 输出的逐像素 3D 点（`pts3d_in_other_view`）                        | `app/core/pipeline.py`                             |
+| **模型坐标系**            | 重建得到的点云所在坐标系，**任意单位**                                    | —                                                  |
+| **真实尺度**              | 把模型坐标换算为**米**的因子 `scale`                                      | `app/core/scale.py`                                |
+| **尺度反推**              | 用户点选两点 + 输入已知真实距离 → 反推 `scale`                            | `POST /api/tasks/{id}/scale`                       |     | **米制对齐** | 用外部 AR 位姿把点云从模型坐标系换算到米制世界系：`p' = s·R·p + T` | `app/core/pipeline.py: metric_alignment` |
+| **metric 块**             | 结果里的 `result.metric`：`{aligned, scale, n_views, source, intrinsics}` | `app/core/pipeline.py`                             |     | **标尺校准** | 尺度反推的产品化说法（无 AR 时的手动路径）                         | 前端交互 + 上述 API                      |
+| **AR 扫描**               | App 内用华为 AREngine 采集，帧携带**米制 VIO 位姿**（前置提供 scale）     | `qt_app/src/ar_scan_controller.*`                  |
+| **稀疏点云融合**          | 华为 SLAM 稀疏点云与服务器稠密点云同帧叠加                                | `qt_app/src/ar_scan_controller.*`                  |
+| **桥（bridge）**          | App 本地 HTTP 服务 `:50687`，让网页访问原生能力（AR / 文件 / 本地历史）   | `qt_app/src/ar_bridge_server.*`                    |
+| **会话层**                | 服务器端统一的重建历史持久化（SQLite，按 owner 隔离）                     | `web/session_store.py`                             |
+| **client_id**             | 未登录时的匿名归属键；由 client **首次访问生成并持久化**                  | 网页：`localStorage`；桌面：固定 `desktop`         |
+| **匿名认领（claim）**     | 登录后把本机匿名历史改挂到账号名下；**需用户手动确认**                    | `POST /api/auth/claim` + `/claim/preview`          |
+| **桌面客户端**（已归档）  | 旧的 PyQt5 + VTK 客户端；已废弃，仅供查阅                                 | `archive/desktop-pyqt-vtk/`                        |
+| **账号**                  | 用户名 + salt + verifier；明文密码不落库                                  | `web/auth_store.py`                                |
+| **用户名规则**            | 3–32 字符、仅 `[A-Za-z0-9_.-]`；**服务端强制**                            | `web/auth_store.validate_username`                 |
+| **密码规则**              | ≥ 8 位且非全空白；**只能在客户端校验**（协议不上行明文密码）              | `web/index.html`                                   |
+| **verifier**              | `sha256(salt + password)`，注册时由**客户端**计算上行                     | `web/auth_store.py` / `web/index.html`             |
+| **nonce / proof**         | 登录挑战-应答：`proof = sha256(nonce + verifier)`，nonce 一次性           | 同上                                               |
+| **token**                 | 登录成功后签发的会话令牌，请求经 `X-Auth-Token` 头携带                    | `web/session_manager.py`                           |
+| **滑动过期**              | 令牌 **30 分钟**闲置才失效；每次带 token 的请求都续期                     | `web/session_manager.py`（`OMNI3D_SESSION_TTL`）   |
+| **服务商（provider）**    | 「一个地址 + 可选端口 + 一把凭据」——面板里可配多台，**账号各家独立**      | 面板「设置 → 服务」                                |
+| **凭据**                  | 一台服务商的 `{token, username, apiKey}`；存 `omni3d.cred:<serverId>`     | `web/index.html`                                   |
+| **API Key**               | 官网签发的长期凭据（`omni3d_…`），`X-Api-Key` 头携带；库里只存 sha256     | `web/api_keys.py`、`web/portal_store.py`           |
+| **计量（metric）**        | 计费口径：`points`（点云）/ `voxels`（体素）/ `mesh`（三角面）            | `web/portal_store.py: METRICS`                     |
+| **计划包（plan pack）**   | 包月调用额度（Personal 100 次 / Professional 600 次），**30 天重置**      | `web/portal_store.py: PLANS`                       |
+| **用量包（usage pack）**  | 预付折扣包（100 万单位、不过期），**各包独立计算**                        | `web/portal_store.py: PACKS`                       |
+| **余额（balance）**       | 按量计费的坑位（分）；充值档 $5/10/20/50                                  | `accounts.balance_cents`                           |
+| **扣减顺序**              | 一次重建：**计划包 → 同计量用量包 → 余额**（唯一入口 `charge()`）         | `web/portal_store.py: charge`                      |
+| **流水（ledger）**        | 一切金额变动（充值 / 购买 / 用量扣减 / 计划重置），带余额快照             | `web/portal_store.py: ledger`                      |
+| **验证阶段（BETA_FREE）** | 所有额度免费发放的开关：**包照扣、余额不扣、额度不足也不拦**              | `web/portal_store.py: BETA_FREE`                   |
 
 ---
 
-## 4. 两个端口（唯一接缝）
+## 4. 三个端口（唯一接缝）
 
-| 端口    | 归属          | 说明                                              |
-| ------- | ------------- | ------------------------------------------------- |
-| `50865` | **server**    | 重建服务（`web/server.py`，`HOST`/`PORT` 可覆盖） |
-| `50687` | **Qt App 桥** | 本地 HTTP 桥，仅 App 场景存在                     |
+| 端口    | 归属               | 说明                                                             |
+| ------- | ------------------ | ---------------------------------------------------------------- |
+| `50865` | **服务商 API**     | 重建（`web/server.py`）；`SERVE_PAGE=1` 时顺便也托管页面（默认） |
+| `50866` | **面板页面**       | 只托管页面的轻服务（`web/pages.py`，无 torch）                   |
+| `50867` | **官网（portal）** | 账号 / 计费 / API Key（`web/portal.py`）                         |
+| `50687` | **Qt App 桥**      | 本地 HTTP 桥，仅 App 场景存在                                    |
+
+端口与主机名常量只在 `web/hosting.py` 里定义一次（`PORT` / `PAGES_PORT` / `PORTAL_PORT` / `HOST`），
+页面首次打开读 `GET /app-config.json` 拿引导信息（默认去找哪个 API、官网在哪个端口）。
 
 ---
 
@@ -137,11 +159,17 @@ Omni3D/
 
 ---
 
-## 8. 部署策略（当前阶段）
+## 8. 部署策略（v1.0.0-mvp 冻结线）
 
-**开发期不做部署。** 部署相关资产（部署指南、frp、Dockerfile、打包配置）
-已移除，待**打包 release** 时重建；开发期只需 `python web/server.py` 本地启动。
+**本版为 Python 参考实现，冻结后不再演进**（后续开发换成 C# / .NET 重写，见
+[`docs/HANDOVER.md`](docs/HANDOVER.md)）。因此这里只记录「怎么把它跑起来」：
 
-- 保留在主路径的：`requirements-app.txt`（应用依赖）、`qt_app/build_apk.ps1`（开发期构建 App）
-- 已移除的：`docs/DEPLOYMENT.md`、`docs/frp/`、`web/frp/`、`Dockerfile`、`.env.example`、`scripts/slurm/`
-- 客户端已收敛为**单一 web 实现**；旧的 PyQt5 + VTK 桌面客户端归档在 `archive/desktop-pyqt-vtk/`（不再维护）
+- 本地开发：`.\run.ps1 server`（重建 API，:50865）/ `.\run.ps1 pages`（页面，:50866）/
+  `.\run.ps1 portal`（官网，:50867）/ `.\run.ps1 test`（全量测试）。
+  三个进程可同机可异机，共享 `data/` 下的 SQLite。
+- 依赖：`requirements-app.txt`（应用依赖，**不要**装根 `requirements.txt`——那是研究栈）；
+  权重放本地后用 `OMNI3D_CHECKPOINT_DIR` 指向它（默认读仓库内的 `jedyang97/`，已 ignore）。
+- 容器与部署资产（`Dockerfile` / `docker-compose.yml` / `docs/DEPLOYMENT.md`）已随本版恢复，
+  按「角色」起容器（`ROLE=api|pages|portal`）。
+- 客户端已收敛为**单一 web 实现**；旧的 PyQt5 + VTK 桌面客户端归档在
+  `archive/desktop-pyqt-vtk/`（不再维护）。

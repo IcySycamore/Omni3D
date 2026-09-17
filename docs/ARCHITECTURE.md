@@ -15,13 +15,21 @@
 └────────────────────────────────────────┘        │  ├ session_store（历史 SQLite）│
                                                   │  └ app/core/pipeline（重建）  │
                                                   └──────────────┬────────────────┘
-                                                                 │
-                                                           fast3r（model）
+┌─ 静态页面宿主 ──────────────┐        │                    │
+│  web/pages.py     :50866      │        │              fast3r（model）
+└───────────────────────────────┘        │
+┌─ 控制面（官网 portal）──────┐        │
+│  web/portal.py    :50867      │◄──HTTP─┘（面板读 /api/p/*：账号 / 计费 / API Key）
+│  └ portal_store（计费 SQLite）│
+└───────────────────────────────┘
 ```
+
+**角色与端口（v1.0.0-mvp）**：面板 `:50866`（静态）/ 官网 `:50867`（控制面）/ 服务商 API `:50865`（数据面）/ App 桥 `:50687`。
+端口常量的**单一来源**是 `web/hosting.py`；`SERVE_PAGE=1`（默认）时服务商 API 顺便也托管页面。
 
 **原则**：server 只有一种；**客户端只有一份实现**（`web/index.html`）；
 移动端 App 是它的**原生壳**（不另做 UI，只补 AR / 文件等原生能力）。
-重建 / 尺度 / 历史 / 测量逻辑只在 server 实现一次。
+**重建 / 尺度 / 历史 / 测量逻辑只在 server 实现一次**；账号 / 计费 / 发 Key 只在官网实现一次。
 
 > 桌面端 = 浏览器直接打开同一个地址。旧的 PyQt5 + VTK 客户端已归档到
 > `archive/desktop-pyqt-vtk/`（原因：两套客户端必须写两遍几何与交互，
@@ -33,16 +41,22 @@
 
 ### server
 
-| 模块                     | 职责                                                            | 关键入口                                                                             |
-| ------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `web/server.py`          | FastAPI 路由与编排（**19 个接口，见 [`docs/API.md`](API.md)**） | `/reconstruct`、`/api/tasks`、`/api/history`、`/api/tasks/{id}/scale`、`/api/auth/*` |
-| `web/task_queue.py`      | 单 worker 异步队列 + 内存实时进度缓存                           | `task_queue.submit()` / `.get()`                                                     |
-| `web/auth_store.py`      | **用户表**：salt + verifier = `sha256(salt+pwd)`（明文不落库）  | `create_user()` / `get_verifier()`                                                   |
-| `web/session_manager.py` | **会话管理**：token → username（内存 + TTL 12h）                | `create()` / `username_for()` / `drop()`                                             |
-| `web/session_store.py`   | **会话层**：重建历史持久化（SQLite，按 `owner` 隔离）           | `save_session()` / `list_sessions()`                                                 |
-| `app/core/pipeline.py`   | 纯函数重建管线（加载→推理→对齐→**米制尺度对齐**）               | `run_reconstruction()` / `metric_alignment()`                                        |
-| `app/core/scale.py`      | **真实尺度反推**（纯函数，无重依赖）                            | `infer_scale_from_measurement()`                                                     |
-| `app/core/config.py`     | 权重路径 / 设备 / 默认参数                                      | —                                                                                    |
+| 模块                     | 职责                                                                          | 关键入口                                                              |
+| ------------------------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `web/server.py`          | 服务商 API：FastAPI 路由与编排（**接口清单见 [`docs/API.md`](API.md)**）      | `/reconstruct`、`/api/tasks`、`/api/history`、`/api/tasks/{id}/scale` |
+| `web/hosting.py`         | **端口/主机与页面路由的单一来源**（`mount_page_routes`）                      | `PORT`/`PAGES_PORT`/`PORTAL_PORT`、`app_config()`                     |
+| `web/pages.py`           | 面板页面宿主（**不加载模型**）                                                | `GET /`、`/app-config.json`、`/assets/*`                              |
+| `web/portal.py`          | **官网（控制面）**：账号 / 计费 / API Key / 流水                              | `/api/p/*`                                                            |
+| `web/portal_store.py`    | 控制面存储：Key / 账号 / 用量包 / 订单 / 用量 / 流水；**扣减入口 `charge()`** | `PLANS`/`METRICS`/`PACKS`/`charge()`                                  |
+| `web/auth_api.py`        | **认证路由的唯一实现**（两侧共用）                                            | `/api/auth/{salt,register,challenge,login,logout,me,password}`        |
+| `web/api_keys.py`        | `X-Api-Key` → username（官网 Key 优先，兼容环境变量静态 Key）                 | `username_for()`                                                      |
+| `web/task_queue.py`      | 单 worker 异步队列 + 内存实时进度缓存                                         | `task_queue.submit()` / `.get()`                                      |
+| `web/auth_store.py`      | **用户表**：salt + verifier = `sha256(salt+pwd)`（明文不落库）                | `create_user()` / `get_verifier()`                                    |
+| `web/session_manager.py` | **会话管理**：token → username（内存 + TTL 12h）                              | `create()` / `username_for()` / `drop()`                              |
+| `web/session_store.py`   | **会话层**：重建历史持久化（SQLite，按 `owner` 隔离）                         | `save_session()` / `list_sessions()`                                  |
+| `app/core/pipeline.py`   | 纯函数重建管线（加载→推理→对齐→**米制尺度对齐**）                             | `run_reconstruction()` / `metric_alignment()`                         |
+| `app/core/scale.py`      | **真实尺度反推**（纯函数，无重依赖）                                          | `infer_scale_from_measurement()`                                      |
+| `app/core/config.py`     | 权重路径 / 设备 / 默认参数                                                    | —                                                                     |
 
 ### client
 
@@ -293,18 +307,21 @@ PLY **52.2MB**（二进制，double 坐标）。前 5000 个渲染点的唯一�
 
 ---
 
-## 9. 部署（已延后至 release 阶段）
+## 9. 部署（v1.0.0-mvp 已恢复）
 
-为专注开发，本项目**当前的部署资产已移除**，将于打包 release 时重建。
+部署资产已随 **v1.0.0-mvp** 重建，并以「三端口 / 三角色」为形状：
 
-| 已移除                  | 原因                                   |
-| ----------------------- | -------------------------------------- |
-| `docs/DEPLOYMENT.md`    | 部署指南（发布时重写）                 |
-| `docs/frp/`、`web/frp/` | frp 隧道配置与文档                     |
-| `Dockerfile`            | 上游 Fast3R demo 容器，本项目未使用    |
-| `.env.example`          | Hydra 模板残留，未使用                 |
-| `scripts/slurm/`        | 上游 Fast3R 集群作业脚本，本项目不训练 |
-| `frp/`（本机）          | 本机 frp 运行配置                      |
+| 资产                                          | 说明                                             |
+| --------------------------------------------- | ------------------------------------------------ |
+| `docs/DEPLOYMENT.md`                          | 部署指南（Docker / 源码两种，含三角色）          |
+| `Dockerfile` + `scripts/docker-entrypoint.sh` | 同一镜像按 `ROLE=api\|pages\|portal` 起进程      |
+| `docker-compose.yml`                          | 一键起三服务（可只起其一二）                     |
+| `requirements-app.txt`                        | 应用依赖（与根 `requirements.txt` 的研究栈分离） |
+| `OMNI3D_CHECKPOINT_DIR`                       | 权重目录（容器挂载卷，别塞进源码树）             |
+
+⚠️ 这套部署描述的是 **Python 参考实现**。本仓冻结后由 C# / .NET 重写取代，
+交接说明见 [`docs/HANDOVER.md`](HANDOVER.md)（含"哪些契约必须复现"的清单）。
+| `frp/`（本机） | 本机 frp 运行配置 |
 
 **开发期如何启动服务**：本地直接 `python web/server.py`（默认 `127.0.0.1:50865`），
 无需任何部署配置。

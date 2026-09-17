@@ -1,16 +1,35 @@
 # Omni3D
 
-从视频 / 图片重建 **真实尺度的 3D 点云**——网页采集、云端推理、AR 加持。
+从视频 / 图片重建 **真实尺度的 3D 点云**——网页采集、云端推理、AR 加持，**并且已经是一个能收费的服务**。
+
+> **状态：`v1.0.0-mvp`（Python 参考实现，已冻结）**
+>
+> 功能完整、313 项测试全绿、三服务可部署；但后续开发将换成 **C# / .NET 重写**，本仓归档为参考实现。
+> 接手重构先读 **[`docs/HANDOVER.md`](docs/HANDOVER.md)**：里面有已冻结的行为契约、精度基线、
+> 接口地图（旧 → 新）与未决项。
 
 ```
 网页采集 ──► FastAPI 队列 ──► Fast3R 稠密重建 ──► 3D 点云查看 / 测量 / 下载
-                    ▲
-       Qt App 壳（华为 AREngine）提供真实米制位姿 + 稀疏点云
+                    ▲                    ▲
+       Qt App 壳（华为 AREngine）        │
+       提供真实米制位姿 + 稀疏点云        官网（portal）：账号 / 计费 / 发 API Key
 ```
 
-- **server**：FastAPI 单机推理（Fast3R 稠密重建）+ 账号 / 会话层 / 历史。
-- **web client**：**唯一的客户端实现**。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、提交、3D 查看、测量、标尺校准、历史、账号，全部在浏览器完成。
-- **移动端 App**：不是第二种 client，而是 web client 的 **WebView 壳 + 本地桥**（额外提供 AR 米制位姿、华为 SLAM 稀疏点云、系统文件对话框）。
+三个可独立部署的服务（详见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)）：
+
+| 服务            | 端口  | 职责                                             |
+| --------------- | ----- | ------------------------------------------------ |
+| **面板 pages**  | 50866 | 只交付页面（无模型依赖）                         |
+| **官网 portal** | 50867 | 账号 / 计费 / API Key / 流水（**控制面**）       |
+| **服务商 api**  | 50865 | 重建任务 / 会话历史 / 测量（**数据面**，需 GPU） |
+
+- **web client**：**唯一的客户端实现**（`web/index.html`）。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、
+  提交、3D 查看、测量、标尺校准、历史、设置，全部在浏览器完成。
+- **移动端 App**：不是第二种 client，而是 web client 的 **WebView 壳 + 本地桥 `:50687`**
+  （额外提供 AR 米制位姿、华为 SLAM 稀疏点云、系统文件对话框）。
+- **计费**：按用量（点云 / 体素 / 网格）、按计划（Personal / Professional，月度重置）、
+  用量包（预付、不过期）与余额；扣减顺序 = 计划包 → 用量包 → 余额。
+  **验证阶段（`BETA_FREE`）全部免费**，但用量照记。
 - 旧的 PyQt5 + VTK 桌面客户端已**归档**（`archive/desktop-pyqt-vtk/`），不再维护。
 
 ---
@@ -30,49 +49,55 @@
 
 ## 🚀 运行
 
-**只有 1 个 server、1 个客户端实现；移动端 App 是它的 WebView 壳。**
+**服务分三个角色（可同机可异机，共享 `data/`）；客户端只有一份实现。**
 
 ```
                       ┌────────────────────┐
-   浏览器 ───────────► │      server       │
-  （web client）      │  web/server.py     │ ──►  Fast3R（GPU 稠密重建）
-                      │      :50865        │
-   移动端 App ───────► │                    │
-  （同一个 web client │                    │
-    + 本地桥 :50687）  └────────────────────┘
+   浏览器 ───────────► │  面板 :50866       │  页面（无模型依赖）
+  （web client）      └────────────────────┘
+        │             ┌────────────────────┐
+        ├───────────► │ 服务商 :50865      │ ──► Fast3R（GPU 稠密重建）
+        │             └────────────────────┘
+        └───────────► ┌────────────────────┐
+                      │  官网 :50867       │  账号 / 计费 / API Key
+                      └────────────────────┘
 
-  桌面端 = 浏览器直接打开同一个地址，无需安装任何客户端
+  移动端 App = 同一个 web client + 本地桥 :50687
+  桌面端 = 浏览器直接打开面板地址，无需安装任何客户端
 ```
 
 ### 0. 准备
 
-> ⚠️ **必须用带依赖的 Python 解释器**。本项目的依赖（torch / fastapi / PyQt5 / vtk）
-> 装在 conda 环境里，**全局 `python` 通常没有**——直接 `python web/server.py` 会报
-> `ModuleNotFoundError: No module named 'fastapi'`。
+> ⚠️ **必须用带依赖的 Python 解释器**。本项目依赖（torch / fastapi 等）装在 conda 环境里，
+> **全局 `python` 通常没有**——直接 `python web/server.py` 会报 `ModuleNotFoundError`。
 > 下面统一用 `run.ps1`：它会自动挑解释器，并在缺依赖时给出可操作的提示。
 
 ```powershell
 git clone https://github.com/IcySycamore/Omni3D.git
 cd Omni3D
 
-# 依赖（server）
+# 依赖（应用）
 <你的环境>\python.exe -m pip install -r requirements-app.txt
 
-# 模型权重：从 HuggingFace 下载 jedyang97/Fast3R_ViT_Large_512 到
-#   jedyang97/Fast3R_ViT_Large_512/     （权重未入库，需手动放置）
+# 模型权重：从 HuggingFace 下载 jedyang97/Fast3R_ViT_Large_512
+# 放到任意目录，然后指向它（默认读仓库内被 ignore 的 jedyang97/）
+$env:OMNI3D_CHECKPOINT_DIR = 'D:\models\Fast3R_ViT_Large_512'
 ```
 
-前置：Python 3.9+、CUDA GPU（建议 ≥12GB 显存）。
+前置：Python 3.10~3.12、CUDA GPU（建议 ≥12GB 显存）。
 解释器不在默认位置时设一次即可：`$env:OMNI3D_PY = 'C:\path\to\envs\Omni3D\python.exe'`
 
-### 1. 启动服务器
+### 1. 启动服务
 
 ```powershell
-.\run.ps1 server                                          # 默认 127.0.0.1:50865
-$env:HOST='0.0.0.0'; $env:PORT='8000'; .\run.ps1 server    # 局域网 / 自定义端口
+.\run.ps1 server     # 50865 服务商 API（首次启动加载模型，数十秒）
+.\run.ps1 pages      # 50866 面板页面（手机/别的机器只需连它 + 一个 API 地址）
+.\run.ps1 portal     # 50867 官网（账号 / 计费 / API Key）
 ```
 
-模型首次加载需数分钟，用 <http://127.0.0.1:50865/health> 查就绪状态（`ready: true`）。
+$
+`SERVE_PAGE=1`（默认）时服务商 API 顺便也托管页面，所以 `http://127.0.0.1:50865/` 一样能打开面板。
+用 <http://127.0.0.1:50865/health> 查就绪（`ready: true`）。
 
 ### 2. 使用网页 client（唯一客户端）
 
