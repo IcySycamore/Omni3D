@@ -147,6 +147,16 @@ class AuthStore:
             except sqlite3.IntegrityError:
                 return False
 
+    def set_password(self, username: str, salt: str, verifier: str) -> bool:
+        """改密：换一套 salt + verifier（用户不存在 → False）。"""
+        with self._lock:
+            cur = self._conn.execute(
+                "UPDATE users SET salt=?, verifier=? WHERE username=?",
+                (salt, verifier, username),
+            )
+            self._conn.commit()
+            return cur.rowcount > 0
+
     def close(self) -> None:
         with self._lock:
             self._conn.close()
