@@ -14,7 +14,10 @@ const root = path.resolve(__dirname, "..", "..");
 const src = fs.readFileSync(path.join(root, "web", "index.html"), "utf8");
 
 const START = "// ==================== 点云解码";
-const END = "// ==================== 测量：屏幕空间最近点拾取";
+// 终点用**标识符**而不是装饰性小节标题 —— 标题是给人看的，改文案就会把这里弄挂
+// （#32 改标题触发过一次 EXTRACT FAILED）。
+// 注意必须落在 `heightColor` **之后**：`fillHeightColors` 会调用它。
+const END = "const PICK_RAY_PX";
 const start = src.indexOf(START);
 const end = src.indexOf(END);
 if (start < 0 || end < 0 || end <= start) {
