@@ -54,6 +54,8 @@ class Task:
     is_video: bool = False
     frame_count: int = config.DEFAULT_FRAME_COUNT
     owner: str = "anon:default"    # 归属：user:<username> / anon:<client_id>（会话层隔离依据）
+    # 是否计入官网用量（用 API Key 提交 = 计费通道；本机匿名/令牌不限）
+    metered: bool = False
     # 结果
     result: dict | None = None
     ply_bytes: bytes | None = None  # 二进制 PLY（不进 JSON，直接落会话目录）
@@ -74,7 +76,7 @@ class TaskQueue:
     # ---- 提交 ----
     def submit(self, files, resolution, intrinsics, extrinsics,
                is_video=False, frame_count=config.DEFAULT_FRAME_COUNT,
-               owner="anon:default") -> Task:
+               owner="anon:default", metered=False) -> Task:
         task = Task(
             task_id=uuid.uuid4().hex[:16],
             files=files,
@@ -84,6 +86,7 @@ class TaskQueue:
             is_video=is_video,
             frame_count=frame_count,
             owner=owner,
+            metered=metered,
         )
         with self._lock:
             task.queue_pos = len(self._queue)

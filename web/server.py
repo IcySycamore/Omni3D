@@ -1,7 +1,8 @@
 """Omni3D 轻量重建服务（FastAPI）。
 
 接口：
-- GET  /                 前端页面（index.html，同源托管）
+- GET  /                 前端页面（index.html，同源托管；`SERVE_PAGE=0` 可关）
+- GET  /app-config.json  客户端引导配置（默认 API 地址 / 端口）
 - GET  /health           模型加载状态
 - POST /reconstruct      上传图片包 → 3D 点云（同步，兼容旧客户端/web）
 - POST /api/tasks        提交图片/视频包 → 入队，立即返回 task_id（异步）
@@ -32,6 +33,7 @@ import threading
 import time
 import traceback
 import uuid
+from contextvars import ContextVar
 from typing import Any, Optional
 
 # 确保项目根目录在 sys.path（web/ 的上一级）
@@ -39,12 +41,19 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+# web/ 自身也要在 sys.path（`hosting.py` 就住在这儿；直接跑脚本时本来就满足，
+# 但被别的进程 import 时不一定）
+_WEB_DIR = os.path.dirname(os.path.abspath(__file__))
+if _WEB_DIR not in sys.path:
+    sys.path.insert(0, _WEB_DIR)
+
 # 必须先导入 torch（本机存在 DLL 加载顺序冲突：其他库先加载会导致 fbgemm.dll 失败）
 import torch  # noqa: E402,F401
 
 import numpy as np  # noqa: E402
 from fastapi import Body, FastAPI, File, Form, Header, UploadFile  # noqa: E402
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
 from app.core import config  # noqa: E402
 from app.core.geometry import (  # noqa: E402
@@ -60,20 +69,50 @@ from app.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
 from app.core.pointcloud import statistical_outlier_removal  # noqa: E402
 from app.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
 
-from task_queue import task_queue  # noqa: E402
-from auth_store import (  # noqa: E402
-    AuthStore,
-    compute_proof,
-    compute_verifier,
-    new_nonce,
-    new_salt,
-    validate_username,
+from hosting import (  # noqa: E402
+    API_HOST,
+    API_PORT,
+    SERVE_PAGE,
+    mount_page_routes,
 )
+import api_keys  # noqa: E402
+import auth_api  # noqa: E402
+from task_queue import task_queue  # noqa: E402
+from auth_store import AuthStore  # noqa: E402
 from session_manager import SessionManager  # noqa: E402
 from session_store import SessionStore, anon_owner, user_owner  # noqa: E402
 from snap_index import snap_index  # noqa: E402
 
 app = FastAPI(title="Omni3D 重建服务", version="0.4.0")
+
+# ---- 跨源（CORS）----
+# 页面与 API **可以分处两个端口 / 两台机器**（见 `web/pages.py`）：此时浏览器
+# 发出的每个 `/api/*` 都是跨源请求，没有这几个响应头就会被浏览器直接拦掉
+# （现象：页面能打开，但一切请求「网络错误」，服务端日志里却什么都看不到）。
+# 身份令牌走 `X-Auth-Token` 请求头而非 Cookie，所以不需要 allow_credentials；
+# 默认放行所有来源（本服务本来就面向本机 / 局域网 / 自建部署），
+# 要收紧就设 `CORS_ORIGINS=http://a.com,http://b.com`。
+_CORS_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("CORS_ORIGINS", "*").split(",")
+    if o.strip()
+] or ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
+)
+
+# ---- 页面 / 静态资源 ----
+# 页面本体（`GET /`）、`/assets/*` 与客户端引导配置 `/app-config.json` 都由
+# `hosting.mount_page_routes` 挂载（与 `web/pages.py` 共用同一份实现）。
+# `SERVE_PAGE=0` → 本进程变成**纯 API**：页面交给 web/pages.py 之类的静态宿主。
+if SERVE_PAGE:
+    mount_page_routes(app)
 
 # ---- 数据目录 ----
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
@@ -89,19 +128,67 @@ session_store = SessionStore(
 
 
 def _owner_of(token, client_id=None):
-    """把登录令牌（优先）或匿名 client_id 解析为会话归属键。
+    """解析请求的会话归属键（顺序：API Key → 登录令牌 → 匿名 client_id）。
 
-    登录用户 → ``user:<username>``；否则 → ``anon:<client_id>``。
-    历史记录因此能**对应到 username**。
+    登录用户（或 API Key 对应的用户名）→ ``user:<username>``；
+    否则 → ``anon:<client_id>``。历史记录因此能**对应到 username**。
+
+    ⚠️ API Key 由中间件 `_identify_by_api_key` 解析后放进 ContextVar：
+    每个服务商的账号体系是**各自独立**的，客户端的「在这台登录的令牌」
+    不能拿去访问另一台；跨服务商要么在那边登录，要么用那边发的 Key。
     """
-    username = session_manager.username_for(token)
+    username = api_key_identity() or session_manager.username_for(token)
     if username:
         return user_owner(username)
     return anon_owner(client_id or "default")
 
-# ---- 监听配置（单一来源；与 frp 映射 127.0.0.1:50865 -> frp-oil.com:50865 对齐）----
-SERVER_HOST = os.environ.get("HOST", "127.0.0.1")
-SERVER_PORT = int(os.environ.get("PORT", "50865"))
+
+# 当前请求的 API Key 身份（用户名）；由中间件填写，随请求自动隔离
+_REQUEST_API_KEY_USER: ContextVar[Optional[str]] = ContextVar(
+    "request_api_key_user", default=None
+)
+
+
+# ---- 服务商的 API Key 身份 ----
+# 客户端用 `X-Api-Key` 头带 Key（代替 `X-Auth-Token`）。
+# 未配 `OMNI3D_API_KEYS` 的服务商不支持 Key，只能账号登录。
+
+
+def api_key_enabled() -> bool:
+    """这台服务商接不接受 API Key。
+
+    官网签发的 Key 总是可以（同一个门户库），所以恒为真；
+    ``static_keys`` 另外说明有没有运维配的静态 Key。
+    """
+    return True
+
+
+def static_keys_enabled() -> bool:
+    return bool(api_keys.load())
+
+
+def api_key_identity() -> Optional[str]:
+    """当前请求里 API Key 对应的用户名（无 / 无效 → None）。"""
+    return _REQUEST_API_KEY_USER.get()
+
+
+@app.middleware("http")
+async def _identify_by_api_key(request, call_next):
+    """把 ``X-Api-Key`` 解析成用户名放进 ContextVar（每请求一份）。
+
+    放在中间件而不是给 ~10 个端点逐个加参数：所有读写数据的端点的归属解析
+    都走 ``_owner_of``，这里一处生效即可，也不会漏。
+    """
+    username = api_keys.username_for(request.headers.get("x-api-key"))
+    token = _REQUEST_API_KEY_USER.set(username)
+    try:
+        return await call_next(request)
+    finally:
+        _REQUEST_API_KEY_USER.reset(token)
+
+# ---- 监听配置（单一来源见 hosting.py；与 frp 映射 127.0.0.1:50865 -> frp-oil.com:50865 对齐）----
+SERVER_HOST = API_HOST
+SERVER_PORT = API_PORT
 
 # ---- 全局模型状态（后台线程加载） ----
 _model = None
@@ -130,11 +217,7 @@ def _startup():
 
 
 # ---- 页面 ----
-@app.get("/", response_class=HTMLResponse)
-def index():
-    html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
-    with open(html_path, encoding="utf-8") as fh:
-        return fh.read()
+# （`GET /` 由 hosting.mount_page_routes 挂载，见文件上方）
 
 
 @app.get("/health")
@@ -143,7 +226,34 @@ def health():
         "ready": _model_ready,
         "device": str(config.DEVICE),
         "error": _model_error,
+        # 客户端靠它提示「这台服务商支不支持 API Key」
+        "api_key": api_key_enabled(),
+        "static_api_keys": static_keys_enabled(),
     }
+
+
+# ---- 可用模型列表 ----
+# 客户端的「模型」菜单就靠它：模型清单由**服务器**决定，客户端不写死。
+# 面板侧的主入口是「验证 API Key」——那一次请求就把可用模型一起回传（`/api/auth/me`），
+# `/api/models` 作为匿名 / 刷新时的备用入口，两者走同一份口径。
+_AVAILABLE_MODELS = [
+    {"id": "fast3r", "name": "Fast3R", "sub": "多视图三维重建"},
+]
+
+
+def models_for_identity() -> list[dict]:
+    """当前身份可用的模型。
+
+    现在所有身份都一样（本机就一个模型）；把身份参数留着，
+    以后「某些模型只开给某些套餐/Key」时只改这里。
+    """
+    return [dict(m) for m in _AVAILABLE_MODELS]
+
+
+@app.get("/api/models")
+def list_models():
+    """列出**当前身份**可用的重建模型（带 API Key 时以该账号口径返回）。"""
+    return {"models": models_for_identity(), "via": api_key_identity() and "api_key" or "anon"}
 
 
 # ---- 重建 ----
@@ -517,6 +627,19 @@ def _task_processor(task, update_progress):
         ply_bytes=getattr(task, "ply_bytes", None),
         created_at=task.created_at,
     )
+    # 计费通道（API Key）：记一次用量 —— 计量单位 + 实际用量 → 分，
+    # 由门户按「先计划包 → 再用量包 → 最后余额」扣减。
+    # 验证阶段不扣余额，但口径先跑通：门户的「控制台 / 流水」就是读这里。
+    if getattr(task, "metered", False) and owner.startswith("user:"):
+        result = task.result or {}
+        # 当前管线只产出点云；体素 / 网格的口径已在门户备好，模型接入后按同一处扣。
+        units = int(result.get("num_points") or 0)
+        try:
+            api_keys.store().record_usage(
+                owner[len("user:"):], task.task_id, units, "points"
+            )
+        except Exception:  # noqa: BLE001  记费失败不该让重建失败
+            traceback.print_exc()
 
 
 task_queue.set_processor(_task_processor)
@@ -633,6 +756,22 @@ async def create_task(
         data = await f.read()
         file_list.append((data, f.filename or "upload"))
 
+    # 用**官网签发的 API Key** 提交 = 走付费通道：额度用完就拦（验证阶段不拦）。
+    # 本机匿名 / 账号登录（令牌）不受限 —— 那是开发者自己的机器。
+    # 放在「文件都读好了、真要入队了」这一步：参数不对不该消耗额度。
+    # 注意：这里只看「还有没有额度」，真正的扣减在重建完成后按实际用量做（记的是用量，
+    # 不是次数）—— 扣减入口只有 portal_store.charge 一个。
+    key_user = api_key_identity()
+    portal = api_keys.store() if key_user else None
+    if key_user and portal.billing_enforced() and not portal.can_start(key_user):
+        return JSONResponse(
+            {
+                "error": "额度不足：请到 Omni3D 官网购买计划包 / 用量包或充值后重试",
+                "credits": 0,
+            },
+            status_code=402,
+        )
+
     task = task_queue.submit(
         files=file_list,
         resolution=resolution,
@@ -641,6 +780,7 @@ async def create_task(
         is_video=is_video_bool,
         frame_count=frame_count,
         owner=_owner_of(x_auth_token, client_id),
+        metered=bool(key_user),
     )
     return JSONResponse(
         {
@@ -690,129 +830,17 @@ def delete_task(task_id: str):
 
 
 # ---- 认证：挑战-应答（明文密码不上网、不落库）----
-# nonce 临时表：nonce -> (username, created_at)，用完即弃
-_nonces: dict = {}
-_nonce_lock = threading.Lock()
-NONCE_TTL = 300.0  # 秒
-
-
-def _put_nonce(nonce: str, username: str) -> None:
-    with _nonce_lock:
-        now = time.time()
-        for k in [k for k, (_, c) in _nonces.items() if now - c > NONCE_TTL]:
-            _nonces.pop(k, None)
-        _nonces[nonce] = (username, now)
-
-
-def _take_nonce(nonce: str):
-    """取出并作废 nonce（一次性）；返回其绑定的 username 或 None。"""
-    with _nonce_lock:
-        item = _nonces.pop(nonce, None)
-    if item is None:
-        return None
-    username, created = item
-    if time.time() - created > NONCE_TTL:
-        return None
-    return username
-
-
-@app.post("/api/auth/salt")
-def auth_salt(payload: dict = Body(...)):
-    """注册前领取随机 salt。Body: {"username"}（用户名已存在则 409）。
-
-    同时前置校验用户名格式，让用户在注册第一步就得到明确提示。
-    """
-    username = (payload.get("username") or "").strip()
-    if not username:
-        return JSONResponse({"error": "缺少 username"}, status_code=400)
-    invalid = validate_username(username)
-    if invalid:
-        return JSONResponse({"error": invalid}, status_code=400)
-    if auth_store.user_exists(username):
-        return JSONResponse({"error": "用户名已存在"}, status_code=409)
-    return JSONResponse({"salt": new_salt()})
-
-
-@app.post("/api/auth/register")
-def auth_register(payload: dict = Body(...)):
-    """注册。Body: {"username","salt","verifier"}
-
-    verifier = sha256(salt + password) 由**客户端**计算，服务器只存 verifier，
-    明文密码不上网也不落库。
-    """
-    username = (payload.get("username") or "").strip()
-    salt = payload.get("salt") or ""
-    verifier = payload.get("verifier") or ""
-    if not username or not salt or not verifier:
-        return JSONResponse({"error": "缺少 username / salt / verifier"}, status_code=400)
-    # 服务端独有的强制检查：客户端可被绕过，用户名规则必须在此兜底。
-    # （密码长度无法在此校验：本协议只上行 verifier，服务器看不到明文密码。）
-    invalid = validate_username(username)
-    if invalid:
-        return JSONResponse({"error": invalid}, status_code=400)
-    if not auth_store.create_user(username, salt, verifier):
-        return JSONResponse({"error": "用户名已存在"}, status_code=409)
-    return JSONResponse({"ok": True, "username": username})
-
-
-@app.post("/api/auth/challenge")
-def auth_challenge(payload: dict = Body(...)):
-    """登录第一步：取 nonce + salt。Body: {"username"}。"""
-    username = (payload.get("username") or "").strip()
-    salt = auth_store.get_salt(username)
-    if not salt:
-        return JSONResponse({"error": "用户名或密码错误"}, status_code=401)
-    nonce = new_nonce()
-    _put_nonce(nonce, username)
-    return JSONResponse({"nonce": nonce, "salt": salt})
-
-
-@app.post("/api/auth/login")
-def auth_login(payload: dict = Body(...)):
-    """登录第二步：Body: {"username","nonce","proof"}。
-
-    proof = sha256(nonce + sha256(salt + password_input))
-    服务器比对 sha256(nonce + verifier)。
-    """
-    username = (payload.get("username") or "").strip()
-    nonce = payload.get("nonce") or ""
-    proof = payload.get("proof") or ""
-    if not username or not nonce or not proof:
-        return JSONResponse({"error": "缺少 username / nonce / proof"}, status_code=400)
-
-    bound_user = _take_nonce(nonce)
-    if bound_user is None or bound_user != username:
-        return JSONResponse({"error": "nonce 无效或已过期"}, status_code=401)
-
-    verifier = auth_store.get_verifier(username)
-    if not verifier:
-        return JSONResponse({"error": "用户名或密码错误"}, status_code=401)
-    if not secrets.compare_digest(compute_proof(nonce, verifier), proof):
-        return JSONResponse({"error": "用户名或密码错误"}, status_code=401)
-
-    token = session_manager.create(username)
-    return JSONResponse({
-        "ok": True,
-        "token": token,
-        "username": username,
-        "expires_in": session_manager.ttl_seconds,
-    })
-
-
-@app.post("/api/auth/logout")
-def auth_logout(x_auth_token: Optional[str] = Header(default=None)):
-    """注销当前令牌。"""
-    return JSONResponse({"ok": session_manager.drop(x_auth_token)})
-
-
-@app.get("/api/auth/me")
-def auth_me(x_auth_token: Optional[str] = Header(default=None)):
-    """当前令牌对应的用户名（客户端启动时用它复验 token 是否仍有效）。"""
-    username = session_manager.username_for(x_auth_token)
-    if not username:
-        return JSONResponse({"error": "未登录"}, status_code=401)
-    return JSONResponse({"ok": True, "username": username,
-                         "expires_in": session_manager.ttl_seconds})
+# 端点实现**只有一份**：`auth_api.register_auth_routes`（官网门户 web/portal.py 也挂它）。
+# 这里额外把「API Key 身份」注入进去，于是 X-Api-Key 也能过 /api/auth/me。
+_auth_routes = auth_api.register_auth_routes(
+    app,
+    auth_store,
+    session_manager,
+    api_key_identity=api_key_identity,
+    models_for_identity=models_for_identity,
+)
+# 兼容别名：旧代码 / 测试按 `server.auth_me` 找这个端点
+auth_me = _auth_routes["me"]
 
 
 @app.get("/api/auth/claim/preview")

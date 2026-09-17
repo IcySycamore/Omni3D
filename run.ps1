@@ -4,18 +4,22 @@
 
 .EXAMPLE
   .\run.ps1 server                 # 启动重建服务器（默认 127.0.0.1:50865）
+  .\run.ps1 pages                  # 只启动面板页面（默认 127.0.0.1:50866，不加载模型）
+  .\run.ps1 portal                 # 只启动官网（默认 127.0.0.1:50867：账号/套餐/API Key）
   .\run.ps1 test                   # 跑单元 + 集成测试
   .\run.ps1 bench                  # 重建速度/质量基准
   .\run.ps1 bench --frames 4 8     # 透传参数给基准脚本
 
 .NOTES
-  客户端就是浏览器页面（服务器同源托管），**无需单独启动**。
+  三个角色各占一个端口：面板 panel(50866) / 官网 portal(50867) / 服务商 API(50865)。
+  面板通常直接开 http://127.0.0.1:50865/ 就行（重建服务顺便托管页面）。
+
   旧的 PyQt5 桌面客户端已归档到 archive/desktop-pyqt-vtk/，不再提供入口。
   解释器解析顺序：$env:OMNI3D_PY → 常见 conda 环境路径 → PATH 里的 python。
 #>
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet("server", "test", "bench")]
+    [ValidateSet("server", "pages", "portal", "test", "bench")]
     [string]$Target,
 
     [Parameter(ValueFromRemainingArguments = $true)]
@@ -66,6 +70,8 @@ if (-not $probeOk) {
 
 switch ($Target) {
     "server" { & $py (Join-Path $root "web\server.py") @Rest }
+    "pages" { & $py (Join-Path $root "web\pages.py") @Rest }
+    "portal" { & $py (Join-Path $root "web\portal.py") @Rest }
     "test" { & $py -m pytest (Join-Path $root "tests") -q @Rest }
     "bench" { & $py (Join-Path $root "scripts\bench_reconstruct.py") @Rest }
 }
