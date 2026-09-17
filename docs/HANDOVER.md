@@ -6,6 +6,9 @@
 >
 > 配套：领域词汇见 [`CONTEXT.md`](../CONTEXT.md)、模块地图见 [`ARCHITECTURE.md`](ARCHITECTURE.md)、
 > 接口清单见 [`API.md`](API.md)、部署见 [`DEPLOYMENT.md`](DEPLOYMENT.md)。
+>
+> **新仓库开工包（panel 先、服务后）见 [`docs/handover/`](handover/README.md)**：
+> 行业调研（panel 侧 / 服务侧）、**线协议**（请求/进度/结果/产物）、上下文与术语表、9 篇 ADR。
 
 ---
 
