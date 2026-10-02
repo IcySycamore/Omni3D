@@ -207,6 +207,44 @@ class TestMultiVertexMeasurement:
         assert "完成" in hint, "得说清怎么结束"
 
 
+class TestElementRowContent:
+    """右侧元素条目：每个事实只说一遍，控件看起来要像控件。
+
+    用户报的两件事：
+    1. 「上面显示两个坐标（一个高精度一个低精度）」—— 行尾 3 位、明细 4 位，
+       同一个坐标出现两次且精度不同；
+    2. 「元素种类被当成可点击控件被渲染，然而那只是一个名称」—— 因为
+       `.element-kind` 被列进了「小控件」组，统一挂了 `--neu-raised-sm`。
+    """
+
+    def test_element_kind_is_not_styled_as_a_control(self, index_html):
+        rule = _css_rule(index_html, ".element-kind")
+        assert "box-shadow" not in rule, "种类是一个名称，不该有凸起阴影"
+        assert "background" not in rule, "种类是一个名称，不该带底色"
+        # 它曾在「小控件」组里（那一组统一挂 --neu-raised-sm）。
+        # 取 `.tag-muted` 到下一个 `}` 之间的那段 —— 就是那组的选器表 + 声明。
+        group = _css_group(index_html, ".tag-muted")
+        assert ".element-kind" not in group, "又把它当小控件了"
+
+    def test_element_row_shows_each_fact_once(self, index_html):
+        body = _fn_body(index_html, "buildElementRow")
+        # 行尾只给测量放值（测量确实有「一个值」）
+        assert body.count('className = "element-value"') == 1
+        assert "toFixed(3)" not in body, "行尾那个 3 位小数的坐标是重复的那一份"
+        detail = _fn_body(index_html, "elementDetailText")
+        assert "坐标" in detail and "质心" in detail
+        assert "toFixed(4)" in detail
+        # 点数在名字里已经写了「(2 点)」；量纲名与单位后缀重复
+        assert "${pts.length} 个点" not in detail
+        assert "DIM_NAME" not in detail
+
+    def test_empty_detail_leaves_no_blank_row(self, index_html):
+        body = _fn_body(index_html, "buildElementRow")
+        assert _contains_text(
+            body, "const detailText = elementDetailText(el); if (detailText) {"
+        ), "明细为空时会白占一行高度"
+
+
 class TestPicking:
     """选点必须在**屏幕空间**遍历全部渲染点。
 
@@ -1367,6 +1405,26 @@ def _fn_body(index_html: str, name: str) -> str:
             if depth == 0:
                 return index_html[open_brace : k + 1]
     raise AssertionError(f"{name} 的花括号不配平")
+
+
+def _css_rule(index_html: str, selector: str) -> str:
+    """取出 `selector { ... }` 这条规则（选器 + 声明），选器必须**正好**是它。
+
+    不匹配选器表里的一项（`.a,\n.b { ... }`）—— 那种情况用 `_css_group`。
+    找不到就报错，而不是返回空串：空串会让 `assert "box-shadow" not in rule`
+    永远绿，等于没有断言。
+    """
+    pattern = rf"(?:^|[{{}};\s]){re.escape(selector)}\s*\{{([^}}]*)\}}"
+    found = re.search(pattern, index_html)
+    if not found:
+        raise AssertionError(f"找不到 CSS 规则: {selector}")
+    return found.group(0)
+
+
+def _css_group(index_html: str, first_selector: str) -> str:
+    """取出「选器表以 first_selector 开头」的那条规则（含表里所有选器）。"""
+    start = index_html.index(first_selector)
+    return index_html[start : index_html.index("}", start)]
 
 
 class TestProviderLightAndSubmitGate:

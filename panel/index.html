@@ -305,7 +305,6 @@
       .icon-btn,
       .tag,
       .tag-muted,
-      .element-kind,
       .export-row,
       .sb-rule,
       .cal-tag,
@@ -2037,12 +2036,12 @@
         accent-color: var(--accent-cyan);
         cursor: pointer;
       }
+      /* 元素种类是**一个名字**，不是控件：不带底色 / 圆角 / 凸起阴影。
+         它曾经挂过 `--neu-raised-sm`，看起来像个能点的按钮（用户报的就是这个）；
+         而它只是个名称 —— 弱一档的颜色就够把名字和它分开了。 */
       .element-kind {
-        font-family: var(--font-mono);
         font-size: var(--fs-sm);
-        padding: var(--sp-1) var(--sp-2);
-        border-radius: var(--r-sm);
-        background: var(--fill-2);
+        color: var(--text-muted);
       }
       .element-value {
         margin-left: auto;
@@ -10405,21 +10404,14 @@
         }
         row.appendChild(name);
 
+        // 只有测量有「一个值」要放到行尾。其它元素的坐标一律放下面那行明细，
+        // **同一个坐标只说一遍** —— 以前行尾是 3 位、明细是 4 位，同一个数出现
+        // 两次还精度不同（用户：「上面显示两个坐标（一个高精度一个低精度）」）。
         if (el.kind === "measurement") {
           const val = document.createElement("span");
           val.className = "element-value" + (el.error ? " err" : "");
           val.textContent = el.error ? "无法计算" : formatMeasurement(el);
           row.appendChild(val);
-        } else if (el.kind !== "group") {
-          const anchor = elementAnchorOf(el);
-          if (anchor) {
-            const val = document.createElement("span");
-            val.className = "element-value";
-            val.textContent = `(${anchor
-              .map((n) => Number(n).toFixed(3))
-              .join(", ")})`;
-            row.appendChild(val);
-          }
         }
 
         // 删除这一条（含引用它的测量）
@@ -10434,10 +10426,14 @@
         row.appendChild(del);
 
         // 每一条元素自己的属性明细
-        const detail = document.createElement("div");
-        detail.className = "element-detail";
-        detail.textContent = elementDetailText(el);
-        row.appendChild(detail);
+        const detailText = elementDetailText(el);
+        if (detailText) {
+          // 明细为空就别留一个空 div —— 它会白占一行高度
+          const detail = document.createElement("div");
+          detail.className = "element-detail";
+          detail.textContent = detailText;
+          row.appendChild(detail);
+        }
 
         row.addEventListener("click", (e) => {
           toggleSelect(el.id, e.ctrlKey || e.metaKey);
@@ -10461,18 +10457,21 @@
               `模型值 ${Number(el.raw).toFixed(4)} ${scaledUnit(dim, false)}`,
             );
           }
-          if (el.dim) parts.push(DIM_NAME[Number(el.dim)] || "");
+          // 不再写量纲名（「体积」这类）：行首的名字和单位后缀已经说过了
           parts.push(`由 ${(el.refs || []).length} 个点确定`);
           if (el.error) parts.push(el.error);
         } else {
-          const pts = el.points || [];
-          if (pts.length === 1) {
+          // 坐标只在这里说一遍（行尾不再放）。点自身就是坐标；连线 / 面 / 立体
+          // 是派生形，给的是它们的质心 —— 与 `elementAnchorOf`（视图里点选用的
+          // 那个锚点）同一个点，写清是质心，别让人误以为是某个顶点。
+          const anchor = elementAnchorOf(el);
+          if (anchor) {
+            const label = el.kind === "point" ? "坐标" : "质心";
             parts.push(
-              `坐标 (${pts[0].map((n) => Number(n).toFixed(4)).join(", ")})`,
+              `${label} (${anchor.map((n) => Number(n).toFixed(4)).join(", ")})`,
             );
-          } else if (pts.length > 1) {
-            parts.push(`${pts.length} 个点`);
           }
+          // 不写点数：名字里已经写了「(2 点)」，再说一遍是废话。
         }
         return parts.filter(Boolean).join(" · ");
       }
