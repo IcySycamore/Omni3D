@@ -1738,6 +1738,19 @@
       }
       .modal-field input {
         width: 100%;
+        /* 浏览器默认外观是**纯白底 + 黑字 + 灰描边 + Arial**（实测
+           `.calDialogRealDist` 的 background 就是 rgb(255,255,255)、
+           `appearance: auto`）—— 贴在新拟物台面上就是一块白板，深色主题下更刺眼。
+           别的输入框都统一过了，这一处没进那张名单。 */
+        background: var(--fill-1);
+        color: var(--text-primary);
+        border-color: transparent;
+        box-shadow: var(--neu-inset-soft);
+        font-family: inherit;
+      }
+      /* 数字框的系统上下箭头在台面上是两个灰点，占宽又没什么用 */
+      .modal-field input[type="number"] {
+        appearance: textfield;
       }
       .modal-note {
         margin: var(--sp-4) 0 0;

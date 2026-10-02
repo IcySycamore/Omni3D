@@ -1534,6 +1534,24 @@ class TestMeasureChildrenCollapse:
 
 
 class TestCalibrationDialog:
+    def test_the_dialog_input_is_not_a_raw_browser_input(self, index_html):
+        """弹窗里的输入框必须跟别的输入框一样是「浅坑」，不能是浏览器默认外观。
+
+        实测（在浏览器里读计算样式）：`#calDialogRealDist` 原本是
+        `background: rgb(255,255,255)` + `color: rgb(0,0,0)` +
+        `border: rgb(118,118,118)` + `font-family: Arial` + `appearance: auto`
+        —— 一块贴在新拟物台面上的白板，深色主题下更刺眼。这是「弹窗设计的
+        不好看」里最实的一条。
+        """
+        rule = _css_rule(index_html, ".modal-field input")
+        assert "box-shadow: var(--neu-inset-soft)" in rule
+        assert "background: var(--fill-1)" in rule
+        assert "font-family: inherit" in rule
+        # 数字框的系统上下箭头在台面上是两个灰点
+        assert _contains_text(
+            index_html, '.modal-field input[type="number"] { appearance: textfield;'
+        )
+
     def test_the_dialog_does_not_repeat_the_placeholder(self, index_html):
         """「真实距离（例：A4 长边 0.297 m）」只是把输入框的 placeholder 又说一遍，
         而「已选两点」也是废话（弹窗本来就是选完两点才弹的）。"""
