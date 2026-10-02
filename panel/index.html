@@ -2036,6 +2036,36 @@
         accent-color: var(--accent-cyan);
         cursor: pointer;
       }
+      /* 元素行的展开箭头：只有带子元素的测量行才有。其它行留一个等宽占位，
+         否则同一列的复选框会参差不齐。不是控件，只负责展开 / 折叠。 */
+      .row-caret {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+      }
+      .row-caret svg {
+        width: 12px;
+        height: 12px;
+        transition: transform 0.12s ease;
+      }
+      /* 折起 = 箭头朝右 */
+      .row-caret.collapsed svg {
+        transform: rotate(-90deg);
+      }
+      .row-caret-empty {
+        cursor: default;
+        pointer-events: none;
+      }
+      .element-row:hover .row-caret:not(.row-caret-empty) {
+        color: var(--text-secondary);
+      }
       /* 元素种类是**一个名字**，不是控件：不带底色 / 圆角 / 凸起阴影。
          它曾经挂过 `--neu-raised-sm`，看起来像个能点的按钮（用户报的就是这个）；
          而它只是个名称 —— 弱一档的颜色就够把名字和它分开了。 */
@@ -2884,9 +2914,10 @@
               </button>
             </div>
             <div class="modal-body">
-              <p class="modal-line">
-                已选两点，模型内距离：<strong id="calDialogModelDist">-</strong>
-              </p>
+              <div class="prop-row">
+                <span class="prop-key">模型距离</span>
+                <span class="prop-val" id="calDialogModelDist">-</span>
+              </div>
               <label class="modal-field">
                 <span>真实距离（<em id="calDialogUnit">m</em>）</span>
                 <input
@@ -2897,9 +2928,6 @@
                   placeholder="例如 0.297"
                 />
               </label>
-              <p class="modal-note">
-                这两点的真实长度（例：A4 长边 0.297 m）。
-              </p>
               <p class="modal-note" id="calDialogResult"></p>
             </div>
             <div class="modal-foot">
@@ -3156,6 +3184,17 @@
               </label>
             </div>
             <div class="glass-card">
+              <h3>测量</h3>
+              <label class="modal-check" style="margin: 0">
+                <input
+                  type="checkbox"
+                  id="collapseChildrenToggle"
+                  data-help="开启后，一条测量完成时它的顶点会折在测量行内（点测量行最前面的箭头可以展开）。关掉则始终铺开。"
+                />
+                测量完成时折叠子元素
+              </label>
+            </div>
+            <div class="glass-card">
               <h3>视角</h3>
               <label class="modal-check" style="margin: 0 0 10px">
                 <input type="checkbox" id="turntableToggle" />
@@ -3364,6 +3403,13 @@
         huaweiPoints: null, // 华为 SLAM 稀疏点云 [{x,y,z},...]
         huaweiFusion: false, // 查看器是否融合华为点云
         colorMode: "rgb", // 'rgb'（真实颜色）| 'height'（按高度着色）
+        // 这朵云带不带真实颜色。不带（早期合成数据 / 服务端只回坐标）时
+        // 两种模式本来就是同一张图 → 颜色按钮没有意义，置灰。
+        cloudHasRgb: false,
+        // 设置项：测量完成后把它的子元素（被引用的顶点）折起来（默认开）。
+        collapseMeasureChildren: true,
+        // 手动展开过的测量 id —— 默认全折叠，所以记的是**展开**而不是折叠。
+        expandedMeasurements: new Set(),
         cloudColors: null, // {rgb, height} 两种着色快照，供颜色开关切换
         axesVisible: false, // 万向轴（三环）是否显示；初始化时按本地设置覆盖
         theme: "deep", // 当前主题名（定义见 :root[data-theme=...]）
@@ -3514,6 +3560,7 @@
         unitGroup: $("#unitGroup"),
         toolLayout: $("#toolLayout"),
         boxNoRotateToggle: $("#boxNoRotateToggle"),
+        collapseChildrenToggle: $("#collapseChildrenToggle"),
         gridGroundToggle: $("#gridGroundToggle"),
         serverList: $("#serverList"),
         addServerBtn: $("#addServerBtn"),
@@ -6690,6 +6737,8 @@
         trash: TOOLBAR_ICONS.clearViewerBtn,
         ruler: TOOLBAR_ICONS["tool:calibrate"],
         export: TOOLBAR_ICONS.exportBtn,
+        // 展开箭头：默认朝下（= 已展开），折起时靠 CSS 转 -90°
+        caret: `${_SVG_OPEN}<path d="M6 9.4 12 15.4l6-6"/></svg>`,
       };
       function paintUiIcons() {
         document.querySelectorAll("[data-icon]").forEach((slot) => {
@@ -6781,7 +6830,8 @@
         updateFusionButton();
         const hasCloud = !!STATE.viewerPointCloud;
         if (dom.colorModeBtn) {
-          dom.colorModeBtn.disabled = !hasCloud;
+          // 没有真实颜色的云没有可切换的东西 → 置灰（而不是点了没反应）
+          dom.colorModeBtn.disabled = !hasCloud || !STATE.cloudHasRgb;
           dom.colorModeBtn.classList.toggle(
             "satisfied",
             STATE.colorMode === "height",
@@ -7652,7 +7702,13 @@
         }
         const geom = new THREE.BufferGeometry();
         geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-        geom.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+        // ⚠️ 颜色属性必须拿**自己的**一份：three 的 BufferAttribute 只是引用
+        //    传进去的数组（不拷贝），而 `setColorMode` 直接改写这个数组 ——
+        //    共用一份就会把快照里的真彩色覆盖掉（见下面的 cloudColors）。
+        geom.setAttribute(
+          "color",
+          new THREE.BufferAttribute(colors.slice(), 3),
+        );
         const mat = new THREE.PointsMaterial({
           size: 0.008,
           vertexColors: true,
@@ -7663,12 +7719,15 @@
         const pointCloud = new THREE.Points(geom, mat);
         scene.add(pointCloud);
         STATE.viewerPointCloud = pointCloud;
-        // 两种着色各留一份拷贝供颜色开关切换。
-        // 不能共用同一个数组：切到高度着色时会把「真实颜色」那份也改掉。
+        // 两种着色各留一份**拷贝**供颜色开关切换。
+        // ⚠️ 不能共用同一个数组：切到高度着色时会把「真实颜色」那份也改掉
+        //    —— 表现就是「颜色只能切一次，之后再也切不回来」（用户实测）。
         STATE.cloudColors = {
           rgb: colors.slice(),
           height: buildHeightColors(positions),
         };
+        // 没有真实颜色的云：两种模式本来就是同一张图 → 颜色按钮没有意义
+        STATE.cloudHasRgb = !!decoded.hasRgb;
         // 完整基准：删「点云对象」时从这份过滤重建，撤销才回得去
         STATE.cloudSource = {
           positions: positions.slice(),
@@ -9088,14 +9147,17 @@
           const active = STATE.activeTool === tool;
           // 不再要求「已经收口」才可完成 —— **「完成」自己会收口**。
           // 否则用户得先猜着把环点上、按钮才亮，那正是「难受」的来源之一。
+          // ⚠️ 字数不够之前**不许写「可完成」**：这条文案是棕色的，写着
+          //    「可完成」却点不动，用户会以为按钮坏了（用户实测）。
           return {
             enabled: true,
             canApply: active && got >= need,
             have: got,
             need,
-            reason:
-              !active || !got
-                ? `至少要 ${need} 个顶点`
+            reason: !active || !got
+              ? `至少要 ${need} 个顶点`
+              : got < need
+                ? `已取 ${got}/${need} · 未完成`
                 : `已取 ${got} 个 · 可完成`,
           };
         }
@@ -9645,10 +9707,13 @@
           }
         }
         pc.geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        // ⚠️ `.slice()` 不能省：BufferAttribute 只是引用传进去的数组，
+        //    而它和 `STATE.cloudColors` 必须各持一份 —— 否则切换颜色时会把
+        //    真彩色写坏，表现是「颜色只能切一次，之后再也切不回来」。
         pc.geometry.setAttribute(
           "color",
           new THREE.BufferAttribute(
-            STATE.colorMode === "height" ? hgt : rgb,
+            (STATE.colorMode === "height" ? hgt : rgb).slice(),
             3,
           ),
         );
@@ -9927,12 +9992,22 @@
           }
           const refs = STATE.pendingIds.slice();
           STATE.pendingIds = [];
-          // 提示条要复位：否则测量都完成了还挂着「已取 2/3 个点」，
-          // 用户会以为下一轮已经取过点了（数值由 toast 汇报）
-          setToolHint(tool.hint || "");
-          await persistCurrent();
-          // 校准不是「产生一个测量」，而是拿两点来定尺度 → 弹窗问真实长度
+          // 提示条**清空**，不要再把整句操作说明塞回来：那是帮助内容。
+          // 挂在常驻状态栏里就变成「已经做完了还在教你怎么做完」——
+          // 画线的说明写着「点应用」，而两点一取完本来就已经算完了（用户实测）。
+          setToolHint("");
+          // 两个点的工具（画线 / 尺度）顺手把这条线段画出来：否则量完只剩两个
+          // 孤零零的点，看不出量的到底是哪一段。
+          if (refs.length === 2) {
+            STATE.elements.push(makeEdgeElement(refs[0], refs[1]));
+            renderElementList();
+            renderElements();
+          }
+          // 校准不是「产生一个测量」，而是拿两点来定尺度 → 弹窗问真实长度。
+          // 它没有 createMeasurement 帮忙落库，所以这里自己存一次 —— 否则弹窗
+          // 确认时 reloadAnnotations 会把刚画的那条线段丢掉。
           if (STATE.activeTool === "calibrate") {
+            await persistCurrent();
             openCalibrationDialog(refs);
             return;
           }
@@ -10255,11 +10330,13 @@
           const rows = [];
           const emit = (el, child) => {
             rows.push(buildElementRow(el, child));
-            if (el.kind === "measurement") {
-              for (const r of el.refs || []) {
-                const ref = elementById(r);
-                if (ref) emit(ref, true);
-              }
+            if (el.kind !== "measurement") return;
+            // 子元素（被引用的顶点）**默认折起来**（设置 → 行为 可关）：
+            // 一条测量动辄挂 4~10 个顶点，全铺开就把列表淹了。
+            if (childrenCollapsed(el)) return;
+            for (const r of el.refs || []) {
+              const ref = elementById(r);
+              if (ref) emit(ref, true);
             }
           };
           for (const el of elements) {
@@ -10370,12 +10447,46 @@
         return out;
       }
 
+      // 测量行的子元素要不要折叠。
+      // 默认**折**（设置项可关）；手动展开过的按 id 记在 expandedMeasurements 里。
+      function childrenCollapsed(el) {
+        if (!el || el.kind !== "measurement") return false;
+        if (!STATE.collapseMeasureChildren) return false;
+        if (!(el.refs || []).some((r) => elementById(r))) return false;
+        return !STATE.expandedMeasurements.has(el.id);
+      }
+
       function buildElementRow(el, isChild) {
         const row = document.createElement("div");
         row.className = "element-row" + (isChild ? " element-child" : "");
         row.dataset.id = el.id;
         if (STATE.selectedIds.has(el.id)) row.classList.add("selected");
         if (STATE.pendingIds.includes(el.id)) row.classList.add("pending");
+
+        // 展开 / 折叠（只有带子元素的测量行才有）：放最前面，便于竖向扫读。
+        const caret = document.createElement("button");
+        caret.type = "button";
+        caret.className = "row-caret";
+        const hasChildren =
+          el.kind === "measurement" &&
+          (el.refs || []).some((r) => elementById(r));
+        if (hasChildren) {
+          const collapsed = childrenCollapsed(el);
+          caret.innerHTML = UI_ICONS.caret;
+          caret.classList.toggle("collapsed", collapsed);
+          caret.title = collapsed ? "展开子元素" : "折叠子元素";
+          caret.addEventListener("click", (e) => {
+            e.stopPropagation(); // 别顺带把这一行选中了
+            if (collapsed) STATE.expandedMeasurements.add(el.id);
+            else STATE.expandedMeasurements.delete(el.id);
+            renderElementList();
+          });
+        } else {
+          caret.classList.add("row-caret-empty");
+          caret.disabled = true;
+          caret.tabIndex = -1;
+        }
+        row.appendChild(caret);
 
         const box = document.createElement("input");
         box.type = "checkbox";
@@ -11336,6 +11447,27 @@
           );
         });
       }
+      // 设置页：行为 —— 测量完成时是否折叠子元素
+      if (dom.collapseChildrenToggle) {
+        dom.collapseChildrenToggle.addEventListener("change", () => {
+          STATE.collapseMeasureChildren = dom.collapseChildrenToggle.checked;
+          try {
+            writeLS(
+              "omni3d.collapse_children",
+              STATE.collapseMeasureChildren ? "1" : "0",
+            );
+          } catch (_) {
+            /* 忽略 */
+          }
+          renderElementList();
+          showToast(
+            STATE.collapseMeasureChildren
+              ? "测量完成后折叠子元素"
+              : "测量完成后展开子元素",
+            "success",
+          );
+        });
+      }
       // 设置页：行为 —— 网格是否贴合点云地面
       if (dom.gridGroundToggle) {
         dom.gridGroundToggle.addEventListener("change", () => {
@@ -11650,6 +11782,14 @@
         STATE.boxNoRotate = saved === null ? true : saved === "1";
         if (dom.boxNoRotateToggle) {
           dom.boxNoRotateToggle.checked = STATE.boxNoRotate;
+        }
+      }
+      // 行为：测量完成时折叠子元素（默认折）
+      {
+        const saved = readLS("omni3d.collapse_children");
+        STATE.collapseMeasureChildren = saved === null ? true : saved === "1";
+        if (dom.collapseChildrenToggle) {
+          dom.collapseChildrenToggle.checked = STATE.collapseMeasureChildren;
         }
       }
       // 行为：网格是否贴合点云地面（默认贴；只有显式存了 "0" 才不贴）

@@ -1427,6 +1427,121 @@ def _css_group(index_html: str, first_selector: str) -> str:
     return index_html[start : index_html.index("}", start)]
 
 
+class TestStatusBarReadiness:
+    """常驻状态栏只报**当前进度**，不写操作说明，也不许提前说「可完成」。"""
+
+    def test_readiness_words_match_whether_it_can_finish(self, index_html):
+        """棕色的那行文字只在真的够数之后才能写「可完成」。
+
+        用户实测：面积只取了 2 个点，棕色的状态行已经写着「已取 2 个 · 可完成」，
+        而按钮是灰的 —— 看起来就像按钮坏了。
+        """
+        body = _fn_body(index_html, "toolStateFor")
+        assert _contains_text(body, "got < need ? `已取 ${got}/${need} · 未完成`")
+        assert _contains_text(body, "`已取 ${got} 个 · 可完成`")
+
+    def test_the_hint_is_not_pushed_back_into_the_status_bar(self, index_html):
+        """工具做完不许再把整句操作说明塞回常驻状态栏（那是帮助内容）。
+
+        画线的说明写着「选好 2 个点后点「应用」，或直接点两个点」——
+        而两点一取完本来就已经算完了，那句话会让人以为还得再点一下
+        （用户实测：「连线选两个点就结束了不需要点完成」）。
+        """
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(body, 'setToolHint("");')
+        assert "setToolHint(tool.hint" not in body
+
+
+class TestTwoPointSegment:
+    """画线 / 尺度这种两点工具，量完要留下看得见的一段。"""
+
+    def test_two_point_tools_draw_their_segment(self, index_html):
+        """用户实测：「尺度选完两个点没有自动连线」—— 量完只剩两个孤零零的点，
+        看不出量的到底是哪一段。"""
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(body, "if (refs.length === 2) {")
+        assert _contains_text(
+            body, "STATE.elements.push(makeEdgeElement(refs[0], refs[1]));"
+        )
+
+    def test_calibration_persists_before_opening_the_dialog(self, index_html):
+        """尺度那条路必须自己落库：否则弹窗确认时 reloadAnnotations 会把刚画的
+        线段丢掉（校准这条分支没有 createMeasurement 帮忙存）。
+
+        ⚠️ 断言的是**紧邻关系**：`onToolClick` 里别处也有 `persistCurrent()`
+        （取点不足时的「先落库」），只查「函数里有没有」会永远绿。
+        """
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(
+            body,
+            'if (STATE.activeTool === "calibrate") { '
+            "await persistCurrent(); openCalibrationDialog(refs);",
+        ), "开校准弹窗前没落库"
+
+
+class TestColorToggle:
+    """颜色开关：快照不许和几何的属性共用同一份数组。"""
+
+    def test_color_attribute_never_shares_memory_with_the_snapshots(self, index_html):
+        """颜色属性必须自己拿一份拷贝 —— 否则「颜色只能切一次」。
+
+        three 的 `BufferAttribute` 只是**引用**传进去的数组（不拷贝），而
+        `setColorMode` 直接改写那个数组。共用一份的后果：切到高度着色时把快照里
+        的真彩色一起覆盖 → 再切回来时 rgb == height，画面不再变化（用户实测：
+        「点击颜色按钮只会切换一次然后就卡死了」）。删掉任意一处 `.slice()` 这条就红。
+        """
+        assert _contains_text(
+            index_html, "new THREE.BufferAttribute(colors.slice(), 3)"
+        )
+        assert _contains_text(
+            index_html, '(STATE.colorMode === "height" ? hgt : rgb).slice()'
+        )
+
+    def test_color_button_is_disabled_without_real_colors(self, index_html):
+        """没有真实颜色的云两种模式本来就是同一张图 → 置灰，而不是点了没反应。"""
+        assert "cloudHasRgb" in index_html
+        body = _fn_body(index_html, "updateViewButtons")
+        assert _contains_text(body, "!hasCloud || !STATE.cloudHasRgb")
+
+
+class TestMeasureChildrenCollapse:
+    """测量完成时子元素默认折叠在测量行内（设置里可关、可逐行展开）。"""
+
+    def test_children_are_collapsed_by_default(self, index_html):
+        assert "collapseMeasureChildren: true" in index_html
+        assert _contains_text(
+            index_html, 'const saved = readLS("omni3d.collapse_children");'
+        )
+        assert _contains_text(
+            index_html,
+            "STATE.collapseMeasureChildren = saved === null ? true : saved",
+        )
+        body = _fn_body(index_html, "renderElementList")
+        assert _contains_text(body, "if (childrenCollapsed(el)) return;")
+
+    def test_collapse_can_be_turned_off_and_expanded_per_row(self, index_html):
+        body = _fn_body(index_html, "childrenCollapsed")
+        assert "STATE.collapseMeasureChildren" in body
+        assert "STATE.expandedMeasurements.has(el.id)" in body
+        row = _fn_body(index_html, "buildElementRow")
+        assert _contains_text(row, "STATE.expandedMeasurements.add(el.id)")
+        assert _contains_text(row, "STATE.expandedMeasurements.delete(el.id)")
+        assert "UI_ICONS.caret" in row, "没有展开箭头就没法展开"
+        # 设置项要真的接上（有控件、有 dom 引用、有 change 处理器）
+        assert 'id="collapseChildrenToggle"' in index_html
+        assert "collapseChildrenToggle: $(" in index_html
+        assert "dom.collapseChildrenToggle.checked" in index_html
+
+
+class TestCalibrationDialog:
+    def test_the_dialog_does_not_repeat_the_placeholder(self, index_html):
+        """「真实距离（例：A4 长边 0.297 m）」只是把输入框的 placeholder 又说一遍，
+        而「已选两点」也是废话（弹窗本来就是选完两点才弹的）。"""
+        assert "A4 长边" not in index_html
+        assert "已选两点" not in index_html
+        assert _contains_text(index_html, '<span class="prop-key">模型距离</span>')
+
+
 class TestProviderLightAndSubmitGate:
     """状态灯的语义 + 凭据校验的时机（用户给的规格）。
 
