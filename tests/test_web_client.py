@@ -1023,10 +1023,20 @@ class TestPerServerCredentials:
         # 两个凭据不能混着发
         assert 'else if (Auth.token && !headers.has("X-Auth-Token"))' in index_html
 
-    def test_server_row_can_verify_credential(self, index_html):
-        assert "function verifyServerCred" in index_html
-        assert 'headers["X-Api-Key"] = cred.apiKey' in index_html
-        assert "server-cred-row" in index_html
+    def test_the_row_no_longer_has_a_verify_button(self, index_html):
+        """校验搬到了**提交重建那一刻**，设置页那个按钮已经拆掉。
+
+        那边一次「校验」只能证明 `/api/auth/me` 通，证明不了这台真的能干活；
+        而且它把「必须先在这儿点一下」变成了隐式前提。
+        """
+        assert "function verifyServerCred" not in index_html
+        assert 'textContent = "校验"' not in index_html
+        assert "server-cred-row" in index_html  # 这一行本身还在，只是只留输入框
+
+    def test_the_placeholder_does_not_point_at_a_removed_page(self, index_html):
+        """别再把用户指去「登录」页 —— 面板里那页已经归档隐藏（.auth-archive）。"""
+        assert "去「登录」页用账号登录" not in index_html
+
 
     def test_help_doc_is_loaded_from_its_own_file(self, index_html):
         """帮助文档已抽到 panel/assets/help.html：改文案不用碰 index.html。
@@ -1065,3 +1075,97 @@ class TestPerServerCredentials:
             doc = fh.read()
         assert "连成线" in doc, "帮助文档没说明「依次点顶点会自动连线」"
         assert "完成" in doc, "帮助文档没说明点「完成」才定稿"
+
+
+def _fn_body(index_html: str, name: str) -> str:
+    """取出 `function name(...) { ... }` 的完整函数体（按花括号配平）。
+
+    不能用 `split("}", 1)[0]` —— 函数里有嵌套的 if/for，会在第一个右括号处
+    截断，断言“找不到”时看着像是代码丢了。
+    """
+    start = index_html.index(f"function {name}(")
+    open_brace = index_html.index("{", start)
+    depth = 0
+    for k in range(open_brace, len(index_html)):
+        if index_html[k] == "{":
+            depth += 1
+        elif index_html[k] == "}":
+            depth -= 1
+            if depth == 0:
+                return index_html[open_brace : k + 1]
+    raise AssertionError(f"{name} 的花括号不配平")
+
+
+class TestProviderLightAndSubmitGate:
+    """状态灯的语义 + 凭据校验的时机（用户给的规格）。
+
+    - 支不支持无 Key 访问是**服务商的策略**（`/health` 的 `anonymous`），
+      不是客户端猜的，也不看来源地址（走内网穿透时请求同样来自 127.0.0.1）；
+    - 校验发生在**每次提交重建**，不在设置页；
+    - 切服务商灯回灰，提交成功变绿，提交失败变红。
+    """
+
+    def test_the_capability_comes_from_the_server(self, index_html):
+        body = _fn_body(index_html, "refreshServerInfo")
+        assert "anonymous: d.anonymous !== false" in body, (
+            "匿名策略必须读服务商自己声明的 /health.anonymous"
+        )
+
+    def test_light_is_no_longer_driven_by_health_probing(self, index_html):
+        """旧口径必须整体消失：拿 /health + /api/auth/me 预判「就绪」只能
+        说明「连得上」，说明不了「这台真的能给你干活」。"""
+        assert "function checkCloudStatus" not in index_html
+        assert "function checkIdentity" not in index_html
+        assert "cloudState" not in index_html
+        assert 'classList.add("cloud-dot", state)' not in index_html
+
+    def test_light_has_exactly_three_states(self, index_html):
+        body = _fn_body(index_html, "markLight")
+        assert 'classList.remove("ok", "failed")' in body
+        assert '"ok"' in body and '"failed"' in body
+        for old in ("ready", "loading", "unverified", "invalid", "denied"):
+            assert f'"{old}"' not in body, f"旧状态 {old} 又回来了"
+
+    def test_any_failure_turns_the_light_red(self, index_html):
+        """红 = 错误（**任何**失败），灯**不区分失败的种类**。
+
+        具体是哪一种失败由提示文案说（认证失败会点名）；灯只回答
+        「这台现在能不能用」。把种类塞进颜色会有两个红/一个绿的歧义。
+        """
+        body = _fn_body(index_html, "submitReconstruction")
+        assert 'markLight("failed")' in body
+        assert "markLight(authFail" not in body, (
+            "别按失败种类分颜色 —— 任何失败都点红，细节放文案里"
+        )
+        assert "认证失败：${why}" in body, "但文案仍要区分出认证失败"
+
+    def test_switching_provider_resets_the_light_to_grey(self, index_html):
+        assert 'markLight("unknown")' in _fn_body(index_html, "activateServer")
+        # 换了凭据也是未知：旧 Key 的结果不能算在新 Key 头上
+        assert 'markLight("unknown")' in _fn_body(index_html, "buildCredRow")
+
+    def test_submit_verifies_via_the_response_status(self, index_html):
+        """校验 = 请求**照发**，看服务商回的状态码。
+
+        客户端自己预判「这台要不要凭据」会多出一处可能与服务端不一致的判断，
+        而且会把「根本没发出去的请求」伪装成「提交失败」。
+        """
+        body = _fn_body(index_html, "submitReconstruction")
+        assert "serverCaps.anonymous === false" not in body, (
+            "提交前不该在客户端预判要不要凭据 —— 由服务商的状态码说了算"
+        )
+        assert "if (!resp.ok)" in body, "必须按 HTTP 状态码判定成败（光看 body.ok 不够）"
+        assert "resp.status === 401" in body
+        assert "认证失败：${why}" in body, "401/403 要说成人话（认证失败），别只报 HTTP 码"
+        assert 'markLight("failed")' in body
+
+    def test_submit_success_is_the_only_green_source(self, index_html):
+        body = _fn_body(index_html, "submitReconstruction")
+        assert 'markLight("ok")' in body
+        # 绿只来自「请求被接受」，不来自别的任何地方
+        assert index_html.count('markLight("ok")') == 1
+
+    def test_no_health_polling(self, index_html):
+        """灯不再靠轮询维持 —— 只在提交 / 换凭据 / 切服务商时变。"""
+        assert "setInterval(checkCloudStatus" not in index_html
+        assert "setInterval(refreshServerInfo" not in index_html

@@ -75,6 +75,7 @@ from server.core.pointcloud import statistical_outlier_removal  # noqa: E402
 from server.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
 
 from panel.hosting import (  # noqa: E402
+    ALLOW_ANONYMOUS,
     API_HOST,
     API_PORT,
     SERVE_PAGE,
@@ -177,16 +178,70 @@ def api_key_identity() -> Optional[str]:
     return _REQUEST_API_KEY_USER.get()
 
 
+# ---- 「必须带凭据」的门槛（`OMNI3D_ALLOW_ANONYMOUS=0` 时生效）----
+# 用**白名单**而不是黑名单：新增端点默认就是「要凭据」，
+# 想对外开放必须显式写进来 —— 否则就是静默的能力外溢（漏一个就是洞）。
+_ANON_ALLOWED_EXACT = frozenset(
+    {
+        "/",  # 仅 SERVE_PAGE=1（单端口 / adb reverse）时才有
+        "/app-config.json",
+        "/health",
+        "/favicon.ico",
+        "/openapi.json",
+        "/docs",
+        "/redoc",
+    }
+)
+_ANON_ALLOWED_PREFIXES = (
+    "/assets/",  # 同上，静态资源
+    "/api/auth/",  # 登录流程本身必须开放，否则永远拿不到凭据
+    "/api/models",  # 只是模型清单，不含任何用户数据
+)
+
+
+def anon_path_allowed(path: str) -> bool:
+    """这条路径能不能无凭据访问（仅在匿名被关闭时才会被问到）。"""
+    return path in _ANON_ALLOWED_EXACT or path.startswith(_ANON_ALLOWED_PREFIXES)
+
+
+def anonymous_allowed(key_username: Optional[str], token: Optional[str]) -> bool:
+    """本请求能否以匿名身份继续。
+
+    服务商允许匿名 → 直接放行；否则必须能解出用户身份
+    （API Key 或登录令牌，两者等效）。
+    """
+    if ALLOW_ANONYMOUS:
+        return True
+    if key_username or session_manager.username_for(token):
+        return True
+    return False
+
+
 @app.middleware("http")
 async def _identify_by_api_key(request, call_next):
-    """把 ``X-Api-Key`` 解析成用户名放进 ContextVar（每请求一份）。
+    """把 ``X-Api-Key`` 解析成用户名放进 ContextVar（每请求一份），
+    并在这里就把「要不要放行」定下来。
 
     放在中间件而不是给 ~10 个端点逐个加参数：所有读写数据的端点的归属解析
     都走 ``_owner_of``，这里一处生效即可，也不会漏。
+
+    ⚠️ 身份解析与放行判断必须待在**同一个**中间件里，而且按这个顺序：
+    两个 `@app.middleware` 谁先跑取决于注册顺序（后注册的在外层），
+    拆成两个将来被重排就是**静默的漏洞** ——
+    先跑的那个会看到「无身份」，把所有带 Key 的请求也一并拒掉。
     """
     username = api_keys.username_for(request.headers.get("x-api-key"))
     token = _REQUEST_API_KEY_USER.set(username)
     try:
+        if not anonymous_allowed(username, request.headers.get("x-auth-token")):
+            if not anon_path_allowed(request.url.path):
+                return JSONResponse(
+                    {
+                        "error": "这台服务商要求凭据（API Key 或登录令牌）",
+                        "requires_key": True,
+                    },
+                    status_code=401,
+                )
         return await call_next(request)
     finally:
         _REQUEST_API_KEY_USER.reset(token)
@@ -218,6 +273,19 @@ def _load_model():
 
 @app.on_event("startup")
 def _startup():
+    # 把「允许匿名」这件事**显式说出来**：它是默认值，很容易在对外部署时被忘掉。
+    # （不能靠监听地址判断 —— 走内网穿透时绑的还是 127.0.0.1。）
+    if ALLOW_ANONYMOUS:
+        print(
+            "[server] 匿名访问：**允许**（默认，本机自用）。"
+            "对外提供服务请设 OMNI3D_ALLOW_ANONYMOUS=0",
+            flush=True,
+        )
+    else:
+        print(
+            "[server] 匿名访问：已关闭 —— 数据端点要求 X-Api-Key 或 X-Auth-Token",
+            flush=True,
+        )
     threading.Thread(target=_load_model, daemon=True).start()
 
 
@@ -234,6 +302,9 @@ def health():
         # 客户端靠它提示「这台服务商支不支持 API Key」
         "api_key": api_key_enabled(),
         "static_api_keys": static_keys_enabled(),
+        # ★ 服务商自己的策略：能不能**不带凭据**用。客户端据此决定
+        # 「提交前先拦下」还是「直接提交」，而不是靠猜或靠来源地址。
+        "anonymous": ALLOW_ANONYMOUS,
     }
 
 

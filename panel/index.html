@@ -426,26 +426,20 @@
         background: #555;
         box-shadow: none;
       }
-      /* 云端模型服务状态灯 */
-      .cloud-dot.ready {
+      /* 模型服务商状态灯：**只看真实的提交结果**。
+         灰 未知
+         绿 已连接 = 提交成功过
+         红 错误   = 提交失败过 */
+      .cloud-dot {
+        background: #6b6f85;
+      }
+      .cloud-dot.ok {
         background: var(--success);
         box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
       }
-      .cloud-dot.loading {
-        background: var(--warning);
-        box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-        animation: pulse-dot 2s infinite;
-      }
-      .cloud-dot.offline {
+      .cloud-dot.failed {
         background: var(--danger);
-      }
-      /* 没凭据 / 凭据没验证过 —— 就绪灯不该亮 */
-      .cloud-dot.unverified {
-        background: #6b6f85;
-      }
-      .cloud-dot.invalid {
-        background: var(--danger);
-        animation: pulse-dot 2s infinite;
+        box-shadow: 0 0 10px rgba(248, 113, 113, 0.55);
       }
       .page-head {
         font-weight: 600;
@@ -1705,11 +1699,6 @@
         font-family: var(--font-mono);
         letter-spacing: 0.02em;
       }
-      .tag-ok {
-        background: rgba(74, 222, 128, 0.12);
-        color: var(--success);
-        border: 1px solid rgba(74, 222, 128, 0.3);
-      }
       .tag-warn {
         background: rgba(251, 191, 36, 0.1);
         color: var(--warning);
@@ -2387,7 +2376,7 @@
             data-name="模型服务商"
             data-help="选择重建用的模型服务商：本地（本机固定端口）或已配置的远程服务器。"
           >
-            <span class="ar-dot disconnected" id="cloudDot"></span>
+            <span class="ar-dot cloud-dot" id="cloudDot"></span>
             <span class="sb-pick-text" id="cloudStatusText">本地 · 检测中</span>
             <span class="sb-chev"></span>
           </button>
@@ -3215,8 +3204,10 @@
         // 服务商能力门槛（/api/models 的 capabilities）：视角档位 / 默认帧数 / 显存。
         // 切服务商或重新初始化时会重新请求并刷新相关 UI（见 loadModels）。
         caps: null,
-        cloudState: "offline", // 模型服务的健康状态：ready | loading | offline | unverified | invalid
-        identity: "none", // 当前服务商的身份：none | verified | invalid
+        light: "unknown", // unknown=灰（未知）| ok=绿（已连接）| failed=红（错误）
+        // 当前服务商**自己声明**的能力（/health）。anonymous=false 表示这台
+        // 要求凭据：提交前先本地拦下，不让用户白等一次注定失败的请求。
+        serverCaps: { anonymous: true },
         appConfig: null, // /app-config.json（官网端口等引导信息）
         arScanFrameCount: 0,
         // 建模结果
@@ -3836,7 +3827,7 @@
       function renderAccountUI() {
         // 面板不自己管账号：账号 / 用量 / API Key 都在官网（另一个端口）。
         // 本机只反映「当前服务商 + 身份是否验证通过」，具体在「设置 → 服务」和左下角状态灯。
-        const verified = STATE.identity === "verified" && !!Auth.username;
+        const verified = !!Auth.username;
         // ---- 以下都是**已废弃留档**的 DOM：不再驱动界面，只保证不报错 ----
         if (dom.accountPanel) {
           dom.accountPanel.classList.toggle("auth-hidden", !verified);
@@ -4067,22 +4058,60 @@
       // ⚠️ 「就绪」= **身份已验证 + 模型已加载**。只有 /health 回 200 就亮绿是错的：
       // 那台机器可能根本没认你的凭据，一提交重建才发现 401/402。
 
-      // 当前身份：none（没填凭据）| verified（/api/auth/me 通过）| invalid（被拒）
-      async function checkIdentity() {
-        if (!hasCredential()) {
-          STATE.identity = "none";
-          return STATE.identity;
+      // ---- 状态灯：只由**真实的提交结果**驱动 ----
+      //   灰 unknown = 未知：还没测出来
+      //   绿 ok      = 已连接：提交成功过
+      //   红 failed  = 错误：提交失败过
+      function markLight(state) {
+        STATE.light = state;
+        if (dom.cloudDot) {
+          dom.cloudDot.classList.remove("ok", "failed");
+          if (state === "ok") dom.cloudDot.classList.add("ok");
+          if (state === "failed") dom.cloudDot.classList.add("failed");
         }
+        updatePickLabels();
+      }
+
+      function lightText() {
+        if (STATE.light === "ok") return "已连接";
+        if (STATE.light === "failed") return "错误";
+        return "未知";
+      }
+
+      // 问一次服务商「你自己的规矩是什么」——允不允许不带凭据访问。
+      // 这是**服务端的策略**（`OMNI3D_ALLOW_ANONYMOUS`），客户端只照做：
+      // 不看来源地址、也不猜（走内网穿透时请求同样来自 127.0.0.1）。
+      async function refreshServerInfo() {
+        try {
+          const resp = await fetch("/health", {
+            signal: AbortSignal.timeout(4000),
+          });
+          if (resp.ok) {
+            const d = await resp.json();
+            STATE.serverCaps = {
+              anonymous: d.anonymous !== false,
+              ready: !!d.ready,
+              device: d.device || "",
+            };
+          }
+        } catch (_) {
+          /* 连不上不当场判定：留给提交时如实失败（灯变红） */
+        }
+        renderServerList();
+        updatePickLabels();
+        renderAccountUI();
+      }
+
+      // 提交成功过 → 顺手把「你是谁」记下来（设置页那行才显示得出用户名）。
+      // 这是**真提交**的副产物，不是单独的一次「校验」。
+      async function noteIdentity() {
+        if (!hasCredential()) return;
         try {
           const resp = await fetch("/api/auth/me", {
             signal: AbortSignal.timeout(4000),
           });
-          if (!resp.ok) {
-            STATE.identity = "invalid";
-            return STATE.identity;
-          }
+          if (!resp.ok) return;
           const data = await resp.json();
-          STATE.identity = "verified";
           if (data.username && data.username !== Auth.username) {
             Auth.username = data.username;
             const cred = readCred(Auth.serverId);
@@ -4090,74 +4119,14 @@
             writeCred(Auth.serverId, cred);
             renderAccountUI();
           }
-          // ★ 模型清单就来自这一次「验证 API Key」的回传（服务端决定你能用哪些）
-          if (Array.isArray(data.models) && data.models.length) {
-            STATE.models = data.models
-              .map((m) => ({
-                id: String(m.id || ""),
-                name: String(m.name || m.id || ""),
-                sub: String(m.sub || ""),
-              }))
-              .filter((m) => m.id);
-            if (!STATE.models.some((m) => m.id === STATE.model)) {
-              STATE.model = STATE.models[0].id;
-            }
-            updatePickLabels();
-          }
-          return STATE.identity;
         } catch (_) {
-          STATE.identity = "invalid";
-          return STATE.identity;
+          /* 记不下用户名不影响使用 */
         }
-      }
-
-      async function checkCloudStatus() {
-        let state = "offline";
-        try {
-          const resp = await fetch("/health", {
-            signal: AbortSignal.timeout(4000),
-          });
-          if (resp.ok) {
-            const d = await resp.json();
-            state = d.ready ? "ready" : "loading";
-          }
-        } catch {
-          /* 离线 */
-        }
-        // 就绪灯的**门槛**是身份：没验证过就不算就绪
-        const identity = await checkIdentity();
-        if (state !== "offline" && identity !== "verified") {
-          state = identity === "invalid" ? "invalid" : "unverified";
-        }
-        STATE.cloudState = state;
-        if (dom.cloudDot) {
-          dom.cloudDot.classList.remove(
-            "ready",
-            "loading",
-            "offline",
-            "invalid",
-            "unverified",
-          );
-          dom.cloudDot.classList.add("cloud-dot", state);
-        }
-        updatePickLabels();
-        renderAccountUI(); // 身份摘要（已验证 / 凭据无效 / 未验证）
       }
 
       function providerLabel() {
-        const st = STATE.cloudState;
-        const stText =
-          st === "ready"
-            ? "就绪"
-            : st === "loading"
-              ? "加载中"
-              : st === "invalid"
-                ? "凭据无效"
-                : st === "unverified"
-                  ? "未验证"
-                  : "离线";
         const sv = activeServer();
-        return `${sv.name || (sv.type === "local" ? "本地" : "服务器")} · ${stText}`;
+        return `${sv.name || (sv.type === "local" ? "本地" : "服务器")} · ${lightText()}`;
       }
 
       function updatePickLabels() {
@@ -4365,9 +4334,8 @@
           );
         });
       }
-      // 健康状态轮询；**首次**的一问一答在 bootstrapServers() 里发出
-      // （要等服务器列表/默认地址就绪，见文件下方启动段）。
-      setInterval(checkCloudStatus, 10000);
+      // 状态灯**不做轮询**：它只在真实的提交结果 / 换凭据 / 切服务商时变。
+      // 首次的一问一答在 bootstrapServers() 里发出（要等服务器列表就绪）。
 
       // ==================== AR桥检测 ====================
       async function detectARBridge() {
@@ -5155,6 +5123,11 @@
 
       async function submitReconstruction() {
         if (!STATE.videoSource) return;
+        // ---- 凭据校验就发生在这里：请求**照发**，由服务商回的状态码说了算 ----
+        // 不在客户端提前拦：要不要凭据是服务商的策略，客户端自己再判一次就多
+        // 一处可能与服务端不一致的逻辑（而且会把「没发出去的请求」伪装成「失败」）。
+        // 也不在设置页：那边一次「校验」只能证明 /api/auth/me 通，证明不了这台
+        // 真的能给你干活。401/403 = 认证没过，在下面的 catch 里如实变红。
         // 提交时停止拍照相机（帧已保存在 capturedFrames）
         stopPhotoCamera();
         dom.submitBtn.disabled = true;
@@ -5253,15 +5226,36 @@
             method: "POST",
             body: formData,
           });
-          const data = await resp.json();
-          if (!data.ok || !data.task_id)
-            throw new Error(data.detail || "提交失败");
+          let data = {};
+          try {
+            data = await resp.json();
+          } catch (_) {
+            /* 非 JSON（网关 502 之类） */
+          }
+          if (!resp.ok) {
+            const why = data.error || data.detail || `HTTP ${resp.status}`;
+            const err = new Error(
+              resp.status === 401 || resp.status === 403
+                ? `认证失败：${why}`
+                : why,
+            );
+            err.httpStatus = resp.status;
+            throw err;
+          }
+          if (!data.ok || !data.task_id) {
+            throw new Error(data.detail || data.error || "提交失败");
+          }
           STATE.currentTaskId = data.task_id;
+          // 请求被接受 = 这台真的能干活 → 灯变绿（这是**唯一**的绿来源）
+          markLight("ok");
+          noteIdentity();
           dom.stageText.textContent = "排队中...";
           dom.progressBar.style.width = "15%";
           startPolling(data.task_id);
         } catch (err) {
-          showToast("提交失败：" + err.message, "error");
+          markLight("failed");
+          const authFail = err.httpStatus === 401 || err.httpStatus === 403;
+          showToast(authFail ? err.message : "提交失败：" + err.message, "error");
           dom.submitBtn.disabled = false;
           dom.progressContainer.classList.add("hidden");
           dom.progressBar.style.width = "0%";
@@ -5311,7 +5305,7 @@
             } else if (status === "failed") {
               clearInterval(STATE.pollInterval);
               STATE.pollInterval = null;
-              dom.stageText.textContent = "❌ 重建失败";
+              dom.stageText.textContent = "❌ 失败";
               setTimeout(() => {
                 dom.progressContainer.classList.add("hidden");
                 dom.progressBar.style.width = "0%";
@@ -7132,7 +7126,7 @@
           renderServerList();
           updatePickLabels();
         }
-        checkCloudStatus();
+        refreshServerInfo();
         loadModels();
       }
 
@@ -7196,7 +7190,7 @@
             syncServerTarget();
             renderServerList();
             updatePickLabels();
-            checkCloudStatus();
+            refreshServerInfo();
           });
           row.appendChild(type);
 
@@ -7215,7 +7209,7 @@
             saveServers();
             syncServerTarget();
             updatePickLabels();
-            checkCloudStatus();
+            refreshServerInfo();
             loadModels();
           });
           row.appendChild(host);
@@ -7257,7 +7251,7 @@
           del.addEventListener("click", () => removeServer(sv.id));
           row.appendChild(del);
 
-          row.appendChild(buildCredRow(sv, builtin));
+          row.appendChild(buildCredRow(sv));
           dom.serverList.appendChild(row);
         });
       }
@@ -7278,7 +7272,7 @@
         return "未设置凭据";
       }
 
-      function buildCredRow(sv, builtin) {
+      function buildCredRow(sv) {
         const wrap = document.createElement("div");
         wrap.className = "server-cred-row";
 
@@ -7286,15 +7280,18 @@
         key.className = "server-key";
         key.type = "password";
         key.autocomplete = "new-password";
-        key.placeholder = "API Key（可留空 → 去「登录」页用账号登录）";
-        key.title =
-          "这台服务商发给你的 Key；只存在本机浏览器、只发给这一台。留空就用账号登录。";
+        // 要不要 Key 由**这台服务商**说（/health 的 anonymous）。
+        // 没问出来之前只写「可留空」—— 别再把用户指去登录页，那页已经不在了。
+        const needsKey =
+          sv.id === STATE.activeServerId &&
+          STATE.serverCaps.anonymous === false;
+        key.placeholder = needsKey
+          ? "API Key（这台要求填）"
+          : "API Key（可留空）";
+        key.title = needsKey
+          ? "这台服务商已关闭匿名访问：提交重建时会要求 API Key。"
+          : "留空则用匿名身份；这台服务商要求凭据时，提交会被拒。";
         key.value = readCred(sv.id).apiKey || "";
-
-        const verify = document.createElement("button");
-        verify.className = "btn btn-sm";
-        verify.textContent = "校验";
-        verify.title = "带这台服务商的凭据问一次 /api/auth/me";
 
         const tag = document.createElement("span");
         tag.className = "tag tag-muted";
@@ -7303,83 +7300,23 @@
         key.addEventListener("change", () => {
           const cred = readCred(sv.id);
           cred.apiKey = key.value.trim();
+          // 换了 Key 就不该再挂着旧用户名（否则看着像已经验证过了）
+          cred.username = "";
           writeCred(sv.id, cred);
           if (sv.id === STATE.activeServerId) {
             syncAuthFromServer();
-            // 清空 Key 就等于退出登录，账号区要跟着变（否则还挂着旧用户名）
             renderAccountUI();
-            // 换了凭据就立刻重新验身份 —— 就绪灯只在验证通过时才亮
-            checkCloudStatus();
+            // 换了凭据 = 未知：灯回灰，等下一次提交来回答
+            markLight("unknown");
           }
           tag.className = "tag tag-muted";
           tag.textContent = credLabel(sv);
         });
 
-        verify.addEventListener("click", async () => {
-          verify.disabled = true;
-          tag.className = "tag tag-muted";
-          tag.textContent = "校验中…";
-          const out = await verifyServerCred(sv);
-          verify.disabled = false;
-          if (out.ok) {
-            const cred = readCred(sv.id);
-            cred.username = out.username;
-            writeCred(sv.id, cred);
-            tag.className = "tag tag-ok";
-            tag.textContent = `通过 · ${out.username}`;
-            if (sv.id === STATE.activeServerId) {
-              syncAuthFromServer();
-              renderAccountUI();
-            }
-            showToast(
-              `${sv.name || "服务商"}：凭据有效（${out.username}）`,
-              "success",
-            );
-          } else {
-            tag.className = "tag tag-warn";
-            tag.textContent = out.reason;
-            showToast(`${sv.name || "服务商"}：${out.reason}`, "warn");
-          }
-        });
-
         wrap.appendChild(key);
-        wrap.appendChild(verify);
         wrap.appendChild(tag);
-        // 内置「本地」行不给改名/删，但凭据一样能填（本机也可能要账号）
-        if (builtin) key.title = "本机服务的 API Key（留空则用账号登录）";
+        // 内置「本地」行不给改名/删，但凭据一样能填
         return wrap;
-      }
-
-      // 校验某台服务商的凭据：只有它自己的令牌 / Key 才可能通过
-      async function verifyServerCred(sv) {
-        const cred = readCred(sv.id);
-        const headers = {};
-        if (cred.apiKey) headers["X-Api-Key"] = cred.apiKey;
-        else if (cred.token) headers["X-Auth-Token"] = cred.token;
-        else return { ok: false, reason: "未设置凭据" };
-        const base = serverBaseUrl(sv);
-        try {
-          const resp = await fetch(`${base || ""}/api/auth/me`, {
-            headers,
-            signal: AbortSignal.timeout(6000),
-          });
-          let data = {};
-          try {
-            data = await resp.json();
-          } catch (_) {
-            /* 非 JSON */
-          }
-          if (resp.ok) return { ok: true, username: data.username || "?" };
-          if (resp.status === 401) {
-            return {
-              ok: false,
-              reason: cred.apiKey ? "API Key 无效" : "登录已过期",
-            };
-          }
-          return { ok: false, reason: `HTTP ${resp.status}` };
-        } catch (_) {
-          return { ok: false, reason: "连不上这台服务商" };
-        }
       }
 
       function moveServer(idx, delta) {
@@ -7419,7 +7356,7 @@
         syncServerTarget();
         renderServerList();
         updatePickLabels();
-        checkCloudStatus();
+        refreshServerInfo();
         showToast("已删除该服务器", "success");
       }
 
@@ -7435,8 +7372,9 @@
         saveServers();
         syncServerTarget();
         renderServerList();
-        updatePickLabels();
-        checkCloudStatus();
+        // 换了一台 = 未用过的未知状态：灯回灰，等下一次提交来回答
+        markLight("unknown");
+        refreshServerInfo();
         showToast(`已切换到「${sv.name || sv.host || "本地"}」`, "success");
       }
 

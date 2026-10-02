@@ -4,12 +4,12 @@
 
 当前项目对外提供 **三个服务**（+ 一个 App 本地桥）：
 
-| 服务               | 地址                                             | 实现                              | 何时存在                            |
-| ------------------ | ------------------------------------------------ | --------------------------------- | ----------------------------------- |
-| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `panel/server.py`（FastAPI）        | 总是（`python panel/server.py`）      |
-| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `panel/pages.py`（无 torch）        | 需要页面时（`python panel/pages.py`） |
-| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `panel/portal.py`                   | 卖服务时（账号 / 计费 / API Key）   |
-| **App 本地桥**     | `http://127.0.0.1:50687`                         | `app/src/ar_bridge_server.cpp` | 仅移动端 App 内                     |
+| 服务               | 地址                                             | 实现                           | 何时存在                              |
+| ------------------ | ------------------------------------------------ | ------------------------------ | ------------------------------------- |
+| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `panel/server.py`（FastAPI）   | 总是（`python panel/server.py`）      |
+| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `panel/pages.py`（无 torch）   | 需要页面时（`python panel/pages.py`） |
+| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `panel/portal.py`              | 卖服务时（账号 / 计费 / API Key）     |
+| **App 本地桥**     | `http://127.0.0.1:50687`                         | `app/src/ar_bridge_server.cpp` | 仅移动端 App 内                       |
 
 > 端口常量只在 `panel/hosting.py` 定义一次；服务商 API 默认**只做 API**（`SERVE_PAGE=0`），页面一律走面板服务（50866）。
 > 原则：**重建能力只在服务商实现一次**；面板 / 官网 / App 都只是它的 client 或控制面。
@@ -20,11 +20,11 @@
 
 ### 1.1 页面与健康
 
-| 方法 | 路径               | 说明                                                          |
-| ---- | ------------------ | ------------------------------------------------------------- |
-| GET  | `/`                | 返回面板页面 `panel/index.html`（**仅** `SERVE_PAGE=1` 时挂载）                 |
-| GET  | `/app-config.json` | 客户端引导：`{api_origin, api_port, pages_port, portal_port}` |
-| GET  | `/health`          | 模型就绪状态（+ 是否支持 API Key）                            |
+| 方法 | 路径               | 说明                                                            |
+| ---- | ------------------ | --------------------------------------------------------------- |
+| GET  | `/`                | 返回面板页面 `panel/index.html`（**仅** `SERVE_PAGE=1` 时挂载） |
+| GET  | `/app-config.json` | 客户端引导：`{api_origin, api_port, pages_port, portal_port}`   |
+| GET  | `/health`          | 模型就绪状态 + 这台服务商自己的能力声明                         |
 
 ```jsonc
 // GET /health
@@ -34,10 +34,17 @@
   "error": null,
   "api_key": true,
   "static_api_keys": false,
+  "anonymous": true, // 允不允许**不带凭据**访问（服务商策略，见下）
 }
 ```
 
 - `ready=false` 时，重建接口返回 **503**（模型首次加载需数分钟）。
+- `anonymous=false` 时，除白名单外的一切数据端点**要求 `X-Api-Key` 或 `X-Auth-Token`**，
+  无凭据一律 **401** `{"error": ..., "requires_key": true}`。白名单只有
+  `/health`、`/api/auth/*`（登录流程本身必须开放）、`/api/models` 与静态资源
+  （见 `panel/server.py` 的 `_ANON_ALLOWED_EXACT/_PREFIXES`）——
+  ⚠️ **`/reconstruct` 不在 `/api/` 前缀下**，但同样受管，别只按前缀写判断。
+  开关是环境变量 `OMNI3D_ALLOW_ANONYMOUS`（默认 `1` = 允许，本机自用零配置）。
 - 交互式文档：`/docs`、`/redoc`、`/openapi.json`（FastAPI 自带）。
 
 ### 1.2 认证（挑战-应答）
@@ -321,7 +328,7 @@ Content-Type: application/json
 
 | 方法 | 路径               | 说明                                                        |
 | ---- | ------------------ | ----------------------------------------------------------- |
-| GET  | `/`                | 面板页面（读 `panel/index.html`）                             |
+| GET  | `/`                | 面板页面（读 `panel/index.html`）                           |
 | GET  | `/app-config.json` | 与 §1.1 同一份引导信息                                      |
 | GET  | `/assets/*`        | 静态资源（品牌图等）                                        |
 | GET  | `/health`          | `{role: "pages", api_origin, api_port}` —— **不是**模型健康 |

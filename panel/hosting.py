@@ -59,6 +59,15 @@ def _flag(name: str, default: bool) -> bool:
 # 确实需要单端口部署（如 adb reverse 只通一个端口）时，显式设 SERVE_PAGE=1。
 SERVE_PAGE = _flag("SERVE_PAGE", False)
 
+# 「支不支持无凭据（匿名）访问」是**服务商自己的策略** ——
+# 不由客户端猜，**也不看来源地址**：走内网穿透时请求同样来自 127.0.0.1，
+# 按来源判定毫无意义；真正的区别是「同一台机器上的自用实例」还是
+# 「对外提供服务的云端实例」，只有部署的人知道，所以只能由部署的人声明。
+# 默认**允许**：`python panel/server.py` 这种本机自用零配置就能开工。
+# 对外提供服务时显式设 `OMNI3D_ALLOW_ANONYMOUS=0`（数据端点随即要求
+# `X-Api-Key` 或 `X-Auth-Token`，白名单见 server.py 的 `_ANON_ALLOWED_*`）。
+ALLOW_ANONYMOUS = _flag("OMNI3D_ALLOW_ANONYMOUS", True)
+
 INDEX_HTML = os.path.join(_PANEL_DIR, "index.html")
 ASSETS_DIR = os.path.join(_PANEL_DIR, "assets")
 
