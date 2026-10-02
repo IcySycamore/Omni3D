@@ -73,9 +73,20 @@ class TestMountPageRoutes:
     def test_index_serves_the_real_page(self):
         app = FastAPI()
         hosting.mount_page_routes(app)
-        html = _endpoint(app, "/")()
+        resp = _endpoint(app, "/")()
         with open(hosting.INDEX_HTML, encoding="utf-8") as fh:
-            assert html == fh.read()
+            assert resp.body.decode("utf-8") == fh.read()
+
+    def test_index_is_not_heuristically_cached(self):
+        """页面必须发 no-cache。
+
+        不发时浏览器会对 HTML 做**启发式缓存**，``index.html`` 改了刷新还是旧的
+        （实测被误当成「帮助页内容丢了」）。
+        """
+        app = FastAPI()
+        hosting.mount_page_routes(app)
+        headers = _endpoint(app, "/")().headers
+        assert "no-cache" in headers["cache-control"].lower()
 
     def test_app_config_route_matches_hosting(self):
         app = FastAPI()

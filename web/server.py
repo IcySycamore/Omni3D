@@ -250,10 +250,51 @@ def models_for_identity() -> list[dict]:
     return [dict(m) for m in _AVAILABLE_MODELS]
 
 
+def server_capabilities() -> dict:
+    """服务商的**能力门槛**：客户端据此决定可选参数，而不是写死在页面里。
+
+    与 `models_for_identity()` 一起构成「这台服务商能干什么」。改硬件 / 改环境
+    变量后客户端只需重新请求一次（初始化、切换服务商时各一次）即可跟着变。
+    """
+    mb = config.gpu_memory_mb()
+    return {
+        "frame_options": config.frame_options(),
+        "default_frames": config.default_frame_count(),
+        "resolutions": [512, 224],
+        "default_resolution": config.DEFAULT_RESOLUTION,
+        "max_render_points": config.MAX_RENDER_POINTS,
+        "device": str(config.DEVICE),
+        "gpu_memory_mb": mb,
+    }
+
+
+def frame_limit_error(frame_count: int) -> str | None:
+    """视角数量越界时给出**点名真凶**的文案（当前值 / 上限 / 去哪里改）；合法返回 None。
+
+    档位由 `config.frame_options()`（按显存）给出，客户端会展示它，
+    但服务端**必须自己拦** —— 否则旧页面、脚本直接提交、或手改表单，
+    换个数字就能把显存打满。
+    """
+    allowed = config.frame_options()
+    if frame_count in allowed:
+        return None
+    mb = config.gpu_memory_mb()
+    vram = f"显存 {mb / 1024:.1f} GB，" if mb else ""
+    return (
+        f"视角数量 {frame_count} 超出本机门槛"
+        f"（{vram}最多 {max(allowed)} 帧）："
+        f"请在 设置 → 采集 里改为 {max(allowed)}"
+    )
+
+
 @app.get("/api/models")
 def list_models():
-    """列出**当前身份**可用的重建模型（带 API Key 时以该账号口径返回）。"""
-    return {"models": models_for_identity(), "via": api_key_identity() and "api_key" or "anon"}
+    """列出**当前身份**可用的重建模型 + 服务商能力门槛（带 API Key 时以该账号口径返回）。"""
+    return {
+        "models": models_for_identity(),
+        "capabilities": server_capabilities(),
+        "via": api_key_identity() and "api_key" or "anon",
+    }
 
 
 # ---- 重建 ----
@@ -735,7 +776,7 @@ async def create_task(
     intrinsics: str = Form("null"),
     extrinsics: str = Form("null"),
     is_video: str = Form("false"),
-    frame_count: int = Form(config.DEFAULT_FRAME_COUNT),
+    frame_count: int = Form(config.default_frame_count()),
     client_id: str = Form("default"),
     x_auth_token: Optional[str] = Header(default=None),
 ):
@@ -749,6 +790,19 @@ async def create_task(
 
     if not files:
         return JSONResponse({"error": "未收到文件"}, status_code=400)
+
+    # 视角数量必须在本机门槛内：档位由服务商按显存给出（见 config.frame_options）。
+    # 客户端会展示这份门槛，但**服务端必须自己拦**（文案点名真凶，见 frame_limit_error）。
+    limit_error = frame_limit_error(frame_count)
+    if limit_error:
+        return JSONResponse(
+            {
+                "error": limit_error,
+                "allowed": config.frame_options(),
+                "requested": frame_count,
+            },
+            status_code=400,
+        )
 
     # 读取文件内容（task_queue 线程内再落盘，避免阻塞 IO 线程）
     file_list = []

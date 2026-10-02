@@ -22,12 +22,14 @@ import torch  # noqa: F401,I001
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+for _p in (_ROOT, _WEB):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import api_keys  # noqa: E402
 import portal  # noqa: E402
 import portal_store  # noqa: E402
+from app.core import config  # noqa: E402
 from portal_store import (  # noqa: E402
     BETA_FREE,
     MAX_KEYS_PER_USER,
@@ -638,5 +640,7 @@ _FORM_ARGS = {
     "intrinsics": "null",
     "extrinsics": "null",
     "is_video": "false",
-    "frame_count": 16,
+    # 视角档位由服务商按显存给，`create_task` 会校验 —— **别硬编码 16**：
+    # 8GB 机器上档位只有 [8]，写死 16 会被挡成 400，额度相关的用例就全成了假失败。
+    "frame_count": config.default_frame_count(),
 }

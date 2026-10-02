@@ -81,8 +81,19 @@ def mount_page_routes(app) -> None:
 
     @app.get("/", response_class=HTMLResponse)
     def index():  # noqa: ANN202
+        """页面本体：每次读盘返回，并**显式禁缓存**。
+
+        为什么必须写 `Cache-Control`：不发这个头时浏览器会对 HTML 做
+        **启发式缓存**（按 Last-Modified 猜一个有效期），于是"页面改了但
+        用户刷新还是旧的"—— 排查问题时极易被当成"某块内容丢了"。
+        assets/ 仍走 StaticFiles 的 ETag，图片照常缓存。
+        """
         with open(INDEX_HTML, encoding="utf-8") as fh:
-            return fh.read()
+            html = fh.read()
+        return HTMLResponse(
+            content=html,
+            headers={"Cache-Control": "no-cache, must-revalidate"},
+        )
 
     @app.get("/app-config.json")
     def _app_config():  # noqa: ANN202

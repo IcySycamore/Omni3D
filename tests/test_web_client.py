@@ -146,9 +146,23 @@ class TestQualityDefaults:
         assert "会裁掉边缘" in index_html
         assert "radio-pill radio-warn" in index_html
 
-    def test_defaults_to_16_frames(self, index_html):
-        assert "frameCount: 16," in index_html
-        assert 'class="radio-pill selected" data-value="16"' in index_html
+    def test_frame_options_come_from_server_capabilities(self, index_html):
+        """视角档位改由**服务商**给（显存约束），页面不再写死 8/12/16。
+
+        背景：8GB 显存下 512px 的 16 帧会把显存顶到 95%、前向从 1.4s
+        退化到 26s+ 直至卡死。所以「能选几个视角」是服务器的能力，
+        不是客户端的偏好 —— 页面拿 `/api/models` 的 capabilities 重建按钮。
+        """
+        assert "frame_options" in index_html
+        assert "STATE.caps =" in index_html
+        assert "function frameOptions" in index_html
+        assert "function renderFrameOptions" in index_html
+        # 当前值不在门槛内时必须被校正（切到显存更小的服务商就会触发）
+        assert "options.includes(STATE.frameCount)" in index_html
+        # 兜底值不再是 16（本机 8GB 会顶满显存）
+        assert "frameCount: 8," in index_html
+        # 选中态由门槛决定，静态 HTML 里不再预设
+        assert 'class="radio-pill selected" data-value="16"' not in index_html
 
 
 class TestServerTargeting:

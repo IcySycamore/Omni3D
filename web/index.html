@@ -2526,9 +2526,12 @@
               <div class="radio-group" id="frameCountGroup">
                 <button class="radio-pill" data-value="8">8 个视角</button>
                 <button class="radio-pill" data-value="12">12 个视角</button>
-                <button class="radio-pill selected" data-value="16">
+                <button class="radio-pill" data-value="16">
                   16 个视角
                 </button>
+              </div>
+              <div style="margin-top: 10px">
+                <span class="tag tag-muted" id="frameHint"></span>
               </div>
             </div>
             <div class="glass-card">
@@ -2630,9 +2633,17 @@
             </div>
             <div class="glass-card">
               <h3>视角</h3>
-              <label class="modal-check" style="margin: 0">
+              <label class="modal-check" style="margin: 0 0 10px">
                 <input type="checkbox" id="turntableToggle" />
                 转盘模式（地平线保持水平）
+              </label>
+              <label class="modal-check" style="margin: 0">
+                <input
+                  type="checkbox"
+                  id="gridGroundToggle"
+                  data-help="开启后，参考网格会自动转到点云的主平面（用最低那层点拟合出的「地面」），不再固定贴着世界水平面。只转网格、不动点云 —— 没有 AR 位姿时「哪个方向是重力」本来就是模型猜的。"
+                />
+                网格贴合点云地面
               </label>
             </div>
           </div>
@@ -2746,11 +2757,15 @@
             </p>
 
             <h4>视角数量</h4>
+            <p>
+              可选档位<strong>由服务商按自己的显存给出</strong> —— 显存越大允许的视角越多，
+              所以不同服务器上看到的选项可能不同；设置页里会写明当前服务商的上限与依据。
+              提交超出门槛的值时，服务商会直接拒绝并告诉你去哪里改。
+            </p>
             <ul>
-              <li><strong>8 个：</strong>最快，适合快速预览。</li>
-              <li><strong>12 个：</strong>速度与质量平衡。</li>
+              <li><strong>档位小（如 8）：</strong>最快，适合快速预览。</li>
               <li>
-                <strong>16 个（默认）：</strong>视角更多，重建更精细但更慢。
+                <strong>档位大（如 12 / 16）：</strong>视角更多、重建更精细，但显存与耗时都会上去。
               </li>
             </ul>
 
@@ -2972,7 +2987,7 @@
         pollInterval: null,
         // 设置
         resolution: 512, // 重建分辨率：512=完整画幅（测量用）/ 224=仅预览
-        frameCount: 16,
+        frameCount: 8, // 兜底值；真正的可选档位由服务商门槛给出（renderFrameOptions）
         cameraIntrinsics: null,
         cameraExtrinsics: null,
         // AR 扫描
@@ -2993,6 +3008,9 @@
         model: "fast3r",
         // 模型列表：来自当前选中的服务器（拿不到时用内置的）
         models: [{ id: "fast3r", name: "Fast3R", sub: "多视图三维重建" }],
+        // 服务商能力门槛（/api/models 的 capabilities）：视角档位 / 默认帧数 / 显存。
+        // 切服务商或重新初始化时会重新请求并刷新相关 UI（见 loadModels）。
+        caps: null,
         cloudState: "offline", // 模型服务的健康状态：ready | loading | offline | unverified | invalid
         identity: "none", // 当前服务商的身份：none | verified | invalid
         appConfig: null, // /app-config.json（官网端口等引导信息）
@@ -3119,6 +3137,7 @@
         unitGroup: $("#unitGroup"),
         toolLayout: $("#toolLayout"),
         boxNoRotateToggle: $("#boxNoRotateToggle"),
+        gridGroundToggle: $("#gridGroundToggle"),
         serverList: $("#serverList"),
         addServerBtn: $("#addServerBtn"),
         // 左下角：服务商 / 模型 / AR 灯 + 选择菜单
@@ -3161,6 +3180,7 @@
         resGroup: $("#resGroup"),
         resHint: $("#resHint"),
         frameCountGroup: $("#frameCountGroup"),
+        frameHint: $("#frameHint"),
         arResGroup: $("#arResGroup"),
         arBridgeStatusDetail: $("#arBridgeStatusDetail"),
         // Toast
@@ -4073,14 +4093,68 @@
               }))
               .filter((m) => m.id);
           }
+          // 服务商能力门槛：视角档位不是客户端偏好，而是服务端按显存给出的
+          STATE.caps =
+            data.capabilities && typeof data.capabilities === "object"
+              ? data.capabilities
+              : null;
         } catch (_) {
-          /* 拿不到就先用内置列表，不影响重建 */
+          /* 拿不到就先用内置列表与兜底档位，不影响重建 */
+          STATE.caps = null;
         }
         if (!STATE.models.some((m) => m.id === STATE.model)) {
           STATE.model = STATE.models[0] ? STATE.models[0].id : "fast3r";
         }
         updatePickLabels();
+        renderFrameOptions();
         return STATE.models;
+      }
+
+      // ---- 视角数量：档位来自服务商门槛（拿不到时退回内置 8/12/16）----
+      const FRAME_OPTIONS_FALLBACK = [8, 12, 16];
+      function frameOptions() {
+        const opts = STATE.caps && STATE.caps.frame_options;
+        return Array.isArray(opts) && opts.length
+          ? opts.map(Number)
+          : FRAME_OPTIONS_FALLBACK;
+      }
+      function renderFrameOptions() {
+        const group = dom.frameCountGroup;
+        if (!group) return;
+        const options = frameOptions();
+        group.innerHTML = options
+          .map(
+            (n) =>
+              `<button class="radio-pill" data-value="${n}">${n} 个视角</button>`,
+          )
+          .join("");
+        // 当前值不在新门槛内（例如刚切到一台显存更小的服务商）→ 落到服务商默认档
+        if (!options.includes(STATE.frameCount)) {
+          const def = Number(STATE.caps && STATE.caps.default_frames);
+          STATE.frameCount = options.includes(def) ? def : Math.max(...options);
+        }
+        markFrameOption();
+        updateFrameHint();
+      }
+      function markFrameOption() {
+        if (!dom.frameCountGroup) return;
+        dom.frameCountGroup.querySelectorAll(".radio-pill").forEach((pill) => {
+          pill.classList.toggle(
+            "selected",
+            parseInt(pill.dataset.value) === STATE.frameCount,
+          );
+        });
+      }
+      function updateFrameHint() {
+        const hint = dom.frameHint;
+        if (!hint) return;
+        const caps = STATE.caps || {};
+        const mb = Number(caps.gpu_memory_mb) || 0;
+        const max = Math.max(...frameOptions());
+        hint.className = "tag tag-muted";
+        hint.textContent = mb
+          ? `由服务商给出：显存 ${(mb / 1024).toFixed(1)} GB，最多 ${max} 帧`
+          : `最多 ${max} 帧（服务商未报显存）`;
       }
 
       // 健康状态轮询；**首次**的一问一答在 bootstrapServers() 里发出
@@ -5549,6 +5623,10 @@
         );
         gridHelper.position.y = -0.6;
         scene.add(gridHelper);
+        // 存起来：网格的朝向/大小要跟着点云走（见 alignGridToGround）。
+        // 不在这里写 STATE.gridFollowGround：那会盖掉用户在设置里改过的值，
+        // 默认值由初始化段（读 localStorage）负责。
+        STATE.gridHelper = gridHelper;
         STATE.viewerInitialized = true;
         // 点击事件
         renderer.domElement.addEventListener("click", onViewerClick);
@@ -5623,6 +5701,103 @@
         const center = lo.map((v, i) => (v + hi[i]) / 2);
         const half = lo.map((v, i) => Math.max((hi[i] - v) / 2, 1e-5));
         return { center, half };
+      }
+
+      // ---- 网格与「地面」对齐 ----
+      // 背景：网格是固定朝向的世界水平面，而 Fast3R 的点云在**自己的坐标系**里
+      // （第一帧相机为原点）—— 拍摄时手有俯仰角，房间地面在点云里本就是斜的，
+      // 所以网格看着「没对齐」。这里只把**网格**转到点云的主平面（不动点云数据，
+      // 零风险、可随时关掉）；要让点云本身水平得靠重力信息（AR 位姿）。
+      //
+      // 平面拟合用最小二乘 y = a·x + b·z + c（对「地面大致在下方」的场景够用，
+      // 不必上完整 PCA）。退化解（点太少 / 共线）直接放弃，保持原样。
+      function fitPlaneFromPoints(pts) {
+        let Sxx = 0, Sxz = 0, Sx = 0, Szz = 0, Sz = 0, S1 = 0;
+        let Sxy = 0, Szy = 0, Sy = 0;
+        for (const p of pts) {
+          const x = p[0], y = p[1], z = p[2];
+          Sxx += x * x; Sxz += x * z; Sx += x;
+          Szz += z * z; Sz += z; S1 += 1;
+          Sxy += x * y; Szy += z * y; Sy += y;
+        }
+        const A = [[Sxx, Sxz, Sx], [Sxz, Szz, Sz], [Sx, Sz, S1]];
+        const rhs = [Sxy, Szy, Sy];
+        const det3 = (m) =>
+          m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+          m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+          m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+        const D = det3(A);
+        if (!isFinite(D) || Math.abs(D) < 1e-12) return null;
+        const withCol = (m, col, v) =>
+          m.map((row, i) => row.map((val, j) => (j === col ? v[i] : val)));
+        const a = det3(withCol(A, 0, rhs)) / D;
+        const b = det3(withCol(A, 1, rhs)) / D;
+        const c = det3(withCol(A, 2, rhs)) / D;
+        if (![a, b, c].every((v) => isFinite(v))) return null;
+        return { normal: [-a, 1, -b], point: [0, c, 0] };
+      }
+
+      function estimateGroundPlane() {
+        const geom = STATE.viewerPointCloud && STATE.viewerPointCloud.geometry;
+        if (!geom) return null;
+        const pos = geom.attributes.position;
+        const n = pos && pos.count;
+        if (!n || n < 64) return null;
+        const step = Math.max(1, Math.floor(n / 8000));
+        const xs = [],
+          ys = [],
+          zs = [];
+        for (let i = 0; i < n; i += step) {
+          xs.push(pos.getX(i));
+          ys.push(pos.getY(i));
+          zs.push(pos.getZ(i));
+        }
+        const quantile = (arr, q) => {
+          const a = arr.slice().sort((m, k) => m - k);
+          return a[
+            Math.min(a.length - 1, Math.max(0, Math.round((a.length - 1) * q)))
+          ];
+        };
+        const yLo = quantile(ys, 0.02);
+        const yHi = quantile(ys, 0.98);
+        const band = yLo + (yHi - yLo) * 0.15; // 最低 15% 当作「地面带」
+        const pts = [];
+        for (let i = 0; i < xs.length; i++) {
+          if (ys[i] <= band) pts.push([xs[i], ys[i], zs[i]]);
+        }
+        if (pts.length < 16) return null;
+        return fitPlaneFromPoints(pts);
+      }
+
+      // 网格大小跟着点云走：原始半径 1.2，按点云 2%~98% 分位的水平跨度缩放
+      function applyGridSize() {
+        const grid = STATE.gridHelper;
+        const fit = cloudFitBox();
+        if (!grid || !fit) return;
+        const span = Math.max(fit.half[0], fit.half[2]) * 2;
+        if (!isFinite(span) || span <= 1e-6) return;
+        grid.scale.setScalar(span / 1.2);
+      }
+
+      function alignGridToGround() {
+        const grid = STATE.gridHelper;
+        if (!grid) return;
+        if (STATE.gridFollowGround === false) {
+          grid.quaternion.identity();
+          grid.position.set(0, -0.6, 0);
+          applyGridSize();
+          return;
+        }
+        const plane = estimateGroundPlane();
+        if (!plane) {
+          applyGridSize();
+          return;
+        }
+        const n = new THREE.Vector3().fromArray(plane.normal).normalize();
+        if (n.y < 0) n.negate(); // 法向朝上，避免网格翻面
+        grid.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
+        grid.position.set(plane.point[0], plane.point[1], plane.point[2]);
+        applyGridSize();
       }
 
       // 把相机放到「刚好装下」的位置（而不是按包围球半径 * 2 拍脑袋）
@@ -7097,6 +7272,7 @@
         STATE.redoStack = [];
         updateCommandStates();
         reloadAnnotations();
+        alignGridToGround(); // 网格贴合点云主平面（「地面」）
         fitViewToCloud(); // 取景
         applyCloudExtras(); // 颜色模式 + 三维轴
         updateViewButtons();
@@ -7554,6 +7730,12 @@
         }
       }
 
+      // 标签的屏幕尺度（scale 在 sizeAttenuation:false 下与相机距离无关，
+      // 只与视口高度成正比）。点云尺度是任意的（模型坐标系），所以标签必须
+      // **屏幕恒定**，不能用世界尺寸 —— 否则小模型上的标签会占满屏。
+      const LABEL_SCALE_POINT = 0.022; // 编号小圆点，约 20px
+      const LABEL_SCALE_TEXT = 0.03; // 文字标签，约 26px
+
       // 生成带数字的小标签（Canvas Sprite）
       function makePointLabel(n) {
         const canvas = document.createElement("canvas");
@@ -7578,9 +7760,10 @@
           map: tex,
           transparent: true,
           depthTest: false,
+          sizeAttenuation: false, // 屏幕恒定像素（不随模型大小/相机距离变）
         });
         const sprite = new THREE.Sprite(mat);
-        sprite.scale.set(0.06, 0.06, 1);
+        sprite.scale.set(LABEL_SCALE_POINT, LABEL_SCALE_POINT, 1);
         sprite.renderOrder = 997;
         return sprite;
       }
@@ -8043,13 +8226,9 @@
           });
           updateResHint();
         }
-        // 更新抽帧选项
-        dom.frameCountGroup.querySelectorAll(".radio-pill").forEach((pill) => {
-          pill.classList.toggle(
-            "selected",
-            parseInt(pill.dataset.value) === STATE.frameCount,
-          );
-        });
+        // 更新抽帧选项（档位由服务商门槛给出，统一用 markFrameOption 标记）
+        markFrameOption();
+        updateFrameHint();
         // 更新 AR 扫描分辨率选项
         if (dom.arResGroup) {
           dom.arResGroup.querySelectorAll(".radio-pill").forEach((pill) => {
@@ -8134,6 +8313,7 @@
           .querySelectorAll(".radio-pill")
           .forEach((p) => p.classList.remove("selected"));
         pill.classList.add("selected");
+        showToast(`视角数量：${STATE.frameCount} 个`, "success");
       });
 
       // ==================== 初始化 ====================
@@ -9201,9 +9381,11 @@
             map: tex,
             transparent: true,
             depthTest: false,
+            sizeAttenuation: false, // 屏幕恒定像素（同编号标签）
           }),
         );
-        sprite.scale.set(0.34, 0.085, 1);
+        // canvas 是 4:1（256x64），scale 要保比例
+        sprite.scale.set(LABEL_SCALE_TEXT * 4, LABEL_SCALE_TEXT, 1);
         sprite.renderOrder = 1000;
         return sprite;
       }
@@ -9806,6 +9988,25 @@
           );
         });
       }
+      // 设置页：行为 —— 网格是否贴合点云地面
+      if (dom.gridGroundToggle) {
+        dom.gridGroundToggle.addEventListener("change", () => {
+          STATE.gridFollowGround = dom.gridGroundToggle.checked;
+          try {
+            writeLS(
+              "omni3d.grid_follow_ground",
+              STATE.gridFollowGround ? "1" : "0",
+            );
+          } catch (_) {
+            /* 忽略 */
+          }
+          alignGridToGround();
+          showToast(
+            STATE.gridFollowGround ? "网格贴合点云地面" : "网格保持世界水平",
+            "success",
+          );
+        });
+      }
       // 设置页：标尺单位 / 服务器地址
       if (dom.unitGroup) {
         dom.unitGroup.addEventListener("click", (e) => {
@@ -10002,6 +10203,14 @@
         STATE.boxNoRotate = saved === null ? true : saved === "1";
         if (dom.boxNoRotateToggle) {
           dom.boxNoRotateToggle.checked = STATE.boxNoRotate;
+        }
+      }
+      // 行为：网格是否贴合点云地面（默认贴；只有显式存了 "0" 才不贴）
+      {
+        const saved = readLS("omni3d.grid_follow_ground");
+        STATE.gridFollowGround = saved === null ? true : saved === "1";
+        if (dom.gridGroundToggle) {
+          dom.gridGroundToggle.checked = STATE.gridFollowGround;
         }
       }
       // 设置页分页：记住上次看的那一页

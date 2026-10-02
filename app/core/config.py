@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 
 import torch
 
@@ -71,6 +72,60 @@ DEFAULT_RESOLUTION = 512
 
 # 视频默认抽帧数。视角冗余比单帧清晰度更能改善自洽性（见 docs/PERFORMANCE.md）。
 DEFAULT_FRAME_COUNT = _env_int("OMNI3D_DEFAULT_FRAME_COUNT", 16)
+
+# ---- 服务商能力门槛（由**服务器**给出，客户端不写死）----
+# 「视角数量」不是客户端偏好，而是**显存约束**：512px 下注意力激活值随帧数
+# 近似平方增长。本机 8GB 实测：7~8 帧正常（前向 2.5s），15/16 帧会把显存
+# 顶到 7.8/8.2 GB 并长时间卡死。所以可选项由服务端按自己的硬件给出。
+
+
+@lru_cache(maxsize=1)
+def gpu_memory_mb() -> int:
+    """本机显卡总显存（MB）；非 CUDA 环境返回 0。
+
+    结果缓存 —— 显存不会变，而 `/api/models` 与每次提交都会问一次。
+    """
+    if not torch.cuda.is_available():
+        return 0
+    try:
+        return int(torch.cuda.get_device_properties(0).total_memory // (1024 * 1024))
+    except Exception:  # noqa: BLE001  探测失败不该影响推理
+        return 0
+
+
+def frame_options() -> list[int]:
+    """允许的「视角数量」档位（按显存分档）。
+
+    可用 ``OMNI3D_FRAME_OPTIONS=8,12`` 显式覆盖（逗号分隔，自动升序去重）。
+    **每次调用都读环境变量** —— 运维现场改一份配置就能生效，也方便测试。
+    """
+    raw = (os.environ.get("OMNI3D_FRAME_OPTIONS") or "").strip()
+    if raw:
+        values = sorted(
+            {
+                int(x)
+                for x in raw.replace("，", ",").split(",")
+                if x.strip().isdigit() and int(x) > 0
+            }
+        )
+        if values:
+            return values
+    mb = gpu_memory_mb()
+    if mb >= 24 * 1024:
+        return [8, 12, 16, 24]
+    if mb >= 16 * 1024:
+        return [8, 12, 16]
+    if mb >= 12 * 1024:
+        return [8, 12]
+    return [8]  # ≤12GB（含本机 8GB）：只给 8 帧，避免顶满显存
+
+
+def default_frame_count() -> int:
+    """新任务的默认抽帧数：门槛内取不超过 ``DEFAULT_FRAME_COUNT`` 的最大档。"""
+    options = frame_options()
+    safe = [n for n in options if n <= DEFAULT_FRAME_COUNT]
+    return max(safe) if safe else min(options)
+
 
 # 推理参数
 INFERENCE_DTYPE = torch.float32
