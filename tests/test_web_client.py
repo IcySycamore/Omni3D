@@ -168,13 +168,37 @@ class TestMultiVertexMeasurement:
         assert 'kind: "edge"' in index_html
         assert 'edge: "连线"' in index_html
 
-    def test_area_rejects_off_plane_vertices(self, index_html):
-        """面积是平面图形：偏出前三点平面的顶点直接拒绝落点。"""
-        assert "面积要求所有顶点共面" in index_html
+    def test_area_does_not_reject_off_plane_vertices(self, index_html):
+        """面积**不**因为顶点偏出前三点平面就拒绝落点。
+
+        用户报的 bug：「测量面积时所有超出容差的都选不了」。服务端
+        `polygon_area` 自己最小二乘拟合平面再投影，本来就容得下不严格共面的
+        顶点（点云表面本来就有厚度）；客户端那道硬门槛只会让人点不动。
+        提示留着，用来说清算的是**投影**面积。
+        """
+        assert "面积要求所有顶点共面" not in index_html, "硬门槛的文案还在"
+        assert "面积按最佳拟合平面投影计算" in index_html
+        body = _fn_body(index_html, "onToolClick")
+        start = body.index("const dist = pointPlaneDistance(")
+        # ⚠️ 一定要从 start 往后找：`const el = makePointElement` 在固定点数
+        #    工具那条分支里也出现过（在共面段**之前**），不加 start 会切出空字符串
+        #    —— 「不许有 return」于是永远绿灯（实测踩过）。
+        end = body.index("const el = makePointElement", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "return" not in _code_only(block), (
+            "共面容差又变回硬门槛了 —— 超出容差的顶点会落不下去"
+        )
 
     def test_volume_is_not_blocked_when_coplanar(self, index_html):
         """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。"""
-        assert "4点共面" in index_html
+        assert "体积会算成 0" in index_html
+        body = _fn_body(index_html, "onToolClick")
+        start = body.index("const dist = pointPlaneDistance(")
+        end = body.index("const el = makePointElement", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "return" not in _code_only(block)
 
     def test_volume_draws_the_hull_the_server_measured(self, index_html):
         """体积画的是**服务端算的那个凸包的棱**（`el.outline`）。
@@ -362,9 +386,11 @@ class TestElementCoordinateSpace:
         """元素坐标投屏前必须正旋 —— 少了这一步，点选会整体打偏。"""
         assert "function elementWorldPoint" in index_html
         assert "function projectElementToScreen" in index_html
-        # 三处「拿元素坐标问屏幕位置」的地方都要走它
-        for site in ("pickElement", "pickPendingVertex"):
-            assert site in index_html
+        # 「拿元素坐标问屏幕位置」的地方都要走它：函数定义本身 + pickElement +
+        # 框选。（曾经还有 pickPendingVertex，它已删 —— 见 TestAreaPickIsNeverBlocked。）
+        assert index_html.count("projectElementToScreen(") >= 3, (
+            "又有人拿原始坐标直接 projectToScreen 了"
+        )
         # 元素锚点不得再直接喂给只认世界坐标的 projectToScreen
         assert "projectToScreen(anchor)" not in index_html, (
             "pickElement/框选又拿原始坐标直接投影了"
@@ -451,17 +477,20 @@ class TestMultiPointEntryPoints:
             index_html, "对**凸多边形**，绕质心的极角序就是唯一正确的环序"
         )
 
-    def test_adopting_selection_checks_coplanarity(self, index_html):
-        """两个入口的校验必须一致：手动落点会拦共面，勾选采纳也不能放行。
+    def test_adopting_selection_does_not_refuse_off_plane(self, index_html):
+        """勾选采纳那条路也不拦不共面的点 —— 与手动落点同一口径（只提示）。
 
-        否则勾 8 个立方体角去点「面积」，会被照单全收并给出一个无意义的数。
+        以前这里 `return`（不采纳、也不动数据）：用户勾好 6 个点再点「面积」，
+        界面什么都不发生（用户：「所有超出容差的都选不了」）。
         """
-        assert _contains_text(
-            index_html, "面积要求所有顶点共面：有 ${off.length} 个点偏出前三点所在平面"
-        )
-        assert _contains_text(
-            index_html, "return; // 不采纳、也不动数据"
-        )
+        assert "面积要求所有顶点共面" not in index_html
+        assert "面积按最佳拟合平面投影计算" in index_html
+        body = _fn_body(index_html, "adoptSelectionAsVertices")
+        start = body.index("const off = pts.filter")
+        end = body.index("const ordered = orderRingVertices", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "return" not in _code_only(block)
 
 
 class TestStatusBarStaysShort:
@@ -1266,6 +1295,112 @@ class TestGizmoHUDMustStayVisible:
         assert "box-shadow" not in blk, ".gizmo-pad 不该有阴影"
 
 
+class TestAreaPickIsNeverBlocked:
+    """面积落点不许被拦，也不许被「已取顶点」抢走。
+
+    用户实测：「测量面积时所有超出容差的都选不了，在容差内的会被识别成之前
+    选中的点」—— 两句话正好对应两个 bug：
+
+      · 「超出容差的都选不了」= 客户端把**共面容差**当成硬门槛（三点定平面，
+        第 4 点起偏离就 return，点都落不下）；而服务端 `polygon_area` 本来就是
+        「最小二乘拟合平面 → 投影上去 → 排序 → shoelace」，不需要严格共面。
+      · 「容差内的被识别成之前选中的点」= 落点前先做了 `pickPendingVertex`：
+        新点落在旧顶点的屏幕拾取半径内 → 当成「你又选了它」，新点落不下去。
+
+    两条入口（在点云上落点 / 先勾选顶点再点工具采纳）都得放开。
+    """
+
+    def test_the_snap_to_existing_vertices_is_gone(self, index_html):
+        body = _fn_body(index_html, "onViewerClick")
+        assert "pickPendingVertex" not in body, (
+            "又加回「点中已取顶点就连线」了 —— 会把靠近旧顶点的新点吃掉"
+        )
+        assert "await onToolClick(picked);" in body, "点云上的点击必须落成新顶点"
+        # 两个函数一起删：别留个没人调的收口入口在代码里（会被人再接线回去）
+        assert "function pickPendingVertex" not in index_html
+        assert "function linkToPendingVertex" not in index_html
+        # 收口仍然在：点「完成」时自动接上两个只剩一条线的端点
+        assert "async function closeRing" in index_html
+
+    def test_coplanar_check_only_warns(self, index_html):
+        body = _fn_body(index_html, "onToolClick")
+        start = body.index("const dist = pointPlaneDistance(")
+        end = body.index("const el = makePointElement", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "showToast" in block, "共面提示没了（要说清算的是投影面积）"
+        assert "return" not in _code_only(block), (
+            "共面容差又变回硬门槛了 —— 超出容差的顶点会落不下去"
+        )
+
+    def test_adopting_selected_vertices_does_not_refuse_off_plane(
+        self, index_html
+    ):
+        body = _fn_body(index_html, "adoptSelectionAsVertices")
+        start = body.index("const off = pts.filter")
+        end = body.index("const ordered = orderRingVertices", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "showToast" in block
+        assert "return" not in _code_only(block), "勾选采纳那条路又把不共面的点拒了"
+
+    def test_removed_tool_is_purged_from_the_saved_layout(self, index_html):
+        """删工具要连本地存的那份布局一起清。
+
+        用户：「删掉的三角形面积怎么在设置工具排序还存在？」——光在渲染时过滤，
+        存储里那条永远还在（旧页面/旧标签页一渲染就冒出来）。
+        """
+        body = _fn_body(index_html, "loadToolLayout")
+        assert _contains_text(body, "TOOL_ORDER_DEFAULT.includes(it.tool)")
+        assert "writeLS(" in body, "旧布局里的已删工具条目要顺手写回去清掉"
+
+
+class TestControlHelpTextsAreDetailed:
+    """控件上的说明（`data-help`）要真的把用途说清。
+
+    用户：「帮助在各个控件上的说明怎么被你回退了？」—— 之前把工具按钮 / 清空
+    元素的说明压成了一句话半（「长度：量两点之间的距离」），帮助模式点开等于
+    没说。说明仍然只有**一份**（就在 data-help 上），悬浮提示依旧只给名称
+    （那条守卫见 TestTooltipsCarryNoDashTail）。
+    """
+
+    MIN_LEN = 18
+
+    def test_every_tool_button_explains_itself(self, index_html):
+        labels = {
+            "select": "选择",
+            "box2d": "框选",
+            "pan": "移动",
+            "line": "长度",
+            "calibrate": "反向尺度推导",
+            "area": "面积",
+            "volume": "体积",
+        }
+        for tool, label in labels.items():
+            html = _tool_button_html(index_html, tool)
+            found = re.search(r'data-help="([^"]+)"', html)
+            assert found, f"{tool} 按钮没有 data-help"
+            text = found.group(1)
+            assert text.startswith(f"{label}："), (
+                f"{tool} 的说明没有以「{label}：」开头：{text!r}"
+            )
+            assert len(text) >= self.MIN_LEN, f"{tool} 的说明又退化成一句半了：{text!r}"
+
+    def test_settings_controls_are_explained_too(self, index_html):
+        for cid, hint in (
+            ("cascadeSelectToggle", "级联选中"),
+            ("cascadeDeleteToggle", "级联删除"),
+            ("collapseChildrenToggle", "折叠"),
+            ("boxNoRotateToggle", "框选"),
+            ("gridGroundToggle", "网格"),
+        ):
+            at = index_html.index(f'id="{cid}"')
+            tag = index_html[index_html.rindex("<input", 0, at) : index_html.index(">", at) + 1]
+            found = re.search(r'data-help="([^"]+)"', tag)
+            assert found, f"设置项 {cid} 没有说明（{hint}）"
+            assert len(found.group(1)) >= 12, f"{cid} 的说明太短"
+
+
 class TestToolGroupTools:
     """工具组：可见性 / 顺序；三角形面积已删（三角形那个生态位由「面积」占）。"""
 
@@ -1288,7 +1423,7 @@ class TestToolGroupTools:
         assert _contains_text(index_html, 'label: "长度"')
         assert _contains_text(index_html, '"tool:line": "长度"')
         assert _contains_text(index_html, 'label: "长度", def: "3", tool: "line"')
-        assert _contains_text(index_html, 'data-help="长度：量两点之间的距离"')
+        assert _contains_text(_tool_button_html(index_html, "line"), 'data-help="长度：')
         path = os.path.join(_ROOT, "panel", "assets", "help.html")
         with open(path, encoding="utf-8") as fh:
             assert "画线" not in fh.read(), "帮助文档里还有「画线」"
@@ -1549,6 +1684,15 @@ def _fn_body(index_html: str, name: str) -> str:
             if depth == 0:
                 return index_html[open_brace : k + 1]
     raise AssertionError(f"{name} 的花括号不配平")
+
+
+def _code_only(text: str) -> str:
+    """去掉整行 `//` 注释后的代码。
+
+    断言「这一段里不许有 return」时，注释里提到 return（解释历史用）会把它搞红
+    —— 实测踩过。判据只看代码。
+    """
+    return "\n".join(re.sub(r"//.*$", "", line) for line in text.splitlines())
 
 
 def _tool_button_html(index_html: str, tool: str) -> str:

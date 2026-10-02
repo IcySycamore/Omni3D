@@ -2839,17 +2839,17 @@
               <button
                 class="tool-btn active"
                 data-tool="select"
-                data-help="选择：点击点云选点，按住Ctrl/⌘多选；点击空白处取消选择。"
+                data-help="选择：点元素 = 选中它（Ctrl/⌘ 点 = 多选）；点云上的点 = 生成一个「点」元素并选中它（可以拿去量长度 / 面积）；点空白 = 取消选择。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="box2d"
-                data-help="框选：按住左键拖出矩形「框选点组」（上限 1000）；矩形内已有的元素也会被选中。"
+                data-help="框选：按住左键拖出一个矩形，框内的点云点收成一个「框选点组」（上限 1000 个点，在元素视图里是一行）；矩形内已有的元素也会被选中。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="pan"
-                data-help="移动：按住左键拖动平移画面"
+                data-help="移动：按住左键拖动 = 平移画面，不转视角、也不选点。"
               ></button>
             </div>
 
@@ -2858,22 +2858,22 @@
               <button
                 class="tool-btn"
                 data-tool="line"
-                data-help="长度：量两点之间的距离"
+                data-help="长度：量两点之间的距离。在点云上依次点两个点就出结果，落满两点会自动连成一条线。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="calibrate"
-                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度"
+                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度。点两个点后在弹窗里填真实长度；右上「帮助」里有常见物品尺度可查。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="area"
-                data-help="面积：选取至少 3 个点，测量共面点围成的凸多边形面积"
+                data-help="面积：依次点选各个顶点（至少 3 个），量它们围成的凸多边形面积。继续点就是加顶点，点「完成」自动收口；顶点不必严格共面，面积按最佳拟合平面投影计算。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="volume"
-                data-help="体积：依次选取实体各顶点，测量凸包体积"
+                data-help="体积：依次点选实体的各个顶点（至少 4 个、别都挤在一个面上），量它们凸包的体积。骨架由凸包算出来，不需要自己连线。"
               ></button>
             </div>
           </div>
@@ -2899,7 +2899,7 @@
                   <button
                     class="btn btn-sm btn-danger"
                     id="clearElementsBtn"
-                    data-help="清空元素：删除当前会话里的全部标注元素"
+                    data-help="清空元素：删除当前会话里的全部标注元素（点、点组、连线、长度、面积、体积）。已提交的重建结果不受影响。"
                   >
                     清空
                   </button>
@@ -3240,15 +3240,27 @@
             <div class="glass-card">
               <h3>元素视图</h3>
               <label class="modal-check" style="margin: 0 0 10px">
-                <input type="checkbox" id="cascadeSelectToggle" />
+                <input
+                  type="checkbox"
+                  id="cascadeSelectToggle"
+                  data-help="开启后，选中一个测量（或点组）会把它的顶点一起选中 —— 想整体搬家 / 一起删的时候省事。默认关。"
+                />
                 选中父元素时级联选中子元素
               </label>
               <label class="modal-check" style="margin: 0 0 10px">
-                <input type="checkbox" id="cascadeDeleteToggle" />
+                <input
+                  type="checkbox"
+                  id="cascadeDeleteToggle"
+                  data-help="开启后，删掉一个测量（或点组）时它的顶点也一并删掉，不用再一个个清理。默认关。"
+                />
                 删除父元素时级联删除子元素
               </label>
               <label class="modal-check" style="margin: 0">
-                <input type="checkbox" id="collapseChildrenToggle" />
+                <input
+                  type="checkbox"
+                  id="collapseChildrenToggle"
+                  data-help="开启后，一次测量完成时它的顶点行会折进测量那一行下面，元素列表短一截；点测量行前面的小三角可随时展开。默认开。"
+                />
                 测量完成时折叠子元素
               </label>
             </div>
@@ -7189,15 +7201,30 @@
           saved = null;
         }
         const out = [];
+        let stale = false;
         if (Array.isArray(saved)) {
           for (const it of saved) {
-            if (!it || !TOOL_ORDER_DEFAULT.includes(it.tool)) continue;
+            if (!it || !TOOL_ORDER_DEFAULT.includes(it.tool)) {
+              // 工具被删掉之后（例如三角形面积），旧布局里还留着它的条目。
+              // 光在渲染时过滤，本地存储里那一条会一直在 —— 用户：「删掉的
+              // 三角形面积怎么在设置工具排序还存在？」这里**顺手清一次**，
+              // 落回存储，下次打开就真的没有了。
+              stale = true;
+              continue;
+            }
             out.push({ tool: it.tool, visible: it.visible !== false });
           }
         }
         for (const t of TOOL_ORDER_DEFAULT) {
           if (!out.some((x) => x.tool === t))
             out.push({ tool: t, visible: toolDefaultVisible(t) });
+        }
+        if (stale) {
+          try {
+            writeLS("omni3d.tool_layout", JSON.stringify(out));
+          } catch (_) {
+            /* 忽略：清不掉只影响下次打开 */
+          }
         }
         return out;
       }
@@ -8322,13 +8349,12 @@
           }
           return;
         }
-        // 先看是不是点中了**本次已取**的顶点：是就不落新点，而是连一条线过去
-        // （收口就靠这个 —— 测量模式下点云永远落新点，没法点回旧点）
-        const hitPending = pickPendingVertex(event);
-        if (hitPending) {
-          await linkToPendingVertex(hitPending);
-          return;
-        }
+        // ❌ 这里**不再**先做一次「是不是点中了本次已取的顶点」的拾取。
+        //    那个分支会把「落在旧顶点拾取半径内的点击」吃掉，改成连一条线过去：
+        //    想在小物体上密集点几个顶点，只要靠近已经点过的那个点，就会被当成
+        //    「你又选了它」，新点根本落不下去（用户：「在容差内的会被识别成之前
+        //    选中的点」）。收口也不需要它 ——「完成」会调 closeRing()，自动把
+        //    两个只剩一条线的端点接上。所以测量模式下**每一次点击都落新点**。
         const picked = pickNearestPoint(event);
         if (!picked) {
           showToast("这里没点到东西（换个角度或放大些再试）", "warn");
@@ -9673,12 +9699,14 @@
             const off = pts.filter(
               (p) => pointPlaneDistance(p, pts[0], pts[1], pts[2]) > tol,
             );
+            // ⚠️ 不共面**不拒绝**采纳：服务端按最佳拟合平面投影算面积，这几个点
+            //    照样能量（算出来是投影面积）。以前这里 return，用户勾选好 6 个点
+            //    再点「面积」什么都不发生（用户：「所有超出容差的都选不了」）。
             if (off.length) {
               showToast(
-                `面积要求所有顶点共面：有 ${off.length} 个点偏出前三点所在平面`,
+                `有 ${off.length} 个顶点偏出前三点的平面：面积按最佳拟合平面投影计算`,
                 "warn",
               );
-              return; // 不采纳、也不动数据
             }
             const ordered = orderRingVertices(picked);
             if (ordered) picked = ordered;
@@ -10104,7 +10132,12 @@
           return;
         }
 
-        // 共面判定：第 4 个点起，与「前三点所在平面」比距离
+        // 共面判定：第 4 个点起，与「前三点所在平面」比距离。
+        // ⚠️ **只提示、不拦。** 服务端的 `polygon_area` 是「最小二乘拟合平面 →
+        //    投影上去 → 绕质心排序 → shoelace」，本来就容得下不严格共面的顶点，
+        //    反倒在这里硬性 return 才是 bug：模型的面上随便点几下，点云表面本来
+        //    就有厚度，稍一偏离就什么都不让你点（用户：「测量面积时所有超出容差的
+        //    都选不了」）。提示留着，是为了让人知道算的是**投影**面积。
         const existing = pendingPointElements();
         if (existing.length >= 3) {
           const dist = pointPlaneDistance(
@@ -10115,20 +10148,20 @@
           );
           const tol = coplanarTolerance();
           if (dist > tol && tool.op === "polygon_area") {
-            // 面积是平面图形：顶点偏出平面就没法连成一个多边形 → 拒绝落点
             showToast(
-              `该点与前三点不共面，距离该平面 ${dist.toFixed(4)}，超出容差 ${tol.toFixed(4)}=`,
+              `第 ${existing.length + 1} 个顶点离基准平面 ${dist.toFixed(
+                4,
+              )}（参考容差 ${tol.toFixed(4)}）：面积按最佳拟合平面投影计算`,
               "warn",
             );
-            return;
           }
           if (
             dist <= tol &&
             existing.length === 3 &&
             tool.op === "polyhedron_volume"
           ) {
-            // 第 4 点仍与前三点共面
-            showToast("4点共面", "warn");
+            // 4 点共面 → 凸包体积是 0，提醒一下（但照样落点，用户可以再来一个）
+            showToast("这 4 个点基本共面，体积会算成 0（换个不在同一面上的顶点）", "warn");
           }
         }
 
@@ -10190,29 +10223,10 @@
         }
       }
 
-      // 本次测量里的顶点在屏幕上的最近命中（用于「点回起点」收口）。
-      // 测量模式下点云永远落新点，所以收口只能靠点中已落的顶点。
-      function pickPendingVertex(event) {
-        if (!STATE.viewerCamera || !STATE.viewerRenderer) return null;
-        const rect = STATE.viewerRenderer.domElement.getBoundingClientRect();
-        const mx = event.clientX - rect.left;
-        const my = event.clientY - rect.top;
-        let best = null;
-        let bestD = Infinity;
-        for (const el of pendingPointElements()) {
-          const v = elementVector(el);
-          if (!v) continue;
-          // 同上：元素存原始坐标，比屏幕距离前先正旋
-          const s = projectElementToScreen([v.x, v.y, v.z]);
-          if (!s.visible) continue;
-          const d = Math.hypot(s.x - mx, s.y - my);
-          if (d < bestD) {
-            bestD = d;
-            best = el;
-          }
-        }
-        return bestD <= elementPickRadius() ? best : null;
-      }
+      // ⚠️ 这里曾经有个 pickPendingVertex（在屏幕上找最近的已取顶点），用来
+      //    「点回起点手动收口」。它是「新点落不下去」的元凶，已删：收口交给
+      //    closeRing（点「完成」时自动接上两个只剩一条线的端点）。
+      //    pickElement 仍然要走 projectElementToScreen，坐标转换只剩那一份。
 
       // 建一条连线 —— **唯一的建边路径**（含「每个顶点最多连两条」这条校验）。
       // opts.silent：失败只返回 false、不弹提示（调用方自己组织文案 —— 比如
@@ -10237,14 +10251,9 @@
         return true;
       }
 
-      // 从上一个顶点连一条线到指定的（本次已取的）顶点 —— **手动**收口走这里
-      async function linkToPendingVertex(el) {
-        const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
-        return await addEdgeBetween(prevId, el.id);
-      }
-
       // **自动**收口：把两个「只剩一条线」的端点接上（正常就是起点与最后一个点）。
       // 用户不必再精确点回起点 —— 那一下在稠密点云里很难点中（用户：「体验很难受」）。
+      // 现在它是**唯一**的收口路径：手动点回起点那条已经删了（它会吃掉新落点）。
       async function closeRing() {
         const ends = pendingPointElements().filter(
           (el) => degreeOfPoint(el.id) === 1,
