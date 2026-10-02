@@ -1362,6 +1362,39 @@ class TestElementViewCascade:
         assert "withDependents" not in group
 
 
+class TestCameraStepBounds:
+    """平移 / 缩放的**世界步长**要夹上下限，否则贴近模型中心时会「滞涩」。
+
+    真因：平移步长 ∝ 相机到环绕中心的距离、缩放步长 ∝ 当前距离，而环绕中心就是
+    模型中心（fitViewToCloud 把 target 设成分位框中心）—— 越贴上去两者越趋近 0。
+    修法：保留相对关系，把世界步长夹在按模型尺度给出的 [lo, hi] 里。
+    """
+
+    def test_zoom_and_pan_steps_are_clamped(self, index_html):
+        assert "function clampStep" in index_html
+        assert _contains_text(index_html, "const lo = r * 0.001;")
+        assert _contains_text(index_html, "const hi = r * 0.5;")
+        pan = _fn_body(index_html, "panBy")
+        assert _contains_text(pan, "const worldPerPx = clampStep(raw);"), (
+            "平移步长没夹上下限"
+        )
+        zoom = _fn_body(index_html, "zoomBy")
+        assert _contains_text(zoom, "const step = clampStep(dist * (1 - scale));"), (
+            "缩放步长没夹上下限"
+        )
+        # 仍不许穿过环绕中心
+        assert _contains_text(zoom, "const len = Math.max(dist - step, floor);")
+
+    def test_the_bounds_use_the_model_scale(self, index_html):
+        """上下限必须按模型尺度给 —— 否则换个大小的模型手感就变了。"""
+        assert _contains_text(index_html, "STATE.fitRadius = radius;")
+        body = _fn_body(index_html, "modelRadius")
+        assert "STATE.fitRadius" in body
+        assert _contains_text(body, "return isFinite(r) && r > 0 ? r : 1;"), (
+            "没有回退值会算出 NaN 步长"
+        )
+
+
 class TestTooltipsCarryNoDashTail:
     """悬浮提示只显示名称，不许再拼「名称——说明」。
 

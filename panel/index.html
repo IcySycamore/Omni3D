@@ -5785,13 +5785,31 @@
         }
 
         // ---- 平移 / 缩放 ----
+        // ⚠️ 「滞涩」的根源：平移的步长 ∝ 相机到环绕中心的距离，缩放的步长 ∝ 当前距离，
+        //    而环绕中心就是**模型中心** —— 越贴上去，两者都越趋近 0，
+        //    手感上就是「拖了/滚了却几乎不动」。
+        //    修法：保留相对关系（远看粗、近看细），但把**世界单位**的步长夹在
+        //    上下限里；上下限按模型尺度给，换个大小的模型手感一致。
+        function modelRadius() {
+          const r = Number(STATE.fitRadius);
+          return isFinite(r) && r > 0 ? r : 1;
+        }
+        // 步长夹逼：先取绝对值夹到 [lo, hi]，再带回符号。
+        function clampStep(step) {
+          if (!isFinite(step) || step === 0) return 0;
+          const r = modelRadius();
+          const lo = r * 0.001; // 再贴也别低于「每 100px 动 0.1 个模型半径」
+          const hi = r * 0.5; // 再远也别高于「每 100px 动 50 个模型半径」
+          return Math.sign(step) * Math.min(Math.max(Math.abs(step), lo), hi);
+        }
         function panBy(dxPx, dyPx) {
           const rect = dom.getBoundingClientRect();
           const dist = camera.position.distanceTo(target);
           // 像素 → 世界：由相机 fov 与到 target 的距离决定
-          const worldPerPx =
+          const raw =
             (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * dist) /
             Math.max(rect.height, 1);
+          const worldPerPx = clampStep(raw);
           const delta = axisRight()
             .multiplyScalar(-dxPx * worldPerPx)
             .add(axisUp().multiplyScalar(dyPx * worldPerPx));
@@ -5800,8 +5818,13 @@
         }
         function zoomBy(scale) {
           const offset = camera.position.clone().sub(target);
-          const len = offset.length() * scale;
-          if (!isFinite(len) || len < MIN_DIST) return;
+          const dist = offset.length();
+          if (!isFinite(dist) || dist <= 0) return;
+          // 往里推为正；同样先按相对关系算，再夹上下限
+          const step = clampStep(dist * (1 - scale));
+          // 不穿过环绕中心：相机停在中心上朝向会退化，留一点余量
+          const floor = Math.max(modelRadius() * 0.001, MIN_DIST);
+          const len = Math.max(dist - step, floor);
           camera.position.copy(target).add(offset.setLength(len));
         }
 
@@ -6345,6 +6368,8 @@
         const dist = (radius * 1.3) / Math.tan(fov / 2);
         const dir = new THREE.Vector3(0.6, 0.35, 0.72).normalize();
         const target = new THREE.Vector3().fromArray(fit.center);
+        // 模型尺度：平移/缩放的步长上下限按它给（见 createCameraRig 里的 clampStep）
+        STATE.fitRadius = radius;
         STATE.viewerControls.target.copy(target);
         STATE.viewerCamera.position.copy(target).addScaledVector(dir, dist);
         STATE.viewerCamera.lookAt(target);
