@@ -21,16 +21,14 @@ import pytest
 import torch  # noqa: F401,I001
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_WEB = os.path.join(_ROOT, "web")
-for _p in (_ROOT, _WEB):
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import api_keys  # noqa: E402
-import portal  # noqa: E402
-import portal_store  # noqa: E402
-from app.core import config  # noqa: E402
-from portal_store import (  # noqa: E402
+from panel import api_keys  # noqa: E402
+from panel import portal  # noqa: E402
+from panel import portal_store  # noqa: E402
+from server.core import config  # noqa: E402
+from panel.portal_store import (  # noqa: E402
     BETA_FREE,
     MAX_KEYS_PER_USER,
     METRICS,
@@ -450,7 +448,7 @@ class TestProviderCreditHook:
         """
         import asyncio
 
-        import server
+        from panel import server
 
         monkeypatch.setattr(api_keys, "_store", store)
         monkeypatch.setattr(store, "billing_enforced", lambda: True)
@@ -480,7 +478,7 @@ class TestProviderCreditHook:
     def test_out_of_credits_is_402(self, store, monkeypatch):
         import asyncio
 
-        import server
+        from panel import server
 
         monkeypatch.setattr(api_keys, "_store", store)
         monkeypatch.setattr(store, "billing_enforced", lambda: True)
@@ -507,7 +505,7 @@ class TestProviderCreditHook:
         """验证阶段：没次数也放行（用量照记）。"""
         import asyncio
 
-        import server
+        from panel import server
 
         monkeypatch.setattr(api_keys, "_store", store)
         store.ensure_account("carol")
@@ -530,7 +528,7 @@ class TestProviderCreditHook:
 
     def test_metering_records_points_and_cents(self, store, monkeypatch):
         """重建完成后按点数记账（200 点 = 1 分）。"""
-        import server
+        from panel import server
 
         monkeypatch.setattr(api_keys, "_store", store)
         task = type(
@@ -558,7 +556,7 @@ class TestProviderCreditHook:
     def test_anonymous_is_not_charged(self, store, monkeypatch):
         import asyncio
 
-        import server
+        from panel import server
 
         monkeypatch.setattr(api_keys, "_store", store)
         submitted = {}
@@ -588,7 +586,7 @@ class TestProviderCreditHook:
         """顺序：文件读好 → 查额度 → 入队（参数不对不消耗额度）。"""
         import inspect
 
-        import server
+        from panel import server
 
         src = inspect.getsource(server.create_task)
         assert src.index("can_start") < src.index("task_queue.submit")
@@ -596,7 +594,7 @@ class TestProviderCreditHook:
 
     def test_metering_charges_the_plan_pack_first(self, store, monkeypatch):
         """重建完成后：优先扣计划包（整包 1 次），并写进流水。"""
-        import server
+        from panel import server
 
         monkeypatch.setattr(api_keys, "_store", store)
         store.purchase("alice", "personal")

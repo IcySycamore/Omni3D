@@ -1,4 +1,4 @@
-"""网页客户端（web/index.html）的结构性回归测试。
+"""网页客户端（panel/index.html）的结构性回归测试。
 
 这里**不启动浏览器**，只做两件在 CI 里也能跑的事：
 1. 用 node 交叉验证内联的纯 JS SHA-256（登录握手正确性的前提）；
@@ -17,15 +17,14 @@ import sys
 import pytest
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_INDEX = os.path.join(_ROOT, "web", "index.html")
+_INDEX = os.path.join(_ROOT, "panel", "index.html")
 _SHA_SCRIPT = os.path.join(_ROOT, "tests", "tools", "web_sha256_check.js")
 _POINTCLOUD_SCRIPT = os.path.join(_ROOT, "tests", "tools", "web_pointcloud_check.js")
 
-_WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import auth_store  # noqa: E402
+from panel import auth_store  # noqa: E402
 
 
 @pytest.fixture(scope="module")

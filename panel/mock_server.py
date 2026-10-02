@@ -1,6 +1,6 @@
 """Omni3D 重建服务 Mock 版本。
 
-接口与 ``web/server.py`` 完全一致，但不加载真实模型，返回模拟点云数据，
+接口与 ``panel/server.py`` 完全一致，但不加载真实模型，返回模拟点云数据，
 用于前端开发、服务调试和网页样式优化。
 
 用法：
@@ -8,7 +8,7 @@
 .. code-block:: bash
 
     cd Omni3D
-    python web/mock_server.py
+    python panel/mock_server.py
 """
 
 import json
@@ -19,19 +19,21 @@ import time
 import traceback
 
 # torch 必须先于 numpy 导入：本机 fbgemm.dll 加载顺序冲突（WinError 127）。
-# 同类处理见 web/server.py 与 tests/conftest.py。
+# 同类处理见 panel/server.py 与 tests/conftest.py。
 import torch  # noqa: F401
 
 import numpy as np
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 
+# 项目根**无条件**钉到 sys.path 最前 —— 理由见 panel/server.py 里的长注释。
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+if PROJECT_ROOT in sys.path:
+    sys.path.remove(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
 
-from app.core import config
-from task_queue import task_queue
+from server.core import config
+from panel.task_queue import task_queue
 
 app = FastAPI(title="Omni3D 重建服务 (Mock)", version="0.2.0-mock")
 

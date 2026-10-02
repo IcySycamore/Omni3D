@@ -50,7 +50,7 @@ def _env_path(name: str, default: str) -> str:
     return raw or default
 
 
-# 项目根目录（app/ 的上两级）
+# 项目根目录（server/ 的上两级）
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Fast3R 预训练权重目录（HF 目录或任意本地目录）。

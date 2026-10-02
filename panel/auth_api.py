@@ -25,14 +25,14 @@ from typing import Callable, Optional
 from fastapi import Body, FastAPI, Header
 from fastapi.responses import JSONResponse
 
-from auth_store import (
+from panel.auth_store import (
     AuthStore,
     compute_proof,
     new_nonce,
     new_salt,
     validate_username,
 )
-from session_manager import SessionManager
+from panel.session_manager import SessionManager
 
 # nonce 临时表：nonce -> (username, created_at)，用完即弃
 _nonces: dict = {}

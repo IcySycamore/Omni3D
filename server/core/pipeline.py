@@ -22,7 +22,7 @@ import torch
 from fast3r.dust3r.utils.image import load_images
 from fast3r.dust3r.inference_multiview import inference
 
-from app.core import config
+from server.core import config
 
 
 # ══════════════════ 外部位姿 / 内参 解析 ══════════════════

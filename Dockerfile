@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
+# 容器里的 /app 是**项目根**（不是仓库里那个 app/：那是 Android/Qt 采集壳）。
 WORKDIR /app
 
 # 先拷贝依赖清单，利用 Docker 缓存层。

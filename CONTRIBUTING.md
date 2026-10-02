@@ -81,7 +81,7 @@ git push -u origin feature/简短描述
 ## 5. 代码风格
 
 - 文档与注释用中文；Python 用 `from __future__ import annotations` + 类型标注
-- 分层：`web/`（server，核心逻辑）、`app/core/`（server 共享核心）、`web/index.html`（唯一客户端）
+- 分层：`panel/`（server，核心逻辑）、`server/core/`（server 共享核心）、`panel/index.html`（唯一客户端）
 - **不要修改 `fast3r/` 内的 vendored 代码**；确有必要请在 PR 中单独说明理由
 - 生成物不提交：`build/`、`dist/`、`__pycache__/`、`data/`、`demo_outputs/`（见 `.gitignore`）
 

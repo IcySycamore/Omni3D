@@ -21,13 +21,14 @@ import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 
-# 确保项目根目录在 sys.path（web/ 的上一级），以便引用 app.core 的单一配置来源。
-# server.py 也会插入，这里再插一次是为了让本模块能被单独导入（测试 / 脚本）而不炸。
+# 项目根**无条件**钉到 sys.path 最前（理由见 panel/server.py 里的长注释：
+# panel/ 一旦排在前面，裸名 `server` 会先命中 panel/server.py）。
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, _PROJECT_ROOT)
+if _PROJECT_ROOT in sys.path:
+    sys.path.remove(_PROJECT_ROOT)
+sys.path.insert(0, _PROJECT_ROOT)
 
-from app.core import config  # noqa: E402
+from server.core import config  # noqa: E402
 
 # ---- 任务状态常量 ----
 STATUS_QUEUED = "queued"

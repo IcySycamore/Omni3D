@@ -1,6 +1,6 @@
-# 移动端 App（qt_app）
+# 移动端 App（app）
 
-> ⚠️ 这不是"第三种客户端"。它的界面**就是 `web/index.html`**——
+> ⚠️ 这不是"第三种客户端"。它的界面**就是 `panel/index.html`**——
 > 本目录只是**网页 client 的原生壳（WebView）+ 本地桥**，用于补上网页拿不到的原生能力。
 
 |              | 说明                                                                                                        |
@@ -17,7 +17,7 @@
 ## 目录结构
 
 ```
-qt_app/
+app/
 ├── CMakeLists.txt                  # Qt 6.5 + Android 打包（可选 desktop 目标）
 ├── build_apk.ps1                   # 命令行打包 APK
 ├── android/                        # AndroidManifest + assets（含华为 AREngine 资产，已入库）
@@ -62,9 +62,9 @@ qt_app/
 ## 构建
 
 ```powershell
-cd qt_app
-.\build_apk.ps1 -Project D:\PROJECT\Omni3D\qt_app -LibTarget omni3d_capture `
-  -Abi arm64-v8a -ApkOut D:\PROJECT\Omni3D\qt_app\Omni3D_Capture-hw-debug.apk
+cd app
+.\build_apk.ps1 -Project D:\PROJECT\Omni3D\app -LibTarget omni3d_capture `
+  -Abi arm64-v8a -ApkOut D:\PROJECT\Omni3D\app\Omni3D_Capture-hw-debug.apk
 adb install -r -g Omni3D_Capture-hw-debug.apk
 ```
 
@@ -78,7 +78,7 @@ adb install -r -g Omni3D_Capture-hw-debug.apk
 并立即重载 WebView。这一点很重要：**地址填错时网页根本加载不出来**，
 这也是唯一的自救通道。
 
-> **认证界面不需要在 App 里做**：App 加载的就是 `web/index.html`，
+> **认证界面不需要在 App 里做**：App 加载的就是 `panel/index.html`，
 > 网页端加了登录页，移动端就自动有了；密码摘要用页面内纯 JS SHA-256 计算
 > （因为 `http://127.0.0.1:50865` 之外的安全上下文不可保证）。
 

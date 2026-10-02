@@ -19,13 +19,12 @@ import sys
 import torch  # noqa: F401,I001
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import api_keys  # noqa: E402
-import server  # noqa: E402
-from session_store import anon_owner, user_owner  # noqa: E402
+from panel import api_keys  # noqa: E402
+from panel import server  # noqa: E402
+from panel.session_store import anon_owner, user_owner  # noqa: E402
 
 
 def _body(resp) -> dict:

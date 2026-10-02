@@ -11,11 +11,11 @@ Omni3D 采集壳 — Android APK 一键构建脚本
 
 用法（PowerShell）：
   powershell -ExecutionPolicy Bypass -File build_apk.ps1
-  powershell -ExecutionPolicy Bypass -File build_apk.ps1 -Project qt_app\test_mini -LibTarget omni_mini -ApkOut qt_app\test_mini\OmniMini-debug.apk
+  powershell -ExecutionPolicy Bypass -File build_apk.ps1 -Project app\test_mini -LibTarget omni_mini -ApkOut app\test_mini\OmniMini-debug.apk
   powershell -ExecutionPolicy Bypass -File build_apk.ps1 -Clean     # 全量重建
 #>
 param(
-    [string]$Project = "D:\PROJECT\Omni3D\qt_app",
+    [string]$Project = "D:\PROJECT\Omni3D\app",
     [string]$LibTarget = "",          # qt_add_executable 目标名（默认从 CMakeLists 解析）
     [string]$BuildDir = "",
     [string]$ApkOut = "",

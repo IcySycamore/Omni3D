@@ -5,8 +5,8 @@
 服务端在 `POST /api/tasks` 校验它 —— **不能只靠客户端**，否则旧页面、脚本
 直接提交、或者手改表单，换个数字就能把显存打满。
 """
-from app.core import config
-from web import server
+from server.core import config
+from panel import server
 
 
 class TestFrameOptions:

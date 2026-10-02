@@ -1,4 +1,4 @@
-"""`app/core/pointcloud.py` 的 SOR 单元测试。
+"""`server/core/pointcloud.py` 的 SOR 单元测试。
 
 不需要 GPU / 模型：全部用合成点云构造。`k`/`std` 的边界行为、非有限值、
 分块与单次结果一致性都在这里守住。
@@ -9,7 +9,7 @@ import pytest
 # torch 必须最先导入（本机 fbgemm.dll 加载顺序冲突）
 import torch  # noqa: F401,I001
 
-from app.core.pointcloud import statistical_outlier_removal
+from server.core.pointcloud import statistical_outlier_removal
 
 
 def _lattice_with_flyers(n=6, spacing=1.0, n_flyers=5, seed=0):

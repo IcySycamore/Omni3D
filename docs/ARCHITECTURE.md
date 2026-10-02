@@ -8,26 +8,26 @@
 
 ```
 ┌─ client（只有一份实现）───────────────┐        ┌─ server（唯一） ──────────────┐
-│  web client     web/index.html         │        │  web/server.py  :50865        │
+│  web client     panel/index.html         │        │  panel/server.py  :50865        │
 │  ─────────────────────────────────────│◄──HTTP─►│  ├ auth_store（账号）         │
 │  移动端 App = web client 的壳 + 桥      │        │  ├ session_manager（token）   │
-│  （qt_app/，本地桥 :50687）             │        │  ├ task_queue（实时进度）     │
+│  （app/，本地桥 :50687）             │        │  ├ task_queue（实时进度）     │
 └────────────────────────────────────────┘        │  ├ session_store（历史 SQLite）│
-                                                  │  └ app/core/pipeline（重建）  │
+                                                  │  └ server/core/pipeline（重建）  │
                                                   └──────────────┬────────────────┘
 ┌─ 静态页面宿主 ──────────────┐        │                    │
-│  web/pages.py     :50866      │        │              fast3r（model）
+│  panel/pages.py     :50866      │        │              fast3r（model）
 └───────────────────────────────┘        │
 ┌─ 控制面（官网 portal）──────┐        │
-│  web/portal.py    :50867      │◄──HTTP─┘（面板读 /api/p/*：账号 / 计费 / API Key）
+│  panel/portal.py    :50867      │◄──HTTP─┘（面板读 /api/p/*：账号 / 计费 / API Key）
 │  └ portal_store（计费 SQLite）│
 └───────────────────────────────┘
 ```
 
 **角色与端口（v1.0.0-mvp）**：面板 `:50866`（静态）/ 官网 `:50867`（控制面）/ 服务商 API `:50865`（数据面）/ App 桥 `:50687`。
-端口常量的**单一来源**是 `web/hosting.py`；`SERVE_PAGE=1`（默认）时服务商 API 顺便也托管页面。
+端口常量的**单一来源**是 `panel/hosting.py`；服务商 API 默认**只做 API**（`SERVE_PAGE=0`），页面一律由面板服务提供。
 
-**原则**：server 只有一种；**客户端只有一份实现**（`web/index.html`）；
+**原则**：server 只有一种；**客户端只有一份实现**（`panel/index.html`）；
 移动端 App 是它的**原生壳**（不另做 UI，只补 AR / 文件等原生能力）。
 **重建 / 尺度 / 历史 / 测量逻辑只在 server 实现一次**；账号 / 计费 / 发 Key 只在官网实现一次。
 
@@ -43,31 +43,31 @@
 
 | 模块                     | 职责                                                                          | 关键入口                                                              |
 | ------------------------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `web/server.py`          | 服务商 API：FastAPI 路由与编排（**接口清单见 [`docs/API.md`](API.md)**）      | `/reconstruct`、`/api/tasks`、`/api/history`、`/api/tasks/{id}/scale` |
-| `web/hosting.py`         | **端口/主机与页面路由的单一来源**（`mount_page_routes`）                      | `PORT`/`PAGES_PORT`/`PORTAL_PORT`、`app_config()`                     |
-| `web/pages.py`           | 面板页面宿主（**不加载模型**）                                                | `GET /`、`/app-config.json`、`/assets/*`                              |
-| `web/portal.py`          | **官网（控制面）**：账号 / 计费 / API Key / 流水                              | `/api/p/*`                                                            |
-| `web/portal_store.py`    | 控制面存储：Key / 账号 / 用量包 / 订单 / 用量 / 流水；**扣减入口 `charge()`** | `PLANS`/`METRICS`/`PACKS`/`charge()`                                  |
-| `web/auth_api.py`        | **认证路由的唯一实现**（两侧共用）                                            | `/api/auth/{salt,register,challenge,login,logout,me,password}`        |
-| `web/api_keys.py`        | `X-Api-Key` → username（官网 Key 优先，兼容环境变量静态 Key）                 | `username_for()`                                                      |
-| `web/task_queue.py`      | 单 worker 异步队列 + 内存实时进度缓存                                         | `task_queue.submit()` / `.get()`                                      |
-| `web/auth_store.py`      | **用户表**：salt + verifier = `sha256(salt+pwd)`（明文不落库）                | `create_user()` / `get_verifier()`                                    |
-| `web/session_manager.py` | **会话管理**：token → username（内存 + TTL 12h）                              | `create()` / `username_for()` / `drop()`                              |
-| `web/session_store.py`   | **会话层**：重建历史持久化（SQLite，按 `owner` 隔离）                         | `save_session()` / `list_sessions()`                                  |
-| `app/core/pipeline.py`   | 纯函数重建管线（加载→推理→对齐→**米制尺度对齐**）                             | `run_reconstruction()` / `metric_alignment()`                         |
-| `app/core/scale.py`      | **真实尺度反推**（纯函数，无重依赖）                                          | `infer_scale_from_measurement()`                                      |
-| `app/core/config.py`     | 权重路径 / 设备 / 默认参数                                                    | —                                                                     |
+| `panel/server.py`          | 服务商 API：FastAPI 路由与编排（**接口清单见 [`docs/API.md`](API.md)**）      | `/reconstruct`、`/api/tasks`、`/api/history`、`/api/tasks/{id}/scale` |
+| `panel/hosting.py`         | **端口/主机与页面路由的单一来源**（`mount_page_routes`）                      | `PORT`/`PAGES_PORT`/`PORTAL_PORT`、`app_config()`                     |
+| `panel/pages.py`           | 面板页面宿主（**不加载模型**）                                                | `GET /`、`/app-config.json`、`/assets/*`                              |
+| `panel/portal.py`          | **官网（控制面）**：账号 / 计费 / API Key / 流水                              | `/api/p/*`                                                            |
+| `panel/portal_store.py`    | 控制面存储：Key / 账号 / 用量包 / 订单 / 用量 / 流水；**扣减入口 `charge()`** | `PLANS`/`METRICS`/`PACKS`/`charge()`                                  |
+| `panel/auth_api.py`        | **认证路由的唯一实现**（两侧共用）                                            | `/api/auth/{salt,register,challenge,login,logout,me,password}`        |
+| `panel/api_keys.py`        | `X-Api-Key` → username（官网 Key 优先，兼容环境变量静态 Key）                 | `username_for()`                                                      |
+| `panel/task_queue.py`      | 单 worker 异步队列 + 内存实时进度缓存                                         | `task_queue.submit()` / `.get()`                                      |
+| `panel/auth_store.py`      | **用户表**：salt + verifier = `sha256(salt+pwd)`（明文不落库）                | `create_user()` / `get_verifier()`                                    |
+| `panel/session_manager.py` | **会话管理**：token → username（内存 + TTL 12h）                              | `create()` / `username_for()` / `drop()`                              |
+| `panel/session_store.py`   | **会话层**：重建历史持久化（SQLite，按 `owner` 隔离）                         | `save_session()` / `list_sessions()`                                  |
+| `server/core/pipeline.py`   | 纯函数重建管线（加载→推理→对齐→**米制尺度对齐**）                             | `run_reconstruction()` / `metric_alignment()`                         |
+| `server/core/scale.py`      | **真实尺度反推**（纯函数，无重依赖）                                          | `infer_scale_from_measurement()`                                      |
+| `server/core/config.py`     | 权重路径 / 设备 / 默认参数                                                    | —                                                                     |
 
 ### client
 
 | 模块                                | 职责                                                            |
 | ----------------------------------- | --------------------------------------------------------------- |
-| `web/index.html`                    | **唯一的客户端实现**（采集 / 查看 / 测量 / 历史 / 账号 / 设置） |
-| `qt_app/qml/WebShell.qml`           | WebView 壳，加载 web client（Android）                          |
+| `panel/index.html`                    | **唯一的客户端实现**（采集 / 查看 / 测量 / 历史 / 账号 / 设置） |
+| `app/qml/WebShell.qml`           | WebView 壳，加载 web client（Android）                          |
 | `archive/desktop-pyqt-vtk/`         | 已废弃的 PyQt5 + VTK 桌面客户端（不再维护，见其 README）        |
-| `qt_app/src/ar_bridge_server.*`     | 本地 HTTP 桥 `:50687`（`/ar/*`、`/ar/scan/*`、`/ar/file/*`）    |
-| `qt_app/src/ar_scan_controller.*`   | AR 扫描：抓帧 + 米制位姿 + 华为稀疏点云累积（Android）          |
-| `qt_app/src/hw_ar_engine_session.*` | 华为 AREngine 适配（`ArSessionBackend` 子类，Android）          |
+| `app/src/ar_bridge_server.*`     | 本地 HTTP 桥 `:50687`（`/ar/*`、`/ar/scan/*`、`/ar/file/*`）    |
+| `app/src/ar_scan_controller.*`   | AR 扫描：抓帧 + 米制位姿 + 华为稀疏点云累积（Android）          |
+| `app/src/hw_ar_engine_session.*` | 华为 AREngine 适配（`ArSessionBackend` 子类，Android）          |
 
 ---
 
@@ -84,7 +84,7 @@
 
 ---
 
-## 4. 会话层（`web/session_store.py`）
+## 4. 会话层（`panel/session_store.py`）
 
 - **后端**：SQLite 单文件（`data/omni3d_sessions.db`），零外部依赖。
 - **隔离**：所有读写都带 `owner`（登录 → `user:<username>`；匿名 → `anon:<client_id>`），各客户端只能看到自己的历史。
@@ -112,8 +112,8 @@
 
 八个认证接口（`/api/auth/*`）的完整定义见 **[`docs/API.md`](API.md)**。
 
-- **服务端**：`web/session_manager.py` 维护 `token → username`（权威映射）。
-- **客户端**：`web/index.html` 的 `fetch` 拦截器统一携带 `X-Auth-Token` 并处理 401。
+- **服务端**：`panel/session_manager.py` 维护 `token → username`（权威映射）。
+- **客户端**：`panel/index.html` 的 `fetch` 拦截器统一携带 `X-Auth-Token` 并处理 401。
 - **历史归属**：`_owner_of(token, client_id)` 优先取 token 的 username，使历史**对应到 username**。
 
 ### 5.1 网页 / 移动端如何接入
@@ -122,7 +122,7 @@
 客户端重复实现认证逻辑：
 
 ```
-web/index.html
+panel/index.html
   ├─ 身份：localStorage(omni3d.client_id)  ← 匿名归属（首次访问生成）
   │         localStorage(omni3d.token)     ← 仅存令牌，**不存密码/verifier**
   ├─ 统一 fetch 拦截器（一处实现，覆盖全部同源调用）
@@ -135,7 +135,7 @@ web/index.html
 
 **为何网页端也要有纯 JS 的 SHA-256**：`crypto.subtle` 只在**安全上下文**可用，
 而手机浏览器通过 `http://<局域网IP>:50865` 访问时并非安全上下文。
-实现位于 `web/index.html`，其正确性由 `tests/tools/web_sha256_check.js`
+实现位于 `panel/index.html`，其正确性由 `tests/tools/web_sha256_check.js`
 （用 node 内置 crypto 交叉验证，含 55/56/64 等填充边界）守住。
 
 **会话过期语义**：令牌 **30 分钟滑动过期**（`OMNI3D_SESSION_TTL` 可覆盖）。
@@ -155,7 +155,7 @@ web/index.html
 
 **问题**：重建点云在**模型坐标系**中是任意单位；测距结果不是米。
 
-**解法一（主）：AR 位姿驱动** —— `app/core/pipeline.py`
+**解法一（主）：AR 位姿驱动** —— `server/core/pipeline.py`
 
 ```
 上传带 extrinsics（每帧 col-major 4×4 cam2world，平移为米）
@@ -185,7 +185,7 @@ web/index.html
 POST /api/tasks/{task_id}/scale   {point_a, point_b, real_distance}
         │
         ▼
-scale = real_distance / ‖point_a − point_b‖       （app/core/scale.py）
+scale = real_distance / ‖point_a − point_b‖       （server/core/scale.py）
         │
         ▼
 session_store.update_scale(...)   → 后端历史记录 scale
@@ -207,7 +207,7 @@ session_store.update_scale(...)   → 后端历史记录 scale
 `(255,180,60)`，前端还只取 `points[:20000]`、并按 `stride=8` 抽稀。结果就是
 「百万点云里前端只看到 2 万点、还全是橙色」。
 
-**现在的管线**（`web/server.py`）：
+**现在的管线**（`panel/server.py`）：
 
 ```
 run_reconstruction → output_dict{preds, views}
@@ -257,9 +257,9 @@ PLY **52.2MB**（二进制，double 坐标）。前 5000 个渲染点的唯一�
 
 ### ✅ Phase 1（本 PR）——已完成
 
-- [x] 会话层 `web/session_store.py`（SQLite，按 `owner` 隔离）
+- [x] 会话层 `panel/session_store.py`（SQLite，按 `owner` 隔离）
 - [x] server 接入会话层 + 历史 API；同步/异步两条路径均落库
-- [x] 尺度反推纯函数 `app/core/scale.py` + API `POST /api/tasks/{id}/scale`
+- [x] 尺度反推纯函数 `server/core/scale.py` + API `POST /api/tasks/{id}/scale`
 - [x] 认证与会话管理：`auth_store.py`（salt+verifier）+ `session_manager.py`（token→username）
 - [x] 历史**对应到 username**（`owner = user:<name>` / `anon:<client_id>`）
 - [x] 桌面客户端：`desktop/`（PyQt5 + VTK，登录窗 ⚙ 设置服务器）→ **已于 Phase 1.6 归档**
@@ -290,20 +290,36 @@ PLY **52.2MB**（二进制，double 坐标）。前 5000 个渲染点的唯一�
 
 - [x] `desktop/` → `archive/desktop-pyqt-vtk/`（保留历史与可复用点，不再维护）
 - [x] `run.ps1` 移除 `desktop` 目标；`CONTEXT.md` / `README.md` / `docs/API.md` /
-      `docs/ARCHITECTURE.md` / `CONTRIBUTING.md` / `qt_app/README.md` 口径统一为「一个 web client」
+      `docs/ARCHITECTURE.md` / `CONTRIBUTING.md` / `archive/desktop-pyqt-vtk/README.md` 口径统一为「一个 web client」
 - [x] 测试去掉对归档代码的依赖，改为**跨语言固定向量**：
       `tests/test_auth.py` 与 `tests/tools/web_sha256_check.js` 共用同一组 verifier/proof 字面量；
       另增加「网页端账号规则常量 == 服务端常量」的断言
 
-### ⏳ Phase 2（独立 PR）——物理重组
+### ✅ Phase 2 —— 物理重组（目录名与职责对齐）
 
-- [ ] `web/` → `server/`（`server/app.py` / `auth_store.py` / `session_manager.py` / `session_store.py` / `task_queue.py`）
-- [ ] 前端 `web/index.html` → `client/web/`
-- [ ] `qt_app/` → `client/qt/`（**桌面端已在 Phase 1.6 归档，不再有 `client/desktop/`**）
-- [ ] 同步修改 `qt_app/build_apk.ps1`、`CMakeLists.txt`、`sys.path`、所有 import
-- [ ] Qt 桥的 `omni3d_history.json` 改为调用 server `/api/history`（去掉重复实现）
+- [x] `web/` → `panel/`，并升级为**真包**（`panel/__init__.py`，内部一律
+      `from panel.xxx import`）。不再把面板目录塞进 `sys.path`。
+- [x] `app/` → `server/`（重建核心 `core/`：config / geometry / pipeline /
+      pointcloud / scale）；引用统一为 `server.core.*`
+- [x] `qt_app/` → `app/`（Android / Qt 采集壳 + 本地 AR 桥 :50687）
+- [x] 服务商 API 默认**不再**托管页面（`SERVE_PAGE=0`）：50865 只做 API、
+      50866 只给页面 —— 一个端口一个职责，不再出现「两个端口都吐同一份页面」
+- [x] 同步 `run.ps1`、`scripts/docker-entrypoint.sh`、`tests/`、`.gitignore`、
+      `tests/tools/*.js`、`app/build_apk.ps1` 与全部文档
+- [ ] `panel/index.html` 未拆进 `client/`：它由 `panel/pages.py` 同源托管，
+      拆出去要给 `ASSETS_DIR` 与静态宿主多一层间接，收益不明
+- [ ] Qt 桥的 `omni3d_history.json` 改为调用服务端 `/api/history`（未做）
 
-> Phase 2 涉及构建脚本与导入路径，破坏性大，故单独成 PR 评审。
+> ⚠️ **命名冲突**（已解决 —— 别踩回去）：`panel/server.py` 与新顶层包 `server/`
+> 同名。直接跑 `python panel/server.py` 时 Python 会把**脚本所在目录**（panel/）
+> 放进 `sys.path` 前排，裸名 `server` 于是有两个候选。
+> 所以 `panel/server.py` 把项目根**无条件**钉到 `sys.path[0]`（先 `remove` 再
+> `insert`，**不是** `if PROJECT_ROOT not in sys.path`）—— 写成后者时，一旦项目根
+> 已在 `sys.path` 里（例如设了 PYTHONPATH），条件为假、一行都不插，
+> `from server.core import config` 会先命中自己并以
+> `ImportError: cannot import name 'core'` 收场。
+> 守卫在 `tests/test_package_layout.py`：真开子进程跑一次，不靠静态扫描 ——
+> 纯静态推理在这个点上给出过**错误**结论（以为必炸，实跑才发现恰好没炸）。
 
 ---
 
@@ -323,7 +339,7 @@ PLY **52.2MB**（二进制，double 坐标）。前 5000 个渲染点的唯一�
 交接说明见 [`docs/HANDOVER.md`](HANDOVER.md)（含"哪些契约必须复现"的清单）。
 | `frp/`（本机） | 本机 frp 运行配置 |
 
-**开发期如何启动服务**：本地直接 `python web/server.py`（默认 `127.0.0.1:50865`），
+**开发期如何启动服务**：本地直接 `python panel/server.py`（默认 `127.0.0.1:50865`），
 无需任何部署配置。
 
 > 需要恢复上述文件时，从本改动之前的提交中 checkout 即可（git 历史保留）。

@@ -17,10 +17,10 @@
 
 | 角色                       | 端口  | 进程            | 职责                                                |
 | -------------------------- | ----- | --------------- | --------------------------------------------------- |
-| **面板 panel**             | 50866 | `web/pages.py`  | 只交付页面（无 torch），浏览器里干活的地方          |
-| **官网 portal**            | 50867 | `web/portal.py` | 账号 / 计费 / 发 API Key / 流水（**控制面**）       |
-| **服务商 API**             | 50865 | `web/server.py` | 重建任务、会话历史、点云/测量（**数据面**，需 GPU） |
-| 本地 AR 桥（不在本次范围） | 50687 | `qt_app/`       | App 壳的原生能力（AR 扫描 / 文件）                  |
+| **面板 panel**             | 50866 | `panel/pages.py`  | 只交付页面（无 torch），浏览器里干活的地方          |
+| **官网 portal**            | 50867 | `panel/portal.py` | 账号 / 计费 / 发 API Key / 流水（**控制面**）       |
+| **服务商 API**             | 50865 | `panel/server.py` | 重建任务、会话历史、点云/测量（**数据面**，需 GPU） |
+| 本地 AR 桥（不在本次范围） | 50687 | `app/`       | App 壳的原生能力（AR 扫描 / 文件）                  |
 
 本地启动（Windows）：
 
@@ -39,7 +39,7 @@
 ## 2. 架构现状
 
 ```
-浏览器（面板 web/index.html）
+浏览器（面板 panel/index.html）
    ├─ 走 /api/*  ──► 服务商 API :50865 ──► Fast3R 前向（GPU）──► 点云 / PLY / 测量
    └─ 走 /api/p/* ─► 官网 :50867 ──► 控制面 SQLite（账号 / Key / 计费 / 流水）
                         ▲
@@ -54,7 +54,7 @@
 | `omni3d_portal.db`                           | `api_keys` / `accounts` / `packs` / `orders` / `usage` / `ledger` | 控制面（官网）   |
 | `omni3d_sessions.db` + `data/sessions/*.ply` | `sessions`                                                        | 数据面（服务商） |
 
-**认证协议（两侧同一份实现：`web/auth_api.py`）**
+**认证协议（两侧同一份实现：`panel/auth_api.py`）**
 
 ```
 注册：salt = 服务端随机；verifier = sha256(salt + password)   ← 客户端算，明文不上网
@@ -65,7 +65,7 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 身份优先级：X-Api-Key > X-Auth-Token > 匿名（client_id）
 ```
 
-**计费（只由官网记账；常量全在 `web/portal_store.py`）**
+**计费（只由官网记账；常量全在 `panel/portal_store.py`）**
 
 - 计量三档：点云 `200 点 = 1 分` / 体素 `1,000 = 1 分` / 网格 `1,000 三角面 = 1 分`
   （`units_to_cents()` 向上取整）；
@@ -117,7 +117,7 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 
 ### 3.4 前端行为
 
-- 面板是**单文件** `web/index.html`（原生 ESM + three.js，无构建）；页面首次打开读 `GET /app-config.json`
+- 面板是**单文件** `panel/index.html`（原生 ESM + three.js，无构建）；页面首次打开读 `GET /app-config.json`
   拿引导信息（默认 API 端口、官网端口）。
 - 凭据**按服务商分开存**（`omni3d.cred:<serverId>`）：换服务商 = 换身份，绝不存在"多台共用账号"。
 - 就绪灯 = **身份已验证 + 模型已加载**（只有 `/health` 通不算）。
@@ -210,7 +210,7 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 
 1. **控制面**（Portal：账号 + 计费 + Key + 流水）→ C# + Postgres。出口：官网页面全功能可用，
    `charge()` 的扣减顺序与流水字段与旧版一致（用旧库导出做对账测试）。
-2. **网关**（Api 的 REST/WS + 认证 + 额度校验）→ C#，**重建仍然转发给 Python**（旧的 `web/server.py`
+2. **网关**（Api 的 REST/WS + 认证 + 额度校验）→ C#，**重建仍然转发给 Python**（旧的 `panel/server.py`
    直接当 worker 用）。出口：面板不改一行代码就能跑通全流程（证明协议兼容）。
 3. **几何与产物**（SOR / 吸附 / 测量 / PLY / 会话）→ C#。出口：同一份点云输入，几何结果与 Python
    实现数值一致（用 §3.5 的基线 + 现有测试向量）。
@@ -244,7 +244,7 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 **架构 / 协议**
 
 - 分享同一份 SQLite 只在本机成立 —— 控制面与数据面**分机器就必须拆库**（本版是同机假设）。
-- 认证端点只能有一份实现（`web/auth_api.py`）；两边各复制一次迟早协议漂移。
+- 认证端点只能有一份实现（`panel/auth_api.py`）；两边各复制一次迟早协议漂移。
 - API Key 身份下，**需要令牌的端点会 401**，客户端会误判成"凭据失效"（`refreshAnonPreview` 踩过）。
 - 吊销 Key 必须**即时**对数据面生效 —— 所以"缓存 Key + TTL"要慎重（本版是查库）。
 
@@ -262,7 +262,7 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 
 - `import torch` 必须**最先**（且早于 numpy）——本机 `fbgemm.dll` 加载顺序冲突。
 - 服务重启会清空内存令牌与任务队列（表现为 401 / 任务消失），这是预期。
-- 修 `web/index.html` 或 `web/portal.html` 里任何面向用户的文案后，**跑测试**（有断言盯着界面文案）。
+- 修 `panel/index.html` 或 `panel/portal.html` 里任何面向用户的文案后，**跑测试**（有断言盯着界面文案）。
 
 ---
 
@@ -283,4 +283,4 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 - 队列是**进程内内存表**（单副本、重启即丢），任务进度靠轮询 —— 这是 v1 最大的技术债，
   已被 §4 的"Postgres 任务表 + 推送"取代。
 - `intrinsics` 目前只用于**校验与报告**，未约束模型焦距（要走上游 `global_aligner`，代价大，未做）。
-- AR 桥 / 移动端 App 壳（`qt_app/`）不在本次重构范围。
+- AR 桥 / 移动端 App 壳（`app/`）不在本次重构范围。

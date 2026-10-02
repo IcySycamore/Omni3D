@@ -1,4 +1,4 @@
-"""`app/core/config.py` 的默认值与环境变量语义测试。
+"""`server/core/config.py` 的默认值与环境变量语义测试。
 
 重点守住两个容易被改坏的地方：
 1. `0` 到底是「合法值（关闭）」还是「非法值（回退默认）」—— 由 `allow_zero` 决定；
@@ -10,7 +10,7 @@ import pytest
 # torch 必须最先导入（本机 fbgemm.dll 加载顺序冲突）
 import torch  # noqa: F401,I001
 
-from app.core import config
+from server.core import config
 
 
 class TestEnvParsing:

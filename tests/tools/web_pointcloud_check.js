@@ -1,5 +1,5 @@
 /*
- * 校验 web/index.html 内联的点云解码纯函数（decodePointCloud / fillHeightColors）。
+ * 校验 panel/index.html 内联的点云解码纯函数（decodePointCloud / fillHeightColors）。
  *
  * 为什么需要它：服务器返回的点云格式有两种（嵌套/扁平 × 带不带 RGB），
  * 解码错位会直接表现为「点云糊成一团」或「颜色全黑」，而这类 bug 在
@@ -11,7 +11,7 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..", "..");
-const src = fs.readFileSync(path.join(root, "web", "index.html"), "utf8");
+const src = fs.readFileSync(path.join(root, "panel", "index.html"), "utf8");
 
 const START = "// ==================== 点云解码";
 // 终点用**标识符**而不是装饰性小节标题 —— 标题是给人看的，改文案就会把这里弄挂

@@ -2,9 +2,9 @@
 
 为什么把「给页面」和「做重建」拆开：
 
-- 重建服务（``web/server.py``）启动时要加载 Fast3R 模型（几十秒 + 显存），
+- 重建服务（``panel/server.py``）启动时要加载 Fast3R 模型（几十秒 + 显存），
   而「把 index.html 交给浏览器」这件事本身**不需要它**；
-- 拆开之后页面可以由**任意静态宿主**提供（``web/pages.py``、nginx、CDN…），
+- 拆开之后页面可以由**任意静态宿主**提供（``panel/pages.py``、nginx、CDN…），
   API 指向任意一台服务器 —— 手机 / 别的机器不必先在本机跑起重建服务。
 
 端口约定（都可用环境变量覆盖）：
@@ -27,7 +27,7 @@ import time
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-_WEB_DIR = os.path.dirname(os.path.abspath(__file__))
+_PANEL_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---- 端口 ----
 # `SERVER_HOST/SERVER_PORT`（server.py）与页面服务共用这两个常量，避免两边写岔。
@@ -52,12 +52,14 @@ def _flag(name: str, default: bool) -> bool:
 
 
 # 重建服务是否**顺便**也托管页面。
-# 默认 1：`http://127.0.0.1:50865/` 依旧能直接打开页面（旧习惯 / 手机 WebView 用
-# adb reverse 时也走这条路）。设成 0 就得到一个纯 API 服务，适合丢到云上。
-SERVE_PAGE = _flag("SERVE_PAGE", True)
+# 默认 **0**：50865 只做重建 API，页面一律由面板服务（50866，`pages.py`）提供。
+# 曾经默认 1（“旧习惯 / 手机 WebView 走 adb reverse”），代价是**两个端口都吐页面**——
+# 实测踩过：排查时极易把 50865 上的那一份当成“残留的旧面板”。
+# 确实需要单端口部署（如 adb reverse 只通一个端口）时，显式设 SERVE_PAGE=1。
+SERVE_PAGE = _flag("SERVE_PAGE", False)
 
-INDEX_HTML = os.path.join(_WEB_DIR, "index.html")
-ASSETS_DIR = os.path.join(_WEB_DIR, "assets")
+INDEX_HTML = os.path.join(_PANEL_DIR, "index.html")
+ASSETS_DIR = os.path.join(_PANEL_DIR, "assets")
 
 
 def app_config() -> dict:

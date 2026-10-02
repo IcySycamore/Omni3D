@@ -2886,7 +2886,7 @@
           </div>
 
             <!-- ===== 已废弃留档：面板内的注册 / 登录表单 =====
-                 同一套接口现在由官网提供（web/portal.py 挂的是同一份实现）。
+                 同一套接口现在由官网提供（panel/portal.py 挂的是同一份实现）。
                  保留 DOM 只为不丢历史，界面已隐藏。 -->
             <div class="auth-archive">
               <div id="loginForm">
@@ -3893,7 +3893,7 @@
       );
 
       // ⚠️ 以下登录 / 注册 / 登出 / 并入匿名记录的处理器都是**废弃留档**：
-      // 表单已被 .auth-archive 隐藏，账号功能搬去官网（web/portal.py）。
+      // 表单已被 .auth-archive 隐藏，账号功能搬去官网（panel/portal.py）。
       // 保留是为了「文件在、协议在」，别再往这里加功能。
       dom.loginBtn.addEventListener("click", async () => {
         const username = dom.loginUsername.value.trim();
@@ -6884,7 +6884,7 @@
       const ACTIVE_SERVER_LS = "omni3d.active_server";
       // 内置「本地」那一台自己的地址 / 端口（也是**第一次使用**时的默认 API 去向）
       const LOCAL_SERVER_LS = "omni3d.local_server";
-      // 与 web/hosting.py 的 API_PORT 默认值一致；页面托管方可以在
+      // 与 panel/hosting.py 的 API_PORT 默认值一致；页面托管方可以在
       // /app-config.json 里改口径（API 在别的机器/端口时用得上）。
       const DEFAULT_API_PORT = 50865;
 
@@ -7051,7 +7051,7 @@
       }
 
       // ---- 页面托管方给的引导配置（`/app-config.json`）----
-      // 页面可能由另一个端口 / 另一台机器（web/pages.py）提供，所以页面本身
+      // 页面可能由另一个端口 / 另一台机器（panel/pages.py）提供，所以页面本身
       // 得知道「默认去哪个地址、哪个端口找 API」。**只在用户没改过时生效**，
       // 也就是第一次打开 / 注册账号 / 匿名使用时的那份默认值。
       async function loadServerConfig() {
@@ -7680,7 +7680,7 @@
         return best;
       }
 
-      // 渲染坐标 → 全量点云最近点（服务端 cKDTree，见 web/snap_index.py）
+      // 渲染坐标 → 全量点云最近点（服务端 cKDTree，见 panel/snap_index.py）
       function currentSessionId() {
         return (
           (STATE.resultData && STATE.resultData.session_id) ||
@@ -8813,7 +8813,7 @@
         if (!isFinite(raw)) return el;
         const calibrated = scale != null && isFinite(scale);
         const k = calibrated ? scale : 1;
-        // 长度 ×k、面积 ×k²、体积 ×k³（与 app/core/geometry.py 一致）
+        // 长度 ×k、面积 ×k²、体积 ×k³（与 server/core/geometry.py 一致）
         const factor = dim === 1 ? k : dim === 2 ? k * k : k * k * k;
         el.value = raw * factor;
         el.unit = scaledUnit(dim, calibrated);

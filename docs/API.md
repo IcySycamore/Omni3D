@@ -6,12 +6,12 @@
 
 | 服务               | 地址                                             | 实现                              | 何时存在                            |
 | ------------------ | ------------------------------------------------ | --------------------------------- | ----------------------------------- |
-| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `web/server.py`（FastAPI）        | 总是（`python web/server.py`）      |
-| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `web/pages.py`（无 torch）        | 需要页面时（`python web/pages.py`） |
-| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `web/portal.py`                   | 卖服务时（账号 / 计费 / API Key）   |
-| **App 本地桥**     | `http://127.0.0.1:50687`                         | `qt_app/src/ar_bridge_server.cpp` | 仅移动端 App 内                     |
+| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `panel/server.py`（FastAPI）        | 总是（`python panel/server.py`）      |
+| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `panel/pages.py`（无 torch）        | 需要页面时（`python panel/pages.py`） |
+| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `panel/portal.py`                   | 卖服务时（账号 / 计费 / API Key）   |
+| **App 本地桥**     | `http://127.0.0.1:50687`                         | `app/src/ar_bridge_server.cpp` | 仅移动端 App 内                     |
 
-> 端口常量只在 `web/hosting.py` 定义一次；`SERVE_PAGE=1`（默认）时服务商 API **顺便**也托管面板页面。
+> 端口常量只在 `panel/hosting.py` 定义一次；服务商 API 默认**只做 API**（`SERVE_PAGE=0`），页面一律走面板服务（50866）。
 > 原则：**重建能力只在服务商实现一次**；面板 / 官网 / App 都只是它的 client 或控制面。
 
 ---
@@ -22,7 +22,7 @@
 
 | 方法 | 路径               | 说明                                                          |
 | ---- | ------------------ | ------------------------------------------------------------- |
-| GET  | `/`                | 返回面板页面 `web/index.html`（`SERVE_PAGE`）                 |
+| GET  | `/`                | 返回面板页面 `panel/index.html`（**仅** `SERVE_PAGE=1` 时挂载）                 |
 | GET  | `/app-config.json` | 客户端引导：`{api_origin, api_port, pages_port, portal_port}` |
 | GET  | `/health`          | 模型就绪状态（+ 是否支持 API Key）                            |
 
@@ -72,7 +72,7 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 - **用户名规则**（服务端强制）：3–32 个字符，仅 `[A-Za-z0-9_.-]`。
 - **密码规则**（至少 8 位、不得全空白）：**只能在客户端校验**。
   协议只上行 `verifier`，服务器从未接触明文密码，因此无法复核密码强度；
-  网页端实同名规则（`web/index.html`）；服务端额外强制**用户名**规则。
+  网页端实同名规则（`panel/index.html`）；服务端额外强制**用户名**规则。
 - `claim` 同时迁移 **SQLite 会话层**与**内存任务表**的归属，保证并入后立即在历史列表可见。
 
 ### 1.3 重建任务
@@ -233,7 +233,7 @@ X-Auth-Token: <可选>
 - 未命中区分两种 `reason`：`out_of_range`（超 `max_distance`）与 `empty`（该会话
   没有点云）。**绝不**硬给一个远处的点 —— 宁可明说「这里没点到东西」。
 - 实现：`scipy.spatial.cKDTree` + 按会话 **LRU 缓存**（`OMNI3D_SNAP_CACHE`，默认 3），
-  详见 `web/snap_index.py`。缓存以「文件大小 + mtime」为签名，PLY 被覆盖会自动重建。
+  详见 `panel/snap_index.py`。缓存以「文件大小 + mtime」为签名，PLY 被覆盖会自动重建。
 - 资源与实测数字见 [`PERFORMANCE.md`](PERFORMANCE.md) 的吸附一节。
 
 **状态码**：`400` 入参非法（空数组 / 非 3 维 / 含 NaN / 超过 500 点 / `max_distance` 非数字）；
@@ -321,7 +321,7 @@ Content-Type: application/json
 
 | 方法 | 路径               | 说明                                                        |
 | ---- | ------------------ | ----------------------------------------------------------- |
-| GET  | `/`                | 面板页面（读 `web/index.html`）                             |
+| GET  | `/`                | 面板页面（读 `panel/index.html`）                             |
 | GET  | `/app-config.json` | 与 §1.1 同一份引导信息                                      |
 | GET  | `/assets/*`        | 静态资源（品牌图等）                                        |
 | GET  | `/health`          | `{role: "pages", api_origin, api_port}` —— **不是**模型健康 |
@@ -333,7 +333,7 @@ Content-Type: application/json
 
 ## 三、官网（portal，:50867）
 
-控制面：账号 / 计费 / API Key / 流水。**认证端点与服务商共用同一份实现**（`web/auth_api.py`），
+控制面：账号 / 计费 / API Key / 流水。**认证端点与服务商共用同一份实现**（`panel/auth_api.py`），
 路径与 §1.2 完全一致：`/api/auth/{salt,register,challenge,login,logout,me,password}`。
 
 | 方法     | 路径                          | 说明                                                                                                |
@@ -352,7 +352,7 @@ Content-Type: application/json
 | GET/POST | `/api/p/keys`                 | 列出 / 新建 API Key（**明文只在新建响应里出现一次**）                                               |
 | POST     | `/api/p/keys/{key_id}/revoke` | 吊销                                                                                                |
 
-计费常量（单价 / 包规格 / 折扣 / 充值档 / 重置周期）全部在 `web/portal_store.py` 顶部；
+计费常量（单价 / 包规格 / 折扣 / 充值档 / 重置周期）全部在 `panel/portal_store.py` 顶部；
 扣减顺序（计划包 → 用量包 → 余额）与 `BETA_FREE` 语义见 `CONTEXT.md` §3。
 
 ---

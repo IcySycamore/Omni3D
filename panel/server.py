@@ -1,7 +1,7 @@
 """Omni3D 轻量重建服务（FastAPI）。
 
 接口：
-- GET  /                 前端页面（index.html，同源托管；`SERVE_PAGE=0` 可关）
+- GET  /                 前端页面（index.html，**仅** SERVE_PAGE=1 时；默认关）
 - GET  /app-config.json  客户端引导配置（默认 API 地址 / 端口）
 - GET  /health           模型加载状态
 - POST /reconstruct      上传图片包 → 3D 点云（同步，兼容旧客户端/web）
@@ -16,7 +16,7 @@
 
 设计：
 - 模型在启动时后台线程加载（首次加载需数分钟），未就绪时 /health 返回 not ready
-- 复用 app/core/pipeline.py（加载→推理→对齐）
+- 复用 server/core/pipeline.py（加载→推理→对齐）
 - 响应包含：降采样点坐标（前端 three.js 渲染）+ 完整 PLY（下载）+ 相机位姿
 
 鉴权：
@@ -36,16 +36,21 @@ import uuid
 from contextvars import ContextVar
 from typing import Any, Optional
 
-# 确保项目根目录在 sys.path（web/ 的上一级）
+# 项目根**无条件**钉到 sys.path 最前：`from panel.xxx` 与 `from server.core import ...`
+# 都靠它，而且「排在 panel/ 前面」是硬要求 —— 理由见下。
+#
+# 为什么不是 `if PROJECT_ROOT not in sys.path: sys.path.insert(0, ...)`：
+# 直接跑 `python panel/server.py` 时，Python 会把**脚本所在目录**（panel/）放进
+# sys.path 前排，于是裸名 `server` 有两个候选 —— 本文件 `panel/server.py` 与顶层
+# 包 `server/`。如果项目根本来就在 sys.path 里（例如设了 PYTHONPATH），那个
+# `not in` 判为假 → 一行都不插 → `from server.core import config` 先命中自己，
+# 以 `ImportError: cannot import name 'core'` 收场。
+# （静态推理认为「一定会炸」、实跑发现「恰好没炸」—— 所以守卫写成真跑一次，
+#   见 tests/test_package_layout.py。）
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-
-# web/ 自身也要在 sys.path（`hosting.py` 就住在这儿；直接跑脚本时本来就满足，
-# 但被别的进程 import 时不一定）
-_WEB_DIR = os.path.dirname(os.path.abspath(__file__))
-if _WEB_DIR not in sys.path:
-    sys.path.insert(0, _WEB_DIR)
+if PROJECT_ROOT in sys.path:
+    sys.path.remove(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
 
 # 必须先导入 torch（本机存在 DLL 加载顺序冲突：其他库先加载会导致 fbgemm.dll 失败）
 import torch  # noqa: E402,F401
@@ -55,8 +60,8 @@ from fastapi import Body, FastAPI, File, Form, Header, UploadFile  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
-from app.core import config  # noqa: E402
-from app.core.geometry import (  # noqa: E402
+from server.core import config  # noqa: E402
+from server.core.geometry import (  # noqa: E402
     OPS,
     GeometryError,
     apply_scale_factor,
@@ -65,28 +70,28 @@ from app.core.geometry import (  # noqa: E402
     resolve_points,
     unit_for,
 )
-from app.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
-from app.core.pointcloud import statistical_outlier_removal  # noqa: E402
-from app.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
+from server.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
+from server.core.pointcloud import statistical_outlier_removal  # noqa: E402
+from server.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
 
-from hosting import (  # noqa: E402
+from panel.hosting import (  # noqa: E402
     API_HOST,
     API_PORT,
     SERVE_PAGE,
     mount_page_routes,
 )
-import api_keys  # noqa: E402
-import auth_api  # noqa: E402
-from task_queue import task_queue  # noqa: E402
-from auth_store import AuthStore  # noqa: E402
-from session_manager import SessionManager  # noqa: E402
-from session_store import SessionStore, anon_owner, user_owner  # noqa: E402
-from snap_index import snap_index  # noqa: E402
+from panel import api_keys  # noqa: E402
+from panel import auth_api  # noqa: E402
+from panel.task_queue import task_queue  # noqa: E402
+from panel.auth_store import AuthStore  # noqa: E402
+from panel.session_manager import SessionManager  # noqa: E402
+from panel.session_store import SessionStore, anon_owner, user_owner  # noqa: E402
+from panel.snap_index import snap_index  # noqa: E402
 
 app = FastAPI(title="Omni3D 重建服务", version="0.4.0")
 
 # ---- 跨源（CORS）----
-# 页面与 API **可以分处两个端口 / 两台机器**（见 `web/pages.py`）：此时浏览器
+# 页面与 API **可以分处两个端口 / 两台机器**（见 `panel/pages.py`）：此时浏览器
 # 发出的每个 `/api/*` 都是跨源请求，没有这几个响应头就会被浏览器直接拦掉
 # （现象：页面能打开，但一切请求「网络错误」，服务端日志里却什么都看不到）。
 # 身份令牌走 `X-Auth-Token` 请求头而非 Cookie，所以不需要 allow_credentials；
@@ -109,8 +114,8 @@ app.add_middleware(
 
 # ---- 页面 / 静态资源 ----
 # 页面本体（`GET /`）、`/assets/*` 与客户端引导配置 `/app-config.json` 都由
-# `hosting.mount_page_routes` 挂载（与 `web/pages.py` 共用同一份实现）。
-# `SERVE_PAGE=0` → 本进程变成**纯 API**：页面交给 web/pages.py 之类的静态宿主。
+# 默认**不挂**：本进程只做 API，页面交给 panel/pages.py（50866）之类的静态宿主。
+# `SERVE_PAGE=1` 时才与面板共用同一份 `mount_page_routes` 实现。
 if SERVE_PAGE:
     mount_page_routes(app)
 
@@ -435,7 +440,7 @@ def _collect_points(output_dict, conf_percentile=None):
 
 
 def _reject_outliers(points, colors):
-    """统计离群点剔除（SOR，实现见 `app.core.pointcloud`）。
+    """统计离群点剔除（SOR，实现见 `server.core.pointcloud`）。
 
     `config.SOR_K` / `config.SOR_STD` 任一 ``<= 0`` 即**关闭**。
     为什么不能只靠置信度过滤：置信度删的是「模型没把握的点」，而背景飞点往往
@@ -884,7 +889,7 @@ def delete_task(task_id: str):
 
 
 # ---- 认证：挑战-应答（明文密码不上网、不落库）----
-# 端点实现**只有一份**：`auth_api.register_auth_routes`（官网门户 web/portal.py 也挂它）。
+# 端点实现**只有一份**：`auth_api.register_auth_routes`（官网门户 panel/portal.py 也挂它）。
 # 这里额外把「API Key 身份」注入进去，于是 X-Api-Key 也能过 /api/auth/me。
 _auth_routes = auth_api.register_auth_routes(
     app,
@@ -1090,7 +1095,7 @@ def measure_session(session_id: str, body: Any = Body(...),
     })
 
 
-# ---- 全量点云吸附（测量必须作用在全量点上，实现见 web/snap_index.py）----
+# ---- 全量点云吸附（测量必须作用在全量点上，实现见 panel/snap_index.py）----
 _SNAP_MAX_QUERIES = 500
 
 

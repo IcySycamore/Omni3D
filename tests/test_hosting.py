@@ -3,9 +3,9 @@
 覆盖：
 - 端口 / 引导配置的单一来源（`hosting.py`），`SERVER_PORT` 与 `API_PORT` 不漂移；
 - `mount_page_routes` 真的挂上了 `/`、`/assets/*`、`/app-config.json`，
-  且 `/` 返回的就是 `web/index.html`；
+  且 `/` 返回的就是 `panel/index.html`；
 - 重建服务默认**仍然**托管页面（旧地址照旧可用），且带 `CORS_ORIGINS` 放行；
-- 页面服务（`web/pages.py`）可独立导入，且它的 `/health` 明确不是模型状态。
+- 页面服务（`panel/pages.py`）可独立导入，且它的 `/health` 明确不是模型状态。
 
 端点用**直接调用函数**的方式测，不启 TestClient —— 后者会触发 FastAPI startup
 事件去加载模型（几十秒且与本次无关）。
@@ -22,13 +22,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import hosting  # noqa: E402
-import pages  # noqa: E402
-import server  # noqa: E402
+from panel import hosting  # noqa: E402
+from panel import pages  # noqa: E402
+from panel import server  # noqa: E402
 
 
 def _endpoint(app, path):
@@ -101,11 +100,16 @@ class TestMountPageRoutes:
 
 
 class TestReconstructionServerSplit:
-    def test_still_serves_page_by_default(self):
-        """`SERVE_PAGE` 默认开：`http://127.0.0.1:50865/` 依旧能直接打开页面。"""
-        assert hosting.SERVE_PAGE is True
-        assert "/" in {getattr(r, "path", None) for r in server.app.routes}
-        assert "/app-config.json" in {getattr(r, "path", None) for r in server.app.routes}
+    def test_is_api_only_by_default(self):
+        """`SERVE_PAGE` 默认**关**：50865 只做重建 API，页面一律走 50866。
+
+        曾经默认开（“旧习惯 / 手机 WebView 走 adb reverse”），代价是**两个
+        端口都吐同一份页面**：实测排查时把它当成了“50865 上残留的旧面板”。
+        """
+        assert hosting.SERVE_PAGE is False
+        paths = {getattr(r, "path", None) for r in server.app.routes}
+        assert "/" not in paths, "50865 不该再托管页面（页面归 50866）"
+        assert "/app-config.json" not in paths
 
     def test_cors_opens_for_cross_origin_pages(self):
         """页面与 API 分处两个端口时，请求是跨源的，必须放行。"""

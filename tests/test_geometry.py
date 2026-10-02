@@ -19,12 +19,11 @@ import pytest
 import torch  # noqa: F401,I001
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import server  # noqa: E402
-from app.core.geometry import (  # noqa: E402
+from panel import server  # noqa: E402
+from server.core.geometry import (  # noqa: E402
     GeometryError,
     apply_scale_factor,
     compute,
@@ -36,7 +35,7 @@ from app.core.geometry import (  # noqa: E402
     triangle_area,
     unit_for,
 )
-from session_store import SessionStore, anon_owner  # noqa: E402
+from panel.session_store import SessionStore, anon_owner  # noqa: E402
 
 O = [0.0, 0.0, 0.0]
 X = [1.0, 0.0, 0.0]

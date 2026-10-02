@@ -125,10 +125,10 @@ Windows（推荐）：
 跨平台：
 
 ```bash
-python web/server.py     # 服务商 API（首次启动加载模型，数十秒）
-python web/pages.py      # 面板页面（不含模型依赖）
-python web/portal.py     # 官网
-python web/mock_server.py  # 无模型的假服务端（前端调试用）
+python panel/server.py     # 服务商 API（首次启动加载模型，数十秒）
+python panel/pages.py      # 面板页面（不含模型依赖）
+python panel/portal.py     # 官网
+python panel/mock_server.py  # 无模型的假服务端（前端调试用）
 ```
 
 ## 端口与配置
@@ -139,7 +139,7 @@ python web/mock_server.py  # 无模型的假服务端（前端调试用）
 | `HOST` / `PORT`               | `127.0.0.1` / `50865`                   | 服务商 API 监听地址与端口                                    |
 | `PAGES_HOST` / `PAGES_PORT`   | 同 `HOST` / `50866`                     | 面板页面                                                     |
 | `PORTAL_HOST` / `PORTAL_PORT` | 同 `HOST` / `50867`                     | 官网                                                         |
-| `SERVE_PAGE`                  | `1`                                     | 服务商 API 是否顺便托管面板页面（纯 API 部署置 `0`）         |
+| `SERVE_PAGE`                  | `0`                                     | 服务商 API 是否顺便托管面板页面（默认否；单端口部署才置 `1`）         |
 | `API_ORIGIN`                  | 空                                      | 页面默认去哪个地址找 API（空 = 按“页面同主机 + API 端口”推） |
 | `CORS_ORIGINS`                | `*`                                     | 允许的跨源来源（令牌走头而非 Cookie，故不用凭据）            |
 | `MOCK_MODE`                   | `false`                                 | 容器入口：`api` 角色跑 mock 服务而非真模型                   |
@@ -148,7 +148,7 @@ python web/mock_server.py  # 无模型的假服务端（前端调试用）
 | `OMNI3D_API_KEYS`             | 空                                      | 静态 API Key（`key=用户名,...`；正式环境用官网签发的 Key）   |
 | `BETA_FREE`（代码常量）       | `True`                                  | 验证阶段：包照扣、余额不扣、额度不足不拦                     |
 
-> 端口常量的**单一来源**是 `web/hosting.py`，别在别处再写一份默认值。
+> 端口常量的**单一来源**是 `panel/hosting.py`，别在别处再写一份默认值。
 
 ## 常见问题
 

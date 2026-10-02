@@ -3,9 +3,9 @@
 三个角色各占一个端口，互不混在一起：
 
 ==================  ==================  ================================================
-面板 panel          ``PAGES_PORT``      web/pages.py —— 用户干活的地方（web client）
+面板 panel          ``PAGES_PORT``      panel/pages.py —— 用户干活的地方（web client）
 **官网 portal**     ``PORTAL_PORT``     **本文件** —— 注册登录 / 买套餐 / 管 API Key
-服务商 API          ``API_PORT``        web/server.py —— 真正跑重建（数据面）
+服务商 API          ``API_PORT``        panel/server.py —— 真正跑重建（数据面）
 ==================  ==================  ================================================
 
 官网与服务商**同机部署、共享同一份 SQLite**（``data/``）：账号在
@@ -29,17 +29,20 @@ from __future__ import annotations
 import os
 import sys
 
-_WEB_DIR = os.path.dirname(os.path.abspath(__file__))
-if _WEB_DIR not in sys.path:
-    sys.path.insert(0, _WEB_DIR)
+_PANEL_DIR = os.path.dirname(os.path.abspath(__file__))
+# 项目根**无条件**钉到 sys.path 最前 —— 理由见 panel/server.py 里的长注释。
+_PROJECT_ROOT = os.path.dirname(_PANEL_DIR)
+if _PROJECT_ROOT in sys.path:
+    sys.path.remove(_PROJECT_ROOT)
+sys.path.insert(0, _PROJECT_ROOT)
 
 from fastapi import Body, FastAPI, Header  # noqa: E402
 from fastapi.responses import HTMLResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-from auth_api import register_auth_routes  # noqa: E402
-from auth_store import AuthStore  # noqa: E402
-from hosting import (  # noqa: E402
+from panel.auth_api import register_auth_routes  # noqa: E402
+from panel.auth_store import AuthStore  # noqa: E402
+from panel.hosting import (  # noqa: E402
     API_ORIGIN,
     API_PORT,
     ASSETS_DIR,
@@ -47,7 +50,7 @@ from hosting import (  # noqa: E402
     PORTAL_HOST,
     PORTAL_PORT,
 )
-from portal_store import (  # noqa: E402
+from panel.portal_store import (  # noqa: E402
     BETA_FREE,
     METRICS,
     PACKS,
@@ -58,10 +61,9 @@ from portal_store import (  # noqa: E402
     PortalStore,
     plan_by_id,
 )
-from session_manager import SessionManager  # noqa: E402
+from panel.session_manager import SessionManager  # noqa: E402
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(_ROOT, "data")
+DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
 
 auth_store = AuthStore(os.path.join(DATA_DIR, "omni3d_users.db"))
 session_manager = SessionManager()
@@ -90,7 +92,7 @@ def _login_or_401(token: str | None):
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
     """官网页面（单文件，自带样式与脚本）。"""
-    with open(os.path.join(_WEB_DIR, "portal.html"), encoding="utf-8") as fh:
+    with open(os.path.join(_PANEL_DIR, "portal.html"), encoding="utf-8") as fh:
         return fh.read()
 
 

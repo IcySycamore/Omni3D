@@ -15,8 +15,8 @@ import numpy as np
 import pytest
 import torch  # noqa: F401  (必须早于 cv2 —— fbgemm.dll 加载顺序)
 
-from app.core import config
-from app.core.pipeline import (
+from server.core import config
+from server.core.pipeline import (
     apply_similarity,
     metric_alignment,
     run_reconstruction,
@@ -227,7 +227,7 @@ def test_source_override_is_reported(model, frames, baseline):
 
 def test_quality_stats_switches_conf_key(baseline):
     """`quality_stats` 必须跟着来源读对应的置信度图（conf_local vs conf）。"""
-    from app.core.pipeline import pointcloud_keys, quality_stats
+    from server.core.pipeline import pointcloud_keys, quality_stats
 
     out, _ = baseline
     for source in ("local", "global"):

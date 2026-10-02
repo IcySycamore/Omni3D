@@ -1,4 +1,4 @@
-"""把 web/portal.html 里的 <script type="module"> 抽出来，供 `node --check` 校验语法。
+"""把 panel/portal.html 里的 <script type="module"> 抽出来，供 `node --check` 校验语法。
 
 和 `_check_js.py`（面板）同一个套路：不依赖浏览器，快速发现括号 / 引号 / 模板串错误。
 """
@@ -8,7 +8,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORTAL = os.path.join(ROOT, "web", "portal.html")
+PORTAL = os.path.join(ROOT, "panel", "portal.html")
 OUT = os.path.join(HERE, "_portal_module.mjs")
 
 with open(PORTAL, encoding="utf-8") as fh:

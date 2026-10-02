@@ -1,4 +1,4 @@
-"""把 web/index.html 里的 <script type="module"> 抽出来，供 `node --check` 做语法校验。
+"""把 panel/index.html 里的 <script type="module"> 抽出来，供 `node --check` 做语法校验。
 
 不依赖浏览器，能在 CI / 命令行里快速发现括号、引号、模板串这类低级错误。
 """
@@ -8,7 +8,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HERE = os.path.dirname(os.path.abspath(__file__))
-INDEX = os.path.join(ROOT, "web", "index.html")
+INDEX = os.path.join(ROOT, "panel", "index.html")
 OUT = os.path.join(HERE, "_index_module.mjs")
 
 with open(INDEX, encoding="utf-8") as fh:

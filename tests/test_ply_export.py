@@ -18,11 +18,10 @@ import pytest
 import torch  # noqa: F401,I001
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import server  # noqa: E402
+from panel import server  # noqa: E402
 
 
 def _header_and_body(ply: bytes):

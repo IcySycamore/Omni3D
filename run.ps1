@@ -12,7 +12,7 @@
 
 .NOTES
   三个角色各占一个端口：面板 panel(50866) / 官网 portal(50867) / 服务商 API(50865)。
-  面板通常直接开 http://127.0.0.1:50865/ 就行（重建服务顺便托管页面）。
+  面板开 http://127.0.0.1:50866/ —— 50865 **只做 API**，不再托管页面。
 
   旧的 PyQt5 桌面客户端已归档到 archive/desktop-pyqt-vtk/，不再提供入口。
   解释器解析顺序：$env:OMNI3D_PY → 常见 conda 环境路径 → PATH 里的 python。
@@ -69,9 +69,9 @@ if (-not $probeOk) {
 }
 
 switch ($Target) {
-    "server" { & $py (Join-Path $root "web\server.py") @Rest }
-    "pages" { & $py (Join-Path $root "web\pages.py") @Rest }
-    "portal" { & $py (Join-Path $root "web\portal.py") @Rest }
+    "server" { & $py (Join-Path $root "panel\server.py") @Rest }
+    "pages" { & $py (Join-Path $root "panel\pages.py") @Rest }
+    "portal" { & $py (Join-Path $root "panel\portal.py") @Rest }
     "test" { & $py -m pytest (Join-Path $root "tests") -q @Rest }
     "bench" { & $py (Join-Path $root "scripts\bench_reconstruct.py") @Rest }
 }

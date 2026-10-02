@@ -16,7 +16,7 @@ import os
 import secrets
 from typing import Optional
 
-from portal_store import PortalStore
+from panel.portal_store import PortalStore
 
 ENV_NAME = "OMNI3D_API_KEYS"
 

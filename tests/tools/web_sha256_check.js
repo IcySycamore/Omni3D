@@ -1,5 +1,5 @@
 /*
- * 校验 web/index.html 内联的纯 JS SHA-256 实现是否与标准一致。
+ * 校验 panel/index.html 内联的纯 JS SHA-256 实现是否与标准一致。
  *
  * 为什么需要它：网页端登录用 sha256(salt+password) 做挑战-应答，
  * 而页面必须用纯 JS 实现（crypto.subtle 只在安全上下文可用，
@@ -14,7 +14,7 @@ const crypto = require("crypto");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..", "..");
-const src = fs.readFileSync(path.join(root, "web", "index.html"), "utf8");
+const src = fs.readFileSync(path.join(root, "panel", "index.html"), "utf8");
 
 const start = src.indexOf("const _SHA256_K");
 const end = src.indexOf("// ==================== 身份：client_id");
