@@ -5795,6 +5795,9 @@
           return isFinite(r) && r > 0 ? r : 1;
         }
         // 步长夹逼：先取绝对值夹到 [lo, hi]，再带回符号。
+        // ⚠️ 只给**平移**用它（平移的步长会随距离趋近 0）。缩放**不能**用：
+        //    给步长加下限后，从最近处往回滚时每格只能挪固定的一点点（线性增长），
+        //    实测就是「缩放也卡住了」——重得能自己把自己锁死在模型中心。
         function clampStep(step) {
           if (!isFinite(step) || step === 0) return 0;
           const r = modelRadius();
@@ -5820,11 +5823,15 @@
           const offset = camera.position.clone().sub(target);
           const dist = offset.length();
           if (!isFinite(dist) || dist <= 0) return;
-          // 往里推为正；同样先按相对关系算，再夹上下限
-          const step = clampStep(dist * (1 - scale));
-          // 不穿过环绕中心：相机停在中心上朝向会退化，留一点余量
-          const floor = Math.max(modelRadius() * 0.001, MIN_DIST);
-          const len = Math.max(dist - step, floor);
+          // 步长保持**相对**（远看快、近看细）：zoomBy 的倍率本身就不随距离变化，
+          // 所以不需要下限；只夹一个上限，防在很远的地方一滚就飞出模型。
+          const step = dist * (1 - scale);
+          const hi = modelRadius() * 0.5;
+          const bounded = Math.max(-hi, Math.min(hi, step));
+          // 「最近处」不能是环绕中心本身：那里朝向退化，而且看什么都一样。
+          // 留 5% 半径 —— 够近，又不是一个出不来的死点。
+          const floor = Math.max(modelRadius() * 0.05, MIN_DIST);
+          const len = Math.max(dist - bounded, floor);
           camera.position.copy(target).add(offset.setLength(len));
         }
 

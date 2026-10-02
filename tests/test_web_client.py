@@ -1379,11 +1379,16 @@ class TestCameraStepBounds:
             "平移步长没夹上下限"
         )
         zoom = _fn_body(index_html, "zoomBy")
-        assert _contains_text(zoom, "const step = clampStep(dist * (1 - scale));"), (
-            "缩放步长没夹上下限"
+        # ⚠️ 缩放**只夹上限**：给步长加下限后，从最近处往回滚时每格只能挪固定的
+        #    一点点（线性增长），实测就是「缩放也卡住了」——自己把自己锁在中心。
+        assert _contains_text(zoom, "const step = dist * (1 - scale);")
+        assert _contains_text(zoom, "const bounded = Math.max(-hi, Math.min(hi, step));")
+        assert "clampStep(" not in zoom, "缩放不该用 clampStep（下限会把它锁死）"
+        # 「最近处」不能是环绕中心：那里朝向退化、看什么都一样，而且出不来
+        assert _contains_text(
+            zoom, "const floor = Math.max(modelRadius() * 0.05, MIN_DIST);"
         )
-        # 仍不许穿过环绕中心
-        assert _contains_text(zoom, "const len = Math.max(dist - step, floor);")
+        assert _contains_text(zoom, "const len = Math.max(dist - bounded, floor);")
 
     def test_the_bounds_use_the_model_scale(self, index_html):
         """上下限必须按模型尺度给 —— 否则换个大小的模型手感就变了。"""
