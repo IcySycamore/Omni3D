@@ -7821,6 +7821,14 @@
       const HOVER_RING_PX = 12;
       const HOVER_RING_OUTER_WORLD = 0.028;
       let hoverMarker = null; // 悬停高亮圆环
+      // 引导线（只服务面积/体积这种「手选全部顶点」的工具）：
+      //   guideLine = 橡皮筋：上一个顶点 → 当前指向的落点
+      //   closeLine = 收口预览（虚线）：当前指向的落点 → 起点
+      let guideLine = null;
+      let closeLine = null;
+      // 最近一次悬停到的世界坐标。落点后引导线要立刻接上，
+      // 而那时鼠标并没有动 —— 不记下来就只能等下一次 pointermove 才刷新。
+      let lastHoverWorld = null;
 
       function pickRadiusPx() {
         const rect = STATE.viewerRenderer.domElement.getBoundingClientRect();
@@ -7842,6 +7850,95 @@
             dist) /
           Math.max(rect.height, 1)
         );
+      }
+
+      // ---- 面积/体积的引导线 ----
+      // 之前这里**只有**一个悬停圆环：用户看不到「下一条边会画到哪」，
+      // 也不知道环会怎么合上，只能边猜边点，最后还要精确点回起点才能收口
+      // （在稠密点云里很难点中）—— 用户原话「体验很难受」。
+      // 现在给两条线：
+      //   ① 实线 = 下一个落点将要连出的边（橡皮筋）
+      //   ② 虚线 = 收口后会补上的那条边（当前落点 → 起点）
+      // 两者都挂在 scene 上、用**世界坐标** —— 与 hoverMarker 同一套坐标约定
+      // （元素存原始坐标，画之前要过 elementWorldPoint 正旋）。
+      function makeGuideLine(dashed) {
+        const geom = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(),
+          new THREE.Vector3(),
+        ]);
+        const mat = dashed
+          ? new THREE.LineDashedMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0.5,
+              dashSize: 1,
+              gapSize: 1,
+            })
+          : new THREE.LineBasicMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0.85,
+            });
+        const line = new THREE.Line(geom, mat);
+        line.renderOrder = 997;
+        line.frustumCulled = false;
+        STATE.viewerScene.add(line);
+        return line;
+      }
+
+      function hideGuideLines() {
+        if (guideLine) guideLine.visible = false;
+        if (closeLine) closeLine.visible = false;
+      }
+
+      // 每次悬停 / 落点后刷新。hoverWorld = 当前指向的世界坐标（null = 没指向）
+      function updateGuideLines(hoverWorld) {
+        lastHoverWorld = hoverWorld || null;
+        const ok =
+          !!hoverWorld &&
+          isMultiPointTool(STATE.activeTool) &&
+          !!STATE.viewerScene &&
+          !!STATE.viewerPointCloud;
+        const pts = ok
+          ? pendingPointElements()
+              .map((el) => elementVector(el))
+              .filter(Boolean)
+              .map((v) => elementWorldPoint([v.x, v.y, v.z]))
+          : [];
+        if (!pts.length) {
+          hideGuideLines();
+          return;
+        }
+        // ① 橡皮筋：上一个顶点 → 当前落点
+        if (!guideLine) guideLine = makeGuideLine(false);
+        const last = pts[pts.length - 1];
+        const g = guideLine.geometry.getAttribute("position");
+        g.setXYZ(0, last.x, last.y, last.z);
+        g.setXYZ(1, hoverWorld.x, hoverWorld.y, hoverWorld.z);
+        g.needsUpdate = true;
+        guideLine.geometry.computeBoundingSphere();
+        guideLine.visible = true;
+        // ② 收口预览：当前落点 → 起点。只在「点数已够最小个数」且「还没收口」时画
+        const need = (TOOL_DEFS[STATE.activeTool] || {}).need || 0;
+        const notOnStart = hoverWorld.distanceToSquared(pts[0]) > 1e-12;
+        const wantClose =
+          pts.length >= need && notOnStart && openVertices().length > 0;
+        if (!wantClose) {
+          if (closeLine) closeLine.visible = false;
+          return;
+        }
+        if (!closeLine) closeLine = makeGuideLine(true);
+        const c = closeLine.geometry.getAttribute("position");
+        c.setXYZ(0, hoverWorld.x, hoverWorld.y, hoverWorld.z);
+        c.setXYZ(1, pts[0].x, pts[0].y, pts[0].z);
+        c.needsUpdate = true;
+        closeLine.geometry.computeBoundingSphere();
+        // 虚线按**屏幕尺度**定长：写死世界单位的话，拉远一段虚线就是一条实线
+        const px = worldPerPixel();
+        closeLine.material.dashSize = px * 7;
+        closeLine.material.gapSize = px * 5;
+        closeLine.computeLineDistances();
+        closeLine.visible = true;
       }
 
       // ---- 拾取：在**屏幕空间**直接遍历渲染点云 ----
@@ -8096,6 +8193,7 @@
         const active = STATE.measureMode || STATE.activeTool === "select";
         if (!active || !STATE.viewerPointCloud) {
           if (hoverMarker) hoverMarker.visible = false;
+          hideGuideLines();
           return;
         }
         const p = pickNearestPoint(event);
@@ -8126,6 +8224,8 @@
         } else {
           hoverMarker.visible = false;
         }
+        // 引导线与圆环同步（面积/体积才画；其他工具会自己隐掉）
+        updateGuideLines(p || null);
       }
 
       function addMeasurementPoint(point) {
@@ -8907,7 +9007,7 @@
           label: "面积",
           need: 3,
           op: "polygon_area",
-          hint: "沿这块面的边缘依次点它的拐角（会自动连成线），点满 3 个起就有数值；再点回第一个拐角把环闭合，状态栏点「完成」。",
+          hint: "沿这块面的边缘依次点拐角：每落一个点就连一条线，虚线预告收口的位置，够 3 个起点「完成」即可（会自动把环合上）。",
         },
         triangleArea: {
           label: "三角形面积",
@@ -8919,7 +9019,7 @@
           label: "体积",
           need: 4,
           op: "polyhedron_volume",
-          hint: "依次点这个立体的各个顶点（会自动连成线），点满 4 个起就有数值；再点回第一个顶点把环闭合，状态栏点「完成」。",
+          hint: "先点 3 个定底面，再点 1 个定高：每落一个点就连一条线，虚线预告收口的位置，够 4 个起点「完成」即可。",
         },
       };
       // 工具组的默认顺序与设置页的「工具组」配置共用
@@ -8986,19 +9086,18 @@
           // 进度看**本次引导**（pending）。元素列表里的选中集会在点工具那一刻
           // 被采纳进来（见 adoptSelectionAsVertices），所以这里不用再看它。
           const got = pendingPointElements().length;
-          const open = openVertices().length;
           const active = STATE.activeTool === tool;
+          // 不再要求「已经收口」才可完成 —— **「完成」自己会收口**。
+          // 否则用户得先猜着把环点上、按钮才亮，那正是「难受」的来源之一。
           return {
             enabled: true,
-            canApply: active && got >= need && open === 0,
+            canApply: active && got >= need,
             have: got,
             need,
             reason:
               !active || !got
                 ? `至少要 ${need} 个顶点`
-                : open
-                  ? `已取 ${got} 个 · 还差收口`
-                  : `已取 ${got} 个 · 可完成`,
+                : `已取 ${got} 个 · 可完成`,
           };
         }
         if (need && have === need) {
@@ -9311,6 +9410,8 @@
         // 就会去拾点，框选也会被误判成落点。
         STATE.measureMode = !!TOOL_DEFS[def].need;
         if (!STATE.measureMode) STATE.pendingIds = [];
+        // 换工具就把引导线收掉（否则它会留在画面上，看着像还有一次没完成的测量）
+        if (!isMultiPointTool(def)) hideGuideLines();
         document
           .querySelectorAll("#editorToolbar .tool-btn[data-tool]")
           .forEach((b) => {
@@ -9474,6 +9575,8 @@
         STATE.pendingIds = [];
         renderElementList();
         renderElements();
+        // 引导线跟着一起收：否则它留在画面上，看着像还有一次没完成的测量
+        hideGuideLines();
         updateToolStates();
         if (!silent) setToolHint("已取消本次测量（已落的点保留）");
         return true;
@@ -9819,10 +9922,8 @@
         // 连线约束：上一个顶点已经接了两条边，就不能再接了
         const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
         if (prevId && degreeOfPoint(prevId) >= 2) {
-          showToast(
-            "上一个取点已经连了两条线，请点回起点收口，或按 Esc 重新开始",
-            "warn",
-          );
+          // 环已经合上了：再点云就是「想开新的一轮」—— 说清下一步就行
+          showToast("环已收口 · 点「完成」结束，或 Esc 重来", "warn");
           return;
         }
 
@@ -9862,6 +9963,9 @@
         STATE.pendingIds.push(el.id);
         renderElementList();
         renderElements();
+        // 落点后引导线要立刻接上这个新顶点（此刻鼠标没动，不刷新它就会
+        // 还停在上一段上，看起来像「线没跟上」）
+        updateGuideLines(lastHoverWorld);
         // 先落库，这样 Esc 后这些点依然在（#33）
         await persistCurrent();
 
@@ -9878,10 +9982,10 @@
       // 那些由左边的 opReq 说，两边都写就成了用户说的「一堆过多的说明」。
       function progressHint(tool) {
         const got = pendingPointElements().length;
-        const open = openVertices().length;
+        // 收口不用用户操心（「完成」自己会做），所以这里**只说还差几个点**；
+        // 够数之后没什么要说的 —— 由左边的「已取 N 个 · 可完成」表达。
         if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;
-        // 点数够且已闭环时不该走到这里（那条路径会直接显示数值）
-        return open ? "点回起点把这个环接上" : "";
+        return "";
       }
 
       // 落点后的实时数值：**只算不存**（preview）。
@@ -9944,38 +10048,43 @@
         return bestD <= elementPickRadius() ? best : null;
       }
 
-      // 从上一个顶点连一条线到指定的（本次已取的）顶点 —— 「收口」走这里
-      async function linkToPendingVertex(el) {
-        const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
-        if (!prevId) {
-          showToast("先落一个点再连", "warn");
-          return;
-        }
-        if (prevId === el.id) {
-          showToast("不能连到它自己", "warn");
-          return;
-        }
-        if (degreeOfPoint(prevId) >= 2) {
-          showToast(
-            "上一个取点已经连了两条线，请点回起点收口，或按 Esc 重新开始",
-            "warn",
-          );
-          return;
-        }
-        if (degreeOfPoint(el.id) >= 2) {
-          showToast(
-            `顶点 #${el.id.slice(-4)} 已经连了两条线，不能再连`,
-            "warn",
-          );
-          return;
+      // 建一条连线 —— **唯一的建边路径**（含「每个顶点最多连两条」这条校验）。
+      // opts.silent：失败只返回 false、不弹提示（调用方自己组织文案 —— 比如
+      // 「完成」要报的是「收不了口」，而不是某一条边的问题）。
+      async function addEdgeBetween(aId, bId, opts = {}) {
+        const warn = (msg) => {
+          if (!opts.silent) showToast(msg, "warn");
+          return false;
+        };
+        if (!aId || !bId) return warn("先落一个点再连");
+        if (aId === bId) return warn("不能连到它自己");
+        if (degreeOfPoint(aId) >= 2 || degreeOfPoint(bId) >= 2) {
+          return warn("这个顶点已经连满两条线");
         }
         pushUndo();
-        STATE.elements.push(makeEdgeElement(prevId, el.id));
+        STATE.elements.push(makeEdgeElement(aId, bId));
         await persistCurrent();
         renderElementList();
         renderElements();
         await previewMeasure(TOOL_DEFS[STATE.activeTool]);
         updateToolStates();
+        return true;
+      }
+
+      // 从上一个顶点连一条线到指定的（本次已取的）顶点 —— **手动**收口走这里
+      async function linkToPendingVertex(el) {
+        const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
+        return await addEdgeBetween(prevId, el.id);
+      }
+
+      // **自动**收口：把两个「只剩一条线」的端点接上（正常就是起点与最后一个点）。
+      // 用户不必再精确点回起点 —— 那一下在稠密点云里很难点中（用户：「体验很难受」）。
+      async function closeRing() {
+        const ends = pendingPointElements().filter(
+          (el) => degreeOfPoint(el.id) === 1,
+        );
+        if (ends.length !== 2) return false;
+        return await addEdgeBetween(ends[0].id, ends[1].id, { silent: true });
       }
 
       // 「完成」：手选的顶点必须围成闭环 —— **所有顶点度数都得是 2**。
@@ -9992,7 +10101,6 @@
       async function finishMultiPointMeasure(tool) {
         const def = toolDefOf(tool);
         const refs = STATE.pendingIds.slice();
-        const open = openVertices();
         if (!refs.length || refs.length < (def.need || 0)) {
           showToast(
             `${def.label}至少需要 ${def.need} 个顶点，现在只有 ${refs.length} 个`,
@@ -10000,11 +10108,12 @@
           );
           return;
         }
-        if (open.length) {
-          showToast(
-            `还没围起来：有 ${open.length} 个顶点的连线数不是 2 —— 请把线连回起点`,
-            "warn",
-          );
+        // **自动收口**：把首尾接上（两个端点各只有一条线）。
+        // 用户原话「最后一个落点连线回起点」—— 这一下不该让他自己去找起点。
+        if (openVertices().length) await closeRing();
+        const open = openVertices().length;
+        if (open) {
+          showToast(`还有 ${open} 个顶点没连满两条线，收不了口`, "warn");
           return;
         }
         // 成功之后才清引导 —— 失败（服务端拒了 / 网络断）时保留，用户能接着改
@@ -10012,6 +10121,7 @@
           STATE.pendingIds = [];
           // 提示条复位，否则测量都完成了还挂着「已取 N 个顶点」
           setToolHint("");
+          hideGuideLines();
         }
         updateToolStates();
       }

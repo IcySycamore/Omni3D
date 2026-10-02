@@ -80,15 +80,43 @@ class TestMultiVertexMeasurement:
         assert expected in index_html
 
     def test_links_cannot_exceed_degree_two(self, index_html):
-        """连线只允许接到度数 < 2 的顶点 —— 每个顶点最多两条边，连不出分叉。"""
-        assert "function degreeOfPoint" in index_html
-        assert "degreeOfPoint(prevId) >= 2" in index_html
-        assert "degreeOfPoint(el.id) >= 2" in index_html
+        """连线只允许接到度数 < 2 的顶点 —— 每个顶点最多两条边，连不出分叉。
 
-    def test_finish_requires_every_vertex_to_have_degree_two(self, index_html):
-        """「完成」要求围成闭环：没收口时必须显式拒绝，不能静默放行。"""
-        assert "function openVertices" in index_html
-        assert "还没围起来" in index_html
+        现在建边路径收敛成一个 `addEdgeBetween`（落点、手动收口、自动收口都走它），
+        所以校验只需在这一处；但仍要盯住它没被绕过去。
+        """
+        assert "function degreeOfPoint" in index_html
+        assert "function addEdgeBetween" in index_html
+        assert "degreeOfPoint(aId) >= 2 || degreeOfPoint(bId) >= 2" in index_html
+        # 落点那条路要单独拦：连满的上一点不能再接新点
+        assert "degreeOfPoint(prevId) >= 2" in index_html
+
+    def test_finish_closes_the_ring_then_verifies_it(self, index_html):
+        """「完成」= **自动收口** + 校验闭环。
+
+        旧实现要求用户先精确点回起点、按钮才亮，再点「完成」——
+        在稠密点云里很难点中（用户：「体验很难受」）。
+        新契约：先 `closeRing()`，**然后仍然校验** `openVertices()` 为空才真正提交
+        —— 收不回来时必须显式拒绝，不能静默放行。
+        """
+        body = _fn_body(index_html, "finishMultiPointMeasure")
+        assert "closeRing()" in body, "「完成」没有自动收口"
+        assert "openVertices()" in body, "自动收口之后没有再校验闭环"
+        assert "收不了口" in body, "收不回来时必须显式拒绝"
+        # 收口只把两个「只剩一条线」的端点接上，不能乱连
+        close_body = _fn_body(index_html, "closeRing")
+        assert "degreeOfPoint(el.id) === 1" in close_body
+        assert "ends.length !== 2" in close_body
+
+    def test_finish_is_available_once_enough_vertices(self, index_html):
+        """顶点够了「完成」就得亮 —— 不再要求用户先手工收口。
+
+        要求 `open === 0` 的话，用户得先猜着把环点上、按钮才亮，
+        那正是「难受」的来源之一。
+        """
+        body = _fn_body(index_html, "toolStateFor")
+        assert "canApply: active && got >= need," in body
+        assert "open === 0" not in body
 
     def test_the_action_button_says_finish_for_these_tools(self, index_html):
         """多点工具的动作按钮是「完成」而不是「应用」。"""
