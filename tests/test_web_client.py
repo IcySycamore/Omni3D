@@ -652,25 +652,208 @@ class TestSettingsTabs:
             assert glyph not in index_html
 
 
+# 这些字符的粗细与形状随平台字体变，还会被当成 emoji —— 界面上不许拿它们当图标
+BANNED_GLYPHS = "●○◈✕✓↑↓🗑📣🎥📷🗂☰■▭▱△▣╱✋🎨🧭🧹📏❓📖⬇↶↷⤾"
+
+
+def _js_object_keys(html: str, const_name: str) -> set[str]:
+    """取一个 JS 对象字面量的顶层键（`const X = { ... };`）。
+
+    只按行首匹配，够这些小图标表用，不引 JS 解析器。
+    """
+    marker = f"const {const_name} = {{"
+    assert marker in html, f"没有 {const_name}"
+    block = html.split(marker)[1].split("\n      };")[0]
+    return set(re.findall(r"""^\s*["']?([A-Za-z_][\w:.-]*)["']?\s*:""", block, re.M))
+
+
+class TestUiIconsAreSvg:
+    """图标只能有一个来源，而且只能是自绘 SVG。"""
+
+    def test_no_glyph_is_assigned_as_button_text(self, index_html):
+        """按钮文字不许用字形拼（`textContent = "● 录制"` 这种）。
+
+        真迹是：图标和文字在同一个字符串里，于是**改文字就得把图标再抄一遍**，
+        而且字形的粗细形状随平台字体变。现在图标走 `data-icon` 槽位、
+        文字走 `.btn-text`，两者互不干扰（`setBtnText` 不会抹掉图标）。
+        """
+        bad = re.findall(rf'textContent\s*=\s*"[^"]*[{BANNED_GLYPHS}]', index_html)
+        assert not bad, f"这些地方又用字形当按钮文字了：{bad}"
+        bad_html = re.findall(rf">\s*[{BANNED_GLYPHS}]", index_html)
+        assert not bad_html, f"HTML 里还有字形图标：{bad_html}"
+
+    def test_ui_icon_map_has_no_orphans(self, index_html):
+        """`UI_ICONS` 里画了却没人用的键，和用了却没有的键都要报出来。
+
+        缺了的那种**不会报错** —— `paintUiIcons` 拿不到就静默跳过，槽位空着，
+        界面上少一个图标却没人发现（侧栏「推广」就这么带着 📣 占位活了好几版）。
+        """
+        slots = set(re.findall(r'data-icon="([^"]+)"', index_html))
+        assert slots, "一个 data-icon 槽位都没有？"
+        # 有些图标不是走槽位、而是 JS 里直接写进元素的（上移/下移/圆点/停止），
+        # 那些也算「有人用」，否则这里会把它们误报成孤儿。
+        used = (
+            slots
+            | set(re.findall(r"UI_ICONS[.\[]\"?'?([A-Za-z_]\w*)", index_html))
+            | set(re.findall(r'setBtnIcon\([^,]+,\s*"([^"]+)"', index_html))
+        )
+        keys = _js_object_keys(index_html, "UI_ICONS")
+        missing = sorted(slots - keys)
+        assert not missing, f"data-icon 用了 UI_ICONS 里没有的键：{missing}"
+        unused = sorted(keys - used)
+        assert not unused, f"UI_ICONS 里这些键没人用：{unused}"
+
+    def test_every_nav_page_has_an_icon(self, index_html):
+        """侧栏每一页都要有 `NAV_ICONS` 条目（同样是「静默不动」的坑）。"""
+        pages = set(re.findall(r'data-page="([^"]+)"', index_html))
+        assert pages
+        missing = sorted(pages - _js_object_keys(index_html, "NAV_ICONS"))
+        assert not missing, f"这些导航页没有图标：{missing}"
+
+    def test_every_toolbar_button_has_an_icon(self, index_html):
+        """工具栏每个按钮都要有 `TOOLBAR_ICONS` 条目。
+
+        只认 `<button>` 上的 id —— 工具栏里还有 `#viewGroup` 这类容器 div。
+        """
+        toolbar = index_html.split('id="editorToolbar"')[1].split("editor-body")[0]
+        wanted = set()
+        for tag in re.findall(r"<button\b[^>]*>", toolbar):
+            m = re.search(r'data-tool="([^"]+)"', tag)
+            if m:
+                wanted.add(f"tool:{m.group(1)}")
+                continue
+            m = re.search(r'id="([^"]+)"', tag)
+            if m:
+                wanted.add(m.group(1))
+        assert wanted, "工具栏里没找到按钮？"
+        missing = sorted(wanted - _js_object_keys(index_html, "TOOLBAR_ICONS"))
+        assert not missing, f"这些工具栏按钮没有图标：{missing}"
+
+    def test_icon_maps_are_declared_in_dependency_order(self, index_html):
+        """图标表的**声明顺序**必须满足依赖关系。
+
+        `const` 没有变量提升：后声明的表读先声明的表才安全。
+        我一度把 `UI_ICONS` 插在 `NAV_ICONS` 之后、`META_ICONS` 之前，
+        而它写着 `scan: META_ICONS.ar` → 模块求值时抛 `ReferenceError`，
+        **整个初始化中断**：图标全空、设置页 tab 也点不动。
+        `node --check` / `scripts/_check_js.py` 只查语法，查不出这个。
+        """
+        order = ("_SVG_OPEN", "TOOLBAR_ICONS", "NAV_ICONS", "META_ICONS", "UI_ICONS")
+        pos = []
+        for name in order:
+            i = index_html.find(f"const {name} =")
+            assert i >= 0, f"没有 const {name}"
+            pos.append(i)
+        assert pos == sorted(pos), (
+            "图标表的声明顺序反了（后者引用了前者，但排在了前面）："
+            + ", ".join(f"{n}@{p}" for n, p in zip(order, pos))
+        )
+
+
+THEME_NAMES = ("deep", "slate", "violet", "amber", "light")
+
+
+def _theme_block(html: str, name: str) -> str:
+    """取一个主题块的声明部分。
+
+    `deep` 是默认主题 —— 它就是 `:root` 本身（不写 data-theme 属性）。
+    """
+    if name == "deep":
+        m = re.search(r":root\s*\{", html)
+        assert m, "没有 :root 块"
+        return html[m.end() :].split("}")[0]
+    marker = f':root[data-theme="{name}"]'
+    assert marker in html, f"没有 {name} 主题块"
+    return html.split(marker)[1].split("}")[0]
+
+
 class TestThemes:
     """主题：只覆盖 CSS 变量，能在设置里切换并记住。"""
 
     _TOKENS = (
-        "--bg-deep",
-        "--bg-card",
+        # 新拟物的三色台面。以前这里要求 `--bg-deep` / `--bg-card` —— 那是旧契约
+        # （靠"一层比一层亮的底色"分层）。现在 `:root` 里所有 `--bg-*` 都等于
+        # `var(--neu-base)`，主题再写它们只是重复定义，真正必须覆盖的是这三色。
+        "--neu-base",
+        "--neu-light",
+        "--neu-dark",
+        "--fill-1",
         "--accent-cyan",
         "--star-opacity",
         "--viewer-bg",
     )
 
-    @pytest.mark.parametrize("name", ["slate", "violet", "amber"])
+    @pytest.mark.parametrize("name", THEME_NAMES)
     def test_each_theme_covers_all_key_tokens(self, index_html, name: str):
         """漏覆盖 token 的后果是「切过去之后某处还是上个主题的颜色」。"""
-        marker = f':root[data-theme="{name}"]'
-        assert marker in index_html, f"没有 {name} 主题块"
-        block = index_html.split(marker)[1].split("}")[0]
+        block = _theme_block(index_html, name)
         missing = [t for t in self._TOKENS if t not in block]
         assert not missing, f"{name} 缺少 {missing}"
+
+    @pytest.mark.parametrize("name", THEME_NAMES)
+    def test_every_theme_declares_its_own_surface_colors(self, index_html, name: str):
+        """台面三色必须是**字面色值**，而且彼此不同。
+
+        用户实测过漏掉它们的后果：切到浅色时 `--neu-light` / `--neu-dark`
+        还是 `:root` 的深色值 → 白底上冒出两道黑阴影，原话「阴影问题巨大」。
+        所以这里不满足于"有定义"，而是断言是具体的十六进制色；
+        并且三色必须互不相同 —— 同色就等于两道阴影糊成一块，等于没做。
+        """
+        block = _theme_block(index_html, name)
+        surface = {}
+        for tok in ("--neu-base", "--neu-light", "--neu-dark"):
+            m = re.search(rf"{re.escape(tok)}:\s*([^;]+);", block)
+            assert m, f"{name} 没定义 {tok}"
+            value = m.group(1).strip()
+            assert re.fullmatch(r"#[0-9a-fA-F]{6}", value), (
+                f"{name} 的 {tok} 必须是字面色值，实际是 {value!r}"
+                "（写成 var() 兜底就会静默退回别的主题的色）"
+            )
+            surface[tok] = value.lower()
+        assert (
+            surface["--neu-light"] != surface["--neu-base"]
+            and surface["--neu-dark"] != surface["--neu-base"]
+        ), f"{name}: 亮影/暗影与台面同色 → 阴影看不出来（{surface}）"
+        assert surface["--neu-light"] != surface["--neu-dark"], (
+            f"{name}: 亮影与暗影同色（{surface}）"
+        )
+
+    @pytest.mark.parametrize("name", THEME_NAMES)
+    def test_every_theme_has_opaque_fills(self, index_html, name: str):
+        """`--fill-*` 必须**不透明**。
+
+        新拟物靠「同一个台面的微差」表达 hover / 选中 / 按下；半透明填充会
+        透出台面，深浅差被吃掉，于是这三种状态全都看不出来。
+        `light` 主题原来正是 4 个 `rgba(...)`，这条就是防它回退。
+        """
+        block = _theme_block(index_html, name)
+        for tok in ("--fill-1", "--fill-2", "--fill-3", "--fill-4"):
+            m = re.search(rf"{re.escape(tok)}:\s*([^;]+);", block)
+            assert m, f"{name} 没定义 {tok}"
+            value = m.group(1).strip()
+            assert "rgba(" not in value and "transparent" not in value, (
+                f"{name} 的 {tok} 是半透明的（{value}）—— 新拟物下看不出深浅"
+            )
+
+    def test_every_var_reference_is_defined(self, index_html):
+        """`var(--x)` 引用的 token 必须在主题块里有定义。
+
+        方向与 `test_no_orphan_tokens` 相反，但同样致命：**引用一个不存在的
+        token，整条声明会被判为无效**（computed value 退成 initial/inherited）。
+        实测过：写了 `box-shadow: var(--neu-inset-soft)`，而 `--neu-inset-soft`
+        那句定义没落进 `:root` → 输入框的阴影整个变成 `none`。
+        页面上看不出「少了个 token」，只会觉得「这里怎么平平的」。
+        带兜底值的 `var(--x, fallback)` 也要查 —— 兜底值正是把这种错误藏起来的东西。
+        """
+        # ⚠️ 先剥掉注释再扫：注释里出现的 `var(--x)`（写说明时很容易抄一个进去）
+        # 不是引用，会把守卫弄成假红 —— 与 `_style_block` 踩过的那个坑同一个。
+        src = re.sub(r"/\*.*?\*/", "", index_html, flags=re.S)
+        defined: set[str] = set()
+        for name in THEME_NAMES:
+            defined |= set(re.findall(r"(--[\w-]+)\s*:", _theme_block(src, name)))
+        used = set(re.findall(r"var\(\s*(--[\w-]+)", src))
+        missing = sorted(used - defined)
+        assert not missing, f"这些 token 被引用但没定义：{missing}"
 
     def test_choices_are_in_settings_and_include_default(self, index_html):
         for name in ("deep", "slate", "violet", "amber"):

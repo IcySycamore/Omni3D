@@ -25,37 +25,39 @@
 
     <style>
       :root {
-        /* ---- 底色：三层纵深（画布 / 卡片 / 浮层）---- */
-        --bg-deep: #070911;
-        --bg-elevated: #0c0f1a;
-        /* 底色：三层纵深（最深的画布 / 抬起的卡 / 浮层）---- 当前只用到两层，
-           第三层需要时再加，别先摆一个没人用的变量。*/
-        --bg-card: rgba(17, 20, 33, 0.78);
-        --bg-card-hover: rgba(23, 27, 43, 0.86);
-        --bg-sidebar: rgba(10, 12, 20, 0.92);
-        /* ---- 描边：一级比一级亮，用「层次」代替「加粗」---- */
-        --glass-border: var(--fill-2);
-        --glass-border-active: var(--fill-3);
+        /* ================= 新拟物（Soft UI）底座 =================
+           整套界面**只有一种台面色**，层次全靠「左上亮 + 右下暗」两道阴影挤出来：
+           没有描边、没有半透明填充、没有渐变。
+           所以 --bg-* / --fill-* 必须**不透明**且几乎同色 ——
+           旧值是半透明的（靠叠白分层），那套做法与新拟物互斥。 */
+        --neu-base: #262a33; /* 唯一的台面色：所有表面都是它 */
+        --neu-light: #343a47; /* 光源固定在左上：亮的那道阴影 */
+        --neu-dark: #181b22; /* 背光那道阴影 */
+        --bg-deep: var(--neu-base);
+        --bg-elevated: var(--neu-base);
+        --bg-card: var(--neu-base);
+        --bg-card-hover: var(--neu-base);
+        --bg-sidebar: var(--neu-base);
+        /* 面的边界由阴影交代，不由线 —— 描边全部透明。
+           （`--glass-border-active` 已删：那是旧设计「hover/焦点靠主色描边」的
+           语言。软 UI 里悬停是「抬起来」，焦点是 `:focus-visible` 的 outline。） */
+        --glass-border: transparent;
         /* ---- 文字：三级 ---- */
-        --text-primary: #eaeaf2;
-        --text-secondary: #9ea3b8;
-        --text-muted: #6b6f85;
-        /* ---- 主色：青管动作、紫只做氛围 ----
-           以前两者等权，整页偏「花」；现在按钮/描边一律走青，紫只留在
-           渐变与大面积背景里。 */
-        --accent-cyan: #22d3ee;
-        --accent-cyan-soft: rgba(34, 211, 238, 0.16);
-        /* 青色的半透明派生（描边 / 发光 / 选中底 / 极淡光晕）：
-           这些值以前散落在 17 处硬编码里，换主题时不会跟着变 ——
-           浅色主题下就变成“发光的浅青”，而深青才是能看清的那个。*/
-        --accent-faint: rgba(34, 211, 238, 0.08);
-        --accent-wash: rgba(34, 211, 238, 0.16);
-        --accent-glow: rgba(34, 211, 238, 0.35);
-        --accent-edge: rgba(34, 211, 238, 0.6);
-        --accent-purple: #a855f7;
-        --danger: #f87171;
-        --success: #4ade80;
-        --warning: #fbbf24;
+        --text-primary: #e9ecf2;
+        --text-secondary: #aab2bf;
+        --text-muted: #939caa;
+        /* ---- 主色 ----
+           低饱和柔青：大面积软灰台面 + 高饱和色是软 UI 最忌的组合。 */
+        --accent-cyan: #7fb8dd;
+        --accent-faint: rgba(127, 184, 221, 0.1);
+        --accent-wash: rgba(127, 184, 221, 0.18);
+        --accent-glow: rgba(127, 184, 221, 0.28);
+        --accent-edge: rgba(127, 184, 221, 0.5);
+        --accent-purple: #a9b4c4;
+        /* 语义色也压低饱和：软灰底上纯红纯绿会跳出来 */
+        --danger: #d98a8a;
+        --success: #8fb99b;
+        --warning: #d9b98a;
         /* ---- 圆角：六档 ----
            改之前这里散着 **19 种**取值（4/5/7/8/9/10/12/14/16/20/22/25…），
            基本是随手写的。收敛成 4 的倍数，界面才会有「一套」的感觉。
@@ -89,31 +91,49 @@
         --sp-7: 20px;
         --sp-8: 24px;
         --sp-9: 32px; /* 页面级留白 */
-        /* 一张卡只用一个阴影；越靠上层越深 */
-        --shadow-card:
-          0 1px 2px rgba(0, 0, 0, 0.32), 0 8px 28px rgba(0, 0, 0, 0.36);
+        /* ---- 新拟物的厚度：两道阴影，一明一暗，光源固定在左上 ----
+           偏移要小、模糊要大（-5/+5、12px）：偏移一大就变成「描边」了。*/
+        --neu-raised:
+          -5px -5px 12px var(--neu-light), 5px 5px 12px var(--neu-dark);
+        --neu-raised-sm:
+          -3px -3px 7px var(--neu-light), 3px 3px 7px var(--neu-dark);
+        --neu-inset:
+          inset -3px -3px 7px var(--neu-light),
+          inset 3px 3px 7px var(--neu-dark);
+        --neu-inset-deep:
+          inset -5px -5px 12px var(--neu-light),
+          inset 5px 5px 12px var(--neu-dark);
+        /* 输入框这种「浅坑」用更浅一档：按压档（3px/7px）在浅色主题下看就是一个洞
+           （用户：「视觉上的深度太深了」）。按压/选中态仍用 --neu-inset。 */
+        --neu-inset-soft:
+          inset -2px -2px 4px var(--neu-light),
+          inset 2px 2px 4px var(--neu-dark);
+        /* 旧名字保留（组件里已经在用），值换成新拟物的那两档 */
+        --shadow-card: var(--neu-raised);
         --shadow-lift:
-          0 2px 4px rgba(0, 0, 0, 0.36), 0 14px 40px rgba(0, 0, 0, 0.46);
+          -8px -8px 20px var(--neu-light), 8px 8px 20px var(--neu-dark);
         --shadow-glow:
-          0 0 0 1px rgba(34, 211, 238, 0.16), 0 0 32px rgba(34, 211, 238, 0.1);
+          0 0 0 1px var(--accent-faint), 0 0 20px var(--accent-faint);
         --transition-fast: 0.16s cubic-bezier(0.4, 0, 0.2, 1);
         --transition-smooth: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         --font-mono:
           "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas",
           monospace;
         --sidebar-width: 236px;
-        /* ---- 半透明填充 / 描边 ----
-           深色主题是「往白里加」，浅色主题必须反过来「往黑里加」，
-           所以它们必须是变量，不能写死在组件规则里。*/
-        --fill-1: rgba(255, 255, 255, 0.03);
-        --fill-2: rgba(255, 255, 255, 0.06);
-        --fill-3: rgba(255, 255, 255, 0.1);
-        --fill-4: rgba(255, 255, 255, 0.2);
-        --star-opacity: 1;
-        /* 3D 视口自己的底色（three.js 读不到 CSS 变量，由 JS 同步）*/
-        --viewer-bg: #080a12;
+        /* ---- 表面填充 ----
+           新拟物里它们是**同一个台面的微差色**（不透明）：
+           同色才能「挤出来」，微差是为了让 hover / 选中还有反馍可看。 */
+        --fill-1: #282c36;
+        --fill-2: #2b303a;
+        --fill-3: #313641;
+        --fill-4: #3a404c;
+        /* 新拟物不用装饰：星空关掉 */
+        --star-opacity: 0;
+        /* 3D 视口自己的底色（three.js 读不到 CSS 变量，由 JS 同步）
+            仍保持暗色：点云的「按高度着色」是蓝→白渐变，浅底上看不见。*/
+        --viewer-bg: #1c1f26;
         /* 「模态遮罩」：浅色主题下必须反转，所以也得变量化 */
-        --overlay: rgba(0, 0, 0, 0.6);
+        --overlay: rgba(12, 14, 18, 0.75);
         /* 品牌 logo 是白色描边的图，浅色主题下要压暗才看得见 */
         --logo-filter: none;
       }
@@ -122,83 +142,102 @@
          主题**只覆盖变量**，不碰任何组件规则 —— 加主题 = 在这里加一段。
          用 :root[data-theme]（html 元素）而不是 body[...]：
          `html, body` 上的 background 都读 html 上的变量，挂在 body 上盖不住 html。*/
+      /* ---- 主题的写法（新拟物之后改了规矩）----
+         主题**只覆盖变量**，但新拟物要求每个主题至少写全三组：
+           ① 三色台面 `--neu-base` / `--neu-light` / `--neu-dark`（亮/暗两道阴影）
+           ② **不透明**的 `--fill-1..4`（半透明会透出台面，按下/选中就看不出来）
+           ③ 三级文字色
+         漏了 ① 的后果实测过：切到浅色时 `--neu-light/--neu-dark` 还是深色，
+         白底上冒出两道黑阴影 —— 用户原话「阴影问题巨大」。
+         `--bg-*` 不用写：`:root` 里它们已经全是 `var(--neu-base)`。*/
       /* 石板：低饱和冷灰，像仪器面板 */
       :root[data-theme="slate"] {
-        --bg-deep: #0b0e12;
-        --bg-elevated: #12161c;
-        --bg-card: rgba(22, 27, 35, 0.8);
-        --bg-card-hover: rgba(28, 34, 44, 0.88);
-        --bg-sidebar: rgba(14, 18, 24, 0.94);
+        --neu-base: #222831;
+        --neu-light: #2b3340;
+        --neu-dark: #171c23;
+        --fill-1: #242a34;
+        --fill-2: #272e39;
+        --fill-3: #2d3541;
+        --fill-4: #363f4d;
+        --text-primary: #e6ebf2;
+        --text-secondary: #a8b2c0;
+        --text-muted: #8f99a8;
         --accent-cyan: #7dd3fc;
-        --accent-cyan-soft: rgba(125, 211, 252, 0.14);
-        --accent-faint: rgba(125, 211, 252, 0.08);
-        --accent-wash: rgba(125, 211, 252, 0.16);
-        --accent-glow: rgba(125, 211, 252, 0.3);
-        --accent-edge: rgba(125, 211, 252, 0.55);
+        --accent-faint: rgba(125, 211, 252, 0.1);
+        --accent-wash: rgba(125, 211, 252, 0.18);
+        --accent-glow: rgba(125, 211, 252, 0.28);
+        --accent-edge: rgba(125, 211, 252, 0.5);
         --accent-purple: #94a3b8;
-        --star-opacity: 0.45;
-        --viewer-bg: #0a0d11;
+        --viewer-bg: #14191f;
+        --overlay: rgba(8, 10, 14, 0.75);
+        --star-opacity: 0;
+        --logo-filter: none;
       }
       /* 星云紫 */
       :root[data-theme="violet"] {
-        --bg-deep: #0b0714;
-        --bg-elevated: #150e24;
-        --bg-card: rgba(28, 18, 46, 0.78);
-        --bg-card-hover: rgba(36, 23, 58, 0.86);
-        --bg-sidebar: rgba(17, 11, 30, 0.93);
+        --neu-base: #241d33;
+        --neu-light: #2e2540;
+        --neu-dark: #181224;
+        --fill-1: #272036;
+        --fill-2: #2a2340;
+        --fill-3: #302946;
+        --fill-4: #3a3254;
+        --text-primary: #eee9f7;
+        --text-secondary: #b3aac4;
+        --text-muted: #9a92ab;
         --accent-cyan: #c084fc;
-        --accent-cyan-soft: rgba(192, 132, 252, 0.16);
-        --accent-faint: rgba(192, 132, 252, 0.09);
+        --accent-faint: rgba(192, 132, 252, 0.1);
         --accent-wash: rgba(192, 132, 252, 0.18);
-        --accent-glow: rgba(192, 132, 252, 0.32);
-        --accent-edge: rgba(192, 132, 252, 0.55);
+        --accent-glow: rgba(192, 132, 252, 0.3);
+        --accent-edge: rgba(192, 132, 252, 0.5);
         --accent-purple: #f0abfc;
-        --star-opacity: 0.9;
-        --viewer-bg: #0a0611;
+        --viewer-bg: #140e1e;
+        --overlay: rgba(10, 6, 18, 0.78);
+        --star-opacity: 0;
+        --logo-filter: none;
       }
-      /* 暖琥珀 */
+      /* 暖琥珀：琥珀原色 #fbbf24 在软灰台面上太跳，压到 #e0b469 才和整体同调 */
       :root[data-theme="amber"] {
-        --bg-deep: #100c08;
-        --bg-elevated: #1a140d;
-        --bg-card: rgba(35, 27, 18, 0.8);
-        --bg-card-hover: rgba(45, 35, 23, 0.88);
-        --bg-sidebar: rgba(20, 15, 10, 0.94);
-        --accent-cyan: #fbbf24;
-        --accent-cyan-soft: rgba(251, 191, 36, 0.16);
-        --accent-faint: rgba(251, 191, 36, 0.08);
-        --accent-wash: rgba(251, 191, 36, 0.16);
-        --accent-glow: rgba(251, 191, 36, 0.3);
-        --accent-edge: rgba(251, 191, 36, 0.55);
-        --accent-purple: #fb923c;
-        --star-opacity: 0.35;
-        --viewer-bg: #0e0a07;
+        --neu-base: #2a241c;
+        --neu-light: #362e24;
+        --neu-dark: #1c1812;
+        --fill-1: #2d271e;
+        --fill-2: #312a21;
+        --fill-3: #382f26;
+        --fill-4: #443a2e;
+        --text-primary: #f2ece2;
+        --text-secondary: #c0b4a2;
+        --text-muted: #a89c8a;
+        --accent-cyan: #e0b469;
+        --accent-faint: rgba(224, 180, 105, 0.1);
+        --accent-wash: rgba(224, 180, 105, 0.18);
+        --accent-glow: rgba(224, 180, 105, 0.28);
+        --accent-edge: rgba(224, 180, 105, 0.5);
+        --accent-purple: #cd8f5f;
+        --viewer-bg: #1a150e;
+        --overlay: rgba(14, 10, 6, 0.78);
+        --star-opacity: 0;
+        --logo-filter: none;
       }
 
       /* 明亮（浅色）
+         ⚠️ 浅色底上阴影必须反过来：亮的一道是**纯白**，暗的一道是**浅灰**。
+         漏了 `--neu-light/--neu-dark` 的话会直接用 `:root` 的深色值，
+         白底上出现两道黑阴影（用户报的「阴影问题巨大」就是它）。
          ⚠️ 3D 视口**故意保持深色**（--viewer-bg）：点云的“按高度着色”是蓝→白渐变，
          放在浅底上基本看不见；浅色的 3D 工具（Figma / Blender）也都是这么做的。*/
       :root[data-theme="light"] {
-        --bg-deep: #f1f4f9;
-        --bg-elevated: #ffffff;
-        --bg-card: rgba(255, 255, 255, 0.92);
-        --bg-card-hover: rgba(255, 255, 255, 1);
-        --bg-sidebar: rgba(248, 250, 253, 0.96);
-        --glass-border: rgba(15, 23, 42, 0.1);
-        --glass-border-active: rgba(15, 23, 42, 0.2);
-        --fill-1: rgba(15, 23, 42, 0.035);
-        --fill-2: rgba(15, 23, 42, 0.07);
-        --fill-3: rgba(15, 23, 42, 0.12);
-        --fill-4: rgba(15, 23, 42, 0.22);
-        --text-primary: #101827;
-        --text-secondary: #4b5568;
+        --neu-base: #e9edf3;
+        --neu-light: #ffffff;
+        --neu-dark: #c5cbd6;
+        --fill-1: #eef1f6;
+        --fill-2: #f2f5f9;
+        --fill-3: #f7f9fb;
+        --fill-4: #ffffff;
+        --text-primary: #1b2433;
+        --text-secondary: #4a5568;
         --text-muted: #6b7280;
-        --overlay: rgba(15, 23, 42, 0.28);
-        /* logo 本身就是彩色的（蓝紫渐变环 + 双色字标），浅色底上直接显示就行。
-           原值是 brightness(0.22) —— 那会把它整个压成黑的，用户：
-           「这个图标在白色主题会变成黑色，黑的没有渐变太丑了」。 */
-        --logo-filter: none;
         --accent-cyan: #0e7490;
-        --accent-cyan-soft: rgba(14, 116, 144, 0.12);
         --accent-faint: rgba(14, 116, 144, 0.07);
         --accent-wash: rgba(14, 116, 144, 0.14);
         --accent-glow: rgba(14, 116, 144, 0.22);
@@ -207,18 +246,129 @@
         --danger: #dc2626;
         --success: #15803d;
         --warning: #b45309;
-        --shadow-card:
-          0 1px 2px rgba(15, 23, 42, 0.08), 0 8px 28px rgba(15, 23, 42, 0.1);
-        --shadow-lift:
-          0 2px 4px rgba(15, 23, 42, 0.1), 0 14px 40px rgba(15, 23, 42, 0.14);
-        --star-opacity: 0;
+        --overlay: rgba(15, 23, 42, 0.28);
         --viewer-bg: #0d1117;
+        --star-opacity: 0;
+        /* logo 本身就是彩色的（蓝紫渐变环 + 双色字标），浅色底上直接显示就行。
+           原值是 brightness(0.22) —— 那会把它整个压成黑的，用户：
+           「这个图标在白色主题会变成黑色，黑的没有渐变太丑了」。 */
+        --logo-filter: none;
       }
 
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+      }
+
+      /* ============ 新拟物面层 ============
+         整套风格的核心就这一段：同一张软灰台面上，可点的「挤出来」（凸），
+         能装东西的「摁下去」（凹）。
+         ⚠️ **不给阴影的同色面等于隐形**（描边已透明、底色又和台面一样），
+         所以下面每个类都必须覆盖到；以后新增「表面」类元素也要加进来。
+
+         分组写而不是逐个组件改：组件规则只说「这是什么」，厚度归这里。
+         两条规矩：
+           ① 容器是凸的，容器**里面**的列表行是平的 —— 只 hover 时才弹起来，
+              否则一个小面板里会挤满气泡；
+           ② 小控件用浅一档（raised-sm），否则厚边会把这个小界面糊住。 */
+
+      /* 凸：卡片 / 按钮 / 工具条 / 面板 / 胶囊 */
+      .glass-card,
+      .hamburger,
+      .btn,
+      .meta-info-bar,
+      .task-item,
+      .task-thumb,
+      .editor-toolbar,
+      .element-view,
+      .status-bar,
+      .picker-menu,
+      .hotkey-panel,
+      .radio-pill,
+      .server-row,
+      .calibration-bar,
+      .video-preview-wrapper,
+      .auth-account-row,
+      .toast,
+      .help-pop {
+        border-color: transparent;
+        box-shadow: var(--neu-raised);
+      }
+      /* ⚠️ 左下角那三个选择器（.sb-pick）**故意不在上/下面任何一组里**：
+         它的底是 `transparent`，而**透明面配外阴影只会得到一圈悬空的灰边**
+         —— 看不见「挤出来的面」，只看见阴影（用户报的就是这个）。
+         它按下面「列表行」处理：平时是平的，hover 才弹起来。 */
+      /* 小控件：浅一档 */
+      .tool-btn,
+      .cmd-btn,
+      .icon-btn,
+      .tag,
+      .tag-muted,
+      .element-kind,
+      .export-row,
+      .sb-rule,
+      .cal-tag,
+      .tool-more-body {
+        border-color: transparent;
+        box-shadow: var(--neu-raised-sm);
+      }
+      /* 凹：能往里放东西的面 */
+      .progress-container,
+      .hotkey-input,
+      .server-row input,
+      .server-row select,
+      .auth-field input,
+      .calibration-bar input,
+      .help-section code {
+        border-color: transparent;
+        box-shadow: var(--neu-inset-soft);
+      }
+      /* 3D 视口是一大块「挖进台面里」的屏，用深一档的凹 */
+      .viewer-container {
+        border-color: transparent;
+        box-shadow: var(--neu-inset-deep);
+      }
+      /* ---- 按钮里的图标 ----
+         图标一律是自绘描边 SVG（`_SVG_OPEN`），**尺寸只由 CSS 定**，
+         SVG 上不写 width/height。
+         为什么不用字形（☰ ◈ ✕ ↑ ↓ 📷 …）：它们的粗细与形状随平台字体变，
+         同一排按钮在不同机器上长得不一样，也会被当成 emoji。 */
+      .btn-ic {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-ic svg,
+      button > svg,
+      .pi-check svg,
+      .placeholder-icon svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        display: block;
+      }
+      .placeholder-icon svg {
+        width: 48px;
+        height: 48px;
+        opacity: 0.5;
+      }
+      /* 面板里的列表行平时是平的，hover 才弹起来 */
+      .picker-item:hover:not(:disabled),
+      .ctx-item:hover,
+      .element-row:hover,
+      .sb-pick:hover:not(:disabled),
+      .sidebar-nav button:hover {
+        box-shadow: var(--neu-raised-sm);
+      }
+      /* 按下 = 从「挤出来」变成「摁下去」—— 软 UI 只需要这一种状态语言 */
+      .btn:active,
+      .tool-btn:active,
+      .cmd-btn:active,
+      .icon-btn:active,
+      .sb-pick:active,
+      .hamburger:active {
+        box-shadow: var(--neu-inset);
       }
 
       /* ---- 键盘焦点 ----
@@ -379,14 +529,11 @@
         color: var(--text-primary);
       }
       .sidebar-nav button.active {
-        background: linear-gradient(
-          90deg,
-          var(--accent-cyan-soft),
-          transparent 72%
-        );
+        /* 软 UI 里「选中」= 摁下去，不是刷一层色再拉一条线 */
+        background: var(--fill-1);
+        box-shadow: var(--neu-inset);
         /* 主色而不是写死的白：浅色主题下侧栏是浅底，白字会直接消失 */
         color: var(--accent-cyan);
-        box-shadow: inset 3px 0 0 var(--accent-cyan);
         font-weight: 600;
       }
       .sidebar-nav button .nav-icon {
@@ -419,7 +566,7 @@
       }
       .ar-dot.connected {
         background: var(--success);
-        box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+        box-shadow: 0 0 10px var(--success);
         animation: pulse-dot 2s infinite;
       }
       .ar-dot.disconnected {
@@ -435,11 +582,11 @@
       }
       .cloud-dot.ok {
         background: var(--success);
-        box-shadow: 0 0 10px rgba(74, 222, 128, 0.6);
+        box-shadow: 0 0 10px var(--success);
       }
       .cloud-dot.failed {
         background: var(--danger);
-        box-shadow: 0 0 10px rgba(248, 113, 113, 0.55);
+        box-shadow: 0 0 10px var(--danger);
       }
       .page-head {
         font-weight: 600;
@@ -450,10 +597,10 @@
       @keyframes pulse-dot {
         0%,
         100% {
-          box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+          box-shadow: 0 0 8px var(--success);
         }
         50% {
-          box-shadow: 0 0 18px rgba(74, 222, 128, 0.85);
+          box-shadow: 0 0 18px var(--success);
         }
       }
 
@@ -468,8 +615,8 @@
         height: 40px;
         border-radius: 50%;
         border: 1px solid var(--glass-border);
-        background: #141624;
-        color: #fff;
+        background: var(--bg-deep);
+        color: var(--text-primary);
         font-size: var(--fs-2xl);
         cursor: pointer;
         align-items: center;
@@ -577,7 +724,6 @@
       }
       .glass-card:hover {
         background: var(--bg-card-hover);
-        border-color: var(--glass-border-active);
         box-shadow: var(--shadow-lift);
       }
       .glass-card.card-accent {
@@ -624,7 +770,7 @@
         aspect-ratio: 16/10;
         border-radius: var(--r-lg);
         overflow: hidden;
-        background: #0d0f18;
+        background: var(--viewer-bg);
         border: 1px solid var(--glass-border);
         box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
         display: flex;
@@ -682,7 +828,7 @@
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: #ef4444;
+        background: var(--danger);
         animation: blink-red 0.8s infinite;
       }
       @keyframes blink-red {
@@ -714,7 +860,7 @@
         transition: all var(--transition-fast);
       }
       .meta-info-bar.success {
-        border-color: rgba(74, 222, 128, 0.35);
+        border-color: transparent;
         color: var(--success);
       }
       .meta-info-bar.hidden {
@@ -736,7 +882,7 @@
       /* 「录制中」：图标与文字都走危险色 —— 原来那层红是那个红色圆点 emoji
          自带的，换成自绘图标后要显式补回来，否则信息就丢了。 */
       .meta-info-bar[data-kind="record"] {
-        border-color: rgba(248, 113, 113, 0.35);
+        border-color: transparent;
         color: var(--danger);
       }
 
@@ -759,10 +905,13 @@
         -webkit-backdrop-filter: blur(8px);
         letter-spacing: 0.02em;
       }
+      /* hover 只有一种语言：**抬起来**（底色微变 + 阴影加厚 + 上移 1px）。
+         原来这里是「底色变一档 + 主色描边 + 一圈主色发光」——
+         软 UI 里没有描边、也没有发光，那圈光晕在浅色底上尤其脏（用户：「很丑」）。 */
       .btn:hover {
-        background: var(--fill-3);
-        border-color: var(--glass-border-active);
-        box-shadow: 0 0 20px var(--accent-faint);
+        background: var(--fill-2);
+        box-shadow: var(--shadow-lift);
+        transform: translateY(-1px);
       }
       .btn:active {
         scale: 0.96;
@@ -782,25 +931,28 @@
          Linear / Figma 的主按钮也都是中性面：**颜色留给状态，不留给“重要”**。
          主操作依然显眼（描边与文字都是主色 + 字重 600），只是不再刺眼。 */
       .btn-primary {
-        background: var(--fill-3);
-        border: 1px solid var(--accent-edge);
+        background: var(--fill-1);
+        border: 1px solid transparent;
         color: var(--accent-cyan);
         font-weight: 600;
-        box-shadow: none;
+        /* 主操作靠「抬得更高 + 一道极淡的主色环」区分，
+           不靠色块（大面积高饱和会刺眼），也不靠描边（软 UI 没有线）。 */
+        box-shadow:
+          var(--neu-raised),
+          0 0 0 1px var(--accent-faint);
         letter-spacing: 0.02em;
       }
       .btn-primary:hover {
-        background: var(--accent-wash);
-        border-color: var(--accent-cyan);
+        background: var(--fill-2);
         transform: translateY(-1px);
       }
       .btn-danger {
-        border-color: rgba(248, 113, 113, 0.4);
+        border-color: transparent;
         color: var(--danger);
       }
       .btn-danger:hover {
-        background: rgba(248, 113, 113, 0.1);
-        border-color: rgba(248, 113, 113, 0.6);
+        background: var(--fill-2);
+        border-color: transparent;
       }
       .btn-sm {
         padding: var(--sp-3) var(--sp-5);
@@ -879,7 +1031,7 @@
         min-height: 360px;
         border-radius: var(--r-xl);
         overflow: hidden;
-        background: #080a12;
+        background: var(--viewer-bg);
         border: 1px solid var(--glass-border);
         position: relative;
         cursor: grab;
@@ -964,7 +1116,7 @@
       .calibration-bar input:focus {
         outline: none;
         border-color: var(--accent-cyan);
-        box-shadow: 0 0 12px var(--accent-glow);
+        box-shadow: var(--neu-inset-soft);
       }
       .calibration-bar .cal-result {
         font-weight: 600;
@@ -994,8 +1146,8 @@
         cursor: default;
       }
       .task-item:hover {
-        border-color: var(--glass-border-active);
         background: var(--fill-2);
+        box-shadow: var(--shadow-lift);
       }
       .task-thumb {
         flex: 0 0 auto;
@@ -1014,7 +1166,10 @@
       }
       .task-thumb-slot {
         display: flex;
-        color: var(--text-faint);
+        /* ⚠️ 这里曾经写的是 `var(--text-faint)` —— 而那个 token **从来没定义过**，
+           于是 color 整条无效、掉回继承色。只有一处用到就不值得新造一级文字，
+           并进 --text-muted。守卫：`test_every_var_reference_is_defined`。 */
+        color: var(--text-muted);
       }
       .task-thumb-slot svg {
         width: 20px;
@@ -1105,11 +1260,12 @@
       #editorToolbar .tool-btn:hover,
       #editorToolbar .cmd-btn:hover:not(:disabled) {
         background: var(--fill-2);
-        color: #fff;
+        color: var(--text-primary);
       }
       #editorToolbar .tool-btn.active {
-        background: var(--accent-wash);
+        background: var(--fill-1);
         color: var(--accent-cyan);
+        box-shadow: var(--neu-inset);
       }
       #editorToolbar .tool-btn.satisfied {
         color: var(--accent-cyan);
@@ -1157,7 +1313,7 @@
       }
       .sb-pick:hover {
         background: var(--fill-2);
-        color: #fff;
+        color: var(--text-primary);
       }
       .sb-pick-text {
         flex: 1 1 auto;
@@ -1188,7 +1344,7 @@
         max-width: min(86vw, 320px);
         border-radius: var(--r-lg);
         background: var(--bg-elevated);
-        border: 1px solid var(--glass-border-active);
+        border: 1px solid transparent;
         box-shadow: var(--shadow-lift);
         padding: var(--sp-4);
       }
@@ -1278,25 +1434,29 @@
         color: var(--text-muted, #8792a8);
         margin-right: var(--sp-1);
       }
+      /* 分段控件（软 UI）：整条是一道凹槽，选中那段从槽里挤出来。
+         原来是「平面文字 + 2px 下划线」，那是平面设计的语言。 */
       .tab-bar {
         display: flex;
         gap: var(--sp-2);
-        padding: var(--sp-3) var(--sp-4) 0;
+        padding: var(--sp-3);
         flex: 0 0 auto;
+        border-radius: var(--r-md);
+        box-shadow: var(--neu-inset);
       }
       .tab {
         flex: 1 1 0;
         padding: var(--sp-3) var(--sp-4);
         font-size: var(--fs-base);
-        color: var(--text-muted, #8792a8);
+        color: var(--text-muted);
         background: transparent;
         border: none;
-        border-bottom: 2px solid transparent;
+        border-radius: var(--r-sm);
         cursor: pointer;
       }
       .tab.active {
-        color: var(--text-primary, #e8ecf6);
-        border-bottom-color: var(--accent, #00d4ff);
+        color: var(--accent-cyan);
+        box-shadow: var(--neu-raised-sm);
       }
       .tab-panel {
         display: flex;
@@ -1318,8 +1478,8 @@
       }
       #settingsTabBar {
         flex-wrap: wrap;
-        padding: 0;
-        border-bottom: 1px solid var(--glass-border);
+        padding: var(--sp-3);
+        border-bottom: none;
       }
       #settingsTabBar .tab {
         flex: 0 1 auto;
@@ -1348,7 +1508,7 @@
         cursor: pointer;
       }
       .export-row:hover {
-        border-color: var(--accent, #00d4ff);
+        border-color: var(--accent-cyan);
       }
       .export-row span {
         font-size: var(--fs-sm);
@@ -1433,7 +1593,7 @@
         margin-left: auto;
         background: transparent;
         border: none;
-        color: #f87171;
+        color: var(--danger);
         cursor: pointer;
         font-size: var(--fs-base);
         padding: 0 var(--sp-1);
@@ -1454,7 +1614,7 @@
         padding: var(--sp-3) var(--sp-5);
         min-height: 36px;
         background: var(--bg-elevated);
-        border: 1px solid var(--glass-border-active);
+        border: 1px solid transparent;
         border-radius: var(--r-md);
         box-shadow: var(--shadow-lift);
         font-size: var(--fs-base);
@@ -1474,10 +1634,10 @@
       }
       .sb-state {
         white-space: nowrap;
-        color: var(--accent-cyan, #22d3ee);
+        color: var(--accent-cyan);
       }
       .sb-state.insufficient {
-        color: #fbbf24;
+        color: var(--warning);
       }
       .sb-msg {
         flex: 1 1 200px;
@@ -1487,7 +1647,7 @@
         text-overflow: ellipsis;
       }
       .sb-msg.warn {
-        color: var(--warning, #fbbf24);
+        color: var(--warning);
       }
       .sb-right {
         display: flex;
@@ -1537,7 +1697,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(4, 6, 12, 0.66);
+        background: var(--overlay);
         backdrop-filter: blur(2px);
       }
       .modal-mask.hidden {
@@ -1546,9 +1706,9 @@
       .modal-card {
         width: min(92vw, 400px);
         border-radius: var(--r-lg);
-        background: #12161f;
-        border: 1px solid var(--fill-3);
-        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+        background: var(--bg-card);
+        border: 1px solid transparent;
+        box-shadow: var(--shadow-lift);
         padding: var(--sp-6);
       }
       .modal-head {
@@ -1587,10 +1747,10 @@
         color: var(--text-muted, #8792a8);
       }
       .modal-note.err {
-        color: #f87171;
+        color: var(--danger);
       }
       .modal-note.ok {
-        color: #4ade80;
+        color: var(--success);
       }
       .modal-line {
         margin: 0 0 var(--sp-4);
@@ -1608,7 +1768,7 @@
         cursor: pointer;
       }
       .modal-check input {
-        accent-color: var(--accent, #00d4ff);
+        accent-color: var(--accent-cyan);
       }
       /* 「总是执行选定操作」没开时，下面那二选一是不可用的 */
       .radio-group.disabled {
@@ -1668,26 +1828,25 @@
         text-align: center;
       }
       .radio-pill:hover {
-        border-color: var(--glass-border-active);
-        color: #fff;
+        color: var(--accent-cyan);
       }
       .radio-pill.selected {
-        background: var(--accent-wash);
-        border-color: var(--accent-cyan);
+        /* 选中 = 摁下去 */
+        background: var(--fill-1);
+        box-shadow: var(--neu-inset);
         /* 同上：白字在浅色主题的浅底上看不见 */
         color: var(--accent-cyan);
-        box-shadow: 0 0 16px var(--accent-wash);
       }
       /* 有风险的选项（如 224：会被裁成正方形，仅适合快速预览） */
       .radio-pill.radio-warn {
-        border-color: rgba(251, 191, 36, 0.45);
+        border-color: transparent;
         color: var(--warning);
       }
       .radio-pill.radio-warn.selected {
-        background: rgba(251, 191, 36, 0.14);
-        border-color: var(--warning);
-        color: #fde68a;
-        box-shadow: 0 0 16px rgba(251, 191, 36, 0.22);
+        background: var(--fill-1);
+        border-color: transparent;
+        color: var(--warning);
+        box-shadow: var(--neu-inset);
       }
       .tag {
         display: inline-flex;
@@ -1700,9 +1859,9 @@
         letter-spacing: 0.02em;
       }
       .tag-warn {
-        background: rgba(251, 191, 36, 0.1);
+        background: var(--fill-1);
         color: var(--warning);
-        border: 1px solid rgba(251, 191, 36, 0.3);
+        border: 1px solid transparent;
       }
       .tag-muted {
         background: var(--fill-1);
@@ -1732,15 +1891,11 @@
         gap: var(--sp-3);
         flex-wrap: wrap;
       }
+      /* 分隔线用「一档更亮的台面色」，不用主色 —— 颜色只表达状态，不拿来装饰 */
       .tool-sep {
         width: 1px;
         height: 20px;
-        background: linear-gradient(
-          to bottom,
-          transparent,
-          var(--glass-border-active),
-          transparent
-        );
+        background: var(--fill-4);
         margin: 0 var(--sp-2);
       }
       .tool-btn,
@@ -1757,22 +1912,22 @@
       }
       .tool-btn:hover,
       .cmd-btn:hover:not(:disabled) {
-        border-color: var(--glass-border-active);
-        color: #fff;
+        color: var(--text-primary);
       }
       /* 工具组是模态的：只有一个是「按下」状态 */
       .tool-btn.active {
-        background: var(--accent-wash);
-        border-color: var(--accent-cyan);
-        color: #fff;
+        background: var(--fill-1);
+        border-color: transparent;
+        color: var(--accent-cyan);
+        box-shadow: var(--neu-inset);
       }
       .cmd-btn:disabled {
         opacity: 0.35;
         cursor: not-allowed;
       }
       .cmd-btn.danger:hover:not(:disabled) {
-        border-color: rgba(248, 113, 113, 0.6);
-        color: #fca5a5;
+        border-color: transparent;
+        color: var(--danger);
       }
       .tool-more {
         position: relative;
@@ -1791,8 +1946,8 @@
         padding: var(--sp-3);
         border-radius: var(--r-md);
         border: 1px solid var(--glass-border);
-        background: #11131f;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+        background: var(--bg-deep);
+        box-shadow: var(--neu-raised);
       }
       .editor-body {
         display: flex;
@@ -1871,8 +2026,9 @@
         background: var(--fill-1);
       }
       .element-row.selected {
-        background: var(--accent-wash);
-        color: #fff;
+        background: var(--fill-1);
+        color: var(--accent-cyan);
+        box-shadow: var(--neu-inset);
       }
       .element-row.pending {
         color: var(--accent-cyan);
@@ -1894,7 +2050,7 @@
         font-size: var(--fs-sm);
       }
       .element-value.err {
-        color: #fca5a5;
+        color: var(--danger);
       }
       .element-child {
         padding-left: var(--sp-6);
@@ -1907,8 +2063,8 @@
         width: 300px;
         border: 1px solid var(--glass-border);
         border-radius: var(--r-lg);
-        background: #11131f;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+        background: var(--bg-deep);
+        box-shadow: var(--shadow-lift);
         padding: var(--sp-5);
       }
       .hotkey-panel.hidden {
@@ -1953,7 +2109,7 @@
         border-radius: var(--r-sm);
         border: 1px solid var(--glass-border);
         background: var(--fill-1);
-        color: #fff;
+        color: var(--text-primary);
         font-family: var(--font-mono);
         text-transform: lowercase;
       }
@@ -1980,36 +2136,72 @@
       .server-list {
         display: flex;
         flex-direction: column;
-        gap: var(--sp-4);
+        gap: var(--sp-5);
       }
+      /* 服务器条目：**整行可点**（点它 = 切到这一台）。不再单独放一个点选圆点 ——
+         左下角那三个已经写着当前是哪台了，再加一个圆点只是重复信息。
+         ⚠️ 间距给足：一行里本来就有 4 个输入/下拉 + 3 个图标按钮（共 7 个"坑"），
+         6px 的间距会把它们糊成一片（用户：「框之间太密集了」）。
+         ⚠️ 但间距一放大就得**同步收窄固定宽度**，否则这行放不下、
+         ↑↓🗑 会被挤到第二行（实测过：12px 间距 + 108px 名字 ≈ 474px 固定量，
+         而卡片内宽只有 555px）。控件宽度是宽弹性的：host 允许缩到 70px。 */
       .server-row {
         display: flex;
         align-items: center;
-        gap: var(--sp-3);
+        gap: var(--sp-4);
         flex-wrap: wrap;
-        padding: var(--sp-3) var(--sp-4);
-        border-radius: var(--r-md);
+        padding: var(--sp-5);
+        border-radius: var(--r-lg);
         border: 1px solid var(--glass-border);
         background: var(--fill-1);
+        cursor: pointer;
+        transition: box-shadow var(--transition-fast);
+      }
+      /* 当前那台 = 摁下去（行内输入框已经是一个个「坑」，所以只能靠
+         **整块凹下去 + 名字用主色**来说「就是这台」）。 */
+      .server-row.on {
+        background: var(--fill-2);
+        box-shadow: var(--neu-inset);
+      }
+      .server-row.on .server-name {
+        color: var(--accent-cyan);
+        font-weight: 600;
+      }
+      .server-row:hover:not(.on) {
+        box-shadow: var(--shadow-lift);
+      }
+      /* 行内那三个图标按钮（上移/下移/删除）**不占盒子**：
+         一行里再摆三个凹盒会糊成一片（用户：「框之间太密集了」），
+         而它们本来就是次要动作 —— 按列表行的规矩，平时是平的、hover 才弹起来。 */
+      .server-row .icon-btn {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+      }
+      .server-row .icon-btn:hover:not(:disabled) {
+        background: var(--fill-2);
+        box-shadow: var(--neu-raised-sm);
       }
       .server-row input,
       .server-row select {
-        padding: var(--sp-2) var(--sp-3);
+        padding: var(--sp-3) var(--sp-4);
         border-radius: var(--r-sm);
         border: 1px solid var(--glass-border);
         background: var(--fill-1);
         color: var(--text-primary);
         font-size: var(--fs-base);
+        /* 行内控件自己有自己的指针形状，别让人以为点输入框也会切服务商 */
+        cursor: auto;
       }
       .server-row input.server-name {
-        width: 92px;
+        width: 88px;
       }
       .server-row input.server-host {
-        flex: 1 1 130px;
-        min-width: 90px;
+        flex: 1 1 120px;
+        min-width: 70px;
       }
       .server-row input.server-port {
-        width: 96px;
+        width: 80px;
       }
       .server-row select.server-type {
         width: 74px;
@@ -2018,27 +2210,25 @@
       .server-row select:disabled {
         opacity: 0.55;
       }
-      /* 第二行：这台服务商**自己**的凭据（账号每台一份，不能共用） */
+      /* 第二行：这台服务商**自己**的凭据（账号每台一份，不能共用）。
+         ⚠️ 原来这里有 `padding-left: var(--sp-1)` —— 那是给已删除的行首点选圆点
+         对齐用的，圆点没了就该去掉，否则整行偏 2px。 */
       .server-cred-row {
         flex-basis: 100%;
         display: flex;
         align-items: center;
-        gap: var(--sp-3);
-        margin-top: var(--sp-2);
-        padding-left: var(--sp-1);
+        gap: var(--sp-4);
+        margin-top: var(--sp-4);
       }
       .server-cred-row input.server-key {
         flex: 1 1 180px;
         min-width: 120px;
       }
-      .server-cred-row .tag {
-        flex: 0 0 auto;
-      }
       .server-icon {
         display: inline-flex;
         width: 16px;
         height: 16px;
-        color: var(--accent, #00d4ff);
+        color: var(--accent-cyan);
         flex: 0 0 auto;
       }
       .server-icon svg,
@@ -2046,7 +2236,6 @@
         width: 100%;
         height: 100%;
       }
-      .server-pick,
       .icon-btn {
         flex: 0 0 auto;
         width: 24px;
@@ -2059,17 +2248,13 @@
         cursor: pointer;
         font-size: var(--fs-base);
       }
-      .server-pick.on {
-        color: var(--accent, #00d4ff);
-        border-color: var(--accent, #00d4ff);
-      }
       .icon-btn:disabled {
         opacity: 0.35;
         cursor: not-allowed;
       }
       .icon-btn.danger:hover {
-        color: #f87171;
-        border-color: #f87171;
+        color: var(--danger);
+        border-color: var(--danger);
       }
       /* 下拉菜单里的服务商图标 / 信息头 */
       .pi-icon {
@@ -2077,7 +2262,7 @@
         width: 15px;
         height: 15px;
         margin-right: var(--sp-4);
-        color: var(--accent, #00d4ff);
+        color: var(--accent-cyan);
         flex: 0 0 auto;
       }
       .picker-head-item {
@@ -2134,7 +2319,7 @@
       }
       .auth-field input:focus {
         border-color: var(--accent-cyan);
-        box-shadow: 0 0 12px var(--accent-wash);
+        box-shadow: var(--neu-inset-soft);
       }
       .auth-account-row {
         display: flex;
@@ -2155,8 +2340,8 @@
       .auth-claim {
         padding: var(--sp-5);
         border-radius: var(--r-md);
-        background: rgba(251, 191, 36, 0.08);
-        border: 1px solid rgba(251, 191, 36, 0.3);
+        background: var(--fill-1);
+        border: 1px solid transparent;
         margin-top: var(--sp-5);
       }
       .auth-claim p {
@@ -2211,9 +2396,9 @@
         padding: var(--sp-5) var(--sp-6);
         border-radius: var(--r-xl);
         font-size: var(--fs-md);
-        background: rgba(20, 22, 36, 0.9);
+        background: var(--bg-deep);
         border: 1px solid var(--glass-border);
-        color: #fff;
+        color: var(--text-primary);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         box-shadow: var(--shadow-card);
@@ -2224,13 +2409,13 @@
         max-width: 380px;
       }
       .toast.error {
-        border-color: rgba(248, 113, 113, 0.5);
+        color: var(--danger);
       }
       .toast.success {
-        border-color: rgba(74, 222, 128, 0.5);
+        color: var(--success);
       }
       .toast.warn {
-        border-color: rgba(251, 191, 36, 0.55);
+        color: var(--warning);
       }
       @keyframes slideInRight {
         from {
@@ -2337,7 +2522,9 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- 汉堡菜单按钮 -->
-    <button class="hamburger" id="hamburgerBtn" aria-label="菜单">☰</button>
+    <button class="hamburger" id="hamburgerBtn" aria-label="菜单">
+      <span class="btn-ic" data-icon="menu"></span>
+    </button>
 
     <!-- 主布局 -->
     <div class="app-layout">
@@ -2350,24 +2537,25 @@
           <img class="logo-word" src="assets/logo-word.png" alt="Omni3D" />
         </div>
         <nav class="sidebar-nav" id="sidebarNav">
+          <!-- 图标槽位留空：由 `paintNavIcons()` 按 data-page 填 `NAV_ICONS`。
+               不放 emoji 占位 —— 拿不到 SVG 的那一页就会把 emoji 一直留在界面上，
+               「推广」就这么带着 📣 活了好几版。 -->
           <button data-page="capture" class="active">
-            <span class="nav-icon">📷</span> 采集
+            <span class="nav-icon"></span> 采集
           </button>
           <button data-page="viewer">
-            <span class="nav-icon">🔍</span> 建模结果
+            <span class="nav-icon"></span> 建模结果
           </button>
           <button data-page="history">
-            <span class="nav-icon">📋</span> 历史记录
+            <span class="nav-icon"></span> 历史记录
           </button>
           <button data-page="settings">
-            <span class="nav-icon">⚙</span> 设置
+            <span class="nav-icon"></span> 设置
           </button>
           <button data-page="help">
-            <span class="nav-icon">❓</span> 帮助文档
+            <span class="nav-icon"></span> 帮助文档
           </button>
-          <button data-page="promo">
-            <span class="nav-icon">📣</span> 推广
-          </button>
+          <button data-page="promo"><span class="nav-icon"></span> 推广</button>
         </nav>
         <div class="sb-bottom">
           <button
@@ -2426,7 +2614,7 @@
             <div class="video-preview-wrapper" id="videoPreviewWrapper">
               <video id="video" autoplay playsinline muted></video>
               <div class="video-placeholder" id="videoPlaceholder">
-                <span class="placeholder-icon">🎥</span>
+                <span class="placeholder-icon" data-icon="video"></span>
                 <span>未选择视频源</span>
               </div>
               <div class="recording-badge hidden" id="recordingBadge">
@@ -2435,11 +2623,26 @@
               </div>
             </div>
             <div style="margin-top: 12px" class="btn-row capture-btns">
-              <button class="btn" id="recBtn">● 录制</button>
-              <button class="btn" id="photoBtn">📷 拍摄</button>
-              <button class="btn" id="pickBtn">🗂 本地视频</button>
-              <button class="btn" id="arScanBtn" disabled>◈ AR 扫描</button>
-              <button class="btn btn-danger" id="clearBtn">✕ 清除</button>
+              <button class="btn" id="recBtn">
+                <span class="btn-ic" data-icon="record"></span
+                ><span class="btn-text">录制</span>
+              </button>
+              <button class="btn" id="photoBtn">
+                <span class="btn-ic" data-icon="photo"></span
+                ><span class="btn-text">拍摄</span>
+              </button>
+              <button class="btn" id="pickBtn">
+                <span class="btn-ic" data-icon="video"></span
+                ><span class="btn-text">本地视频</span>
+              </button>
+              <button class="btn" id="arScanBtn" disabled>
+                <span class="btn-ic" data-icon="scan"></span
+                ><span class="btn-text">AR 扫描</span>
+              </button>
+              <button class="btn btn-danger" id="clearBtn">
+                <span class="btn-ic" data-icon="x"></span
+                ><span class="btn-text">清除</span>
+              </button>
               <input
                 type="file"
                 id="fileInput"
@@ -2458,17 +2661,16 @@
             </div>
             <!-- AR 扫描：按钮已并入上面那排，这里只留扫描中的状态区 -->
             <div id="arScanStatusArea" style="margin-top: 8px; display: none">
-              <div
-                class="glass-card"
-                style="padding: 12px 16px; border-color: rgba(0, 212, 255, 0.3)"
-              >
+              <div class="glass-card" style="padding: 12px 16px">
                 <span id="arScanStatusText">扫描中...</span>
                 <div class="btn-row" style="margin-top: 8px">
                   <button class="btn btn-sm btn-primary" id="arScanFinishBtn">
-                    ✓ 完成扫描
+                    <span class="btn-ic" data-icon="check"></span
+                    ><span class="btn-text">完成扫描</span>
                   </button>
                   <button class="btn btn-sm btn-danger" id="arScanCancelBtn">
-                    ✕ 放弃
+                    <span class="btn-ic" data-icon="x"></span
+                    ><span class="btn-text">放弃</span>
                   </button>
                 </div>
               </div>
@@ -2504,75 +2706,55 @@
                 class="tool-btn"
                 id="huaweiFusionBtn"
                 data-help="把 AR 扫描得到的华为点云叠加显示（亮黄色），导出时也会一起写入。没有 AR 数据时不可用。"
-              >
-                ◈ 华为点云
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 id="colorModeBtn"
                 data-help="在「真实颜色」和「按高度着色」之间切换。按高度着色用蓝→白渐变表示上下，便于看清结构。"
-              >
-                🎨 颜色
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 id="axesToggleBtn"
                 data-help="万向轴（方向棱镜）：右下角显示当前姿态。抓住某条圈拖动 → 只绕该轴旋转；抓不到圈不响应。关掉就隐藏且不可用。"
-              >
-                🧭 万向轴
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 id="exportBtn"
                 data-help="导出当前模型。目前支持导出 PLY 点云文件。"
-              >
-                ⬇ 导出
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 id="clearViewerBtn"
                 data-help="清空查看器：移除画面里的点云与全部标注元素。已存到历史记录的重建结果不会被删。"
-              >
-                🧹 清空
-              </button>
+              ></button>
               <span class="tool-sep"></span>
               <button
                 class="tool-btn cmd-btn"
                 id="undoBtn"
                 disabled
                 data-help="撤销上一步标注操作（Ctrl+Z）。"
-              >
-                ↶
-              </button>
+              ></button>
               <button
                 class="tool-btn cmd-btn"
                 id="redoBtn"
                 disabled
                 data-help="重做被撤销的标注操作（Ctrl+Shift+Z）。"
-              >
-                ↷
-              </button>
+              ></button>
               <button
                 class="tool-btn cmd-btn"
                 id="resetViewBtn"
                 data-help="重置视角：把点云重新放到画面中央并铺满。"
-              >
-                ⤾
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 id="helpBtn"
                 data-help="帮助模式：打开后点任意按钮或视图区域，就会显示它的用途说明。"
-              >
-                ❓ 帮助
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 id="helpDocBtn"
                 data-help="打开帮助文档：从采集、重建、测量到服务商与 API Key 的逐条说明。"
-              >
-                📖 文档
-              </button>
+              ></button>
             </div>
 
             <div class="tool-section" id="pickGroup">
@@ -2580,23 +2762,17 @@
                 class="tool-btn active"
                 data-tool="select"
                 data-help="选择：点元素 = 选中（Ctrl/⌘ 点 = 多选）；点云上的点 = 选中它（生成一个「点」元素，可拿去画线/量面积）；点空白 = 取消选择。"
-              >
-                ■ 选择
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 data-tool="box2d"
                 data-help="框选：按住左键拖出矩形，框内的点云点收成一个「框选点组」（上限 1000 个点，在元素视图里就是一行）；矩形内已有的元素也会被选中。"
-              >
-                ▭ 框选
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 data-tool="pan"
                 data-help="移动：按住左键拖动 = 平移画面。不转视角、也不选点。"
-              >
-                ✋ 移动
-              </button>
+              ></button>
             </div>
 
             <div class="tool-section" id="toolGroup">
@@ -2605,38 +2781,28 @@
                 class="tool-btn"
                 data-tool="line"
                 data-help="画线：量两点之间的距离。选 2 个点后点「应用」，或直接切换到此工具后在点云上点两个点。"
-              >
-                ╱ 画线
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 data-tool="calibrate"
                 data-help="反向尺度推导：用一段已知的真实长度反推整模尺度。选 2 个点（或直接点两个点），在弹窗里填真实长度即可。"
-              >
-                📏 尺度
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 data-tool="area"
                 data-help="面积：量 3 个点确定的平面面积（平行四边形，恰为三角形面积的 2 倍）。选 3 个点后点「应用」，或直接点三个点。"
-              >
-                ▱ 面积
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 data-tool="triangleArea"
                 hidden
                 data-help="三角形面积：量 3 个点确定的三角形面积（是平行四边形面积的一半）。选 3 个点后点「应用」，或直接点三个点。默认在设置 → 界面里开启。"
-              >
-                △ 三角形面积
-              </button>
+              ></button>
               <button
                 class="tool-btn"
                 data-tool="volume"
                 data-help="体积：先选 3 个点定底面，再选 1 个点定高。"
-              >
-                ▣ 体积
-              </button>
+              ></button>
             </div>
           </div>
 
@@ -2711,8 +2877,12 @@
         <div class="modal-mask hidden" id="calDialog">
           <div class="modal-card">
             <div class="modal-head">
-              <span>📏 标尺校准</span>
-              <button class="modal-x" id="calDialogClose">✕</button>
+              <span
+                ><span class="btn-ic" data-icon="ruler"></span> 标尺校准</span
+              >
+              <button class="modal-x" id="calDialogClose">
+                <span class="btn-ic" data-icon="x"></span>
+              </button>
             </div>
             <div class="modal-body">
               <p class="modal-line">
@@ -2746,8 +2916,10 @@
         <div class="modal-mask hidden" id="exportDialog">
           <div class="modal-card">
             <div class="modal-head">
-              <span>⬇ 导出</span>
-              <button class="modal-x" id="exportClose">✕</button>
+              <span><span class="btn-ic" data-icon="export"></span> 导出</span>
+              <button class="modal-x" id="exportClose">
+                <span class="btn-ic" data-icon="x"></span>
+              </button>
             </div>
             <div class="modal-body">
               <button class="export-row" id="exportPlyBtn">
@@ -2766,8 +2938,12 @@
         <div class="modal-mask hidden" id="delDialog">
           <div class="modal-card">
             <div class="modal-head">
-              <span>🗑 删除元素</span>
-              <button class="modal-x" id="delDialogClose">✕</button>
+              <span
+                ><span class="btn-ic" data-icon="trash"></span> 删除元素</span
+              >
+              <button class="modal-x" id="delDialogClose">
+                <span class="btn-ic" data-icon="x"></span>
+              </button>
             </div>
             <div class="modal-body">
               <p class="modal-line">
@@ -2797,7 +2973,9 @@
         <div class="help-pop hidden" id="helpPop">
           <div class="help-pop-head">
             <span id="helpPopTitle">说明</span>
-            <button class="modal-x" id="helpPopClose">✕</button>
+            <button class="modal-x" id="helpPopClose">
+              <span class="btn-ic" data-icon="x"></span>
+            </button>
           </div>
           <div class="help-pop-body" id="helpPopBody"></div>
         </div>
@@ -4173,7 +4351,7 @@
         if (it.cur) {
           const ck = document.createElement("span");
           ck.className = "pi-check";
-          ck.textContent = "✓";
+          ck.innerHTML = UI_ICONS.check;
           btn.appendChild(ck);
         }
         if (onClick) btn.addEventListener("click", onClick);
@@ -4484,7 +4662,8 @@
         dom.recordingBadge.classList.add("hidden");
         dom.metaInfoBar.classList.add("hidden");
         dom.arScanStatusArea.style.display = "none";
-        dom.recBtn.textContent = "● 录制";
+        setBtnIcon(dom.recBtn, "record");
+        setBtnText(dom.recBtn, "录制");
         dom.recBtn.classList.remove("btn-danger");
         updateSubmitButton();
         updateClearButton();
@@ -4584,7 +4763,8 @@
             if (STATE.recordingTimerInterval)
               clearInterval(STATE.recordingTimerInterval);
             dom.recordingBadge.classList.add("hidden");
-            dom.recBtn.textContent = "● 录制";
+            setBtnIcon(dom.recBtn, "record");
+            setBtnText(dom.recBtn, "录制");
             dom.recBtn.classList.remove("btn-danger");
             if (!STATE.clearing && STATE.recordedChunks.length > 0) {
               STATE.recordedBlob = new Blob(STATE.recordedChunks, {
@@ -4617,7 +4797,8 @@
           STATE.mediaRecorder.start();
           STATE.recordingStartTime = Date.now();
           dom.recordingBadge.classList.remove("hidden");
-          dom.recBtn.textContent = "■ 停止";
+          setBtnIcon(dom.recBtn, "stop");
+          setBtnText(dom.recBtn, "停止");
           dom.recBtn.classList.add("btn-danger");
           updateRecordingTimer();
           STATE.recordingTimerInterval = setInterval(updateRecordingTimer, 500);
@@ -4793,7 +4974,8 @@
         // 若正在录制，先停止
         if (STATE.mediaRecorder && STATE.mediaRecorder.state === "recording") {
           STATE.mediaRecorder.stop();
-          dom.recBtn.textContent = "● 录制";
+          setBtnIcon(dom.recBtn, "record");
+          setBtnText(dom.recBtn, "录制");
           dom.recBtn.classList.remove("btn-danger");
         }
         // 拍照相机已开启 → 直接拍下一张
@@ -4851,12 +5033,12 @@
         if (!dom.arScanBtn) return;
         if (STATE.arScanActive) {
           dom.arScanBtn.disabled = true;
-          dom.arScanBtn.textContent = "◈ 扫描中…";
+          setBtnText(dom.arScanBtn, "扫描中…");
           dom.arScanBtn.title = "AR 扫描进行中";
         } else {
           const connected = STATE.arConnected;
           dom.arScanBtn.disabled = !connected;
-          dom.arScanBtn.textContent = "◈ AR 扫描";
+          setBtnText(dom.arScanBtn, "AR 扫描");
           dom.arScanBtn.title = connected
             ? "用 AR 扫描采集（同时得到真实尺度）"
             : "AR 扫描只能在 Omni3D App 内使用";
@@ -5255,7 +5437,10 @@
         } catch (err) {
           markLight("failed");
           const authFail = err.httpStatus === 401 || err.httpStatus === 403;
-          showToast(authFail ? err.message : "提交失败：" + err.message, "error");
+          showToast(
+            authFail ? err.message : "提交失败：" + err.message,
+            "error",
+          );
           dom.submitBtn.disabled = false;
           dom.progressContainer.classList.add("hidden");
           dom.progressBar.style.width = "0%";
@@ -6457,6 +6642,9 @@
         settings: `${_SVG_OPEN}<path d="M4 7.6h8.2M17.8 7.6H20M4 16.4h2.2M11.8 16.4H20"/><circle cx="15" cy="7.6" r="2.2"/><circle cx="9" cy="16.4" r="2.2"/></svg>`,
         help: `${_SVG_OPEN}<circle cx="12" cy="12" r="8.6"/><path d="M9.7 9.8a2.4 2.4 0 1 1 3.1 2.3c-.7.25-.8.75-.8 1.2v.4"/><circle cx="12" cy="16.8" r=".95" fill="currentColor" stroke="none"/></svg>`,
         login: `${_SVG_OPEN}<circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0"/></svg>`,
+        // ⚠️ 曾经漏了这一条：`paintNavIcons` 拿不到 SVG 就**静默不动**，
+        // HTML 里的 emoji 占位就一直留在侧栏上（用户看到的「📣 推广」）。
+        promo: `${_SVG_OPEN}<path d="M5 10h2.9l7.3-3.8v11.6L7.9 14H5z"/><path d="M9.4 14v4.1"/><path d="M18.9 9.3a4 4 0 0 1 0 5.4"/></svg>`,
       };
 
       // ---- 元信息条图标（自绘 SVG，纯描边，跟随 currentColor）----
@@ -6476,6 +6664,57 @@
             const slot = btn.querySelector(".nav-icon");
             if (svg && slot) slot.innerHTML = svg;
           });
+      }
+
+      // ---- 其余界面图标（一律自绘 SVG，不再用字形）----
+      // 为什么反复强调：☰ ◈ ✕ ↑ ↓ 这些字符的粗细与形状由**运行环境的字体**决定，
+      // 同一排按钮换台机器就长得不一样，还会被当成 emoji。
+      // 用法：HTML 里留 `<span class="btn-ic" data-icon="x"></span>`，
+      //       由 `paintUiIcons()` 统一填充 —— 图标**只有一个来源**。
+      //
+      // ⚠️ **位置不能随便放**：这张表引用了 `NAV_ICONS` / `META_ICONS` /
+      // `TOOLBAR_ICONS`，必须放在**三者都已初始化之后**。我一度把它插在
+      // `NAV_ICONS` 后面（`META_ICONS` 前面）—— 模块求值时读到未初始化的
+      // `META_ICONS` 直接抛 ReferenceError，整个初始化中断：
+      // 图标全空、设置页 tab 也点不动。const 没有变量提升，只能靠位置保证。
+      const UI_ICONS = {
+        menu: `${_SVG_OPEN}<path d="M4.4 7.2h15.2M4.4 12h15.2M4.4 16.8h15.2"/></svg>`,
+        record: `${_SVG_OPEN}<circle cx="12" cy="12" r="5.4" fill="currentColor" stroke="none"/></svg>`,
+        stop: `${_SVG_OPEN}<rect x="7.2" y="7.2" width="9.6" height="9.6" rx="1.6" fill="currentColor" stroke="none"/></svg>`,
+        photo: NAV_ICONS.capture,
+        video: `${_SVG_OPEN}<rect x="3.4" y="7" width="11.4" height="10" rx="2"/><path d="M14.8 11.4 20.6 8.2v7.6l-5.8-3.2z"/></svg>`,
+        scan: META_ICONS.ar,
+        check: `${_SVG_OPEN}<path d="M5 12.6 9.8 17.4 19 6.8"/></svg>`,
+        x: `${_SVG_OPEN}<path d="M6.6 6.6l10.8 10.8M17.4 6.6 6.6 17.4"/></svg>`,
+        up: `${_SVG_OPEN}<path d="M6.6 14.4 12 9l5.4 5.4"/></svg>`,
+        down: `${_SVG_OPEN}<path d="M6.6 9.6 12 15l5.4-5.4"/></svg>`,
+        trash: TOOLBAR_ICONS.clearViewerBtn,
+        ruler: TOOLBAR_ICONS["tool:calibrate"],
+        export: TOOLBAR_ICONS.exportBtn,
+      };
+      function paintUiIcons() {
+        document.querySelectorAll("[data-icon]").forEach((slot) => {
+          const svg = UI_ICONS[slot.dataset.icon];
+          if (svg) slot.innerHTML = svg;
+        });
+      }
+      // 只换按钮上的**图标**（按钮的 textContent 会把图标一起抹掉）
+      function setBtnIcon(btn, key) {
+        const slot = btn && btn.querySelector("[data-icon]");
+        if (!slot || !UI_ICONS[key]) return;
+        slot.dataset.icon = key;
+        slot.innerHTML = UI_ICONS[key];
+      }
+      // 只换按钮上的**文字**，不动图标
+      function setBtnText(btn, text) {
+        if (!btn) return;
+        let span = btn.querySelector(".btn-text");
+        if (!span) {
+          span = document.createElement("span");
+          span.className = "btn-text";
+          btn.appendChild(span);
+        }
+        span.textContent = text;
       }
 
       // ---- 左栏宽度可拖调（持久化 --sidebar-width）----
@@ -6886,12 +7125,12 @@
           );
           const up = document.createElement("button");
           up.className = "btn btn-sm";
-          up.textContent = "↑";
+          up.innerHTML = UI_ICONS.up;
           up.disabled = idx === 0;
           up.addEventListener("click", () => moveTool(item.tool, -1));
           const down = document.createElement("button");
           down.className = "btn btn-sm";
-          down.textContent = "↓";
+          down.innerHTML = UI_ICONS.down;
           down.disabled = idx === STATE.toolLayout.length - 1;
           down.addEventListener("click", () => moveTool(item.tool, 1));
           row.appendChild(box);
@@ -7141,16 +7380,17 @@
         dom.serverList.innerHTML = "";
         STATE.servers.forEach((sv, idx) => {
           const row = document.createElement("div");
-          row.className = "server-row";
+          row.className =
+            "server-row" + (sv.id === STATE.activeServerId ? " on" : "");
           const builtin = sv.id === "local";
 
-          const pick = document.createElement("button");
-          pick.className =
-            "server-pick" + (sv.id === STATE.activeServerId ? " on" : "");
-          pick.title = sv.id === STATE.activeServerId ? "当前使用" : "用这一台";
-          pick.textContent = sv.id === STATE.activeServerId ? "●" : "○";
-          pick.addEventListener("click", () => activateServer(sv.id));
-          row.appendChild(pick);
+          // 点条目本身 = 切到这一台。不再单独放一个点选圆点：
+          // 左下角那三个已经写着当前是哪台了，再加一个圆点是重复信息。
+          // 落在输入框/下拉/按钮上的点击不算（否则一点输入框就把服务商切了）。
+          row.addEventListener("click", (e) => {
+            if (e.target.closest("input, select, button, textarea")) return;
+            if (sv.id !== STATE.activeServerId) activateServer(sv.id);
+          });
 
           const icon = document.createElement("span");
           icon.className = "server-icon";
@@ -7229,7 +7469,7 @@
 
           const up = document.createElement("button");
           up.className = "icon-btn";
-          up.textContent = "↑";
+          up.innerHTML = UI_ICONS.up;
           up.title = "上移";
           up.disabled = builtin || idx <= 1;
           up.addEventListener("click", () => moveServer(idx, -1));
@@ -7237,7 +7477,7 @@
 
           const down = document.createElement("button");
           down.className = "icon-btn";
-          down.textContent = "↓";
+          down.innerHTML = UI_ICONS.down;
           down.title = "下移";
           down.disabled = builtin || idx === STATE.servers.length - 1;
           down.addEventListener("click", () => moveServer(idx, 1));
@@ -7245,7 +7485,7 @@
 
           const del = document.createElement("button");
           del.className = "icon-btn danger";
-          del.textContent = "🗑";
+          del.innerHTML = UI_ICONS.trash;
           del.title = builtin ? "内置，不能删" : "删除这台";
           del.disabled = builtin;
           del.addEventListener("click", () => removeServer(sv.id));
@@ -7258,20 +7498,9 @@
 
       // ---- 服务商凭据：每家一份（令牌 或 API Key）----
       // 账号体系是**各家独立**的，所以「在这里登录」只对这台服务商生效。
-      function credLabel(sv) {
-        const cred = readCred(sv.id);
-        // ⚠️ 用户名只是「上次校验成功」的记录：API Key 被清空后不能再显示成「已登录」
-        if (cred.apiKey) {
-          return cred.username
-            ? `API Key · ${cred.username}`
-            : "API Key · 已填";
-        }
-        if (cred.token) {
-          return cred.username ? `已登录 · ${cred.username}` : "已登录";
-        }
-        return "未设置凭据";
-      }
-
+      // ⚠️ 曾经这里还有一个 `credLabel()` 把状态写成「未设置凭据 / API Key · 已填」
+      // 挂在输入框旁边 —— 它只是把 placeholder 又说了一遍（而且口令框里的圆点
+      // 本来就能看出填没填），已删。顺带删掉的两个函数也是同一个原因。
       function buildCredRow(sv) {
         const wrap = document.createElement("div");
         wrap.className = "server-cred-row";
@@ -7292,11 +7521,6 @@
           ? "这台服务商已关闭匿名访问：提交重建时会要求 API Key。"
           : "留空则用匿名身份；这台服务商要求凭据时，提交会被拒。";
         key.value = readCred(sv.id).apiKey || "";
-
-        const tag = document.createElement("span");
-        tag.className = "tag tag-muted";
-        tag.textContent = credLabel(sv);
-
         key.addEventListener("change", () => {
           const cred = readCred(sv.id);
           cred.apiKey = key.value.trim();
@@ -7309,12 +7533,9 @@
             // 换了凭据 = 未知：灯回灰，等下一次提交来回答
             markLight("unknown");
           }
-          tag.className = "tag tag-muted";
-          tag.textContent = credLabel(sv);
         });
 
         wrap.appendChild(key);
-        wrap.appendChild(tag);
         // 内置「本地」行不给改名/删，但凭据一样能填
         return wrap;
       }
@@ -10067,7 +10288,7 @@
         // 删除这一条（含引用它的测量）
         const del = document.createElement("button");
         del.className = "row-del";
-        del.textContent = "🗑";
+        del.innerHTML = UI_ICONS.trash;
         del.title = "删除这个元素（引用它的测量会一起删除）";
         del.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -11254,6 +11475,7 @@
       STATE.axesVisible = gizmoSaved === null ? true : gizmoSaved === "1";
       paintToolbarIcons();
       paintNavIcons();
+      paintUiIcons();
       initTheme();
       initGizmoPad();
       updateGizmo();
