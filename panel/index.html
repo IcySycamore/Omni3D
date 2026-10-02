@@ -2839,17 +2839,17 @@
               <button
                 class="tool-btn active"
                 data-tool="select"
-                data-help="选择：点元素 = 选中（Ctrl/⌘ 点 = 多选）；点云上的点 = 选中它（生成一个「点」元素，可拿去画线/量面积）；点空白 = 取消选择。"
+                data-help="选择：点击点云选点，按住Ctrl/⌘多选；点击空白处取消选择。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="box2d"
-                data-help="框选：按住左键拖出矩形，框内的点云点收成一个「框选点组」（上限 1000 个点，在元素视图里就是一行）；矩形内已有的元素也会被选中。"
+                data-help="框选：按住左键拖出矩形「框选点组」（上限 1000）；矩形内已有的元素也会被选中。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="pan"
-                data-help="移动：按住左键拖动 = 平移画面。不转视角、也不选点。"
+                data-help="移动：按住左键拖动平移画面"
               ></button>
             </div>
 
@@ -2858,17 +2858,17 @@
               <button
                 class="tool-btn"
                 data-tool="line"
-                data-help="画线：量两点之间的距离。选 2 个点后点「应用」，或直接切换到此工具后在点云上点两个点。"
+                data-help="画线：量两点之间的距离"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="calibrate"
-                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度。选 2 个点（或直接点两个点），在弹窗里填真实长度即可。"
+                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="area"
-                data-help="面积：量 3 个点确定的平面面积（平行四边形，恰为三角形面积的 2 倍）。选 3 个点后点「应用」，或直接点三个点。"
+                data-help="面积：选取至少 3 个点，测量共面点围成的凸多边形面积"
               ></button>
               <button
                 class="tool-btn"
@@ -2879,7 +2879,7 @@
               <button
                 class="tool-btn"
                 data-tool="volume"
-                data-help="体积：先选 3 个点定底面，再选 1 个点定高。"
+                data-help="体积：依次点实体的各个顶点（三棱柱就是 6 个角）—— 够 4 个起就有数值，点「完成」按这些顶点算凸包体积并画出轮廓。"
               ></button>
             </div>
           </div>
@@ -2889,7 +2889,6 @@
               <div class="viewer-container" id="viewerContainer"></div>
               <div class="viewer-stats-overlay" id="viewerStats"></div>
               <!-- 测量chip（在viewerContainer内动态创建） -->
-              <!-- 万向轴（三环）：姿态固定，抓住某条环拖动 → 只绕那条世界轴转 -->
               <div class="gizmo-pad hidden" id="gizmoPad"></div>
             </div>
             <!-- /viewer-wrap -->
@@ -2906,7 +2905,7 @@
                   <button
                     class="btn btn-sm btn-danger"
                     id="clearElementsBtn"
-                    data-help="清空元素：删除当前会话里的全部标注元素（点、线、面积、体积）。"
+                    data-help="清空元素：删除当前会话里的全部标注元素"
                   >
                     清空
                   </button>
@@ -2922,7 +2921,7 @@
           </div>
           <!-- /editor-body -->
 
-          <!-- 状态栏：当前工具 / 取点进度 / 状态消息 / 应用（常驻，不遮挡画布） -->
+          <!-- 状态栏：当前工具 / 取点进度 / 状态消息 / 应用 -->
           <div class="status-bar" id="opCard">
             <span class="sb-tool" id="opTitle">选择</span>
             <span class="sb-rule"></span>
@@ -2962,7 +2961,7 @@
                 <button
                   class="modal-x"
                   id="calDialogHelp"
-                  data-help="常见物品尺度：跳到帮助文档里那张清单（A4 纸、银行卡、硬币、光盘…）。"
+                  data-help="常见物品尺度"
                 >
                   <span class="btn-ic" data-icon="help"></span>
                 </button>
@@ -9111,49 +9110,42 @@
       // 为什么要跑服务端：长度/面积/体积必须有**唯一实现**，否则「界面显示的数」
       // 与「存的标注」会变成两套真相。
       const TOOL_DEFS = {
+
         select: {
           label: "选择",
           need: 0,
-          hint: "",
         },
         box2d: {
           label: "框选",
           need: 0,
-          hint: "",
         },
         pan: {
           label: "移动",
           need: 0,
-          hint: "",
         },
         line: {
           label: "画线",
           need: 2,
           op: "length",
-          hint: "量两点之间的距离：选好 2 个点后点「应用」，或直接点两个点。",
         },
         calibrate: {
           label: "尺度",
           need: 2,
-          hint: "用一段已知的真实长度反推整模尺度：选好 2 个点，在弹窗里填这段的真实长度。",
         },
         area: {
           label: "面积",
           need: 3,
           op: "polygon_area",
-          hint: "沿这块面的边缘依次点拐角：每落一个点就连一条线，虚线预告收口的位置，够 3 个起点「完成」即可（会自动把环合上）。",
         },
         triangleArea: {
           label: "三角形面积",
           need: 3,
           op: "triangle_area",
-          hint: "量 3 个点确定的三角形面积：选好 3 个点后点「应用」，或直接点三个点。",
         },
         volume: {
           label: "体积",
           need: 4,
           op: "polyhedron_volume",
-          hint: "依次点实体的各个顶点（三棱柱就是 6 个角）：够 4 个起就有数值，点「完成」按这些顶点算体积并画出轮廓。",
         },
       };
       // 工具组的默认顺序与设置页的「工具组」配置共用
@@ -9217,14 +9209,8 @@
           };
         }
         if (isMultiPointTool(tool)) {
-          // 进度看**本次引导**（pending）。元素列表里的选中集会在点工具那一刻
-          // 被采纳进来（见 adoptSelectionAsVertices），所以这里不用再看它。
           const got = pendingPointElements().length;
           const active = STATE.activeTool === tool;
-          // 不再要求「已经收口」才可完成 —— **「完成」自己会收口**。
-          // 否则用户得先猜着把环点上、按钮才亮，那正是「难受」的来源之一。
-          // ⚠️ 字数不够之前**不许写「可完成」**：这条文案是棕色的，写着
-          //    「可完成」却点不动，用户会以为按钮坏了（用户实测）。
           return {
             enabled: true,
             canApply: active && got >= need,
@@ -9238,11 +9224,7 @@
                   : `已取 ${got} 个 · 可完成`,
           };
         }
-        // ---- 固定点数的工具（画线 / 尺度 / 三角形面积）----
-        // 文案跟面积 / 体积**同一套**（用户要求统一）：
-        //   至少要 N 个点 → 已取 N/M · 未完成 → 已取 N 个 · 可应用
-        // 进度要把**落点引导**（pending）也算上：只看选中集会出现在视图里
-        // 点了两个点、状态栏还在说「还需 2 个点」。
+        // ---- 测量工具----
         if (need) {
           const pend =
             STATE.activeTool === tool ? pendingPointElements().length : 0;
@@ -9250,8 +9232,7 @@
           const canApply = have === need; // 列表里选中正好 need 个就能直接套用
           const mismatch = have > 0 && have !== need;
           return {
-            // 选中数既不是 0 也不是 need → 置灰（别让用户以为能直接套用）；
-            // 选中 0 个时仍可用（那是「起一轮引导」）
+            // 选中数既不是 0 也不是 need 禁用
             enabled: !have || canApply,
             canApply,
             have: got,
@@ -9284,7 +9265,7 @@
         solid: "体积",
         measurement: "测量",
       };
-      // 测量动作的中文名（元素行里显示）
+      // 测量动作的中文名
       const OP_LABEL = {
         length: "长度",
         triangle_area: "三角形面积",
@@ -9584,10 +9565,8 @@
             b.classList.toggle("active", b.dataset.tool === def);
           });
         if (!opts.silentHint) {
-          // 多点工具的 hint 是一整句操作说明 —— 那属于帮助内容。常驻状态栏会和
-          // 左边的进度文案叠成「一堆过多的说明」（用户实测），所以这里留空，
-          // 进度由 opReq / progressHint 说。
-          setToolHint(isMultiPointTool(def) ? "" : TOOL_DEFS[def].hint || "");
+
+          setToolHint("");
         }
         if (STATE.viewerContainer) {
           STATE.viewerContainer.classList.toggle(
@@ -9708,7 +9687,7 @@
         if (def.op && chain.length >= (def.need || 0)) {
           await previewMeasure(def);
         } else {
-          setToolHint(progressHint(def));
+          setToolHint("");
         }
         updateToolStates();
       }
@@ -9733,7 +9712,7 @@
         pushUndo();
         STATE.selectedIds.clear();
         STATE.pendingIds = [];
-        setToolHint(`${def.label}：已用选中的 ${refs.length} 个点计算`);
+        setToolHint(`已用选中的 ${refs.length} 个点`);
         await createMeasurement(def, refs);
         renderElementList();
         renderElements();
@@ -10068,9 +10047,8 @@
           if (STATE.pendingIds.length < tool.need) {
             renderElementList();
             renderElements();
-            setToolHint(
-              `${tool.label}：已取 ${STATE.pendingIds.length}/${tool.need} 个点（Esc 取消）`,
-            );
+
+            setToolHint("");
             // 先落库，这样 Esc 后这些点依然在（#33）
             await persistCurrent();
             updateToolStates();
@@ -10078,20 +10056,12 @@
           }
           const refs = STATE.pendingIds.slice();
           STATE.pendingIds = [];
-          // 提示条**清空**，不要再把整句操作说明塞回来：那是帮助内容。
-          // 挂在常驻状态栏里就变成「已经做完了还在教你怎么做完」——
-          // 画线的说明写着「点应用」，而两点一取完本来就已经算完了（用户实测）。
           setToolHint("");
-          // 两个点的工具（画线 / 尺度）顺手把这条线段画出来：否则量完只剩两个
-          // 孤零零的点，看不出量的到底是哪一段。
           if (refs.length === 2) {
             STATE.elements.push(makeEdgeElement(refs[0], refs[1]));
             renderElementList();
             renderElements();
           }
-          // 校准不是「产生一个测量」，而是拿两点来定尺度 → 弹窗问真实长度。
-          // 它没有 createMeasurement 帮忙落库，所以这里自己存一次 —— 否则弹窗
-          // 确认时 reloadAnnotations 会把刚画的那条线段丢掉。
           if (STATE.activeTool === "calibrate") {
             await persistCurrent();
             openCalibrationDialog(refs);
@@ -10101,9 +10071,7 @@
           return;
         }
 
-        // ---- 手选全部顶点（面积 / 体积）----
-        // 面积要围成环，所以「上一个顶点已经接了两条边」就不能再接了；
-        // 体积只看点集（凸包），连线与度数都不设限。
+        // ---- 手选全部顶点
         const ring = ringToolActive();
         const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
         if (ring && prevId && degreeOfPoint(prevId) >= 2) {
@@ -10125,7 +10093,7 @@
           if (dist > tol && tool.op === "polygon_area") {
             // 面积是平面图形：顶点偏出平面就没法连成一个多边形 → 拒绝落点
             showToast(
-              `该点离前三点所在平面 ${dist.toFixed(4)}，超出容差 ${tol.toFixed(4)}（模型的 3%）——面积要求所有顶点共面`,
+              `该点与前三点不共面，距离该平面 ${dist.toFixed(4)}，超出容差 ${tol.toFixed(4)}=`,
               "warn",
             );
             return;
@@ -10135,9 +10103,8 @@
             existing.length === 3 &&
             tool.op === "polyhedron_volume"
           ) {
-            // 第 4 点仍与前三点共面 → 围不出体。**不拦**（用户定的口径：
-            // 共面就共面，体积就是 0），但要说一声，免得他对着 0 发愣。
-            showToast("这 4 个点共面，体积会是 0", "warn");
+            // 第 4 点仍与前三点共面
+            showToast("4点共面", "warn");
           }
         }
 
@@ -10155,22 +10122,12 @@
         await persistCurrent();
 
         if (STATE.pendingIds.length < tool.need) {
-          setToolHint(progressHint(tool));
+          setToolHint("");
           updateToolStates();
           return;
         }
         await previewMeasure(tool);
         updateToolStates();
-      }
-
-      // 取点进度（状态栏）。只写**下一步做什么**，不复述工具名与个数上限 ——
-      // 那些由左边的 opReq 说，两边都写就成了用户说的「一堆过多的说明」。
-      function progressHint(tool) {
-        const got = pendingPointElements().length;
-        // 收口不用用户操心（「完成」自己会做），所以这里**只说还差几个点**；
-        // 够数之后没什么要说的 —— 由左边的「已取 N 个 · 可完成」表达。
-        if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;
-        return "";
       }
 
       // 落点后的实时数值：**只算不存**（preview）。

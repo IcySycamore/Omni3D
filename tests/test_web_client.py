@@ -174,7 +174,7 @@ class TestMultiVertexMeasurement:
 
     def test_volume_is_not_blocked_when_coplanar(self, index_html):
         """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。"""
-        assert "这 4 个点共面，体积会是 0" in index_html
+        assert "4点共面" in index_html
 
     def test_volume_draws_the_hull_the_server_measured(self, index_html):
         """体积画的是**服务端算的那个凸包的棱**（`el.outline`）。
@@ -198,13 +198,17 @@ class TestMultiVertexMeasurement:
         )
 
     def test_volume_hint_promises_no_ring(self, index_html):
-        """体积的提示不能提「连线 / 虚线 / 收口」—— 它不连线也不收口。"""
-        match = re.search(r"volume: \{(.*?)\n        \}", index_html, re.S)
-        assert match, "找不到 volume 的工具定义"
-        hint = match.group(1)
+        """体积的说明不能提「连线 / 虚线 / 收口」—— 它不连线也不收口。
+
+        工具说明现在只在一个地方：那个按钮的 `data-help`（帮助模式里看得到）。
+        """
+        help_text = _tool_button_html(index_html, "volume")
         for banned in ("虚线", "收口", "连一条线"):
-            assert banned not in hint, f"体积不连线，提示里不该出现「{banned}」"
-        assert "完成" in hint, "得说清怎么结束"
+            assert banned not in help_text, f"体积不连线，说明里不该出现「{banned}」"
+        assert "完成" in help_text, "得说清怎么结束"
+        # 它量的是**凸包体积**，不是「凸多边体面积」（旧文案里的错词）
+        assert "凸多边体面积" not in help_text
+        assert "体积" in help_text
 
 
 class TestElementRowContent:
@@ -468,11 +472,32 @@ class TestStatusBarStaysShort:
     """
 
     def test_operation_manual_is_not_parked_in_the_status_bar(self, index_html):
-        """那句说明属于帮助内容（帮助模式里能看到），不该常驻状态栏。"""
+        """那句说明属于帮助内容（帮助模式里的 `data-help` + 帮助文档），
+        不许常驻状态栏 —— 它会跟左边那列进度叠成「一堆过多的说明」。
+
+        用户为这条报过三次；最后一次是截图：状态栏同时出现
+        「已取 1/2 · 未完成」和「画线：已取 1/2 个点（Esc 取消）」。
+        """
         assert _contains_text(
-            index_html,
-            'setToolHint(isMultiPointTool(def) ? "" : TOOL_DEFS[def].hint || "");',
+            index_html, 'if (!opts.silentHint) { setToolHint(""); }'
         )
+        assert "TOOL_DEFS[def].hint" not in index_html
+        # 工具定义里不再有第二份说明
+        defs = re.search(r"const TOOL_DEFS = \{(.*?)\n      \};", index_html, re.S)
+        assert defs, "找不到 TOOL_DEFS"
+        assert "hint:" not in defs.group(1), "说明只留一份：工具按钮的 data-help"
+
+    def test_progress_is_reported_once(self, index_html):
+        """进度只在左边那列（opReq）说 —— 提示条不许再复述一遍。
+
+        用户截图里的重复：「已取 1/2 · 未完成」+「画线：已取 1/2 个点（Esc 取消）」。
+        取点进度的第二份文案（`progressHint` 的「还差 N 个顶点」）已整个删掉。
+        """
+        assert "progressHint" not in index_html
+        assert "还差" not in _fn_body(index_html, "onToolClick")
+        body = _fn_body(index_html, "onToolClick")
+        assert "个点（Esc 取消）" not in body
+        assert _contains_text(body, 'setToolHint("");')
 
     def test_preview_hint_carries_only_the_number(self, index_html):
         # 只断到模板串为止：调用可能被格式化器拆行/加尾随逗号
@@ -480,9 +505,6 @@ class TestStatusBarStaysShort:
             index_html,
             'setToolHint(`${formatMeasurement(m)}${m.calibrated ? "" : "（未标定）"}`',
         )
-
-    def test_progress_hint_does_not_restate_the_tool_name(self, index_html):
-        assert _contains_text(index_html, "if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;")
 
 
 class TestDesignTokens:
@@ -1393,9 +1415,25 @@ def _fn_body(index_html: str, name: str) -> str:
 
     不能用 `split("}", 1)[0]` —— 函数里有嵌套的 if/for，会在第一个右括号处
     截断，断言“找不到”时看着像是代码丢了。
+
+    ⚠️ 也不能直接找 `function name(` 之后的第一个 `{`：参数带默认对象时
+    （`function setActiveTool(tool, opts = {})`）那对花括号就是第一个，取到的
+    “函数体”是 `{}` —— 断言会**永远假绿/假红**（实测踩过）。先配平参数表的圆括号。
     """
-    start = index_html.index(f"function {name}(")
-    open_brace = index_html.index("{", start)
+    head = f"function {name}"
+    start = index_html.index(head)
+    i = start + len(head)
+    depth = 0
+    while i < len(index_html):
+        ch = index_html[i]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    open_brace = index_html.index("{", i)
     depth = 0
     for k in range(open_brace, len(index_html)):
         if index_html[k] == "{":
@@ -1405,6 +1443,18 @@ def _fn_body(index_html: str, name: str) -> str:
             if depth == 0:
                 return index_html[open_brace : k + 1]
     raise AssertionError(f"{name} 的花括号不配平")
+
+
+def _tool_button_html(index_html: str, tool: str) -> str:
+    """取工具按钮整段标签（含 `data-help`）。
+
+    ⚠️ 不要用「从 `data-tool="x"` 到下一个 `>`」——属性顺序不固定，
+    `data-help` 写在 `data-tool` **之前** 时就会漏掉。所以从 `<button` 开始取。
+    """
+    key = f'data-tool="{tool}"'
+    at = index_html.index(key)
+    start = index_html.rindex("<button", 0, at)
+    return index_html[start : index_html.index(">", at) + 1]
 
 
 def _css_rule(index_html: str, selector: str) -> str:
@@ -1454,8 +1504,7 @@ class TestStatusBarReadiness:
         assert _contains_text(body, "`至少要 ${need} 个点`")
         assert _contains_text(body, "`已取 ${got}/${need} · 未完成`")
         assert _contains_text(body, "`已取 ${got} 个 · 可应用`")
-        # ⚠️ 只比对旧的**完整文案字面量**，别拿「还需」这种片段去扫 —— 注释里
-        # 引一句就成假红了（我就是这么红的）。
+
         assert "`还需 ${need} 个点`" not in body, "旧文案又回来了"
         assert "数量不匹配" not in body, "旧文案又回来了"
         assert "pendingPointElements().length" in body
