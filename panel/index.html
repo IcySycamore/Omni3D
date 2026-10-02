@@ -1729,19 +1729,14 @@
         font-size: var(--fs-md);
         color: var(--text-primary, #e8ecf6);
       }
-      .modal-field {
-        display: flex;
-        flex-direction: column;
-        gap: var(--sp-3);
-        font-size: var(--fs-base);
-        color: var(--text-muted, #8792a8);
-      }
-      .modal-field input {
+      /* 弹窗里的输入框。
+         ⚠️ 这条以前是**选择器白名单**（`.hotkey-input` / `.server-row input` …），
+         新写的输入框漏进名单就会退回浏览器默认外观（纯白底 + 黑字 + 灰描边 +
+         Arial + 系统箭头）—— 在新拟物台面上就是一块白板（实测过：
+         `#calDialogRealDist` 的 background 就是 rgb(255,255,255)）。
+         所以改成按**容器**兜底：弹窗里的输入框一律按同一套画。 */
+      .modal-card input:not([type="checkbox"]) {
         width: 100%;
-        /* 浏览器默认外观是**纯白底 + 黑字 + 灰描边 + Arial**（实测
-           `.calDialogRealDist` 的 background 就是 rgb(255,255,255)、
-           `appearance: auto`）—— 贴在新拟物台面上就是一块白板，深色主题下更刺眼。
-           别的输入框都统一过了，这一处没进那张名单。 */
         background: var(--fill-1);
         color: var(--text-primary);
         border-color: transparent;
@@ -1749,8 +1744,49 @@
         font-family: inherit;
       }
       /* 数字框的系统上下箭头在台面上是两个灰点，占宽又没什么用 */
-      .modal-field input[type="number"] {
+      .modal-card input[type="number"] {
         appearance: textfield;
+      }
+      /* 弹窗标题右侧的动作组（帮助 / 关闭） */
+      .modal-head-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+      }
+      /* 校准弹窗：两行**并列**（左边名字、右边值 / 输入框） */
+      .cal-row {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-4);
+        margin-bottom: var(--sp-4);
+        font-size: var(--fs-base);
+      }
+      .cal-label {
+        flex: 0 0 68px;
+        color: var(--text-muted);
+      }
+      .cal-val {
+        flex: 1 1 auto;
+        font-family: var(--font-mono);
+        color: var(--text-primary);
+        word-break: break-all;
+        font-variant-numeric: tabular-nums;
+      }
+      .cal-input-wrap {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        min-width: 0;
+      }
+      .cal-input-wrap input {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .cal-input-wrap em {
+        font-style: normal;
+        font-size: var(--fs-sm);
+        color: var(--text-muted);
       }
       .modal-note {
         margin: var(--sp-4) 0 0;
@@ -2922,31 +2958,43 @@
               <span
                 ><span class="btn-ic" data-icon="ruler"></span> 标尺校准</span
               >
-              <button class="modal-x" id="calDialogClose">
-                <span class="btn-ic" data-icon="x"></span>
-              </button>
+              <span class="modal-head-actions">
+                <button
+                  class="modal-x"
+                  id="calDialogHelp"
+                  data-help="常见物品尺度：跳到帮助文档里那张清单（A4 纸、银行卡、硬币、光盘…）。"
+                >
+                  <span class="btn-ic" data-icon="help"></span>
+                </button>
+                <button class="modal-x" id="calDialogClose">
+                  <span class="btn-ic" data-icon="x"></span>
+                </button>
+              </span>
             </div>
             <div class="modal-body">
-              <div class="prop-row">
-                <span class="prop-key">模型距离</span>
-                <span class="prop-val" id="calDialogModelDist">-</span>
+              <div class="cal-row">
+                <span class="cal-label">模型尺度</span>
+                <span class="cal-val" id="calDialogModelDist">-</span>
               </div>
-              <label class="modal-field">
-                <span>真实距离（<em id="calDialogUnit">m</em>）</span>
-                <input
-                  type="number"
-                  id="calDialogRealDist"
-                  step="any"
-                  min="0"
-                  placeholder="例如 0.297"
-                />
-              </label>
+              <div class="cal-row">
+                <span class="cal-label">真实尺度</span>
+                <span class="cal-input-wrap">
+                  <input
+                    type="number"
+                    id="calDialogRealDist"
+                    step="any"
+                    min="0"
+                    placeholder="例如 0.297"
+                  />
+                  <em id="calDialogUnit">m</em>
+                </span>
+              </div>
               <p class="modal-note" id="calDialogResult"></p>
             </div>
             <div class="modal-foot">
               <button class="btn btn-sm" id="calDialogCancel">取消</button>
               <button class="btn btn-sm btn-primary" id="calDialogOk">
-                确定
+                完成
               </button>
             </div>
           </div>
@@ -3609,6 +3657,7 @@
         calDialogRealDist: $("#calDialogRealDist"),
         calDialogResult: $("#calDialogResult"),
         calDialogOk: $("#calDialogOk"),
+        calDialogHelp: $("#calDialogHelp"),
         calDialogCancel: $("#calDialogCancel"),
         calDialogClose: $("#calDialogClose"),
         // 历史页
@@ -6750,6 +6799,7 @@
         trash: TOOLBAR_ICONS.clearViewerBtn,
         ruler: TOOLBAR_ICONS["tool:calibrate"],
         export: TOOLBAR_ICONS.exportBtn,
+        help: TOOLBAR_ICONS.helpBtn,
         // 展开箭头：默认朝下（= 已展开），折起时靠 CSS 转 -90°
         caret: `${_SVG_OPEN}<path d="M6 9.4 12 15.4l6-6"/></svg>`,
       };
@@ -8570,6 +8620,19 @@
         dom.calDialogOk.addEventListener("click", confirmCalibration);
         dom.calDialogCancel.addEventListener("click", closeCalibrationDialog);
         dom.calDialogClose.addEventListener("click", closeCalibrationDialog);
+        // 「常见物品尺度」清单在帮助文档里 —— 跳过去并滚到那一节
+        if (dom.calDialogHelp) {
+          dom.calDialogHelp.addEventListener("click", () => {
+            closeCalibrationDialog();
+            navigateTo("help");
+            // 帮助文档是启动时异步载入的；navigateTo 会把滚动位置复位，
+            // 所以等一帧再滚到锚点。
+            requestAnimationFrame(() => {
+              const target = document.getElementById("scale-reference");
+              if (target) target.scrollIntoView({ block: "start" });
+            });
+          });
+        }
         dom.calDialog.addEventListener("click", (e) => {
           if (e.target === dom.calDialog) closeCalibrationDialog();
         });
@@ -9167,29 +9230,39 @@
             canApply: active && got >= need,
             have: got,
             need,
-            reason: !active || !got
-              ? `至少要 ${need} 个顶点`
-              : got < need
-                ? `已取 ${got}/${need} · 未完成`
-                : `已取 ${got} 个 · 可完成`,
+            reason:
+              !active || !got
+                ? `至少要 ${need} 个顶点`
+                : got < need
+                  ? `已取 ${got}/${need} · 未完成`
+                  : `已取 ${got} 个 · 可完成`,
           };
         }
-        if (need && have === need) {
+        // ---- 固定点数的工具（画线 / 尺度 / 三角形面积）----
+        // 文案跟面积 / 体积**同一套**（用户要求统一）：
+        //   至少要 N 个点 → 已取 N/M · 未完成 → 已取 N 个 · 可应用
+        // 进度要把**落点引导**（pending）也算上：只看选中集会出现在视图里
+        // 点了两个点、状态栏还在说「还需 2 个点」。
+        if (need) {
+          const pend =
+            STATE.activeTool === tool ? pendingPointElements().length : 0;
+          const got = Math.max(pend, have);
+          const canApply = have === need; // 列表里选中正好 need 个就能直接套用
+          const mismatch = have > 0 && have !== need;
           return {
-            enabled: true,
-            canApply: true,
-            have,
+            // 选中数既不是 0 也不是 need → 置灰（别让用户以为能直接套用）；
+            // 选中 0 个时仍可用（那是「起一轮引导」）
+            enabled: !have || canApply,
+            canApply,
+            have: got,
             need,
-            reason: `已取 ${have}/${need} 点 · 可应用`,
-          };
-        }
-        if (!have) {
-          return {
-            enabled: true,
-            canApply: false,
-            have,
-            need,
-            reason: need ? `还需 ${need} 个点` : "",
+            reason: canApply
+              ? `已取 ${got} 个 · 可应用`
+              : mismatch
+                ? `已选 ${have} 个 · 只需 ${need} 个`
+                : !got
+                  ? `至少要 ${need} 个点`
+                  : `已取 ${got}/${need} · 未完成`,
           };
         }
         return {
@@ -9197,7 +9270,7 @@
           canApply: false,
           have,
           need,
-          reason: `已取 ${have}/${need} 点 · 数量不匹配`,
+          reason: "",
         };
       }
 

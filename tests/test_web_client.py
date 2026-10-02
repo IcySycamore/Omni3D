@@ -1440,6 +1440,27 @@ class TestStatusBarReadiness:
         assert _contains_text(body, "got < need ? `已取 ${got}/${need} · 未完成`")
         assert _contains_text(body, "`已取 ${got} 个 · 可完成`")
 
+    def test_short_tools_use_the_same_status_language(self, index_html):
+        """画线 / 尺度（固定点数）的状态栏文案与面积 / 体积**同一套**。
+
+        用户原话：「将画线和尺度的状态栏引导语统一到体积和面积的风格」。
+        旧文案是「还需 2 个点」/「已取 2/2 点 · 可应用」/「数量不匹配」，
+        跟面积那套（至少要 N 个点 / 已取 N/M · 未完成 / 已取 N 个 · …）不是一路。
+
+        另：进度必须把**落点引导**也算上 —— 只看列表选中集，会出现「在视图里
+        点了两个点，状态栏还在说还需 2 个点」。
+        """
+        body = _fn_body(index_html, "toolStateFor")
+        assert _contains_text(body, "`至少要 ${need} 个点`")
+        assert _contains_text(body, "`已取 ${got}/${need} · 未完成`")
+        assert _contains_text(body, "`已取 ${got} 个 · 可应用`")
+        # ⚠️ 只比对旧的**完整文案字面量**，别拿「还需」这种片段去扫 —— 注释里
+        # 引一句就成假红了（我就是这么红的）。
+        assert "`还需 ${need} 个点`" not in body, "旧文案又回来了"
+        assert "数量不匹配" not in body, "旧文案又回来了"
+        assert "pendingPointElements().length" in body
+        assert _contains_text(body, "const got = Math.max(pend, have);")
+
     def test_the_hint_is_not_pushed_back_into_the_status_bar(self, index_html):
         """工具做完不许再把整句操作说明塞回常驻状态栏（那是帮助内容）。
 
@@ -1543,21 +1564,39 @@ class TestCalibrationDialog:
         —— 一块贴在新拟物台面上的白板，深色主题下更刺眼。这是「弹窗设计的
         不好看」里最实的一条。
         """
-        rule = _css_rule(index_html, ".modal-field input")
+        rule = _css_rule(index_html, '.modal-card input:not([type="checkbox"])')
         assert "box-shadow: var(--neu-inset-soft)" in rule
         assert "background: var(--fill-1)" in rule
         assert "font-family: inherit" in rule
         # 数字框的系统上下箭头在台面上是两个灰点
         assert _contains_text(
-            index_html, '.modal-field input[type="number"] { appearance: textfield;'
+            index_html, '.modal-card input[type="number"] { appearance: textfield;'
         )
 
-    def test_the_dialog_does_not_repeat_the_placeholder(self, index_html):
-        """「真实距离（例：A4 长边 0.297 m）」只是把输入框的 placeholder 又说一遍，
-        而「已选两点」也是废话（弹窗本来就是选完两点才弹的）。"""
-        assert "A4 长边" not in index_html
+    def test_the_dialog_matches_the_spec(self, index_html):
+        """弹窗结构（用户给的规格）：标题在左上；右上角**一个帮助 + 一个叉号**；
+        两行**并列**（模型尺度 / 真实尺度）；右下角两个按钮。"""
+        assert _contains_text(index_html, 'class="cal-label">模型尺度<')
+        assert _contains_text(index_html, 'class="cal-label">真实尺度<')
+        assert 'id="calDialogHelp"' in index_html
+        assert 'id="calDialogClose"' in index_html
+        assert _contains_text(index_html, 'class="modal-head-actions"')
+        assert _contains_text(index_html, 'id="calDialogOk">完成')
+        # 弹窗里不该再出现「已选两点」这种废话（弹窗本来就是选完两点才弹的），
+        # 也不该重复输入框的 placeholder
         assert "已选两点" not in index_html
-        assert _contains_text(index_html, '<span class="prop-key">模型距离</span>')
+        assert "例：A4 长边" not in index_html
+
+    def test_the_help_button_points_at_the_scale_reference(self, index_html):
+        """右上角那个帮助要真的跳到「常见物品尺度」清单 —— 两边都得对得上。"""
+        assert _contains_text(index_html, 'getElementById("scale-reference")')
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            doc = fh.read()
+        assert 'id="scale-reference"' in doc, "帮助文档里没有这个锚点"
+        # 清单得真给出可用的尺度，不能只是个小标题
+        for size in ("297", "85.6", "25 mm", "40 mm", "120 mm"):
+            assert size in doc, f"清单里少了 {size}"
 
 
 class TestProviderLightAndSubmitGate:
