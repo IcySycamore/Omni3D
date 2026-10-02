@@ -2793,7 +2793,7 @@
               <button
                 class="tool-btn"
                 id="axesToggleBtn"
-                data-help="万向轴（方向棱镜）：右下角显示当前姿态。抓住某条圈拖动 → 只绕该轴旋转；抓不到圈不响应。关掉就隐藏且不可用。"
+                data-help="万向轴：右下角显示当前姿态"
               ></button>
               <button
                 class="tool-btn"
@@ -2831,7 +2831,7 @@
               <button
                 class="tool-btn"
                 id="helpDocBtn"
-                data-help="打开帮助文档：从采集、重建、测量到服务商与 API Key 的逐条说明。"
+                data-help="打开帮助文档：采集、重建、测量、服务商与 API Key 的逐条说明。"
               ></button>
             </div>
 
@@ -2839,17 +2839,17 @@
               <button
                 class="tool-btn active"
                 data-tool="select"
-                data-help="选择：点元素 = 选中它（Ctrl/⌘ 点 = 多选）；点云上的点 = 生成一个「点」元素并选中它（可以拿去量长度 / 面积）；点空白 = 取消选择。"
+                data-help="选择：点击点云选点，按住Ctrl/⌘多选；点击空白处取消选择。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="box2d"
-                data-help="框选：按住左键拖出一个矩形，框内的点云点收成一个「框选点组」（上限 1000 个点，在元素视图里是一行）；矩形内已有的元素也会被选中。"
+                data-help="框选：按住左键拖出矩形，框内的点云点收成一个最多 1000 点的点组；矩形内已有的元素也会被选中。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="pan"
-                data-help="移动：按住左键拖动 = 平移画面，不转视角、也不选点。"
+                data-help="移动：按住左键拖动平移画面"
               ></button>
             </div>
 
@@ -2858,22 +2858,22 @@
               <button
                 class="tool-btn"
                 data-tool="line"
-                data-help="长度：量两点之间的距离。在点云上依次点两个点就出结果，落满两点会自动连成一条线。"
+                data-help="长度：量两点之间的距离"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="calibrate"
-                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度。点两个点后在弹窗里填真实长度；右上「帮助」里有常见物品尺度可查。"
+                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="area"
-                data-help="面积：依次点选各个顶点（至少 3 个），量它们围成的凸多边形面积。继续点就是加顶点，点「完成」自动收口；顶点不必严格共面，面积按最佳拟合平面投影计算。"
+                data-help="面积：依次点选至少 3 个顶点，测量围成的凸多边形面积"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="volume"
-                data-help="体积：依次点选实体的各个顶点（至少 4 个、别都挤在一个面上），量它们凸包的体积。骨架由凸包算出来，不需要自己连线。"
+                data-help="体积：依次点选至少 4 个非共面顶点，测量凸包体积"
               ></button>
             </div>
           </div>
@@ -2899,7 +2899,7 @@
                   <button
                     class="btn btn-sm btn-danger"
                     id="clearElementsBtn"
-                    data-help="清空元素：删除当前会话里的全部标注元素（点、点组、连线、长度、面积、体积）。已提交的重建结果不受影响。"
+                    data-help="清空元素：删除当前会话里的全部标注元素"
                   >
                     清空
                   </button>
@@ -3243,7 +3243,7 @@
                 <input
                   type="checkbox"
                   id="cascadeSelectToggle"
-                  data-help="开启后，选中一个测量（或点组）会把它的顶点一起选中 —— 想整体搬家 / 一起删的时候省事。默认关。"
+                  data-help="开启后，选中一个测量或点组会把它的顶点一起选中。默认关。"
                 />
                 选中父元素时级联选中子元素
               </label>
@@ -3251,7 +3251,7 @@
                 <input
                   type="checkbox"
                   id="cascadeDeleteToggle"
-                  data-help="开启后，删掉一个测量（或点组）时它的顶点也一并删掉，不用再一个个清理。默认关。"
+                  data-help="开启后，删掉一个测量或点组时，它的顶点也一并删掉。默认关。"
                 />
                 删除父元素时级联删除子元素
               </label>
@@ -3259,7 +3259,7 @@
                 <input
                   type="checkbox"
                   id="collapseChildrenToggle"
-                  data-help="开启后，一次测量完成时它的顶点行会折进测量那一行下面，元素列表短一截；点测量行前面的小三角可随时展开。默认开。"
+                  data-help="开启后，测量完成时其顶点元素行会折叠在测量结果条目下，默认开。"
                 />
                 测量完成时折叠子元素
               </label>
@@ -3274,7 +3274,7 @@
                 <input
                   type="checkbox"
                   id="gridGroundToggle"
-                  data-help="开启后，参考网格会自动转到点云的主平面（用最低那层点拟合出的「地面」），不再固定贴着世界水平面。只转网格、不动点云。"
+                  data-help="开启后，参考网格会自动转到点云的主平面"
                 />
                 网格贴合点云地面
               </label>
@@ -7205,10 +7205,6 @@
         if (Array.isArray(saved)) {
           for (const it of saved) {
             if (!it || !TOOL_ORDER_DEFAULT.includes(it.tool)) {
-              // 工具被删掉之后（例如三角形面积），旧布局里还留着它的条目。
-              // 光在渲染时过滤，本地存储里那一条会一直在 —— 用户：「删掉的
-              // 三角形面积怎么在设置工具排序还存在？」这里**顺手清一次**，
-              // 落回存储，下次打开就真的没有了。
               stale = true;
               continue;
             }
@@ -8009,6 +8005,8 @@
       //   closeLine = 收口预览（虚线）：当前指向的落点 → 起点
       let guideLine = null;
       let closeLine = null;
+      // 面积测量中显示的「被测那块」（半透明面 + 虚线边界），由 refreshPlanePatch 维护
+      let planePatch = null;
       // 最近一次悬停到的世界坐标。落点后引导线要立刻接上，
       // 而那时鼠标并没有动 —— 不记下来就只能等下一次 pointermove 才刷新。
       let lastHoverWorld = null;
@@ -8072,6 +8070,71 @@
       function hideGuideLines() {
         if (guideLine) guideLine.visible = false;
         if (closeLine) closeLine.visible = false;
+      }
+
+      function hidePlanePatch() {
+        if (!planePatch) return;
+        if (STATE.viewerScene) STATE.viewerScene.remove(planePatch);
+        planePatch.traverse((o) => {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) {
+            if (o.material.map) o.material.map.dispose();
+            o.material.dispose();
+          }
+        });
+        planePatch = null;
+      }
+
+      // 面积：把「即将量到的那块」画出来。顶点一到三个就没有平面可言（平面还没定），
+      // 所以什么都不画 —— 从第四个顶点起才看得出「前面三点定下的平面在哪」。
+      function refreshPlanePatch() {
+        hidePlanePatch();
+        const scene = STATE.viewerScene;
+        if (!scene || !ringToolActive()) return;
+        const vectors = pendingPointElements()
+          .map(elementVector)
+          .filter(Boolean);
+        if (vectors.length < 3) return;
+        // 元素存原始坐标，画到 scene 上要先正旋（与 hoverMarker / 引导线同一套约定）
+        const world = vectors.map((v) => elementWorldPoint([v.x, v.y, v.z]));
+        const patch = makePolygonPatch(world, { opacity: 0.18 });
+        if (!patch) return;
+        // 边界也画一圈（虚线）：收口那条边在「完成」之前还没落成元素，
+        // 不画出来用户就不知道这块面在哪合上。
+        const px =
+          STATE.viewerCamera && STATE.viewerRenderer ? worldPerPixel() : 0;
+        const loop = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([...world, world[0]]),
+          new THREE.LineDashedMaterial({
+            color: 0x00d4ff,
+            transparent: true,
+            opacity: 0.7,
+            dashSize: px > 0 ? px * 8 : 0.05,
+            gapSize: px > 0 ? px * 5 : 0.03,
+          }),
+        );
+        loop.computeLineDistances();
+        loop.renderOrder = 997;
+        loop.frustumCulled = false;
+        patch.add(loop);
+        planePatch = patch;
+        scene.add(patch);
+      }
+
+      // 悬停 / 落点的**真实落点**：面积会把顶点投到测量平面上，预览就得投到同一个
+      // 地方 —— 否则圆环贴在点云表面、顶点却落在平面上，看着像两个位置。
+      function ringPlaneWorld() {
+        if (!ringToolActive()) return null;
+        const pts = pendingPointElements()
+          .map((el) => elementVector(el))
+          .filter(Boolean)
+          .map((v) => elementWorldPoint([v.x, v.y, v.z]));
+        return pts.length >= 3 ? measurePlaneOf(pts) : null;
+      }
+
+      function landingPointFor(worldPoint) {
+        const plane = ringPlaneWorld();
+        return plane ? projectOntoPlane(worldPoint, plane) : worldPoint;
       }
 
       // 每次悬停 / 落点后刷新。hoverWorld = 当前指向的世界坐标（null = 没指向）
@@ -8379,6 +8442,8 @@
           return;
         }
         const p = pickNearestPoint(event);
+        // 预览的是**真实落点**（面积会投到测量平面上），见 landingPointFor
+        const land = p ? landingPointFor(p) : null;
         if (!hoverMarker) {
           const ringGeom = new THREE.RingGeometry(
             HOVER_RING_OUTER_WORLD * 0.7,
@@ -8396,8 +8461,8 @@
           hoverMarker.renderOrder = 999;
           STATE.viewerScene.add(hoverMarker);
         }
-        if (p) {
-          hoverMarker.position.copy(p);
+        if (land) {
+          hoverMarker.position.copy(land);
           // 屏幕恒定大小：基准半径是世界单位，不按相机距离缩放的话，拉远就
           // 看不见了（用户会以为「预览没了」，其实它还在，只是成了一个点）。
           const s = (worldPerPixel() * HOVER_RING_PX) / HOVER_RING_OUTER_WORLD;
@@ -8407,7 +8472,7 @@
           hoverMarker.visible = false;
         }
         // 引导线与圆环同步（面积/体积才画；其他工具会自己隐掉）
-        updateGuideLines(p || null);
+        updateGuideLines(land || null);
       }
 
       function addMeasurementPoint(point) {
@@ -9459,6 +9524,80 @@
         return Math.abs(new THREE.Vector3().subVectors(p, a).dot(nrm)) / len;
       }
 
+      // ---- 面积的**测量平面** ----
+      // 用户口径：面积必须能指出「量的是哪一块」。最佳拟合平面做不到这一点 ——
+      // 点一多，整个平面会跟着转，量的东西在用户看不见的地方悄悄变了
+      //（用户：「使用拟合平面会导致用户无法确定实际测量的是哪里的面积」）。所以：
+      //   · 平面由**前三个顶点**定死（三个点本来就在一个平面上）；
+      //   · 之后每个顶点都投影到这个平面上 —— 顶点永远严格共面，服务端算的就是
+      //     这个投影多边形的面积，**所见即所测**；
+      //   · 平面本身**画出来**（半透明的一块 + 虚线边界）。
+      // 撤销（Ctrl+Z）删掉顶点后，平面按剩下的前三点重算 —— 这就是「重定平面」。
+      function measurePlaneOf(vectors) {
+        if (!vectors || vectors.length < 3) return null;
+        const a = vectors[0];
+        const nrm = new THREE.Vector3()
+          .subVectors(vectors[1], a)
+          .cross(new THREE.Vector3().subVectors(vectors[2], a));
+        if (nrm.length() <= 1e-12) return null; // 前三点共线 → 平面还没定下来
+        nrm.normalize();
+        const u = new THREE.Vector3().subVectors(vectors[1], a).normalize();
+        const v = new THREE.Vector3().crossVectors(nrm, u).normalize();
+        return { origin: a.clone(), normal: nrm, u, v };
+      }
+
+      function projectOntoPlane(p, plane) {
+        const off = new THREE.Vector3()
+          .subVectors(p, plane.origin)
+          .dot(plane.normal);
+        return p.clone().addScaledVector(plane.normal, -off);
+      }
+
+      // 本次引导（面积）的测量平面；顶点不够三个 / 前三点共线时是 null
+      function currentMeasurePlane(els) {
+        if (!isRingOp(activeOp())) return null;
+        const list = els || pendingPointElements();
+        return measurePlaneOf(list.map(elementVector).filter(Boolean));
+      }
+
+      // 面积那块「被测的面」：绕质心的扇形三角化（凸多边形下就是正解，
+      // 与服务端 polygon_area 「绕质心极角排序」同一套口径）。
+      function makePolygonPatch(points, opts = {}) {
+        if (!points || points.length < 3) return null;
+        const centre = new THREE.Vector3();
+        for (const p of points) centre.add(p);
+        centre.multiplyScalar(1 / points.length);
+        const verts = [];
+        for (let i = 0; i < points.length; i++) {
+          const a = points[i];
+          const b = points[(i + 1) % points.length];
+          verts.push(
+            centre.x,
+            centre.y,
+            centre.z,
+            a.x,
+            a.y,
+            a.z,
+            b.x,
+            b.y,
+            b.z,
+          );
+        }
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+        const mat = new THREE.MeshBasicMaterial({
+          color: opts.color === undefined ? 0x00d4ff : opts.color,
+          transparent: true,
+          opacity: opts.opacity === undefined ? 0.16 : opts.opacity,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.renderOrder = opts.renderOrder === undefined ? 996 : opts.renderOrder;
+        mesh.frustumCulled = false;
+        return mesh;
+      }
+
       function elementVector(el) {
         const p = el && (el.points || [])[0];
         return p ? new THREE.Vector3(p[0], p[1], p[2]) : null;
@@ -9658,14 +9797,9 @@
       function orderRingVertices(els) {
         if (els.length < 3) return null;
         const pts = els.map(elementVector);
-        const a = pts[0];
-        const nrm = new THREE.Vector3()
-          .subVectors(pts[1], a)
-          .cross(new THREE.Vector3().subVectors(pts[2], a));
-        if (nrm.length() <= 1e-12) return null; // 前三点共线 → 定不出平面
-        nrm.normalize();
-        const u = new THREE.Vector3().subVectors(pts[1], a).normalize();
-        const v = new THREE.Vector3().crossVectors(nrm, u);
+        const plane = measurePlaneOf(pts);
+        if (!plane) return null; // 前三点共线 → 定不出平面
+        const { u, v } = plane;
         const c = new THREE.Vector3();
         for (const p of pts) c.add(p);
         c.multiplyScalar(1 / pts.length);
@@ -9695,18 +9829,26 @@
         if (tool === "area") {
           const pts = picked.map(elementVector);
           if (pts.length >= 3) {
-            const tol = coplanarTolerance();
-            const off = pts.filter(
-              (p) => pointPlaneDistance(p, pts[0], pts[1], pts[2]) > tol,
-            );
-            // ⚠️ 不共面**不拒绝**采纳：服务端按最佳拟合平面投影算面积，这几个点
-            //    照样能量（算出来是投影面积）。以前这里 return，用户勾选好 6 个点
-            //    再点「面积」什么都不发生（用户：「所有超出容差的都选不了」）。
-            if (off.length) {
-              showToast(
-                `有 ${off.length} 个顶点偏出前三点的平面：面积按最佳拟合平面投影计算`,
-                "warn",
+            const plane = measurePlaneOf(pts);
+            // 与前三点定下的测量平面同一口径：所有顶点都**投到那个平面上**
+            // （投影结果写回点元素，量的是投影多边形，也就是画出来那块）。
+            // 以前这里遇到不共面就 return，用户勾好 6 个点再点「面积」什么都不发生
+            //（用户：「所有超出容差的都选不了」）。
+            if (plane) {
+              const tol = coplanarTolerance();
+              const off = pts.filter(
+                (p) => pointPlaneDistance(p, pts[0], pts[1], pts[2]) > tol,
               );
+              picked.forEach((el, i) => {
+                const q = projectOntoPlane(pts[i], plane);
+                el.points = [[q.x, q.y, q.z]];
+              });
+              if (off.length) {
+                showToast(
+                  `有 ${off.length} 个顶点偏离测量平面，已投到测量平面上`,
+                  "warn",
+                );
+              }
             }
             const ordered = orderRingVertices(picked);
             if (ordered) picked = ordered;
@@ -10149,9 +10291,9 @@
           const tol = coplanarTolerance();
           if (dist > tol && tool.op === "polygon_area") {
             showToast(
-              `第 ${existing.length + 1} 个顶点离基准平面 ${dist.toFixed(
+              `这个点离测量平面 ${dist.toFixed(4)}（参考容差 ${tol.toFixed(
                 4,
-              )}（参考容差 ${tol.toFixed(4)}）：面积按最佳拟合平面投影计算`,
+              )}）：顶点已投到测量平面上`,
               "warn",
             );
           }
@@ -10161,12 +10303,17 @@
             tool.op === "polyhedron_volume"
           ) {
             // 4 点共面 → 凸包体积是 0，提醒一下（但照样落点，用户可以再来一个）
-            showToast("这 4 个点基本共面，体积会算成 0（换个不在同一面上的顶点）", "warn");
+            showToast("这 4 个点基本共面", "warn");
           }
         }
 
+        // 面积：顶点投到「前三点定下的测量平面」上 —— 见 measurePlaneOf 的注释。
+        // 顶点严格共面，服务端算的就是**画出来那块**的面积，所见即所测。
+        const plane = ring ? currentMeasurePlane(existing) : null;
+        const vertex = plane ? projectOntoPlane(_p, plane) : _p;
+
         pushUndo();
-        const el = makePointElement([_p.x, _p.y, _p.z]);
+        const el = makePointElement([vertex.x, vertex.y, vertex.z]);
         STATE.elements.push(el);
         if (ring && prevId) STATE.elements.push(makeEdgeElement(prevId, el.id));
         STATE.pendingIds.push(el.id);
@@ -10930,6 +11077,15 @@
               geom = new THREE.BufferGeometry().setFromPoints([...pts, pts[0]]);
               mat = new THREE.LineBasicMaterial(lineMatOpts);
               line = new THREE.Line(geom, mat);
+              // 被测的那块也填出来：只画一圈边，用户还是看不出「量的是哪块」
+              //（用户：「使用拟合平面会导致用户无法确定实际测量的是哪里的面积」）。
+              // 顶点已经共面（落点时就投到测量平面上了），所以这块面就是投影多边形。
+              const patch = makePolygonPatch(pts, {
+                opacity: 0.14,
+                renderOrder: 995,
+                color: el.error ? 0xf87171 : 0x00d4ff,
+              });
+              if (patch) group.add(patch);
             } else if (isVolume) {
               const [A, B, C, E] = pts;
               const AB = B.clone().sub(A);
@@ -11063,6 +11219,9 @@
           gcloud.renderOrder = 999;
           group.add(gcloud);
         }
+        // 引导用的「被测那块」（面积测量中）跟着元素一起刷新 —— 元素一变
+        // （落点 / 撤销 / 换工具）它就得重算，否则会停在上一次的平面上。
+        refreshPlanePatch();
       }
 
       // ---- 框选（2D）：把元素的锚点投到屏幕，落在矩形内即选中 ----

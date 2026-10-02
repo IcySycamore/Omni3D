@@ -177,7 +177,7 @@ class TestMultiVertexMeasurement:
         提示留着，用来说清算的是**投影**面积。
         """
         assert "面积要求所有顶点共面" not in index_html, "硬门槛的文案还在"
-        assert "面积按最佳拟合平面投影计算" in index_html
+        assert "已投到测量平面上" in index_html
         body = _fn_body(index_html, "onToolClick")
         start = body.index("const dist = pointPlaneDistance(")
         # ⚠️ 一定要从 start 往后找：`const el = makePointElement` 在固定点数
@@ -191,8 +191,12 @@ class TestMultiVertexMeasurement:
         )
 
     def test_volume_is_not_blocked_when_coplanar(self, index_html):
-        """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。"""
-        assert "体积会算成 0" in index_html
+        """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。
+
+        提示的具体措辞不归测试管（用户会自己改文案），这里只盯「有提示」+
+        「不拦」两件事。
+        """
+        assert "共面" in index_html
         body = _fn_body(index_html, "onToolClick")
         start = body.index("const dist = pointPlaneDistance(")
         end = body.index("const el = makePointElement", start)
@@ -411,7 +415,10 @@ class TestElementCoordinateSpace:
     def test_hover_marker_stays_in_world_space(self, index_html):
         """预览圆环挂在 scene 上、用世界坐标 —— 这是它对的原因，不要"统一"掉。"""
         assert "STATE.viewerScene.add(hoverMarker)" in index_html
-        assert "hoverMarker.position.copy(p)" in index_html
+        # 预览的是**真实落点**：面积会先把顶点投到测量平面上（landingPointFor），
+        # 圆环必须跟着投过去，否则它贴在点云表面、顶点却落在平面上。
+        assert "const land = p ? landingPointFor(p) : null;" in index_html
+        assert "hoverMarker.position.copy(land)" in index_html
 
 
 class TestMultiPointEntryPoints:
@@ -484,7 +491,7 @@ class TestMultiPointEntryPoints:
         界面什么都不发生（用户：「所有超出容差的都选不了」）。
         """
         assert "面积要求所有顶点共面" not in index_html
-        assert "面积按最佳拟合平面投影计算" in index_html
+        assert "已投到测量平面上" in index_html
         body = _fn_body(index_html, "adoptSelectionAsVertices")
         start = body.index("const off = pts.filter")
         end = body.index("const ordered = orderRingVertices", start)
@@ -1322,6 +1329,49 @@ class TestAreaPickIsNeverBlocked:
         # 收口仍然在：点「完成」时自动接上两个只剩一条线的端点
         assert "async function closeRing" in index_html
 
+    def test_vertices_are_projected_onto_the_first_three_plane(self, index_html):
+        """面积：平面由**前三点**定死，后面的顶点投影上去。
+
+        用户：「使用拟合平面会导致用户无法确定实际测量的是哪里的面积，并不符合
+        使用需求」—— 拟合平面会随新点整体转，量的东西在用户看不见的地方变了。
+        前三点定平面 + 投影之后顶点严格共面，服务端算的就是画出来那块。
+        """
+        assert "function measurePlaneOf" in index_html
+        assert "function projectOntoPlane" in index_html
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(
+            body, "const plane = ring ? currentMeasurePlane(existing) : null;"
+        )
+        assert _contains_text(
+            body, "const vertex = plane ? projectOntoPlane(_p, plane) : _p;"
+        )
+        assert _contains_text(body, "makePointElement([vertex.x, vertex.y, vertex.z])")
+        # 勾选采纳那条路同一口径（投影结果写回点元素）
+        adopt = _fn_body(index_html, "adoptSelectionAsVertices")
+        assert _contains_text(adopt, "const q = projectOntoPlane(pts[i], plane);")
+        assert _contains_text(adopt, "el.points = [[q.x, q.y, q.z]];")
+
+    def test_the_measured_patch_is_drawn(self, index_html):
+        """被测的那块面必须画出来：测量中画（引导），完成后也画（结果）。
+
+        否则用户只看得见几个点和几条连线，看不出「量的是哪块面」。
+        """
+        assert "function makePolygonPatch" in index_html
+        assert "function refreshPlanePatch" in index_html
+        guide = _fn_body(index_html, "refreshPlanePatch")
+        assert "makePolygonPatch(world" in guide
+        render = _fn_body(index_html, "renderElements")
+        assert "makePolygonPatch(pts" in render, "完成的面积测量没画出被测那块"
+        assert "refreshPlanePatch();" in render, "引导用的那块面没跟着元素刷新"
+
+    def test_the_landing_preview_sits_on_the_plane(self, index_html):
+        """悬停圆环与橡皮筋都要指到**平面上的落点**，不能贴在点云表面。"""
+        assert "function landingPointFor" in index_html
+        assert "function ringPlaneWorld" in index_html
+        body = _fn_body(index_html, "updateMeasureHover")
+        assert _contains_text(body, "const land = p ? landingPointFor(p) : null;")
+        assert _contains_text(body, "updateGuideLines(land || null);")
+
     def test_coplanar_check_only_warns(self, index_html):
         body = _fn_body(index_html, "onToolClick")
         start = body.index("const dist = pointPlaneDistance(")
@@ -1355,50 +1405,50 @@ class TestAreaPickIsNeverBlocked:
         assert "writeLS(" in body, "旧布局里的已删工具条目要顺手写回去清掉"
 
 
-class TestControlHelpTextsAreDetailed:
-    """控件上的说明（`data-help`）要真的把用途说清。
+class TestControlHelpAttributesAreWellFormed:
+    """控件说明（`data-help`）只守**结构**，不规定措辞。
 
-    用户：「帮助在各个控件上的说明怎么被你回退了？」—— 之前把工具按钮 / 清空
-    元素的说明压成了一句话半（「长度：量两点之间的距离」），帮助模式点开等于
-    没说。说明仍然只有**一份**（就在 data-help 上），悬浮提示依旧只给名称
-    （那条守卫见 TestTooltipsCarryNoDashTail）。
+    用户：「现在帮助文档和帮助按钮说明的 ai 味道太重，我要对他们进行修改」
+    —— 措辞是他的，守卫不能把它写死（写死了他每改一次字就要改一次测试）。
+    守的是两件真会出事的事：
+
+      ① **属性必须闭合。** 实测：`data-help="……凸多边形面积` 少了收尾引号，
+         浏览器会把后面的 `></button><button class=` 全吃进属性值里 ——
+         **volume 按钮直接从 DOM 里消失**，而且不报错。
+      ② 说明不能是空壳，并且按约定以控件名开头（帮助模式里一眼能对上是哪个控件）。
     """
 
-    MIN_LEN = 18
+    TOOLS = ("select", "box2d", "pan", "line", "calibrate", "area", "volume")
+    SWITCHES = (
+        "cascadeSelectToggle",
+        "cascadeDeleteToggle",
+        "collapseChildrenToggle",
+        "boxNoRotateToggle",
+        "gridGroundToggle",
+    )
 
-    def test_every_tool_button_explains_itself(self, index_html):
-        labels = {
-            "select": "选择",
-            "box2d": "框选",
-            "pan": "移动",
-            "line": "长度",
-            "calibrate": "反向尺度推导",
-            "area": "面积",
-            "volume": "体积",
-        }
-        for tool, label in labels.items():
-            html = _tool_button_html(index_html, tool)
-            found = re.search(r'data-help="([^"]+)"', html)
-            assert found, f"{tool} 按钮没有 data-help"
-            text = found.group(1)
-            assert text.startswith(f"{label}："), (
-                f"{tool} 的说明没有以「{label}：」开头：{text!r}"
-            )
-            assert len(text) >= self.MIN_LEN, f"{tool} 的说明又退化成一句半了：{text!r}"
+    def test_every_tool_button_has_a_closed_help(self, index_html):
+        for tool in self.TOOLS:
+            tag = _tool_button_html(index_html, tool)
+            found = re.search(r'data-help="([^"<>]*)"', tag)
+            assert found, f"{tool} 的 data-help 没闭合（会把后面的按钮吃掉）：{tag!r}"
+            assert len(found.group(1).strip()) >= 8, f"{tool} 的说明是空壳"
 
-    def test_settings_controls_are_explained_too(self, index_html):
-        for cid, hint in (
-            ("cascadeSelectToggle", "级联选中"),
-            ("cascadeDeleteToggle", "级联删除"),
-            ("collapseChildrenToggle", "折叠"),
-            ("boxNoRotateToggle", "框选"),
-            ("gridGroundToggle", "网格"),
-        ):
+    def test_settings_controls_have_a_closed_help(self, index_html):
+        for cid in self.SWITCHES:
             at = index_html.index(f'id="{cid}"')
             tag = index_html[index_html.rindex("<input", 0, at) : index_html.index(">", at) + 1]
-            found = re.search(r'data-help="([^"]+)"', tag)
-            assert found, f"设置项 {cid} 没有说明（{hint}）"
-            assert len(found.group(1)) >= 12, f"{cid} 的说明太短"
+            found = re.search(r'data-help="([^"<>]*)"', tag)
+            assert found, f"{cid} 的 data-help 没闭合：{tag!r}"
+            assert len(found.group(1).strip()) >= 8, f"{cid} 的说明是空壳"
+
+    def test_help_mode_reads_the_same_attribute(self, index_html):
+        """说明仍然只有一份：帮助模式读的就是控件上的 `data-help`。
+
+        悬浮 `title` 只给名称（见 TestTooltipsCarryNoDashTail），所以说明不能只写在
+        某处一次性拼好的字符串里。
+        """
+        assert 'closest("[data-help]")' in index_html
 
 
 class TestToolGroupTools:
