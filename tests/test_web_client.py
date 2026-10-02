@@ -357,6 +357,105 @@ class TestStatusBarStaysShort:
         assert _contains_text(index_html, "if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;")
 
 
+class TestDesignTokens:
+    """样式必须走 token —— 规矩写在 `docs/DESIGN.md`。
+
+    这个面板曾经**圆角 19 种、字号 24 种、padding 44 种**，接近 100 个随手写的
+    数值。"看起来不像正经产品"的根源在这里，不在配色 —— 所以用测试锁住：
+    CSS 里出现裸的圆角/字号就直接红。
+    """
+
+    def _style_block(self, index_html: str) -> str:
+        style = index_html.split("<style>")[1].split("</style>")[0]
+        # 先剥掉 CSS 注释再断言。否则注释里写一句「旧做法是 padding-left: …」
+        # 会让 `[^;]+` 从注释里一路吞到下一个分号，把后面声明里的裸 px 也算进来
+        # → **假红**。假红比没有断言更糟：它会淹没真正的裸值。
+        # 注释不是声明，剥掉不会漏检（被注释掉的代码本来就不生效）。
+        return re.sub(r"/\*.*?\*/", "", style, flags=re.S)
+
+    def test_no_raw_border_radius(self, index_html):
+        style = self._style_block(index_html)
+        raw = [
+            v.strip()
+            for v in re.findall(r"border-radius:\s*([^;]+);", style)
+            if "var(" not in v and v.strip() not in ("50%", "0")
+        ]
+        assert raw == [], (
+            "这些圆角没走 token（档位见 docs/DESIGN.md 第二节）：" f"{raw}"
+        )
+
+    def test_no_raw_font_size(self, index_html):
+        style = self._style_block(index_html)
+        raw = [
+            v.strip()
+            for v in re.findall(r"font-size:\s*([^;]+);", style)
+            if "var(" not in v and v.strip() not in ("0", "1rem")
+        ]
+        assert raw == [], f"这些字号没走 token：{raw}"
+
+    def test_no_raw_spacing(self, index_html):
+        """padding / margin / gap 也必须走 --sp-* 阶梯。
+
+        这三样原来散着 **44 种**取值 —— 间距是布局的节奏，节奏乱了再怎么调
+        配色都救不回来。`0` / `auto` / `calc()` 是允许的。
+        """
+        style = self._style_block(index_html)
+        prop = (r"(?:padding|margin)(?:-(?:top|right|bottom|left))?"
+                r"|gap|row-gap|column-gap")
+        raw = []
+        for value in re.findall(rf"\b(?:{prop}):\s*([^;]+);", style):
+            raw += [p for p in value.split() if re.fullmatch(r"\d+(?:\.\d+)?px", p)]
+        assert raw == [], f"这些间距没走 token：{sorted(set(raw))}"
+
+    def test_the_token_ladder_is_defined(self, index_html):
+        for name in ("--r-xs", "--r-sm", "--r-md", "--r-lg", "--r-xl", "--r-full",
+                     "--fs-xs", "--fs-sm", "--fs-base", "--fs-md", "--fs-lg",
+                     "--fs-xl", "--fs-2xl", "--fs-3xl",
+                     "--sp-1", "--sp-2", "--sp-3", "--sp-4", "--sp-5",
+                     "--sp-6", "--sp-7", "--sp-8", "--sp-9"):
+            assert f"{name}:" in index_html, f"缺 token {name}（docs/DESIGN.md 第二节）"
+
+    def test_no_decorative_gradient_on_primary(self, index_html):
+        """「青 → 紫」那类渐变被点名删过（「像蓝莓一样…ai 风格太浓」），别再引入。"""
+        style = self._style_block(index_html)
+        assert "--accent-gradient" not in style
+        block = style.split(".btn-primary {")[1].split("}", 1)[0]
+        assert "gradient" not in block, "主按钮又用渐变当底了（docs/DESIGN.md 第一节）"
+
+    def test_keyboard_focus_is_visible(self, index_html):
+        """键盘焦点必须有可见反馈。
+
+        改动前是「两套都没有」：按钮用**浏览器默认焦点框**（颜色粗细与主题无关），
+        输入框则 `outline: none` + 自己画的 border/glow。键盘用户在一堆图标按钮
+        之间根本看不出焦点在哪。现在统一成 `:focus-visible`。
+        """
+        style = self._style_block(index_html)
+        assert ":focus-visible" in style, "少了 :focus-visible —— 键盘用户看不到焦点"
+        assert "outline: 2px solid var(--accent-cyan)" in style
+        # 鼠标点击不留环（否则每点一下都有一圈）
+        assert ":focus:not(:focus-visible)" in style
+
+    def test_primary_button_is_not_a_slab_of_accent(self, index_html):
+        """主按钮的底不能是主色 —— 高饱和色铺大面积就会刺眼。
+
+        同一个地方踩了两次：先是「青 → 紫」渐变被嫌 ai 味重；删成纯色后**更糟**，
+        `#22d3ee` 糊成一整块按钮底，用户原话：「这个青色太丑陋，还不如原来」。
+        可见问题出在**面积**而不是色相 —— 同一支青做成 5px 指示点、图标、进度条
+        都很好看（那些地方现在仍是 `--accent-cyan`）。
+
+        所以规矩是：主色只上描边 / 文字 / 小面积，底走中性抬升面（`--fill-3`）。
+        实测 `.view-task-btn` 区域平均饱和度从 0.86 → 0.37。
+        """
+        style = self._style_block(index_html)
+        block = style.split(".btn-primary {")[1].split("}", 1)[0]
+        assert "background: var(--accent-cyan)" not in block, (
+            "主按钮又拿主色当整块底了 —— 大面积高饱和会刺眼（docs/DESIGN.md 第一节）"
+        )
+        assert "var(--accent-cyan)" in block, (
+            "主按钮一点主色都没有了，主操作会认不出来（描边或文字至少留一个）"
+        )
+
+
 class TestInlineJavaScript:
     def test_sha256_matches_standard(self):
         """纯 JS SHA-256 必须与标准实现一致，否则登录永远失败。"""
@@ -681,6 +780,107 @@ class TestThemes:
             assert "background: var(--bg-sidebar)" in body, (
                 "某处 .sidebar 的 background 没走变量：" + body.strip()[:100]
             )
+
+
+class TestSidebarToggleButton:
+    """窄屏的「展开键」不许压在侧栏上。
+
+    用户原话：「侧栏展开键会挡住侧栏」。汉堡按钮是 `position: fixed; left: 14px`
+    + 宽 40px → **右边缘在 x=54**，而侧栏宽 236px。旧做法是给 `.sidebar-logo`
+    加 `padding-left: var(--sp-9)`（32px）—— **不够**，只让出 32px，仍叠 22px，
+    实测两个矩形确实相交（汉堡与品牌标叠着画）。
+    现在改成：侧栏展开时整体**移出侧栏**（于是它自然成了关闭键）。
+    """
+
+    def _style_block(self, index_html: str) -> str:
+        style = index_html.split("<style>")[1].split("</style>")[0]
+        return re.sub(r"/\*.*?\*/", "", style, flags=re.S)
+
+    def test_open_sidebar_moves_the_toggle_out_of_the_way(self, index_html):
+        style = self._style_block(index_html)
+        assert "body.sidebar-open .hamburger" in style, (
+            "侧栏展开时没有把切换键移开 —— 它会继续压在侧栏的品牌标上"
+        )
+        blk = style.split("body.sidebar-open .hamburger {")[1].split("}", 1)[0]
+        assert "var(--sidebar-width)" in blk, (
+            "移出的距离必须跟着 --sidebar-width：侧栏可拖宽（最大 460），"
+            "写死像素会在拖宽后再次重叠"
+        )
+
+    def test_the_toggle_class_is_toggled_on_body(self, index_html):
+        """切换键在 `.app-layout` **外面**，兄弟选择器够不着 → 只能挂 body。
+
+        少切任一侧，按钮就会留在错误的位置（展开后压在侧栏上，或收起后飘在中间）。
+        """
+        for fn, verb in (("openSidebar", "add"), ("closeSidebar", "remove")):
+            body = index_html.split(f"function {fn}() {{")[1].split("}", 1)[0]
+            assert f'document.body.classList.{verb}("sidebar-open")' in body, (
+                f"{fn} 没同步 body.sidebar-open —— 按钮会留在错的位置"
+            )
+
+    def test_the_old_padding_patch_is_gone(self, index_html):
+        """那条 `padding-left: var(--sp-9)` 补丁必须删掉。
+
+        它只让出 32px 而按钮到 x=54，既解决不了问题、还会让人误以为已经处理过。
+        """
+        style = self._style_block(index_html)
+        assert ".sidebar.open .sidebar-logo" not in style, (
+            "旧的 padding 补丁还在（只让出 32px，不够；已被 body.sidebar-open 取代）"
+        )
+
+
+class TestMetaInfoBarIcons:
+    """元信息条的图标必须是自绘 SVG，而且只能出现一次。
+
+    用户指着一个 span 说「一个图标」、指着另一个说「一个重复的非svg图标」：
+    当时 HTML 里写死 `<span class="meta-icon">🎬</span>`，而 9 个调用方又各自
+    在文字前面再拼一个 emoji（🎬/🖼/📷/🔴）—— 同一个图标画两遍，
+    字形还随平台字体变。
+
+    现在：图标只由 `META_ICONS` 按 kind 一处提供，文字走 `textContent`
+    （顺带避免拼接 HTML —— 文件名里可能带 `<`）。
+    """
+
+    _GLYPHS = "🎬🖼📷🔴✓"
+
+    def _calls(self, index_html: str) -> list:
+        """每个调用的实参（截到它自己的 `);`）。跳过函数定义那一处。
+
+        用 `);` 当终止符是安全的：实参里的 `${formatBytes(...)}` 只会出现 `)}`，
+        不会出现 `);`。
+        """
+        out = []
+        for m in re.finditer(r"showMetaInfo\(", index_html):
+            if index_html[: m.start()].rstrip().endswith("function"):
+                continue
+            out.append(index_html[m.end():].split(");", 1)[0])
+        return out
+
+    def test_the_icon_slot_is_filled_by_js_not_by_markup(self, index_html):
+        """HTML 里不能写死字形 —— 图标由 JS 按 kind 填。"""
+        assert '<span class="meta-icon" id="metaIcon"></span>' in index_html
+
+    def test_every_call_passes_a_kind_and_no_glyph(self, index_html):
+        calls = self._calls(index_html)
+        assert len(calls) >= 7, f"只找到 {len(calls)} 处 showMetaInfo 调用"
+        for args in calls:
+            # 必须是 **kind 名**（ASCII 小写标识符），不是随便一个字符串 ——
+            # 否则 `showMetaInfo("录制中...")` 这种「退回拼字符串」也能蒙混过关。
+            assert re.match(r'"[a-z][a-z0-9]*"', args.lstrip()), (
+                f"第一个参数必须是 kind（如 \"video\"）：{args[:60]!r}"
+            )
+            bad = [c for c in self._GLYPHS if c in args]
+            assert not bad, f"文字里又拼了字形图标 {bad}：{args[:80]!r}"
+
+    def test_every_kind_has_an_svg_icon(self, index_html):
+        kinds = set(re.findall(r'showMetaInfo\(\s*"(\w+)"', index_html))
+        assert kinds, "没找到任何 kind"
+        defined = index_html.split("const META_ICONS = {")[1].split("};", 1)[0]
+        assert "${_SVG_OPEN}" in defined, (
+            "META_ICONS 里的图标不是自绘 SVG（应复用 _SVG_OPEN，纯描边 + currentColor）"
+        )
+        missing = [k for k in sorted(kinds) if f"{k}:" not in defined]
+        assert not missing, f"META_ICONS 缺这些 kind：{missing}"
 
 
 class TestGizmoRingsFollowTheCamera:

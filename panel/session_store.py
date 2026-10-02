@@ -122,6 +122,10 @@ class SessionStore:
     def _ply_path_for(self, session_id: str) -> str:
         return os.path.join(self._sessions_dir, f"{session_id}.ply")
 
+    def _thumb_path_for(self, session_id: str) -> str:
+        """缩略图用**约定路径**（不占数据库列）：与 PLY 同目录，删会话时一起清。"""
+        return os.path.join(self._sessions_dir, f"{session_id}.thumb.jpg")
+
     @staticmethod
     def _dumps_points(points) -> Optional[bytes]:
         if not points:
@@ -138,11 +142,16 @@ class SessionStore:
     # ---- 写入 ----
     def save_session(self, *, session_id: str, owner: str, result: dict,
                      status: str = "done", created_at: Optional[float] = None,
-                     ply_bytes: Optional[bytes] = None) -> None:
+                     ply_bytes: Optional[bytes] = None,
+                     thumb_bytes: Optional[bytes] = None) -> None:
         """保存/更新一条重建历史（幂等 upsert）。
 
         PLY 以**二进制**写入会话目录（百万点 ASCII 约 80MB → 二进制约 15MB）；
         兼容旧调用：没有 ``ply_bytes`` 时仍接受 ``result["ply"]`` 文本。
+
+        ``thumb_bytes`` = **上传素材的封面**（视频第一帧 / 第一张图）。列表里用它
+        而不是渲染点云：素材本来就在手上 —— 对任何部署都通用（不依赖 PLY 和
+        服务端的图像库），而且用户一眼认得出是哪一次的拍摄。
         """
         points = result.get("points") or []
         if ply_bytes is None:
@@ -153,6 +162,13 @@ class SessionStore:
             ply_path = self._ply_path_for(session_id)
             with open(ply_path, "wb") as fh:
                 fh.write(ply_bytes)
+        if thumb_bytes:
+            # 缩略图只是铺上添花：写不进去不该让整次重建失败
+            try:
+                with open(self._thumb_path_for(session_id), "wb") as fh:
+                    fh.write(thumb_bytes)
+            except OSError:
+                pass
 
         # points / colors 都是「渲染用」大数据，不进 meta_json
         meta = {k: v for k, v in result.items()
@@ -313,6 +329,22 @@ class SessionStore:
             return row["ply_path"]
         return None
 
+    def get_thumb_path(self, session_id: str, owner: str) -> Optional[str]:
+        """返回该会话缩略图路径（校验归属，文件存在才返回）。
+
+        路径是约定出来的，所以**老会话没有这张图**时就是 None —— 列表那边
+        只是不显示缩略图，不会出错。
+        """
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT 1 FROM sessions WHERE session_id=? AND owner=?",
+                (session_id, owner),
+            ).fetchone()
+        if not row:
+            return None
+        path = self._thumb_path_for(session_id)
+        return path if os.path.exists(path) else None
+
     def rename_owner(self, old_owner: str, new_owner: str) -> int:
         """把某归属的所有历史改挂到另一归属（例如匿名历史并入账号）。
 
@@ -343,12 +375,13 @@ class SessionStore:
             self._conn.commit()
             hit = cur.rowcount > 0
         if hit:
-            ply = self._ply_path_for(session_id)
-            if os.path.exists(ply):
-                try:
-                    os.remove(ply)
-                except OSError:
-                    pass
+            for path in (self._ply_path_for(session_id),
+                         self._thumb_path_for(session_id)):
+                if os.path.exists(path):
+                    try:
+                        os.remove(path)
+                    except OSError:
+                        pass
         return hit
 
     # ---- 序列化 ----

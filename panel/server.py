@@ -638,6 +638,9 @@ def _task_processor_impl(task, update_progress):
     if not image_paths:
         raise RuntimeError("未收到有效图片/视频帧")
 
+    # 缩略图就用素材封面（视频第一帧 / 第一张图）—— 这一刻拿最省事
+    task.thumb_bytes = _make_thumb_bytes(image_paths[0])
+
     update_progress(task, 0.20, f"推理 {len(image_paths)} 帧")
     # 统一编排（与 /reconstruct 共用）；PLY 字节流单独带出，不进 JSON
     result, ply_bytes = _reconstruct_to_result(
@@ -671,6 +674,7 @@ def _task_processor(task, update_progress):
         status="done",
         result=task.result or {},
         ply_bytes=getattr(task, "ply_bytes", None),
+        thumb_bytes=getattr(task, "thumb_bytes", None),
         created_at=task.created_at,
     )
     # 计费通道（API Key）：记一次用量 —— 计量单位 + 实际用量 → 分，
@@ -749,6 +753,7 @@ def reconstruct(
             status="done",
             result=result,
             ply_bytes=ply_bytes,
+            thumb_bytes=_make_thumb_bytes(image_paths[0]),
         )
         return JSONResponse(result)
     except Exception as exc:  # noqa: BLE001
@@ -969,6 +974,46 @@ def get_history_ply(session_id: str, client_id: str = "default",
         return JSONResponse({"error": "PLY 不存在"}, status_code=404)
     return FileResponse(ply_path, media_type="application/octet-stream",
                         filename=f"{session_id}.ply")
+
+
+# ---- 历史缩略图：上传素材的封面（视频第一帧 / 第一张图）----
+#
+# 为什么用素材而不是渲染点云：渲染需要 PLY（远端服务商未必留着、也可能没有
+# 图像处理条件），而**素材本来就在手上** —— 对任何部署都通用，用户也能一眼
+# 认出这是哪一次的拍摄。成本几乎为零（抽帧/收图时顺手做一次）。
+THUMB_SIZE = 256
+
+
+def _make_thumb_bytes(image_path: str, size: int = THUMB_SIZE) -> Optional[bytes]:
+    """把一张图片等比缩到长边 size 并编码成 JPEG；失败返回 None。"""
+    import cv2  # noqa: E402
+
+    img = cv2.imread(image_path)
+    if img is None:
+        return None
+    h, w = img.shape[:2]
+    longest = max(h, w)
+    if longest > size:
+        k = size / float(longest)
+        img = cv2.resize(img, (max(1, int(w * k)), max(1, int(h * k))),
+                         interpolation=cv2.INTER_AREA)
+    ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+    return buf.tobytes() if ok else None
+
+
+@app.get("/api/history/{session_id}/thumb")
+def get_history_thumb(session_id: str, client_id: str = "default",
+                      x_auth_token: Optional[str] = Header(default=None)):
+    """该历史**上传素材的封面**（视频第一帧 / 第一张图）。"""
+    owner = _owner_of(x_auth_token, client_id)
+    path = session_store.get_thumb_path(session_id, owner)
+    if not path:
+        return JSONResponse({"error": "没有缩略图"}, status_code=404)
+    return FileResponse(path, media_type="image/jpeg",
+                        # no-cache = 每次协商（有 ETag，命中就是 304），
+                        # 不能用 max-age：同一个 URL 的内容会随实现变化，
+                        # 而旧图会被浏览器一直用下去（实测过）。
+                        headers={"Cache-Control": "no-cache"})
 
 
 @app.delete("/api/history/{session_id}")
