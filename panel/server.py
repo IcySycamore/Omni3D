@@ -66,6 +66,7 @@ from server.core.geometry import (  # noqa: E402
     GeometryError,
     apply_scale_factor,
     compute,
+    outline_for,
     refresh_measurements,
     resolve_points,
     unit_for,
@@ -1198,6 +1199,9 @@ def measure_session(session_id: str, body: Any = Body(...),
         "refs": list(ids),
         "dim": dim,
         "points": points,
+        # 骨架（顶点对索引）：体积是凸包的棱，其它 op 为空。
+        # 前端就按这个画 —— 画出来的与算出来的必定是同一个凸包。
+        "outline": outline_for(op, points),
         "raw": raw,
         "value": apply_scale_factor(raw, dim, scale),
         "unit": unit_for(dim, calibrated),

@@ -28,9 +28,11 @@ from server.core.geometry import (  # noqa: E402
     GeometryError,
     apply_scale_factor,
     compute,
+    convex_hull_edges,
     parallelogram_area,
     parallelepiped_volume,
     refresh_measurements,
+    resolve_measurement,
     resolve_points,
     segment_length,
     triangle_area,
@@ -161,6 +163,21 @@ def _elements() -> list:
     ]
 
 
+def _degrees(edges: list, n: int) -> list:
+    """每个顶点被几根棱接上（棱要用度数判断就是拿来干这个的）。"""
+    counts = [0] * n
+    for i, j in edges:
+        counts[i] += 1
+        counts[j] += 1
+    return counts
+
+
+def _triangular_prism() -> list:
+    """三棱柱的 6 个顶点 —— 每个顶点的度数都是 **3**（用户实测的反例）。"""
+    base = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.0, 2.0, 0.0]]
+    return base + [[x, y, z + 1.5] for x, y, z in base]
+
+
 CUBE_2 = [[float(x), float(y), float(z)]
           for x in (0, 2) for y in (0, 2) for z in (0, 2)]
 
@@ -271,6 +288,91 @@ class TestPolyhedronVolume:
     def test_rejects_fewer_than_four(self):
         with pytest.raises(GeometryError, match="至少需要 4 个点"):
             compute("polyhedron_volume", [O, X, Y])
+
+
+class TestConvexHullOutline:
+    """体积的骨架由服务端给（`convex_hull_edges`）—— 前端不再自己算一遍。
+
+    为什么必须由服务端给：体积算的是 `ConvexHull.volume`，只有**同一个**凸包的
+    棱画出来才与算出来的数值对应；客户端另算一份就是两套真相
+    （用户：「现在测的是什么不清楚」）。
+    """
+
+    def test_cube_has_twelve_edges_and_degree_three(self):
+        edges = convex_hull_edges(CUBE_2)
+        assert len(edges) == 12  # 立方体：6 面 × 2 条不重复的棱
+        assert _degrees(edges, len(CUBE_2)) == [3] * 8
+
+    def test_triangular_prism_degree_is_three(self):
+        """⚠️ 用户的用例：三棱柱每个顶点的度数是 **3**，不是 2。
+
+        旧的「每顶点最多两条线 + 必须收口」是**面积**的语义（多边形的边界：
+        每个角恰好接两条边）。拿它去卡体积，三棱柱的正确骨架会被判成不合法。
+        """
+        pts = _triangular_prism()
+        edges = convex_hull_edges(pts)
+        assert len(edges) == 9  # 上底 3 + 下底 3 + 侧棱 3
+        assert _degrees(edges, len(pts)) == [3] * 6
+
+    def test_edges_are_unique_and_undirected(self):
+        edges = convex_hull_edges(CUBE_2)
+        assert len({tuple(e) for e in edges}) == len(edges), "有重复的棱"
+        assert all(i < j for i, j in edges), "同一条棱只能有一个方向"
+        assert all(0 <= i < len(CUBE_2) and 0 <= j < len(CUBE_2)
+                   for i, j in edges), "返回的是索引，不是坐标"
+
+    def test_degenerate_input_has_no_edges(self):
+        """共面 / 共线 / 点数不够 → 空表（与体积给 0 同一口径：不报错）。"""
+        assert convex_hull_edges([O, X, Y, [1.0, 1.0, 0.0]]) == []
+        assert convex_hull_edges([O, X, [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]]) == []
+        assert convex_hull_edges([O, X, Y]) == []
+        assert convex_hull_edges([]) == []
+
+    def test_volume_measurement_carries_the_outline(self):
+        """`resolve_measurement` 要把骨架一起给出来，前端才有得画。"""
+        pts = _triangular_prism()
+        elements = {f"p{i}": {"id": f"p{i}", "kind": "point", "points": [p]}
+                    for i, p in enumerate(pts)}
+        solved = resolve_measurement(elements, {
+            "id": "m1", "kind": "measurement", "op": "polyhedron_volume",
+            "refs": [f"p{i}" for i in range(len(pts))],
+        })
+        assert solved["raw"] == pytest.approx(3.0)  # 底面积 2 × 高 1.5
+        assert len(solved["outline"]) == 9
+        assert _degrees(solved["outline"], len(pts)) == [3] * 6
+
+    def test_area_measurement_has_no_hull_outline(self):
+        """面积不是凸包 —— 它的骨架就是点按序连起来，客户端本来就有。"""
+        elements = {k: {"id": k, "kind": "point", "points": [p]}
+                    for k, p in {"a": O, "b": X, "c": Y}.items()}
+        solved = resolve_measurement(elements, {
+            "id": "m1", "kind": "measurement", "op": "polygon_area",
+            "refs": ["a", "b", "c"],
+        })
+        assert solved["outline"] == []
+
+    def test_refresh_keeps_the_outline_in_sync(self):
+        """每次读取都重算 —— 骨架不能是存死的快照。"""
+        annotations = {"version": 1, "elements": [
+            {"id": f"p{i}", "kind": "point", "points": [p]}
+            for i, p in enumerate(_triangular_prism())
+        ] + [{"id": "m1", "kind": "measurement", "op": "polyhedron_volume",
+              "refs": [f"p{i}" for i in range(6)]}]}
+        refreshed = refresh_measurements(annotations, None)
+        m = [e for e in refreshed["elements"] if e["id"] == "m1"][0]
+        assert m["value"] == pytest.approx(3.0)
+        assert len(m["outline"]) == 9
+
+    def test_bad_measurement_drops_the_stale_outline(self):
+        """算不出来的测量不能留着上次的骨架（会画出个不存在的东西）。"""
+        annotations = {"version": 1, "elements": [{
+            "id": "m1", "kind": "measurement", "op": "polyhedron_volume",
+            "refs": ["ghost"], "outline": [[0, 1]], "value": 9.0,
+        }]}
+        refreshed = refresh_measurements(annotations, None)
+        m = refreshed["elements"][0]
+        assert "error" in m
+        assert "outline" not in m
 
 
 class TestCoplanarJudgement:
@@ -547,6 +649,28 @@ class TestMeasureEndpoint:
             client_id="alice", x_auth_token=None))["measurement"]
         assert m["value"] == pytest.approx(1.0 / 6.0)
         assert m["unit"] == "u³"
+
+    def test_polyhedron_volume_endpoint_returns_its_hull(self, env):
+        """体积的响应要带上「算的是哪个凸包」的骨架（`outline`）。
+
+        用户反例：三棱柱每顶点度数是 **3**，而旧的「度数 ≤ 2 / 必须收口」
+        是面积（多边形边界）的语义 —— 拿它卡体积，画出来的和算出来的对不上，
+        于是「现在测的是什么不清楚」。
+        """
+        store, owner = env
+        pts = _triangular_prism()
+        store.save_annotations("s1", owner, {
+            "version": 1,
+            "elements": [{"id": f"p{i}", "kind": "point", "points": [p]}
+                         for i, p in enumerate(pts)]})
+        m = _body(server.measure_session(
+            "s1",
+            {"op": "polyhedron_volume",
+             "element_ids": [f"p{i}" for i in range(len(pts))]},
+            client_id="alice", x_auth_token=None))["measurement"]
+        assert m["value"] == pytest.approx(3.0)
+        assert len(m["outline"]) == 9
+        assert _degrees(m["outline"], len(pts)) == [3] * 6
 
     def test_preview_computes_but_does_not_persist(self, env):
         """preview：只算不存 —— 网页逐点落点时看实时数值就靠它。"""

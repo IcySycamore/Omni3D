@@ -79,20 +79,55 @@ class TestMultiVertexMeasurement:
         )
         assert expected in index_html
 
-    def test_links_cannot_exceed_degree_two(self, index_html):
-        """连线只允许接到度数 < 2 的顶点 —— 每个顶点最多两条边，连不出分叉。
+    def test_ring_links_cannot_exceed_degree_two(self, index_html):
+        """**只有面积**（围环）把度数卡在 2 —— 多边形的边界本来就是这样。
 
-        现在建边路径收敛成一个 `addEdgeBetween`（落点、手动收口、自动收口都走它），
-        所以校验只需在这一处；但仍要盯住它没被绕过去。
+        现在建边路径收敛成一个 `addEdgeBetween`（手动收口、自动收口都走它），
+        所以校验只需在这一处；但两条**自动连线**的路必须挂在「环工具」上，
+        否则体积也会被拉成一堆线（见 `test_volume_does_not_constrain_vertex_degree`）。
         """
         assert "function degreeOfPoint" in index_html
         assert "function addEdgeBetween" in index_html
+        # 「连线」工具本身仍不许连出分叉
         assert "degreeOfPoint(aId) >= 2 || degreeOfPoint(bId) >= 2" in index_html
-        # 落点那条路要单独拦：连满的上一点不能再接新点
-        assert "degreeOfPoint(prevId) >= 2" in index_html
+        # 落点自动连线：上一个顶点接满两条就不再接
+        assert _contains_text(
+            index_html, "if (ring && prevId && degreeOfPoint(prevId) >= 2) {"
+        )
+        assert _contains_text(
+            index_html,
+            "if (ring && prevId) "
+            "STATE.elements.push(makeEdgeElement(prevId, el.id));",
+        )
+
+    def test_volume_does_not_constrain_vertex_degree(self, index_html):
+        """⚠️ 体积**不是**环：它量的是点集的凸包，三棱柱每顶点度数就是 3。
+
+        用户实测：「体积引导不应该限制顶点度数」。度数 ≤ 2 + 必须收口是
+        **面积**的语义（多边形的边界），照搬到体积上会把正确骨架判成不合法。
+        """
+        match = re.search(r"const RING_OPS = new Set\(\[(.*?)\]\)",
+                          index_html, re.S)
+        assert match, "没有 RING_OPS —— 度数 / 收口 / 自动连线就没有判据了"
+        ops = re.findall(r'"([^"]+)"', match.group(1))
+        assert ops == ["polygon_area"], (
+            "只有面积是「围一个环」。体积（polyhedron_volume）量的是凸包，"
+            "列进来就会把三棱柱（每顶点度数 3）判成不合法。"
+        )
+        # 「完成」时的收口 + 闭环校验同样只在环工具里
+        body = _fn_body(index_html, "finishMultiPointMeasure")
+        assert "isRingOp(def.op)" in body, "「完成」没有按 op 区分环 / 非环"
+        assert _contains_text(
+            body,
+            "if (isRingOp(def.op)) { "
+            "if (openVertices().length) await closeRing();",
+        ), "closeRing 必须落在环工具判断之内，否则体积也会被强行收口"
+        # 引导线（橡皮筋 + 收口虚线）也只对环有意义
+        guide = _fn_body(index_html, "updateGuideLines")
+        assert "ringToolActive()" in guide, "体积不该画「连回起点」的引导线"
 
     def test_finish_closes_the_ring_then_verifies_it(self, index_html):
-        """「完成」= **自动收口** + 校验闭环。
+        """面积点「完成」= **自动收口** + 校验闭环（体积不收，见上一条）。
 
         旧实现要求用户先精确点回起点、按钮才亮，再点「完成」——
         在稠密点云里很难点中（用户：「体验很难受」）。
@@ -141,9 +176,35 @@ class TestMultiVertexMeasurement:
         """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。"""
         assert "这 4 个点共面，体积会是 0" in index_html
 
-    def test_volume_draws_no_box_anymore(self, index_html):
-        """体积不再画「3 点底面 + 1 点定高」的直四棱柱，只留数值标签。"""
-        assert 'const isHull = el.op === "polyhedron_volume"' in index_html
+    def test_volume_draws_the_hull_the_server_measured(self, index_html):
+        """体积画的是**服务端算的那个凸包的棱**（`el.outline`）。
+
+        以前这里什么都不画：用户只看到自己连的线，而那条线跟凸包没关系
+        （凸包对连线顺序不敏感、还会忽略内部点），于是「现在测的是什么不清楚」。
+        """
+        assert "const isHull = el.op === \"polyhedron_volume\"" in index_html
+        body = _fn_body(index_html, "renderElements")
+        assert "const edges = el.outline || [];" in body
+        assert _contains_text(body, "for (const [i, j] of edges) {")
+        assert _contains_text(body, "new THREE.LineSegments(geom, mat)")
+
+    def test_client_does_not_compute_its_own_hull(self, index_html):
+        """骨架不能前端自己再算一遍 —— 两套真相会画出与数值不符的东西。
+
+        唯一实现：`server/core/geometry.py::convex_hull_edges`。
+        """
+        assert "ConvexHull" not in index_html, (
+            "体积的凸包由服务端给（同一次计算里拿到的），前端不许再算一份"
+        )
+
+    def test_volume_hint_promises_no_ring(self, index_html):
+        """体积的提示不能提「连线 / 虚线 / 收口」—— 它不连线也不收口。"""
+        match = re.search(r"volume: \{(.*?)\n        \}", index_html, re.S)
+        assert match, "找不到 volume 的工具定义"
+        hint = match.group(1)
+        for banned in ("虚线", "收口", "连一条线"):
+            assert banned not in hint, f"体积不连线，提示里不该出现「{banned}」"
+        assert "完成" in hint, "得说清怎么结束"
 
 
 class TestPicking:
@@ -317,7 +378,8 @@ class TestMultiPointEntryPoints:
         assert _contains_text(
             index_html, "if (isMultiPointTool(tool)) await adoptSelectionAsVertices(tool);"
         )
-        # 采纳后要连线段（顺序 = 顶点顺序），够数就收口
+        # 面积采纳后要连线段（顺序 = 顶点顺序），够数就收口；体积只取点集
+        assert _contains_text(index_html, "if (isRingOp(def.op)) {")
         assert _contains_text(index_html, "for (let i = 1; i < chain.length; i++) link(chain[i - 1], chain[i]);")
 
     def test_failed_measurement_keeps_the_pending_vertices(self, index_html):

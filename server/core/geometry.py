@@ -214,6 +214,56 @@ def polyhedron_volume(points) -> float:
         return 0.0
 
 
+def convex_hull_edges(points) -> list[list[int]]:
+    """凸包的**棱**（返回顶点对，索引指向 `points`）。退化点集 → 空表。
+
+    用途：把「服务端实际拿来算体积的那个凸包」原样画给用户看。
+
+    ⚠️ 不要在客户端再算一遍凸包 —— 那就是两套真相，画出来的与算出来的
+    可能不是同一个东西（用户：「现在测的是什么不清楚」）。
+    ⚠️ Qhull 的面是**三角化**的：直接取 simplices 的边，立方体每个正方形面里
+    会多出一条对角线（18 条棱、度数 4），画出来就是「一堆斜线」。所以先按支撑
+    平面把三角片合并成面，再取每个面**只被一个三角片用到**的边 = 面的边界。
+    """
+    pts = [_vec(p) for p in points]
+    if len(pts) < 4:
+        return []
+    try:
+        hull = ConvexHull(np.asarray(pts, dtype=float))
+    except QhullError:
+        return []  # 共面 / 共线 / 重复点：围不出体，也就没有骨架
+    # 支撑平面（单位法向 + 偏移）相同的三角片属于同一个面
+    facets: dict = {}
+    for simplex, plane in zip(hull.simplices, hull.equations):
+        key = tuple(np.round(np.asarray(plane, dtype=float), 6))
+        facets.setdefault(key, []).append([int(v) for v in simplex])
+    edges = set()
+    for triangles in facets.values():
+        # ⚠️ 计数必须**按面**分：真棱会被相邻的两个面各用一次，全局计数会把它
+        # 当成对角线一起丢掉（实测：全丢，棱数为 0）。
+        local: dict = {}
+        for a, b, c in triangles:
+            for i, j in ((a, b), (b, c), (c, a)):
+                key = (i, j) if i < j else (j, i)
+                local[key] = local.get(key, 0) + 1
+        # 同一个面的内部对角线被两个三角片各用一次；面的边界只用一次
+        edges.update(key for key, n in local.items() if n == 1)
+    return [[i, j] for i, j in sorted(edges)]
+
+
+def outline_for(op: str, points) -> list[list[int]]:
+    """某个 op 的**骨架**（顶点对索引）—— 「这个量到底在量哪块形状」。
+
+    目前只有体积需要服务端给：它算的是凸包，棱必须与体积出自同一个凸包。
+    面积 / 长度的骨架就是点按序连起来，客户端本来就有。
+
+    ⚠️ 唯一实现：端点（`panel/server.py::measure_session`）和重算
+    （`refresh_measurements`）都必须调它 —— 两边各写一份就是这次踩过的坑
+    （响应里少个字段，前端就没得画）。
+    """
+    return convex_hull_edges(points) if op == "polyhedron_volume" else []
+
+
 # ══════════════════ 共面判定（供 UI 引导用）══════════════════
 # 口径：**第 4 个点起**，每点到「前三点所在平面」的距离与模型包络之比 < 3%，
 # 一律在**模型世界单位**上算（与是否标定过无关）。
@@ -348,7 +398,12 @@ def resolve_points(elements: dict, element_id: str, _seen: Optional[set] = None)
 
 
 def resolve_measurement(elements: dict, element: dict) -> dict:
-    """重算一个测量元素 → ``{"raw": 模型单位值, "dim": 量纲, "points": 坐标}``。
+    """重算一个测量元素 →
+    ``{"raw": 模型单位值, "dim": 量纲, "points": 坐标, "outline": 顶点对}``。
+
+    `outline` 是「这个量到底在量哪块形状」的骨架，也由**算法本身**给：
+    体积是凸包，棱必须由服务端算（见 `convex_hull_edges`）—— 客户端自己再算
+    一遍就等于两套真相。多边形的骨架就是点按序连起来，客户端本来就有。
 
     Raises:
         GeometryError: 未知 op、缺 refs、引用坏了或点数不匹配。
@@ -360,7 +415,12 @@ def resolve_measurement(elements: dict, element: dict) -> dict:
     points: list = []
     for ref in refs:
         points.extend(resolve_points(elements, ref))
-    return {"raw": compute(op, points), "dim": OPS[op][1], "points": points}
+    return {
+        "raw": compute(op, points),
+        "dim": OPS[op][1],
+        "points": points,
+        "outline": outline_for(op, points),
+    }
 
 
 def refresh_measurements(annotations: Optional[dict],
@@ -388,7 +448,7 @@ def refresh_measurements(annotations: Optional[dict],
             solved = resolve_measurement(by_id, element)
         except GeometryError as exc:
             element["error"] = str(exc)
-            for key in ("raw", "value", "unit", "points"):
+            for key in ("raw", "value", "unit", "points", "outline"):
                 element.pop(key, None)
             continue
         element.pop("error", None)
@@ -396,6 +456,7 @@ def refresh_measurements(annotations: Optional[dict],
         element["raw"] = raw
         element["dim"] = dim
         element["points"] = solved["points"]
+        element["outline"] = solved["outline"]
         element["value"] = apply_scale_factor(raw, dim, scale)
         element["unit"] = unit_for(dim, scale is not None)
         element["calibrated"] = scale is not None

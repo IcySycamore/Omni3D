@@ -7896,7 +7896,7 @@
         lastHoverWorld = hoverWorld || null;
         const ok =
           !!hoverWorld &&
-          isMultiPointTool(STATE.activeTool) &&
+          ringToolActive() &&
           !!STATE.viewerScene &&
           !!STATE.viewerPointCloud;
         const pts = ok
@@ -9019,7 +9019,7 @@
           label: "体积",
           need: 4,
           op: "polyhedron_volume",
-          hint: "先点 3 个定底面，再点 1 个定高：每落一个点就连一条线，虚线预告收口的位置，够 4 个起点「完成」即可。",
+          hint: "依次点实体的各个顶点（三棱柱就是 6 个角）：够 4 个起就有数值，点「完成」按这些顶点算体积并画出轮廓。",
         },
       };
       // 工具组的默认顺序与设置页的「工具组」配置共用
@@ -9195,6 +9195,24 @@
       function isMultiPointTool(tool) {
         return MULTI_POINT_TOOLS.has(tool);
       }
+      // **只有面积是「围一个环」**：它量的就是这些点围成的多边形，每个顶点正好
+      // 两条边（度数 = 2）就是多边形的边界，收口 = 闭合成环。
+      //
+      // ⚠️ 体积**不能**照搬：它量的是这些点的**凸包**，与连线无关 ——
+      // 三棱柱每个顶点度数就是 3，度数限制会把正确的骨架直接画不出来
+      // （用户：「体积引导不应该限制顶点度数」）。所以体积既不连线、也不收口；
+      // 骨架由服务端按**同一个凸包**算出来（`measurement.outline`）。
+      // 判据用 **op** 而不是工具名：op 才是「算的是什么东西」。
+      const RING_OPS = new Set(["polygon_area"]);
+      function isRingOp(op) {
+        return RING_OPS.has(op);
+      }
+      function activeOp() {
+        return (TOOL_DEFS[STATE.activeTool] || {}).op;
+      }
+      function ringToolActive() {
+        return isRingOp(activeOp());
+      }
 
       function makeEdgeElement(aId, bId) {
         return { id: newElementId(), kind: "edge", refs: [aId, bId] };
@@ -9216,7 +9234,8 @@
           .filter((el) => el && el.kind === "point");
       }
 
-      // 还没收口的顶点（度数 ≠ 2）——「完成」要求它为空
+      // 还没收口的顶点（度数 ≠ 2）。**只对环工具（面积）有意义** ——
+      // 体积不连线，所以它的顶点度数恒为 0，不要拿这个去卡它。
       function openVertices() {
         return pendingPointElements().filter(
           (el) => degreeOfPoint(el.id) !== 2,
@@ -9519,23 +9538,27 @@
         pushUndo();
         const chain = picked.map((el) => el.id);
         STATE.pendingIds = chain;
-        // 度数已满的顶点不再接新线（与连线段交互同一套约束）
-        const link = (a, b) => {
-          if (degreeOfPoint(a) >= 2 || degreeOfPoint(b) >= 2) return;
-          STATE.elements.push(makeEdgeElement(a, b));
-        };
-        for (let i = 1; i < chain.length; i++) link(chain[i - 1], chain[i]);
-        if (chain.length >= (tool.need || 0) && chain.length >= 3) {
-          link(chain[chain.length - 1], chain[0]); // 够数就收口
+        // 只有面积要连成环（它量的是环围出的多边形）；体积只取点集，
+        // 连线与度数都不参与计算，骨架由服务端按凸包给。
+        if (isRingOp(def.op)) {
+          // 度数已满的顶点不再接新线（与连线段交互同一套约束）
+          const link = (a, b) => {
+            if (degreeOfPoint(a) >= 2 || degreeOfPoint(b) >= 2) return;
+            STATE.elements.push(makeEdgeElement(a, b));
+          };
+          for (let i = 1; i < chain.length; i++) link(chain[i - 1], chain[i]);
+          if (chain.length >= (tool.need || 0) && chain.length >= 3) {
+            link(chain[chain.length - 1], chain[0]); // 够数就收口
+          }
         }
         STATE.selectedIds.clear();
         renderElementList();
         renderElements();
         await persistCurrent();
         const def = TOOL_DEFS[tool];
-        // 已经闭环就直接把数值算出来（比再写一遍「可完成」有用）——
-        // 「可完成」左边 opReq 已经在说了。
-        if (openVertices().length === 0 && def.op) {
+        // 够数就把数值算出来 —— 面积是已闭环、体积是点数够。
+        // （「可完成」左边 opReq 已经在说了，再写一遍没用。）
+        if (def.op && chain.length >= (def.need || 0)) {
           await previewMeasure(def);
         } else {
           setToolHint(progressHint(def));
@@ -9919,9 +9942,11 @@
         }
 
         // ---- 手选全部顶点（面积 / 体积）----
-        // 连线约束：上一个顶点已经接了两条边，就不能再接了
+        // 面积要围成环，所以「上一个顶点已经接了两条边」就不能再接了；
+        // 体积只看点集（凸包），连线与度数都不设限。
+        const ring = ringToolActive();
         const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
-        if (prevId && degreeOfPoint(prevId) >= 2) {
+        if (ring && prevId && degreeOfPoint(prevId) >= 2) {
           // 环已经合上了：再点云就是「想开新的一轮」—— 说清下一步就行
           showToast("环已收口 · 点「完成」结束，或 Esc 重来", "warn");
           return;
@@ -9959,7 +9984,7 @@
         pushUndo();
         const el = makePointElement([_p.x, _p.y, _p.z]);
         STATE.elements.push(el);
-        if (prevId) STATE.elements.push(makeEdgeElement(prevId, el.id));
+        if (ring && prevId) STATE.elements.push(makeEdgeElement(prevId, el.id));
         STATE.pendingIds.push(el.id);
         renderElementList();
         renderElements();
@@ -10108,13 +10133,15 @@
           );
           return;
         }
-        // **自动收口**：把首尾接上（两个端点各只有一条线）。
-        // 用户原话「最后一个落点连线回起点」—— 这一下不该让他自己去找起点。
-        if (openVertices().length) await closeRing();
-        const open = openVertices().length;
-        if (open) {
-          showToast(`还有 ${open} 个顶点没连满两条线，收不了口`, "warn");
-          return;
+        // 面积要收口（它量的就是环围出的多边形）；
+        // 体积不收 —— 它量的是点集的凸包，环不参与计算。
+        if (isRingOp(def.op)) {
+          if (openVertices().length) await closeRing();
+          const open = openVertices().length;
+          if (open) {
+            showToast(`还有 ${open} 个顶点没连满两条线，收不了口`, "warn");
+            return;
+          }
         }
         // 成功之后才清引导 —— 失败（服务端拒了 / 网络断）时保留，用户能接着改
         if (await createMeasurement(def, refs)) {
@@ -10653,9 +10680,20 @@
             let mat;
             let line = null;
             if (isHull) {
-              // 体积（凸包）：**不画骨架**。顶点顺序是用户手动连线定的，那个环
-              // 已经由「连线」元素画出来了；这里再画一遍凸包会带上共面三角形的
-              // 内部对角线，看起来像一堆斜线。只留数值标签。
+              // 体积（凸包）：画**服务端实际算的那个凸包的棱**（`el.outline`，
+              // 顶点对索引）。以前这里什么都不画 —— 用户看到的只有自己连的线，
+              // 而那条线跟凸包没关系，于是「现在测的是什么不清楚」。
+              // ⚠️ 不要在这里自己算凸包：两套真相会画出与算出来不一致的东西。
+              const edges = el.outline || [];
+              const segs = [];
+              for (const [i, j] of edges) {
+                if (pts[i] && pts[j]) segs.push(pts[i], pts[j]);
+              }
+              if (segs.length) {
+                geom = new THREE.BufferGeometry().setFromPoints(segs);
+                mat = new THREE.LineBasicMaterial(lineMatOpts);
+                line = new THREE.LineSegments(geom, mat);
+              }
             } else if (isPolygon) {
               // 面积（凸多边形）：按取点顺序连成闭环
               geom = new THREE.BufferGeometry().setFromPoints([...pts, pts[0]]);
