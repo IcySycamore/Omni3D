@@ -19,7 +19,7 @@ demo_examples/
 # 文档与资源（构建镜像不需要）
 docs/
 assets/
-notebooks/
+training/notebooks/
 *.md
 
 # IDE

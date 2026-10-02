@@ -1,0 +1,1367 @@
+"""Omni3D 轻量重建服务（FastAPI）。
+
+接口：
+- GET  /                 前端页面（index.html，**仅** SERVE_PAGE=1 时；默认关）
+- GET  /app-config.json  客户端引导配置（默认 API 地址 / 端口）
+- GET  /health           模型加载状态
+- POST /reconstruct      上传图片包 → 3D 点云（同步，兼容旧客户端/web）
+- POST /api/tasks        提交图片/视频包 → 入队，立即返回 task_id（异步）
+- GET  /api/tasks/{id}   轮询任务状态（queued/running/done/failed + 进度 + 结果）
+- GET  /api/tasks        任务列表（传 client_id 或令牌时按归属隔离）
+- DELETE /api/tasks/{id} 删除任务记录
+- POST /api/auth/*       认证：salt / register / challenge / login / logout / claim
+- GET  /api/auth/me      校验令牌；GET /api/auth/claim/preview 预览可并入条数
+- GET/DELETE /api/history*   会话层历史（SQLite，按 owner 隔离）
+- POST /api/tasks/{id}/scale 由「两点 + 真实距离」反推尺度
+
+设计：
+- 模型在启动时后台线程加载（首次加载需数分钟），未就绪时 /health 返回 not ready
+- 复用 server/core/pipeline.py（加载→推理→对齐）
+- 响应包含：降采样点坐标（前端 three.js 渲染）+ 完整 PLY（下载）+ 相机位姿
+
+鉴权：
+- 登录令牌经 ``X-Auth-Token`` 头传递，**30 分钟滑动过期**
+  （``OMNI3D_SESSION_TTL`` 可覆盖）；未登录时按 ``client_id`` 归入匿名桶。
+- 客户端的「历史记录」应读 ``/api/history``（持久 + 按归属隔离）；
+  ``/api/tasks`` 只是内存任务表，重启即清。
+"""
+import json
+import os
+import secrets
+import sys
+import threading
+import time
+import traceback
+import uuid
+from contextvars import ContextVar
+from typing import Any, Optional
+
+# 项目根**无条件**钉到 sys.path 最前：`from panel.xxx` 与 `from server.core import ...`
+# 都靠它，而且「排在 panel/ 前面」是硬要求 —— 理由见下。
+#
+# 为什么不是 `if PROJECT_ROOT not in sys.path: sys.path.insert(0, ...)`：
+# 直接跑 `python panel/server.py` 时，Python 会把**脚本所在目录**（panel/）放进
+# sys.path 前排，于是裸名 `server` 有两个候选 —— 本文件 `panel/server.py` 与顶层
+# 包 `server/`。如果项目根本来就在 sys.path 里（例如设了 PYTHONPATH），那个
+# `not in` 判为假 → 一行都不插 → `from server.core import config` 先命中自己，
+# 以 `ImportError: cannot import name 'core'` 收场。
+# （静态推理认为「一定会炸」、实跑发现「恰好没炸」—— 所以守卫写成真跑一次，
+#   见 tests/test_package_layout.py。）
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT in sys.path:
+    sys.path.remove(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
+
+# 必须先导入 torch（本机存在 DLL 加载顺序冲突：其他库先加载会导致 fbgemm.dll 失败）
+import torch  # noqa: E402,F401
+
+import numpy as np  # noqa: E402
+from fastapi import Body, FastAPI, File, Form, Header, UploadFile  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+
+from server.core import config  # noqa: E402
+from server.core.geometry import (  # noqa: E402
+    OPS,
+    GeometryError,
+    apply_scale_factor,
+    compute,
+    outline_for,
+    refresh_measurements,
+    resolve_points,
+    unit_for,
+)
+from server.core.pipeline import pointcloud_keys, run_reconstruction  # noqa: E402
+from server.core.pointcloud import statistical_outlier_removal  # noqa: E402
+from server.core.scale import ScaleError, infer_scale_from_measurement  # noqa: E402
+
+from panel.hosting import (  # noqa: E402
+    ALLOW_ANONYMOUS,
+    API_HOST,
+    API_PORT,
+    SERVE_PAGE,
+    mount_page_routes,
+)
+from panel import api_keys  # noqa: E402
+from panel import auth_api  # noqa: E402
+from panel.task_queue import task_queue  # noqa: E402
+from panel.auth_store import AuthStore  # noqa: E402
+from panel.session_manager import SessionManager  # noqa: E402
+from panel.session_store import SessionStore, anon_owner, user_owner  # noqa: E402
+from panel.snap_index import snap_index  # noqa: E402
+
+app = FastAPI(title="Omni3D 重建服务", version="0.4.0")
+
+# ---- 跨源（CORS）----
+# 页面与 API **可以分处两个端口 / 两台机器**（见 `panel/pages.py`）：此时浏览器
+# 发出的每个 `/api/*` 都是跨源请求，没有这几个响应头就会被浏览器直接拦掉
+# （现象：页面能打开，但一切请求「网络错误」，服务端日志里却什么都看不到）。
+# 身份令牌走 `X-Auth-Token` 请求头而非 Cookie，所以不需要 allow_credentials；
+# 默认放行所有来源（本服务本来就面向本机 / 局域网 / 自建部署），
+# 要收紧就设 `CORS_ORIGINS=http://a.com,http://b.com`。
+_CORS_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("CORS_ORIGINS", "*").split(",")
+    if o.strip()
+] or ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
+)
+
+# ---- 页面 / 静态资源 ----
+# 页面本体（`GET /`）、`/assets/*` 与客户端引导配置 `/app-config.json` 都由
+# 默认**不挂**：本进程只做 API，页面交给 panel/pages.py（50866）之类的静态宿主。
+# `SERVE_PAGE=1` 时才与面板共用同一份 `mount_page_routes` 实现。
+if SERVE_PAGE:
+    mount_page_routes(app)
+
+# ---- 数据目录 ----
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
+
+# ---- 认证 / 会话 / 历史（三者共存于 data/）----
+auth_store = AuthStore(os.path.join(DATA_DIR, "omni3d_users.db"))
+# 会话有效期：默认 30 分钟滑动过期，可用 OMNI3D_SESSION_TTL（秒）覆盖
+session_manager = SessionManager()
+session_store = SessionStore(
+    db_path=os.path.join(DATA_DIR, "omni3d_sessions.db"),
+    sessions_dir=os.path.join(DATA_DIR, "sessions"),
+)
+
+
+def _owner_of(token, client_id=None):
+    """解析请求的会话归属键（顺序：API Key → 登录令牌 → 匿名 client_id）。
+
+    登录用户（或 API Key 对应的用户名）→ ``user:<username>``；
+    否则 → ``anon:<client_id>``。历史记录因此能**对应到 username**。
+
+    ⚠️ API Key 由中间件 `_identify_by_api_key` 解析后放进 ContextVar：
+    每个服务商的账号体系是**各自独立**的，客户端的「在这台登录的令牌」
+    不能拿去访问另一台；跨服务商要么在那边登录，要么用那边发的 Key。
+    """
+    username = api_key_identity() or session_manager.username_for(token)
+    if username:
+        return user_owner(username)
+    return anon_owner(client_id or "default")
+
+
+# 当前请求的 API Key 身份（用户名）；由中间件填写，随请求自动隔离
+_REQUEST_API_KEY_USER: ContextVar[Optional[str]] = ContextVar(
+    "request_api_key_user", default=None
+)
+
+
+# ---- 服务商的 API Key 身份 ----
+# 客户端用 `X-Api-Key` 头带 Key（代替 `X-Auth-Token`）。
+# 未配 `OMNI3D_API_KEYS` 的服务商不支持 Key，只能账号登录。
+
+
+def api_key_enabled() -> bool:
+    """这台服务商接不接受 API Key。
+
+    官网签发的 Key 总是可以（同一个门户库），所以恒为真；
+    ``static_keys`` 另外说明有没有运维配的静态 Key。
+    """
+    return True
+
+
+def static_keys_enabled() -> bool:
+    return bool(api_keys.load())
+
+
+def api_key_identity() -> Optional[str]:
+    """当前请求里 API Key 对应的用户名（无 / 无效 → None）。"""
+    return _REQUEST_API_KEY_USER.get()
+
+
+# ---- 「必须带凭据」的门槛（`OMNI3D_ALLOW_ANONYMOUS=0` 时生效）----
+# 用**白名单**而不是黑名单：新增端点默认就是「要凭据」，
+# 想对外开放必须显式写进来 —— 否则就是静默的能力外溢（漏一个就是洞）。
+_ANON_ALLOWED_EXACT = frozenset(
+    {
+        "/",  # 仅 SERVE_PAGE=1（单端口 / adb reverse）时才有
+        "/app-config.json",
+        "/health",
+        "/favicon.ico",
+        "/openapi.json",
+        "/docs",
+        "/redoc",
+    }
+)
+_ANON_ALLOWED_PREFIXES = (
+    "/assets/",  # 同上，静态资源
+    "/api/auth/",  # 登录流程本身必须开放，否则永远拿不到凭据
+    "/api/models",  # 只是模型清单，不含任何用户数据
+)
+
+
+def anon_path_allowed(path: str) -> bool:
+    """这条路径能不能无凭据访问（仅在匿名被关闭时才会被问到）。"""
+    return path in _ANON_ALLOWED_EXACT or path.startswith(_ANON_ALLOWED_PREFIXES)
+
+
+def anonymous_allowed(key_username: Optional[str], token: Optional[str]) -> bool:
+    """本请求能否以匿名身份继续。
+
+    服务商允许匿名 → 直接放行；否则必须能解出用户身份
+    （API Key 或登录令牌，两者等效）。
+    """
+    if ALLOW_ANONYMOUS:
+        return True
+    if key_username or session_manager.username_for(token):
+        return True
+    return False
+
+
+@app.middleware("http")
+async def _identify_by_api_key(request, call_next):
+    """把 ``X-Api-Key`` 解析成用户名放进 ContextVar（每请求一份），
+    并在这里就把「要不要放行」定下来。
+
+    放在中间件而不是给 ~10 个端点逐个加参数：所有读写数据的端点的归属解析
+    都走 ``_owner_of``，这里一处生效即可，也不会漏。
+
+    ⚠️ 身份解析与放行判断必须待在**同一个**中间件里，而且按这个顺序：
+    两个 `@app.middleware` 谁先跑取决于注册顺序（后注册的在外层），
+    拆成两个将来被重排就是**静默的漏洞** ——
+    先跑的那个会看到「无身份」，把所有带 Key 的请求也一并拒掉。
+    """
+    username = api_keys.username_for(request.headers.get("x-api-key"))
+    token = _REQUEST_API_KEY_USER.set(username)
+    try:
+        if not anonymous_allowed(username, request.headers.get("x-auth-token")):
+            if not anon_path_allowed(request.url.path):
+                return JSONResponse(
+                    {
+                        "error": "这台服务商要求凭据（API Key 或登录令牌）",
+                        "requires_key": True,
+                    },
+                    status_code=401,
+                )
+        return await call_next(request)
+    finally:
+        _REQUEST_API_KEY_USER.reset(token)
+
+# ---- 监听配置（单一来源见 hosting.py；与 frp 映射 127.0.0.1:50865 -> frp-oil.com:50865 对齐）----
+SERVER_HOST = API_HOST
+SERVER_PORT = API_PORT
+
+# ---- 全局模型状态（后台线程加载） ----
+_model = None
+_model_ready = False
+_model_error = None
+
+
+def _load_model():
+    """后台线程加载 Fast3R 模型。"""
+    global _model, _model_ready, _model_error
+    try:
+        from fast3r.models.fast3r import Fast3R
+
+        _model = Fast3R.from_pretrained(config.CHECKPOINT_DIR).to(config.DEVICE)
+        _model.eval()
+        _model_ready = True
+        print(f"[server] 模型加载完成，设备: {config.DEVICE}")
+    except Exception as exc:  # noqa: BLE001
+        _model_error = str(exc)
+        traceback.print_exc()
+
+
+@app.on_event("startup")
+def _startup():
+    # 把「允许匿名」这件事**显式说出来**：它是默认值，很容易在对外部署时被忘掉。
+    # （不能靠监听地址判断 —— 走内网穿透时绑的还是 127.0.0.1。）
+    if ALLOW_ANONYMOUS:
+        print(
+            "[server] 匿名访问：**允许**（默认，本机自用）。"
+            "对外提供服务请设 OMNI3D_ALLOW_ANONYMOUS=0",
+            flush=True,
+        )
+    else:
+        print(
+            "[server] 匿名访问：已关闭 —— 数据端点要求 X-Api-Key 或 X-Auth-Token",
+            flush=True,
+        )
+    threading.Thread(target=_load_model, daemon=True).start()
+
+
+# ---- 页面 ----
+# （`GET /` 由 hosting.mount_page_routes 挂载，见文件上方）
+
+
+@app.get("/health")
+def health():
+    return {
+        "ready": _model_ready,
+        "device": str(config.DEVICE),
+        "error": _model_error,
+        # 客户端靠它提示「这台服务商支不支持 API Key」
+        "api_key": api_key_enabled(),
+        "static_api_keys": static_keys_enabled(),
+        # ★ 服务商自己的策略：能不能**不带凭据**用。客户端据此决定
+        # 「提交前先拦下」还是「直接提交」，而不是靠猜或靠来源地址。
+        "anonymous": ALLOW_ANONYMOUS,
+    }
+
+
+# ---- 可用模型列表 ----
+# 客户端的「模型」菜单就靠它：模型清单由**服务器**决定，客户端不写死。
+# 面板侧的主入口是「验证 API Key」——那一次请求就把可用模型一起回传（`/api/auth/me`），
+# `/api/models` 作为匿名 / 刷新时的备用入口，两者走同一份口径。
+_AVAILABLE_MODELS = [
+    {"id": "fast3r", "name": "Fast3R", "sub": "多视图三维重建"},
+]
+
+
+def models_for_identity() -> list[dict]:
+    """当前身份可用的模型。
+
+    现在所有身份都一样（本机就一个模型）；把身份参数留着，
+    以后「某些模型只开给某些套餐/Key」时只改这里。
+    """
+    return [dict(m) for m in _AVAILABLE_MODELS]
+
+
+def server_capabilities() -> dict:
+    """服务商的**能力门槛**：客户端据此决定可选参数，而不是写死在页面里。
+
+    与 `models_for_identity()` 一起构成「这台服务商能干什么」。改硬件 / 改环境
+    变量后客户端只需重新请求一次（初始化、切换服务商时各一次）即可跟着变。
+    """
+    mb = config.gpu_memory_mb()
+    return {
+        "frame_options": config.frame_options(),
+        "default_frames": config.default_frame_count(),
+        "resolutions": [512, 224],
+        "default_resolution": config.DEFAULT_RESOLUTION,
+        "max_render_points": config.MAX_RENDER_POINTS,
+        "device": str(config.DEVICE),
+        "gpu_memory_mb": mb,
+    }
+
+
+def frame_limit_error(frame_count: int) -> str | None:
+    """视角数量越界时给出**点名真凶**的文案（当前值 / 上限 / 去哪里改）；合法返回 None。
+
+    档位由 `config.frame_options()`（按显存）给出，客户端会展示它，
+    但服务端**必须自己拦** —— 否则旧页面、脚本直接提交、或手改表单，
+    换个数字就能把显存打满。
+    """
+    allowed = config.frame_options()
+    if frame_count in allowed:
+        return None
+    mb = config.gpu_memory_mb()
+    vram = f"显存 {mb / 1024:.1f} GB，" if mb else ""
+    return (
+        f"视角数量 {frame_count} 超出本机门槛"
+        f"（{vram}最多 {max(allowed)} 帧）："
+        f"请在 设置 → 采集 里改为 {max(allowed)}"
+    )
+
+
+@app.get("/api/models")
+def list_models():
+    """列出**当前身份**可用的重建模型 + 服务商能力门槛（带 API Key 时以该账号口径返回）。"""
+    return {
+        "models": models_for_identity(),
+        "capabilities": server_capabilities(),
+        "via": api_key_identity() and "api_key" or "anon",
+    }
+
+
+# ---- 重建 ----
+# PLY 走**二进制小端**：同样 100 万点，ASCII 约 80MB，二进制 27B/点 约 27MB。
+# 坐标用 float64（header 写 `property double`）：内部变换本来就是 float64，
+# 落盘再降回 float32 属于无谓的二次舍入（#24）。颜色仍是 uchar，只占 3B/点。
+# 注：float32 **不是**当前误差瓶颈（相对精度 ~1e-7 而自洽性误差 ~2.5%），
+# 这里只是「既然不要速度，就顺手不留无谓损失」。
+_PLY_STRUCT = np.dtype([
+    ("x", "<f8"), ("y", "<f8"), ("z", "<f8"),
+    ("red", "u1"), ("green", "u1"), ("blue", "u1"),
+])
+# 与 `_PLY_STRUCT` 一一对应 —— 改结构体必须同步改这里，否则 PLY 读不出来。
+_PLY_HEADER_PROPS = (
+    "property double x\nproperty double y\nproperty double z\n"
+    "property uchar red\nproperty uchar green\nproperty uchar blue\n"
+)
+_FALLBACK_RGB = (255, 180, 60)
+
+
+def _pts_to_ply(points, colors=None) -> bytes:
+    """点坐标 (N,3) + 颜色 (N,3,0~255) → **二进制小端** PLY 字节串。
+
+    没有颜色时退化为单色（不再是唯一选择：正常路径会用上真实 RGB）。
+    全向量化，百万点也只是几次 numpy 拷贝。
+    """
+    pts = np.asarray(points, dtype=np.float64).reshape(-1, 3)
+    if pts.shape[0] == 0:
+        return b""
+    if colors is None:
+        rgb = np.tile(np.asarray(_FALLBACK_RGB, dtype=np.uint8), (pts.shape[0], 1))
+    else:
+        rgb = np.asarray(colors, dtype=np.uint8).reshape(-1, 3)
+        if rgb.shape[0] != pts.shape[0]:
+            rgb = np.tile(np.asarray(_FALLBACK_RGB, dtype=np.uint8), (pts.shape[0], 1))
+
+    header = (
+        "ply\n"
+        "format binary_little_endian 1.0\n"
+        "comment generated by Omni3D (Fast3R)\n"
+        f"element vertex {pts.shape[0]}\n"
+        + _PLY_HEADER_PROPS
+        + "end_header\n"
+    )
+    rec = np.empty(pts.shape[0], dtype=_PLY_STRUCT)
+    rec["x"], rec["y"], rec["z"] = pts[:, 0], pts[:, 1], pts[:, 2]
+    rec["red"], rec["green"], rec["blue"] = rgb[:, 0], rgb[:, 1], rgb[:, 2]
+    return header.encode("ascii") + rec.tobytes()
+
+
+def _view_colors(views, index: int, height: int, width: int):
+    """从第 index 个视图取真实 RGB，返回 (H*W, 3) uint8；取不到返回 None。
+
+    `views[i]["img"]` 是 ``ImgNorm`` 之后的张量：``ImageNet 无关``的
+    ``(x/255 - 0.5)/0.5``，即值域 [-1, 1]；反归一化即可还原真实颜色。
+    """
+    if not views or index >= len(views):
+        return None
+    view = views[index]
+    img = view.get("img") if isinstance(view, dict) else None
+    if img is None:
+        return None
+    if hasattr(img, "detach"):
+        img = img.detach().cpu().numpy()
+    img = np.asarray(img, dtype=np.float32)
+    if img.ndim == 4:          # (B, 3, H, W)
+        img = img[0]
+    if img.ndim != 3:
+        return None
+    if img.shape[0] == 3:      # (3, H, W) → (H, W, 3)
+        img = np.transpose(img, (1, 2, 0))
+    if img.shape[0] != height or img.shape[1] != width:
+        # 尺寸与点图不一致时宁可不上色，也不能让颜色错位
+        return None
+    rgb = np.clip((img + 1.0) * 0.5, 0.0, 1.0) * 255.0
+    return rgb.astype(np.uint8).reshape(-1, 3)
+
+
+def _collect_points(output_dict, conf_percentile=None):
+    """收集各视图点云（**全分辨率 + 真实 RGB + 置信度过滤**）。
+
+    只负责「收集」。流程顺序固定为 **收集 → 剔除离群点 → 抽样渲染**：
+    `_reject_outliers` 与 `_sample_for_render` 分开调用，保证显示、PLY 导出与
+    测量三者看到的是**同一份**点云（看到的 = 量到的 = 导出的）。
+
+    Returns:
+        ``(points, colors)`` —— 置信度过滤后的**全量**点 ``(N, 3)`` float32 与
+        其 RGB ``(N, 3)`` uint8；任一视图取不到颜色时整体为 ``None``。
+    """
+    if conf_percentile is None:
+        conf_percentile = config.VIS_CONF_PERCENTILE
+
+    preds = output_dict["preds"]
+    views = output_dict.get("views") or []
+    pts_key, conf_key = pointcloud_keys()
+
+    pts_parts: list = []
+    rgb_parts: list = []
+    for index, pred in enumerate(preds):
+        pts = pred[pts_key]
+        if hasattr(pts, "detach"):
+            pts = pts.detach().cpu().numpy()
+        pts = np.asarray(pts, dtype=np.float64)
+        if pts.ndim == 4:                       # (B, H, W, 3)
+            pts = pts[0]
+        if pts.ndim != 3:
+            continue
+        height, width = pts.shape[0], pts.shape[1]
+        pts = pts.reshape(-1, 3)
+
+        keep = np.isfinite(pts).all(axis=1)
+
+        conf = pred.get(conf_key)
+        if conf is not None and conf_percentile > 0:
+            if hasattr(conf, "detach"):
+                conf = conf.detach().cpu().numpy()
+            conf = np.asarray(conf, dtype=np.float32)
+            if conf.ndim == 3:                  # (B, H, W)
+                conf = conf[0]
+            conf = conf.reshape(-1)
+            if conf.shape[0] == keep.shape[0] and keep.any():
+                keep &= conf >= np.percentile(conf[keep], conf_percentile)
+
+        colors = _view_colors(views, index, height, width)
+        if colors is not None and colors.shape[0] != keep.shape[0]:
+            colors = None
+
+        pts_parts.append(pts[keep])
+        rgb_parts.append(colors[keep] if colors is not None else None)
+
+    if not pts_parts:
+        return np.zeros((0, 3), dtype=np.float64), None
+
+    points = np.concatenate(pts_parts, axis=0)
+    has_colors = all(part is not None for part in rgb_parts)
+    colors = np.concatenate(rgb_parts, axis=0) if has_colors else None
+    return points, colors
+
+
+def _reject_outliers(points, colors):
+    """统计离群点剔除（SOR，实现见 `server.core.pointcloud`）。
+
+    `config.SOR_K` / `config.SOR_STD` 任一 ``<= 0`` 即**关闭**。
+    为什么不能只靠置信度过滤：置信度删的是「模型没把握的点」，而背景飞点往往
+    置信度并不低，只能靠**几何孤立性**识别，两者互补。
+
+    Returns:
+        ``(points, colors, removed)`` —— ``removed`` 为被剔除的点数（关闭时为 0）。
+    """
+    pts = np.asarray(points, dtype=np.float64).reshape(-1, 3)
+    rgb = None if colors is None else np.asarray(colors, dtype=np.uint8).reshape(-1, 3)
+    if config.SOR_K <= 0 or config.SOR_STD <= 0 or pts.shape[0] < 2:
+        return pts, rgb, 0
+    keep = statistical_outlier_removal(pts, k=config.SOR_K, std=config.SOR_STD)
+    removed = int(pts.shape[0] - int(keep.sum()))
+    if removed == 0:
+        return pts, rgb, 0
+    return pts[keep], (None if rgb is None else rgb[keep]), removed
+
+
+def _sample_for_render(points, colors, max_render_points=None):
+    """把全量点云**确定性均匀抽样**到 ``max_render_points``（仅用于客户端渲染）。
+
+    抽样必须在离群点剔除**之后**做，否则渲染子集里会残留已被剔除的飞点，
+    出现「屏幕上还在、PLY 里没有」的不一致。
+
+    Returns:
+        ``(render_points, render_colors)``（已 ``.tolist()``，供直接进 JSON）。
+    """
+    if max_render_points is None:
+        max_render_points = config.MAX_RENDER_POINTS
+    # 渲染子集特意降回 float32：屏幕分辨率远低于 float32 精度，用 double 白占内存（#24）
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3)
+    rgb = None if colors is None else np.asarray(colors, dtype=np.uint8).reshape(-1, 3)
+    if max_render_points and pts.shape[0] > max_render_points:
+        idx = np.linspace(0, pts.shape[0] - 1, max_render_points).astype(np.int64)
+        pts = pts[idx]
+        rgb = None if rgb is None else rgb[idx]
+    return pts.tolist(), (None if rgb is None else rgb.tolist())
+
+
+def _reconstruct_to_result(image_paths, resolution, intrinsics=None, extrinsics=None,
+                           is_video=False):
+    """核心编排（同步 /reconstruct 与异步 _task_processor 共用）：
+    推理 → 收集点云（全量 + RGB）→ 二进制 PLY → 统一结果结构。
+
+    Returns:
+        ``(result, ply_bytes)`` —— PLY **不进 JSON**（百万点会让响应体膨胀到
+        几十 MB，手机端解析会直接卡死）；调用方把它落到会话目录，
+        客户端统一用 ``GET /api/history/{id}/ply`` 下载。
+    """
+    if not _model_ready:
+        raise RuntimeError("模型仍在加载中，请稍后重试")
+    t0 = time.time()
+    output_dict, _profiling = run_reconstruction(
+        image_paths,
+        _model,
+        config.DEVICE,
+        resolution=resolution,
+        dtype=config.INFERENCE_DTYPE,
+        extrinsics=extrinsics,
+        intrinsics=intrinsics,
+    )
+    metric = output_dict.get("metric") or {}
+    points, colors = _collect_points(output_dict)
+    num_points_raw = int(points.shape[0])
+    # 剔除离群点后再落盘 / 抽样：看到的 = 量到的 = 导出的
+    points, colors, num_removed = _reject_outliers(points, colors)
+    ply_bytes = _pts_to_ply(points, colors)
+    render_points, render_colors = _sample_for_render(points, colors)
+    # 渲染用点云带上颜色：与网页/桌面端约定的 [x,y,z,r,g,b] 形式一致
+    if render_colors is not None and render_points:
+        render_payload = np.concatenate(
+            [np.asarray(render_points, dtype=np.float32),
+             np.asarray(render_colors, dtype=np.float32)], axis=1
+        ).tolist()
+    else:
+        render_payload = render_points
+    elapsed = time.time() - t0
+    result = {
+        "ok": True,
+        "num_views": len(image_paths),
+        "num_points": len(points),
+        "num_points_raw": num_points_raw,
+        "num_points_removed": num_removed,
+        "render_points": len(render_points),
+        "elapsed_s": round(elapsed, 2),
+        "points": render_payload,
+        "has_colors": render_colors is not None,
+        "has_ply": bool(ply_bytes),
+        "ply_bytes": len(ply_bytes),
+        "intrinsics": intrinsics,
+        "extrinsics": extrinsics,
+        "is_video": is_video,
+        "device": str(config.DEVICE),
+        # 真实尺度：有可用 AR 位姿时为米制；否则 None（客户端走标尺校准）
+        "scale": metric.get("scale"),
+        "metric": metric,
+        "quality": output_dict.get("quality"),
+    }
+    return result, ply_bytes
+
+
+def _save_upload(data: bytes, filename: str, tmp_dir: str) -> str:
+    """保存上传文件到临时目录，返回路径。"""
+    os.makedirs(tmp_dir, exist_ok=True)
+    safe = os.path.basename(filename or "upload.bin")
+    path = os.path.join(tmp_dir, f"{int(time.time() * 1000)}_{safe}")
+    with open(path, "wb") as fh:
+        fh.write(data)
+    return path
+
+
+def _extract_video_frames(video_path: str, frame_count: int, out_dir: str):
+    """用 cv2 从视频均匀抽帧，返回帧图片路径列表（保持时间序）。"""
+    import cv2  # noqa: E402
+
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise RuntimeError(f"无法打开视频: {video_path}")
+
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if total <= 0:
+        cap.release()
+        raise RuntimeError("视频无有效帧")
+
+    n = min(frame_count, total)
+    # 均匀采样帧索引（首尾各保留一点余量）
+    idxs = sorted(
+        {int(i * (total - 1) / (n - 1)) for i in range(n)} if n > 1 else {0}
+    )
+
+    os.makedirs(out_dir, exist_ok=True)
+    paths = []
+    cur = 0
+    for idx in idxs:
+        while cur < idx:
+            ok = cap.grab()
+            cur += 1
+            if not ok:
+                break
+        ok, frame = cap.retrieve()
+        if not ok:
+            continue
+        p = os.path.join(out_dir, f"frame_{cur:05d}.jpg")
+        cv2.imwrite(p, frame, [cv2.IMWRITE_JPEG_QUALITY, 92])
+        paths.append(p)
+        cur += 1
+    cap.release()
+
+    if not paths:
+        raise RuntimeError("视频抽帧失败：无有效帧")
+    return paths
+
+
+def _resample_to(seq, n):
+    """把逐帧序列均匀重采样为 n 项（多则取样、少则重复末项）。空序列原样返回。"""
+    if not seq or n <= 0:
+        return seq
+    if len(seq) == n:
+        return seq
+    if len(seq) == 1:
+        return [seq[0]] * n
+    step = len(seq) / n
+    return [seq[min(len(seq) - 1, int(i * step))] for i in range(n)]
+
+
+def _task_processor_impl(task, update_progress):
+    """任务队列处理器：图片直传或视频抽帧 → 重建 → 存结果。"""
+    global _model
+
+    if not _model_ready:
+        raise RuntimeError("模型仍在加载中，请稍后重试")
+
+    tmp_dir = os.path.join(PROJECT_ROOT, "temp_preview_frames", "tasks", task.task_id)
+
+    if task.is_video:
+        update_progress(task, 0.05, "保存视频")
+        # 视频：只应有一个文件
+        data, filename = task.files[0]
+        video_path = _save_upload(data, filename, tmp_dir)
+        update_progress(task, 0.10, "抽帧中")
+        frames = _extract_video_frames(video_path, task.frame_count, tmp_dir)
+        image_paths = frames
+        # 视频抽帧后，逐帧外参按帧数重采样（传感器姿态在录制时已采样到 extrinsics）
+        intrinsics_data = task.intrinsics
+        extrinsics_data = _resample_to(task.extrinsics, len(frames))
+    else:
+        update_progress(task, 0.05, "保存图片")
+        image_paths = []
+        for data, filename in task.files:
+            image_paths.append(_save_upload(data, filename, tmp_dir))
+        intrinsics_data = task.intrinsics
+        extrinsics_data = task.extrinsics
+
+    if not image_paths:
+        raise RuntimeError("未收到有效图片/视频帧")
+
+    # 缩略图就用素材封面（视频第一帧 / 第一张图）—— 这一刻拿最省事
+    task.thumb_bytes = _make_thumb_bytes(image_paths[0])
+
+    update_progress(task, 0.20, f"推理 {len(image_paths)} 帧")
+    # 统一编排（与 /reconstruct 共用）；PLY 字节流单独带出，不进 JSON
+    result, ply_bytes = _reconstruct_to_result(
+        image_paths, task.resolution,
+        intrinsics=intrinsics_data, extrinsics=extrinsics_data,
+        is_video=task.is_video,
+    )
+    update_progress(task, 0.85, "生成点云")
+    result["task_id"] = task.task_id
+    task.result = result
+    task.ply_bytes = ply_bytes
+
+
+# 注册任务处理器（包装：执行重建 + 落入会话层，成功/失败均记录）
+def _task_processor(task, update_progress):
+    owner = getattr(task, "owner", "anon:default") or "anon:default"
+    try:
+        _task_processor_impl(task, update_progress)
+    except Exception as exc:  # noqa: BLE001
+        session_store.save_session(
+            session_id=task.task_id,
+            owner=owner,
+            status="failed",
+            result={"error": str(exc), "is_video": task.is_video},
+            created_at=task.created_at,
+        )
+        raise
+    session_store.save_session(
+        session_id=task.task_id,
+        owner=owner,
+        status="done",
+        result=task.result or {},
+        ply_bytes=getattr(task, "ply_bytes", None),
+        thumb_bytes=getattr(task, "thumb_bytes", None),
+        created_at=task.created_at,
+    )
+    # 计费通道（API Key）：记一次用量 —— 计量单位 + 实际用量 → 分，
+    # 由门户按「先计划包 → 再用量包 → 最后余额」扣减。
+    # 验证阶段不扣余额，但口径先跑通：门户的「控制台 / 流水」就是读这里。
+    if getattr(task, "metered", False) and owner.startswith("user:"):
+        result = task.result or {}
+        # 当前管线只产出点云；体素 / 网格的口径已在门户备好，模型接入后按同一处扣。
+        units = int(result.get("num_points") or 0)
+        try:
+            api_keys.store().record_usage(
+                owner[len("user:"):], task.task_id, units, "points"
+            )
+        except Exception:  # noqa: BLE001  记费失败不该让重建失败
+            traceback.print_exc()
+
+
+task_queue.set_processor(_task_processor)
+
+
+@app.post("/reconstruct")
+def reconstruct(
+    files: list[UploadFile] = File(...),
+    resolution: int = Form(config.DEFAULT_RESOLUTION),
+    intrinsics: str = Form("null"),
+    extrinsics: str = Form("null"),
+    client_id: str = Form("default"),
+    x_auth_token: Optional[str] = Header(default=None),
+):
+    """上传图片包（+ 可选内外参 JSON）→ 重建点云。
+
+    - files: 图片文件（jpg/png）
+    - resolution: 512 或 224
+    - intrinsics: 每视图 3x3 内参矩阵 JSON（可选，示例 [[[...],[...],[...]], ...]）
+    - extrinsics: 每视图 4x4 相机位姿 JSON（可选）
+    """
+    if not _model_ready:
+        return JSONResponse(
+            {"error": "模型仍在加载中，请稍后重试", "ready": False}, status_code=503
+        )
+
+    # 解析内外参（可选）
+    try:
+        intrinsics_data = json.loads(intrinsics) if intrinsics not in ("null", "") else None
+        extrinsics_data = json.loads(extrinsics) if extrinsics not in ("null", "") else None
+    except json.JSONDecodeError as exc:
+        return JSONResponse({"error": f"内外参 JSON 解析失败: {exc}"}, status_code=400)
+
+    # 保存上传图片到临时目录
+    tmp_dir = os.path.join(PROJECT_ROOT, "temp_preview_frames", "web_upload")
+    os.makedirs(tmp_dir, exist_ok=True)
+    image_paths = []
+    for f in files:
+        data = f.file.read()
+        path = os.path.join(tmp_dir, f"{int(time.time() * 1000)}_{f.filename or 'img'}")
+        with open(path, "wb") as fh:
+            fh.write(data)
+        image_paths.append(path)
+
+    if not image_paths:
+        return JSONResponse({"error": "未收到图片"}, status_code=400)
+
+    try:
+        # 统一编排（与异步任务处理器共用）
+        result, ply_bytes = _reconstruct_to_result(
+            image_paths, resolution,
+            intrinsics=intrinsics_data, extrinsics=extrinsics_data,
+            is_video=False,
+        )
+        # 落入会话层（同步接口也生成历史）
+        session_id = uuid.uuid4().hex[:16]
+        result["task_id"] = session_id
+        session_store.save_session(
+            session_id=session_id,
+            owner=_owner_of(x_auth_token, client_id),
+            status="done",
+            result=result,
+            ply_bytes=ply_bytes,
+            thumb_bytes=_make_thumb_bytes(image_paths[0]),
+        )
+        return JSONResponse(result)
+    except Exception as exc:  # noqa: BLE001
+        traceback.print_exc()
+        return JSONResponse({"error": f"重建失败: {exc}"}, status_code=500)
+
+
+# ---- 异步任务 API ----
+def _task_to_dict(task, include_result: bool) -> dict:
+    d = {
+        "task_id": task.task_id,
+        "status": task.status,
+        "progress": round(task.progress, 3),
+        "stage": task.stage,
+        "error": task.error,
+        "is_video": task.is_video,
+        "num_views": task.result.get("num_views") if task.result else None,
+        "created_at": task.created_at,
+        "finished_at": task.finished_at,
+    }
+    if include_result and task.result:
+        d["result"] = task.result
+    return d
+
+
+@app.post("/api/tasks")
+async def create_task(
+    files: list[UploadFile] = File(...),
+    resolution: int = Form(config.DEFAULT_RESOLUTION),
+    intrinsics: str = Form("null"),
+    extrinsics: str = Form("null"),
+    is_video: str = Form("false"),
+    frame_count: int = Form(config.default_frame_count()),
+    client_id: str = Form("default"),
+    x_auth_token: Optional[str] = Header(default=None),
+):
+    """提交采集包（图片或视频）→ 入队，立即返回 task_id。"""
+    is_video_bool = is_video.strip().lower() in ("1", "true", "yes", "on")
+    try:
+        intrinsics_data = json.loads(intrinsics) if intrinsics not in ("null", "") else None
+        extrinsics_data = json.loads(extrinsics) if extrinsics not in ("null", "") else None
+    except json.JSONDecodeError as exc:
+        return JSONResponse({"error": f"内外参 JSON 解析失败: {exc}"}, status_code=400)
+
+    if not files:
+        return JSONResponse({"error": "未收到文件"}, status_code=400)
+
+    # 视角数量必须在本机门槛内：档位由服务商按显存给出（见 config.frame_options）。
+    # 客户端会展示这份门槛，但**服务端必须自己拦**（文案点名真凶，见 frame_limit_error）。
+    limit_error = frame_limit_error(frame_count)
+    if limit_error:
+        return JSONResponse(
+            {
+                "error": limit_error,
+                "allowed": config.frame_options(),
+                "requested": frame_count,
+            },
+            status_code=400,
+        )
+
+    # 读取文件内容（task_queue 线程内再落盘，避免阻塞 IO 线程）
+    file_list = []
+    for f in files:
+        data = await f.read()
+        file_list.append((data, f.filename or "upload"))
+
+    # 用**官网签发的 API Key** 提交 = 走付费通道：额度用完就拦（验证阶段不拦）。
+    # 本机匿名 / 账号登录（令牌）不受限 —— 那是开发者自己的机器。
+    # 放在「文件都读好了、真要入队了」这一步：参数不对不该消耗额度。
+    # 注意：这里只看「还有没有额度」，真正的扣减在重建完成后按实际用量做（记的是用量，
+    # 不是次数）—— 扣减入口只有 portal_store.charge 一个。
+    key_user = api_key_identity()
+    portal = api_keys.store() if key_user else None
+    if key_user and portal.billing_enforced() and not portal.can_start(key_user):
+        return JSONResponse(
+            {
+                "error": "额度不足：请到 Omni3D 官网购买计划包 / 用量包或充值后重试",
+                "credits": 0,
+            },
+            status_code=402,
+        )
+
+    task = task_queue.submit(
+        files=file_list,
+        resolution=resolution,
+        intrinsics=intrinsics_data,
+        extrinsics=extrinsics_data,
+        is_video=is_video_bool,
+        frame_count=frame_count,
+        owner=_owner_of(x_auth_token, client_id),
+        metered=bool(key_user),
+    )
+    return JSONResponse(
+        {
+            "ok": True,
+            "task_id": task.task_id,
+            "status": task.status,
+            "queue_pos": task.queue_pos,
+            "message": "任务已入队",
+        },
+        status_code=202,
+    )
+
+
+@app.get("/api/tasks/{task_id}")
+def get_task(task_id: str, include_result: bool = True):
+    """轮询任务状态。done 时附带完整重建结果。"""
+    task = task_queue.get(task_id)
+    if task is None:
+        return JSONResponse({"error": "任务不存在或已过期"}, status_code=404)
+    return JSONResponse(_task_to_dict(task, include_result=include_result))
+
+
+@app.get("/api/tasks")
+def list_tasks(limit: int = 20, client_id: Optional[str] = None,
+               x_auth_token: Optional[str] = Header(default=None)):
+    """任务列表（最新 N 条，不含大数据结果）。
+
+    不传 ``client_id`` 且无令牌时列出全部（兼容调试脚本）；
+    传了则**按归属隔离**：登录用户看自己的，匿名看 ``anon:<client_id>`` 的。
+    """
+    owner = None
+    if client_id is not None or x_auth_token:
+        owner = _owner_of(x_auth_token, client_id)
+    tasks = task_queue.list_recent(limit, owner=owner)
+    return JSONResponse(
+        {"tasks": [_task_to_dict(t, include_result=False) for t in tasks]}
+    )
+
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task(task_id: str):
+    """删除一条任务记录（排队中/已完成可删，运行中不可删）。"""
+    ok = task_queue.remove(task_id)
+    if not ok:
+        return JSONResponse({"ok": False, "error": "任务不存在或正在运行"}, status_code=404)
+    return JSONResponse({"ok": True})
+
+
+# ---- 认证：挑战-应答（明文密码不上网、不落库）----
+# 端点实现**只有一份**：`auth_api.register_auth_routes`（官网门户 panel/portal.py 也挂它）。
+# 这里额外把「API Key 身份」注入进去，于是 X-Api-Key 也能过 /api/auth/me。
+_auth_routes = auth_api.register_auth_routes(
+    app,
+    auth_store,
+    session_manager,
+    api_key_identity=api_key_identity,
+    models_for_identity=models_for_identity,
+)
+# 兼容别名：旧代码 / 测试按 `server.auth_me` 找这个端点
+auth_me = _auth_routes["me"]
+
+
+@app.get("/api/auth/claim/preview")
+def auth_claim_preview(client_id: str = "default",
+                       x_auth_token: Optional[str] = Header(default=None)):
+    """预览「匿名记录并入当前账号」将迁移多少条。
+
+    登录后由客户端调用：若 count>0 就提示用户是否并入
+    （网页/桌面端均采用**手动确认**，避免多人共用设备时误并）。
+    """
+    username = session_manager.username_for(x_auth_token)
+    if not username:
+        return JSONResponse({"error": "未登录"}, status_code=401)
+    count = session_store.count_sessions(anon_owner(client_id))
+    return JSONResponse({"ok": True, "count": count, "username": username,
+                         "client_id": client_id})
+
+
+@app.post("/api/auth/claim")
+def auth_claim(client_id: str = "default",
+               x_auth_token: Optional[str] = Header(default=None)):
+    """把匿名历史并入当前账号（登录后调用，使历史对应到 username）。"""
+    username = session_manager.username_for(x_auth_token)
+    if not username:
+        return JSONResponse({"error": "未登录"}, status_code=401)
+    anon = anon_owner(client_id)
+    owner = user_owner(username)
+    # 历史既落在 SQLite（持久）也在内存任务表（重启前可见），两边一起迁
+    moved = session_store.rename_owner(anon, owner)
+    task_queue.rename_owner(anon, owner)
+    return JSONResponse({"ok": True, "moved": moved, "username": username})
+
+
+# ---- 会话层：重建历史（登录用户对应到 username）----
+@app.get("/api/history")
+def list_history(client_id: str = "default", limit: int = 50,
+                 x_auth_token: Optional[str] = Header(default=None)):
+    """列出该归属的历史会话（登录用户 → 其 username；匿名 → client_id）。"""
+    owner = _owner_of(x_auth_token, client_id)
+    return JSONResponse({"owner": owner,
+                         "sessions": session_store.list_sessions(owner, limit)})
+
+
+@app.get("/api/history/{session_id}")
+def get_history(session_id: str, client_id: str = "default",
+                include_points: bool = False,
+                x_auth_token: Optional[str] = Header(default=None)):
+    """获取单条历史会话；归属不匹配则 404（历史隔离）。"""
+    owner = _owner_of(x_auth_token, client_id)
+    data = session_store.get_session(session_id, owner, include_points=include_points)
+    if data is None:
+        return JSONResponse({"error": "会话不存在"}, status_code=404)
+    # 测量值**不存死**：按几何 + 当前 scale 重算后再返回 —— 重新标定后所有已有
+    # 测量会自动跟着变，不需要回写任何记录（#28）。
+    data["annotations"] = refresh_measurements(
+        data.get("annotations"), data.get("scale"))
+    return JSONResponse(data)
+
+
+@app.get("/api/history/{session_id}/ply")
+def get_history_ply(session_id: str, client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """下载该历史会话的完整 PLY 点云文件。"""
+    owner = _owner_of(x_auth_token, client_id)
+    ply_path = session_store.get_ply_path(session_id, owner)
+    if not ply_path:
+        return JSONResponse({"error": "PLY 不存在"}, status_code=404)
+    return FileResponse(ply_path, media_type="application/octet-stream",
+                        filename=f"{session_id}.ply")
+
+
+# ---- 历史缩略图：上传素材的封面（视频第一帧 / 第一张图）----
+#
+# 为什么用素材而不是渲染点云：渲染需要 PLY（远端服务商未必留着、也可能没有
+# 图像处理条件），而**素材本来就在手上** —— 对任何部署都通用，用户也能一眼
+# 认出这是哪一次的拍摄。成本几乎为零（抽帧/收图时顺手做一次）。
+THUMB_SIZE = 256
+
+
+def _make_thumb_bytes(image_path: str, size: int = THUMB_SIZE) -> Optional[bytes]:
+    """把一张图片等比缩到长边 size 并编码成 JPEG；失败返回 None。"""
+    import cv2  # noqa: E402
+
+    img = cv2.imread(image_path)
+    if img is None:
+        return None
+    h, w = img.shape[:2]
+    longest = max(h, w)
+    if longest > size:
+        k = size / float(longest)
+        img = cv2.resize(img, (max(1, int(w * k)), max(1, int(h * k))),
+                         interpolation=cv2.INTER_AREA)
+    ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+    return buf.tobytes() if ok else None
+
+
+@app.get("/api/history/{session_id}/thumb")
+def get_history_thumb(session_id: str, client_id: str = "default",
+                      x_auth_token: Optional[str] = Header(default=None)):
+    """该历史**上传素材的封面**（视频第一帧 / 第一张图）。"""
+    owner = _owner_of(x_auth_token, client_id)
+    path = session_store.get_thumb_path(session_id, owner)
+    if not path:
+        return JSONResponse({"error": "没有缩略图"}, status_code=404)
+    return FileResponse(path, media_type="image/jpeg",
+                        # no-cache = 每次协商（有 ETag，命中就是 304），
+                        # 不能用 max-age：同一个 URL 的内容会随实现变化，
+                        # 而旧图会被浏览器一直用下去（实测过）。
+                        headers={"Cache-Control": "no-cache"})
+
+
+@app.delete("/api/history/{session_id}")
+def delete_history(session_id: str, client_id: str = "default",
+                   x_auth_token: Optional[str] = Header(default=None)):
+    """删除该归属的某条历史会话。"""
+    owner = _owner_of(x_auth_token, client_id)
+    ok = session_store.delete_session(session_id, owner)
+    if not ok:
+        return JSONResponse({"ok": False, "error": "会话不存在"}, status_code=404)
+    # 点云文件已删 → 必须失效吸附缓存，否则后续 snap 会命中已删除会话的树
+    snap_index.invalidate(session_id)
+    return JSONResponse({"ok": True})
+
+
+@app.put("/api/sessions/{session_id}/annotations")
+def put_annotations(session_id: str, body: Any = Body(...),
+                    client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """**幂等整体替换**该会话的标注（元素 = 基础点 + 派生形）。
+
+    为什么是整体替换：客户端撤销 = 回写上一快照；服务器不实现操作日志 /
+    补偿 / 版本冲突解决（单用户工具，成本与收益不匹配）。
+    `session_id` 是主键，所以**重复提交不会产生重复数据**。
+
+    标注必须按会话隔离：`scale` 是会话级因子、各会话坐标系不同，跨会话连点
+    没有几何意义。未落盘的临时选择只存客户端内存，不走这里。
+    """
+    owner = _owner_of(x_auth_token, client_id)
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "请求体需为 JSON 对象"}, status_code=400)
+    session = session_store.get_session(session_id, owner)
+    if session is None:
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    # 客户端提交的测量值不作数：按几何 + 当前 scale 重算后再落库（#28），
+    # 否则「客户端说的数值」会与「服务器算的数值」两套真相共存。
+    normalized = refresh_measurements(body, session.get("scale")) or body
+    if not session_store.save_annotations(session_id, owner, normalized):
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    return JSONResponse({"ok": True, "session_id": session_id,
+                         "annotations": normalized})
+
+
+# ---- 测量：在服务器上按元素坐标计算并落标注（#28）----
+# element_ids 上限：面积/体积现在要选「全部顶点」（用户手选，量级很小），
+# 原来的 8 会直接把一个 10 个顶点的体积判成 400。
+_MEASURE_MAX_ELEMENTS = 64
+
+
+@app.post("/api/sessions/{session_id}/measure")
+def measure_session(session_id: str, body: Any = Body(...),
+                    client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """按元素坐标计算长度 / 面积 / 体积。
+
+    Body: ``{"op": "length"|"triangle_area"|"area"|"volume"|
+              "polygon_area"|"polyhedron_volume",
+              "element_ids": ["e1", "e2"], "preview": false}``
+
+    为什么在服务器算：长度/面积/体积必须有**唯一实现**，否则「显示的数值」与
+    「存的标注」会出现两套真相；而且重新标定 `scale` 后要能自动重算。
+
+    ``preview=true`` → **只算不存**（不 append、不落库）。网页端逐点落点时要
+    实时看到数值，但每落一个点就产生一条标注显然不对；预览走的仍然是这份
+    **唯一实现**，客户端不自己算。
+
+    坐标来自标注元素（客户端已把它们吸附到**全量点云**，见 /snap），
+    未标定时返回 `u`/`u²`/`u³` 并在结果上标记 `calibrated: false`。
+    """
+    owner = _owner_of(x_auth_token, client_id)
+    session = session_store.get_session(session_id, owner)
+    if session is None:
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "请求体需为 JSON 对象"}, status_code=400)
+
+    op = body.get("op")
+    ids = body.get("element_ids") or []
+    if not isinstance(ids, list) or not ids:
+        return JSONResponse({"error": "element_ids 必须是非空数组"},
+                            status_code=400)
+    if len(ids) > _MEASURE_MAX_ELEMENTS:
+        return JSONResponse(
+            {"error": f"element_ids 超过上限 {_MEASURE_MAX_ELEMENTS}"},
+            status_code=400)
+
+    annotations = session.get("annotations")
+    if not annotations:
+        return JSONResponse(
+            {"error": "该会话还没有标注，请先 PUT /api/sessions/{id}/annotations"},
+            status_code=400)
+    elements = annotations.get("elements") or []
+    by_id = {e.get("id"): e for e in elements
+             if isinstance(e, dict) and e.get("id")}
+
+    try:
+        points: list = []
+        for element_id in ids:
+            points.extend(resolve_points(by_id, element_id))
+        raw = compute(op, points)
+        dim = OPS[op][1]
+    except GeometryError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+    scale = session.get("scale")
+    calibrated = scale is not None
+    measurement = {
+        "id": f"m_{uuid.uuid4().hex[:8]}",
+        "kind": "measurement",
+        "op": op,
+        "refs": list(ids),
+        "dim": dim,
+        "points": points,
+        # 骨架（顶点对索引）：体积是凸包的棱，其它 op 为空。
+        # 前端就按这个画 —— 画出来的与算出来的必定是同一个凸包。
+        "outline": outline_for(op, points),
+        "raw": raw,
+        "value": apply_scale_factor(raw, dim, scale),
+        "unit": unit_for(dim, calibrated),
+        "calibrated": calibrated,
+        "scale": scale,
+        "created_at": time.time(),
+    }
+    if body.get("preview"):
+        # 预览：算完就够了，不 append、不落库
+        return JSONResponse({
+            "ok": True,
+            "session_id": session_id,
+            "measurement": measurement,
+            "points": points,
+            "preview": True,
+        })
+    elements.append(measurement)
+    if not session_store.save_annotations(session_id, owner, annotations):
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+    return JSONResponse({
+        "ok": True,
+        "session_id": session_id,
+        "measurement": measurement,
+        "points": points,
+        "count": len([e for e in elements
+                      if isinstance(e, dict) and e.get("kind") == "measurement"]),
+    })
+
+
+# ---- 全量点云吸附（测量必须作用在全量点上，实现见 panel/snap_index.py）----
+_SNAP_MAX_QUERIES = 500
+
+
+@app.post("/api/sessions/{session_id}/snap")
+def snap_to_session(session_id: str, body: dict = Body(...),
+                    client_id: str = "default",
+                    x_auth_token: Optional[str] = Header(default=None)):
+    """把客户端给出的坐标**吸附到该会话的全量点云**上。
+
+    客户端只拿到渲染子集（抽样后点距放大约 5 倍），直接用它选点会带采样误差；
+    这里用 SOR 之后、与 PLY 下载完全一致的那一份全量点云做最近邻查询。
+
+    Body: ``{"points": [[x,y,z], ...], "max_distance": 0.05 | null}``
+
+    返回：``{"ok": true, "results": [...]}``，每项命中为
+    ``{"hit": true, "point": [...], "distance": d}``，未命中为
+    ``{"hit": false, "reason": "out_of_range"|"empty", ...}``。
+    """
+    owner = _owner_of(x_auth_token, client_id)
+    ply_path = session_store.get_ply_path(session_id, owner)
+    if not ply_path:
+        # 归属不匹配与「不存在」都返回 404：不泄露「这个 id 存在但不属于你」
+        return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+
+    payload = body or {}
+    points = payload.get("points") or []
+    if not isinstance(points, list) or not points:
+        return JSONResponse({"error": "points 必须是非空数组"}, status_code=400)
+    if len(points) > _SNAP_MAX_QUERIES:
+        return JSONResponse(
+            {"error": f"points 超过上限 {_SNAP_MAX_QUERIES}"}, status_code=400)
+    try:
+        queries = np.asarray(points, dtype=np.float64).reshape(-1, 3)
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "points 需为 [[x,y,z], ...]"},
+                            status_code=400)
+    if not np.isfinite(queries).all():
+        return JSONResponse({"error": "points 含 NaN/Inf"}, status_code=400)
+
+    max_distance = payload.get("max_distance")
+    if max_distance is not None:
+        try:
+            max_distance = float(max_distance)
+        except (TypeError, ValueError):
+            return JSONResponse({"error": "max_distance 需为数字或 null"},
+                                status_code=400)
+
+    t0 = time.time()
+    results = snap_index.query(session_id, ply_path, queries, max_distance)
+    return JSONResponse({
+        "ok": True,
+        "results": results,
+        "hits": sum(1 for r in results if r.get("hit")),
+        "elapsed_ms": round((time.time() - t0) * 1000.0, 2),
+    })
+
+
+# ---- 真实尺度反推：选两点 + 已知真实距离 → 尺度因子 ----
+
+
+@app.post("/api/tasks/{task_id}/scale")
+def infer_scale(task_id: str, payload: dict = Body(...),
+                client_id: str = "default",
+                x_auth_token: Optional[str] = Header(default=None)):
+    """从「模型内两点 + 已知真实距离(米)」反推真实尺度因子并持久化。
+
+    Body: ``{"element_ids": ["e1", "e2"], "real_distance": 1.23}``
+    （兼容旧形式：直接传 ``point_a`` / ``point_b`` 裸坐标）
+
+    返回 scale 后，客户端后续测量按 scale 换算为米制。
+    为什么改成传**元素 id**：服务器已经有元素已吸附的全量点坐标，
+    再让客户端传一份裸坐标就等于把坐标复制一遍，两边还可能不一致（#28）。
+    """
+    real_distance = payload.get("real_distance")
+    element_ids = payload.get("element_ids")
+    point_a = payload.get("point_a")
+    point_b = payload.get("point_b")
+
+    if element_ids:
+        # 新形式：两个元素 id（每个元素取其第一个点）
+        owner = _owner_of(x_auth_token, client_id)
+        session = session_store.get_session(task_id, owner)
+        if session is None:
+            return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)
+        annotations = session.get("annotations")
+        if not annotations:
+            return JSONResponse({"error": "该会话还没有标注"}, status_code=400)
+        by_id = {e.get("id"): e for e in (annotations.get("elements") or [])
+                 if isinstance(e, dict) and e.get("id")}
+        try:
+            resolved = [resolve_points(by_id, eid) for eid in element_ids]
+        except GeometryError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=400)
+        if len(resolved) != 2 or any(not pts for pts in resolved):
+            return JSONResponse(
+                {"error": "element_ids 需要两个元素，且每个至少能解出一个点"},
+                status_code=400)
+        point_a, point_b = resolved[0][0], resolved[1][0]
+
+    if point_a is None or point_b is None or real_distance is None:
+        return JSONResponse(
+            {"error": "缺少参数：需 element_ids 或 point_a/point_b，以及 real_distance"},
+            status_code=400,
+        )
+    try:
+        result = infer_scale_from_measurement(point_a, point_b, real_distance)
+    except ScaleError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+    # 持久化到会话层（校验归属）
+    owner = _owner_of(x_auth_token, client_id)
+    updated = session_store.update_scale(
+        session_id=task_id, owner=owner,
+        scale=result["scale"], real_distance=result["real_distance"],
+    )
+    # 同步更新内存中的任务结果，便于 /api/tasks/{id} 立即返回
+    task = task_queue.get(task_id)
+    if task is not None and task.result is not None:
+        task.result["scale"] = result["scale"]
+
+    return JSONResponse({
+        "ok": True,
+        "task_id": task_id,
+        "persisted": updated,
+        **result,
+    })
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    # 监听 SERVER_HOST:SERVER_PORT（模块级单一来源）
+    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)

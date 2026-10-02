@@ -1,12 +1,17 @@
+<p align="center">
+  <img src="panel/assets/logo-mark.png" width="110" alt="Omni3D" />
+</p>
+
 # Omni3D
 
 从视频 / 图片重建 **真实尺度的 3D 点云**——网页采集、云端推理、AR 加持，**并且已经是一个能收费的服务**。
 
 > **状态：`v1.0.0-mvp`（Python 参考实现，已冻结）**
 >
-> 功能完整、316 项测试全绿、三服务可部署；但后续开发将换成 **C# / .NET 重写**，本仓归档为参考实现。
-> 接手重构先读 **[`docs/HANDOVER.md`](docs/HANDOVER.md)**（冻结的行为契约、精度基线、旧→新接口地图）；
-> **新仓库开工包**（行业调研 + 线协议 + 术语表 + ADR，panel 先做）见 **[`docs/handover/`](docs/handover/README.md)**。
+> 功能完整、**469 项测试**全绿、三服务可部署；但后续开发将换成 **C# / .NET 重写**，本仓归档为参考实现。
+> 接手重构先读 **[`docs/HANDOVER.md`](docs/HANDOVER.md)**（冻结的行为契约、精度基线、旧→新接口地图）。
+> **下一步要做什么**看 **[`docs/BACKLOG.md`](docs/BACKLOG.md)**（精度基线 / 拆前端 /
+> 持久队列+支付 / 三服务拆分含 MySQL）。
 
 ```
 网页采集 ──► FastAPI 队列 ──► Fast3R 稠密重建 ──► 3D 点云查看 / 测量 / 下载
@@ -23,7 +28,7 @@
 | **官网 portal** | 50867 | 账号 / 计费 / API Key / 流水（**控制面**）       |
 | **服务商 api**  | 50865 | 重建任务 / 会话历史 / 测量（**数据面**，需 GPU） |
 
-- **web client**：**唯一的客户端实现**（`web/index.html`）。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、
+- **web client**：**唯一的客户端实现**（`panel/index.html`）。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、
   提交、3D 查看、测量、标尺校准、历史、设置，全部在浏览器完成。
 - **移动端 App**：不是第二种 client，而是 web client 的 **WebView 壳 + 本地桥 `:50687`**
   （额外提供 AR 米制位姿、华为 SLAM 稀疏点云、系统文件对话框）。
@@ -69,7 +74,7 @@
 ### 0. 准备
 
 > ⚠️ **必须用带依赖的 Python 解释器**。本项目依赖（torch / fastapi 等）装在 conda 环境里，
-> **全局 `python` 通常没有**——直接 `python web/server.py` 会报 `ModuleNotFoundError`。
+> **全局 `python` 通常没有**——直接 `python panel/server.py` 会报 `ModuleNotFoundError`。
 > 下面统一用 `run.ps1`：它会自动挑解释器，并在缺依赖时给出可操作的提示。
 
 ```powershell
@@ -96,7 +101,7 @@ $env:OMNI3D_CHECKPOINT_DIR = 'D:\models\Fast3R_ViT_Large_512'
 ```
 
 $
-`SERVE_PAGE=1`（默认）时服务商 API 顺便也托管页面，所以 `http://127.0.0.1:50865/` 一样能打开面板。
+服务商 API（50865）默认**只做 API**，页面一律走 `http://127.0.0.1:50866/`；想让它顺便也托管页面就设 `SERVE_PAGE=1`。
 用 <http://127.0.0.1:50865/health> 查就绪（`ready: true`）。
 
 ### 2. 使用网页 client（唯一客户端）
@@ -150,7 +155,7 @@ $
 | 账号：注册 / 登录 / 登出、匿名记录并入       |   ✅   |     ✅     | 同一套挑战-应答                                          |
 | 帮助页                                       |   ✅   |     ✅     |                                                          |
 
-> **只有一份客户端实现**：`web/index.html`。浏览器与 App 共用它，因此网页侧的改动
+> **只有一份客户端实现**：`panel/index.html`。浏览器与 App 共用它，因此网页侧的改动
 > 两个环境同时生效，不存在「两套客户端行为不一致」的问题；差异只在**采集能力**
 > （AR 只有 App 有）与**原生外壳**（App 多一个本地桥 `:50687`）。
 
@@ -160,11 +165,11 @@ $
 
 ```
 ┌─ 客户端 ─────────────────────────────────────────────┐
-│  网页 web/index.html（采集/查看/测量/历史/设置）         │
+│  网页 panel/index.html（采集/查看/测量/历史/设置）         │
 │   └─ fetch /api/*           → 服务器                   │
 │   └─ fetch 127.0.0.1:50687  → Qt App 本地 HTTP 桥      │
 │                                                       │
-│  Qt App 壳（qt_app/）                                 │
+│  Qt App 壳（app/）                                 │
 │   ├─ WebView 加载网页（混合内容/临时证书已自动放行）      │
 │   ├─ ar_bridge_server（本地桥 :50687）                 │
 │   ├─ ArScanController + HwArEngineSession（AR 扫描）    │
@@ -172,10 +177,10 @@ $
 └──────────────────────────────────────────────────────┘
         │  multipart 上传          │  AR 帧/位姿/点云（桥内取）
         ▼                          ▼
-┌─ 服务器 web/server.py :50865 ────────────────────────┐
+┌─ 服务器 panel/server.py :50865 ────────────────────────┐
 │  FastAPI 路由（/api/tasks 队列 /reconstruct 同步）     │
 │  task_queue（单 worker + 内存缓存 TTL 30min）          │
-│  app/core/pipeline.py（Fast3R 加载→推理→对齐）         │
+│  server/core/pipeline.py（Fast3R 加载→推理→对齐）         │
 │  fast3r/（vendored 模型仓库 + 权重路径 config）         │
 └──────────────────────────────────────────────────────┘
 ```
@@ -185,7 +190,8 @@ $
 - **采集端**：网页（浏览器）/ Qt App（AR 扫描）三路互斥，统一 multipart 契约（`is_video/frame_count/resolution/intrinsics/extrinsics` + `client_id`）。
 - **真实尺度**：AR 扫描的帧携带 AREngine 米制位姿（VIO），服务器据此重建，测量直接为米制。
 - **华为点云融合**：AR 扫描时 AREngine 累积稀疏 SLAM 点云（世界坐标），经桥 `/ar/scan/pointcloud` 取回，与服务器稠密点云同帧叠加（网页开关 + 下载合并）。
-- **点云回传**：服务器 `result.ply`（base64/URL）+ `points[:20000]` → 网页渲染；App 内下载走桥 `/ar/file/save` 写 `/sdcard/Download`。
+- **点云回传**：服务器回传**渲染子集** `points`（默认 6 万，`OMNI3D_MAX_RENDER_POINTS` 可调）→ 网页渲染；
+  全量点云不塞 JSON，走 `GET /api/history/{id}/ply` 下载；App 内下载走桥 `/ar/file/save` 写 `/sdcard/Download`。
 
 ### 对外服务
 
@@ -203,14 +209,14 @@ $
 前置：Qt 6.5.3、Android SDK/NDK、JDK 17、华为 AREngine SDK。
 
 ```powershell
-cd qt_app
-.\build_apk.ps1 -Project D:\PROJECT\Omni3D\qt_app -LibTarget omni3d_capture `
-  -Abi arm64-v8a -ApkOut D:\PROJECT\Omni3D\qt_app\Omni3D_Capture-hw-debug.apk
+cd app
+.\build_apk.ps1 -Project D:\PROJECT\Omni3D\app -LibTarget omni3d_capture `
+  -Abi arm64-v8a -ApkOut D:\PROJECT\Omni3D\app\Omni3D_Capture-hw-debug.apk
 adb install -r -g Omni3D_Capture-hw-debug.apk
 ```
 
 - App 入口 `homeUrl`：默认 `http://127.0.0.1:50865/`（adb reverse）；可持久化为部署域名（脱离 adb）。
-- 华为 AREngine Server 由 App 自集成安装（资产在 `qt_app/android/assets/`）。
+- 华为 AREngine Server 由 App 自集成安装（资产在 `app/android/assets/`）。
 
 ---
 
@@ -218,27 +224,27 @@ adb install -r -g Omni3D_Capture-hw-debug.apk
 
 ```
 Omni3D/
-├── web/                  # server（FastAPI）+ 前端
+├── panel/                  # server（FastAPI）+ 前端
 │   ├── server.py         # 路由 / 编排 / 监听（127.0.0.1:50865）
 │   ├── auth_store.py     # 用户表：salt + sha256(salt+pwd)（明文不落库）
 │   ├── session_manager.py# 会话管理：token → username
 │   ├── session_store.py  # 历史持久化（SQLite，按 owner/username 隔离）
 │   ├── task_queue.py     # 单 worker 任务队列
-│   ├── index.html        # 前端主体（采集/查看/测量/历史/设置）
-│   └── WEB_REQUIREMENTS.md  # 前端需求契约
+│   └── index.html        # 前端主体（采集/查看/测量/历史/设置）
 ├── archive/              # 已废弃的实现（保留供查阅）
 │   └── desktop-pyqt-vtk/ # 旧的 PyQt5 + VTK 桌面客户端，见其 README
-├── app/core/             # 共享核心（server 使用）
+├── server/core/             # 共享核心（server 使用）
 │   ├── pipeline.py       # 重建管线（加载→推理→对齐）
 │   ├── scale.py          # 真实尺度反推（纯函数）
 │   └── config.py         # 权重路径 / 设备 / 参数
-├── qt_app/               # 移动端 App 壳（WebView 加载网页 client + 本地桥）
+├── app/               # 移动端 App 壳（WebView 加载网页 client + 本地桥）
 │   ├── qml/WebShell.qml  # WebView 壳
 │   ├── qml/ScanPage.qml  # AR 扫描覆盖层
 │   └── src/              # 桥 / 扫描 / AREngine / 预览（Android）
-├── fast3r/               # vendored 模型仓库（训练/推理）
+├── fast3r/               # vendored 模型仓库（训练与推理共用）
+├── training/             # 训练/评测：configs（Hydra 树）+ notebooks + 评测脚本
 ├── docs/                 # 架构说明 / 审计文档
-├── configs/  scripts/  notebooks/  demo_examples/   # 模型实验
+├── scripts/  demo_examples/                        # 服务侧诊断脚本 / 示例数据
 └── jedyang97/            # 模型权重（.gitignore，需手动放置）
 ```
 
@@ -250,12 +256,11 @@ Omni3D/
 - [服务清单（API）](docs/API.md) —— 全部接口、认证协议、状态码、curl 示例
 - [速度与质量（实测）](docs/PERFORMANCE.md) —— 分辨率/帧数对耗时与自洽性的影响
 - [架构说明](docs/ARCHITECTURE.md) —— server/client 模块地图、会话层、真实尺度
-- [网页端需求契约](web/WEB_REQUIREMENTS.md)
 
-> 📦 **部署**：部署指南、frp 隧道、容器（Dockerfile）与打包配置在开发阶段已移除，
-> 将于**发布（release）阶段**重建。详见 `docs/ARCHITECTURE.md`。
+> 📦 **部署**：三个服务同镜像、按 `ROLE` 起进程（`Dockerfile` + `docker-compose.yml`），
+> 详见 **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**。
 
-> 🖥 **客户端只有一个**：`web/index.html`。桌面端就是浏览器直接打开
+> 🖥 **客户端只有一个**：`panel/index.html`。桌面端就是浏览器直接打开
 > <http://127.0.0.1:50865/>（无需安装）；移动端 App 加载的也是它。
 > 旧的 PyQt5 + VTK 桌面客户端已归档到
 > [`archive/desktop-pyqt-vtk/`](archive/desktop-pyqt-vtk/README.md)。

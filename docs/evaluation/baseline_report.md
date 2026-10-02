@@ -14,8 +14,8 @@
 
 | 配置 | 任务 | 配置文件 |
 |------|------|----------|
-| RE10K 位姿（mock） | pose | `configs/eval/benchmark_re10k.yaml` |
-| 重建质量（mock） | recon | `configs/eval/benchmark_recon.yaml` |
+| RE10K 位姿（mock） | pose | `training/configs/eval/benchmark_re10k.yaml` |
+| 重建质量（mock） | recon | `training/configs/eval/benchmark_recon.yaml` |
 
 mock 后端使用带噪声的模拟相机轨迹和点云，仅用于验证指标与流程。
 
@@ -23,10 +23,10 @@ mock 后端使用带噪声的模拟相机轨迹和点云，仅用于验证指标
 
 ```bash
 # 位姿评测
-python scripts/run_benchmark.py --config configs/eval/benchmark_re10k.yaml
+python training/scripts/run_benchmark.py --config training/configs/eval/benchmark_re10k.yaml
 
 # 重建评测
-python scripts/run_benchmark.py --config configs/eval/benchmark_recon.yaml
+python training/scripts/run_benchmark.py --config training/configs/eval/benchmark_recon.yaml
 
 # 可视化
 python scripts/plot_benchmark_results.py \
@@ -73,8 +73,8 @@ python scripts/plot_benchmark_results.py \
 - `fast3r/eval/benchmark.py`：统一评测执行器，支持 mock / model 两种后端
 - `scripts/run_benchmark.py`：命令行入口
 - `scripts/plot_benchmark_results.py`：结果可视化
-- `configs/eval/benchmark_re10k.yaml`：RE10K 位姿评测配置
-- `configs/eval/benchmark_recon.yaml`：重建评测配置
+- `training/configs/eval/benchmark_re10k.yaml`：RE10K 位姿评测配置
+- `training/configs/eval/benchmark_recon.yaml`：重建评测配置
 
 复用的现有文件：
 

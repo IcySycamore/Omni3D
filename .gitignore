@@ -3,8 +3,8 @@ logs
 # Qoder IDE files
 .qoder/
 
-notebooks/figures/
-notebooks/output/
+training/notebooks/figures/
+training/notebooks/output/
 
 *.ply
 
@@ -160,7 +160,7 @@ dmypy.json
 *.bin
 
 # Lightning-Hydra-Template
-configs/local/default.yaml
+training/configs/local/default.yaml
 /data/
 /logs/
 .env
@@ -178,17 +178,21 @@ jedyang97/
 # ---- IDE ----
 .idea/
 
+# ---- 前端 JS 自检产物（scripts/_check_js.py / _check_portal_js.py 生成）----
+scripts/_index_module.mjs
+scripts/_portal_module.mjs
+
 # ---- 会话报告（需要版本控制时删掉这几行）----
 Omni3D_系统分析报告.html
 Omni3D_尺度方案审计与开发方向.html
 Omni3D_Cpp迁移审查与计划.html
 
 # ---- 密钥 / 内网穿透配置（绝不入库）----
-# 起因：web/frp/{frpc,frps}.ini 曾被提交到公开仓库（含 frps 的 auth.token）。
+# 起因：panel/frp/{frpc,frps}.ini 曾被提交到公开仓库（含 frps 的 auth.token）。
 # 删除文件**无法**从 git 历史移除 → 那枚 token 必须视为已泄露并去服务商处轮换；
 # 下面这些规则确保同类文件不会再被提交（旧规则只挡了 frp/frpc.toml，太窄）。
 frp/
-web/frp/
+panel/frp/
 docs/frp/
 secrets/
 **/frpc.ini

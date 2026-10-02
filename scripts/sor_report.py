@@ -1,6 +1,6 @@
 """在真实视频上量 SOR 的剔除比例与耗时（#22）。
 
-刻意直接调用 `web/server.py` 的**真实代码路径**（`_collect_points` →
+刻意直接调用 `panel/server.py` 的**真实代码路径**（`_collect_points` →
 `_reject_outliers` → `_sample_for_render`），而不是复刻一份逻辑，
 这样 `docs/PERFORMANCE.md` 里记录的数字与线上行为一致。
 
@@ -15,10 +15,9 @@ import numpy as np  # 必须在 torch 之后
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "web"))
 
-from app.core import config  # noqa: E402
-from app.core.pipeline import run_reconstruction  # noqa: E402
+from server.core import config  # noqa: E402
+from server.core.pipeline import run_reconstruction  # noqa: E402
 import server as web_server  # noqa: E402
 
 DEFAULT_VIDEO = os.path.join(PROJECT_ROOT, "demo_examples", "family", "Family.mp4")
@@ -62,7 +61,7 @@ def _snap_bench(ply_bytes, n_queries=200):
     """建树 / 查询耗时（#25）：把 PLY 落成临时文件后走**真实吸附路径**。"""
     import tempfile
 
-    from snap_index import SnapIndex, read_ply_xyz
+    from panel.snap_index import SnapIndex, read_ply_xyz
 
     with tempfile.TemporaryDirectory() as td:
         path = os.path.join(td, "cloud.ply")

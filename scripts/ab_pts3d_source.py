@@ -13,8 +13,8 @@ import numpy as np
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
-from app.core import config                      # noqa: E402
-from app.core.pipeline import (                  # noqa: E402
+from server.core import config                      # noqa: E402
+from server.core.pipeline import (                  # noqa: E402
     pointcloud_keys,
     quality_stats,
     run_reconstruction,
@@ -45,7 +45,7 @@ def _extract_frames(video, n, out_dir):
 
 
 def _clouds(out, source):
-    """复刻 web/server.py::_collect_points 的过滤语义，返回每视图 (pts, conf_mean)。"""
+    """复刻 panel/server.py::_collect_points 的过滤语义，返回每视图 (pts, conf_mean)。"""
     pts_key, conf_key = pointcloud_keys(source)
     per_view = []
     for pred in out["preds"]:

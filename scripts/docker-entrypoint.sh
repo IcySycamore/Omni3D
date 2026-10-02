@@ -17,18 +17,18 @@ case "$ROLE" in
     api)
         if [ "$MOCK_MODE" = "true" ]; then
             echo "[Omni3D] role=api mock 模式（无模型依赖）: http://${HOST:-0.0.0.0}:${PORT:-50865}"
-            exec python web/mock_server.py
+            exec python panel/mock_server.py
         fi
         echo "[Omni3D] role=api 重建服务: http://${HOST:-0.0.0.0}:${PORT:-50865}"
-        exec python web/server.py
+        exec python panel/server.py
         ;;
     pages)
         echo "[Omni3D] role=pages 面板页面: http://${PAGES_HOST:-0.0.0.0}:${PAGES_PORT:-50866}"
-        exec python web/pages.py
+        exec python panel/pages.py
         ;;
     portal)
         echo "[Omni3D] role=portal 官网: http://${PORTAL_HOST:-0.0.0.0}:${PORTAL_PORT:-50867}"
-        exec python web/portal.py
+        exec python panel/portal.py
         ;;
     *)
         echo "[Omni3D] 未知 ROLE='$ROLE'（可选：api | pages | portal）" >&2

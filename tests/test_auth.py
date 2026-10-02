@@ -14,15 +14,14 @@ import time
 
 import pytest
 
-# web/ 按运行时的方式加入导入路径
+# panel/ 按运行时的方式加入导入路径
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_WEB = os.path.join(_ROOT, "web")
-if _WEB not in sys.path:
-    sys.path.insert(0, _WEB)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-import auth_store  # noqa: E402
-import session_manager as sm  # noqa: E402
-from session_store import SessionStore, anon_owner, user_owner  # noqa: E402
+from panel import auth_store  # noqa: E402
+from panel import session_manager as sm  # noqa: E402
+from panel.session_store import SessionStore, anon_owner, user_owner  # noqa: E402
 
 
 # ---------------------------------------------------------------- 用户名规则

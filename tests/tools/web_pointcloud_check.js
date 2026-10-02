@@ -1,5 +1,5 @@
 /*
- * 校验 web/index.html 内联的点云解码纯函数（decodePointCloud / fillHeightColors）。
+ * 校验 panel/index.html 内联的点云解码纯函数（decodePointCloud / fillHeightColors）。
  *
  * 为什么需要它：服务器返回的点云格式有两种（嵌套/扁平 × 带不带 RGB），
  * 解码错位会直接表现为「点云糊成一团」或「颜色全黑」，而这类 bug 在
@@ -11,13 +11,16 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..", "..");
-const src = fs.readFileSync(path.join(root, "web", "index.html"), "utf8");
+const src = fs.readFileSync(path.join(root, "panel", "index.html"), "utf8");
 
 const START = "// ==================== 点云解码";
 // 终点用**标识符**而不是装饰性小节标题 —— 标题是给人看的，改文案就会把这里弄挂
 // （#32 改标题触发过一次 EXTRACT FAILED）。
 // 注意必须落在 `heightColor` **之后**：`fillHeightColors` 会调用它。
-const END = "const PICK_RAY_PX";
+// ⚠️ 这个标识符必须**在拾取块开头**，而且 `test_web_client.py` 里有断言盯着它存在，
+//    否则改名时这里会静默断掉（已经踩过两次：`PICK_RAY_PX` 删过一次、
+//    `PICK_TOLERANCE_PX` 删过一次，每次都只是「测试红了」才发现）。
+const END = "const PICK_RADIUS_RATIO";
 const start = src.indexOf(START);
 const end = src.indexOf(END);
 if (start < 0 || end < 0 || end <= start) {

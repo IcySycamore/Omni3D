@@ -6,7 +6,7 @@
 
 输出：逐组合的墙钟耗时、点数、以及**质量代理指标**
 （`residual_ratio_median` / `local_scale_std` / `mean_conf`，定义见
-`app/core/pipeline.py: quality_stats`）。最后给出 markdown 汇总表。
+`server/core/pipeline.py: quality_stats`）。最后给出 markdown 汇总表。
 
 ⚠️ 质量代理 ≠ 绝对精度：没有 GT 点云/位姿时只能衡量**自洽性与稳定性**。
 绝对精度需跑 vendored 的 `fast3r/eval/`（需要 re10k / robustmvd 数据集，本机未附）。
@@ -26,8 +26,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import cv2  # noqa: E402
 
-from app.core import config  # noqa: E402
-from app.core.pipeline import run_reconstruction  # noqa: E402
+from server.core import config  # noqa: E402
+from server.core.pipeline import run_reconstruction  # noqa: E402
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEMO_ROOT = os.path.join(PROJECT_ROOT, "demo_examples")

@@ -1,4 +1,4 @@
-"""`app/core/pipeline.py` 中「真实尺度对齐」相关纯函数的单元测试。
+"""`server/core/pipeline.py` 中「真实尺度对齐」相关纯函数的单元测试。
 
 不需要 GPU / 模型：全部用合成数据构造。
 """
@@ -8,7 +8,7 @@ import pytest
 # torch 必须最先导入（本机 fbgemm.dll 加载顺序冲突）
 import torch  # noqa: I001
 
-from app.core.pipeline import (
+from server.core.pipeline import (
     apply_similarity,
     extrinsics_to_cam2world,
     metric_alignment,
@@ -17,7 +17,7 @@ from app.core.pipeline import (
     summarize_intrinsics,
 )
 
-from app.core import config
+from server.core import config
 
 
 # ─────────────── 工具 ───────────────

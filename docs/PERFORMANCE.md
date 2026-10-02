@@ -105,7 +105,7 @@
 
 客户端拿到的 `points` 是**渲染子集**（默认 6 万 / 全量约 200 万），等于每约 24 个点
 只留 1 个、点距被放大约 5 倍。所以选点后要拿坐标回来吸附到**全量点云**上，
-测量才不带上采样误差。实现见 `web/snap_index.py`（`cKDTree` + 按会话 LRU）。
+测量才不带上采样误差。实现见 `panel/snap_index.py`（`cKDTree` + 按会话 LRU）。
 
 实测（family 16 帧 @512，SOR 后 2,026,141 点）：
 
@@ -157,7 +157,7 @@
 
 - `local`（**默认**）→ `pts3d_local_aligned_to_global` + `conf_local` ——
   local head 经 `align_local_pts3d_to_global` 对齐到全局坐标系；
-  与上游重建评测口径一致（`configs/model/fast3r.yaml` 的
+  与上游重建评测口径一致（`training/configs/model/fast3r.yaml` 的
   `eval_use_pts3d_from_local_head: true`）。
 - `global` → `pts3d_in_other_view` + `conf`（全局 head 原始输出）。
 

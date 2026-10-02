@@ -4,14 +4,14 @@
 
 当前项目对外提供 **三个服务**（+ 一个 App 本地桥）：
 
-| 服务               | 地址                                             | 实现                              | 何时存在                            |
-| ------------------ | ------------------------------------------------ | --------------------------------- | ----------------------------------- |
-| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `web/server.py`（FastAPI）        | 总是（`python web/server.py`）      |
-| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `web/pages.py`（无 torch）        | 需要页面时（`python web/pages.py`） |
-| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `web/portal.py`                   | 卖服务时（账号 / 计费 / API Key）   |
-| **App 本地桥**     | `http://127.0.0.1:50687`                         | `qt_app/src/ar_bridge_server.cpp` | 仅移动端 App 内                     |
+| 服务               | 地址                                             | 实现                           | 何时存在                              |
+| ------------------ | ------------------------------------------------ | ------------------------------ | ------------------------------------- |
+| **服务商 API**     | `http://127.0.0.1:50865`（`HOST`/`PORT` 可覆盖） | `panel/server.py`（FastAPI）   | 总是（`python panel/server.py`）      |
+| **面板页面**       | `http://127.0.0.1:50866`（`PAGES_PORT`）         | `panel/pages.py`（无 torch）   | 需要页面时（`python panel/pages.py`） |
+| **官网（portal）** | `http://127.0.0.1:50867`（`PORTAL_PORT`）        | `panel/portal.py`              | 卖服务时（账号 / 计费 / API Key）     |
+| **App 本地桥**     | `http://127.0.0.1:50687`                         | `app/src/ar_bridge_server.cpp` | 仅移动端 App 内                       |
 
-> 端口常量只在 `web/hosting.py` 定义一次；`SERVE_PAGE=1`（默认）时服务商 API **顺便**也托管面板页面。
+> 端口常量只在 `panel/hosting.py` 定义一次；服务商 API 默认**只做 API**（`SERVE_PAGE=0`），页面一律走面板服务（50866）。
 > 原则：**重建能力只在服务商实现一次**；面板 / 官网 / App 都只是它的 client 或控制面。
 
 ---
@@ -20,11 +20,11 @@
 
 ### 1.1 页面与健康
 
-| 方法 | 路径               | 说明                                                          |
-| ---- | ------------------ | ------------------------------------------------------------- |
-| GET  | `/`                | 返回面板页面 `web/index.html`（`SERVE_PAGE`）                 |
-| GET  | `/app-config.json` | 客户端引导：`{api_origin, api_port, pages_port, portal_port}` |
-| GET  | `/health`          | 模型就绪状态（+ 是否支持 API Key）                            |
+| 方法 | 路径               | 说明                                                            |
+| ---- | ------------------ | --------------------------------------------------------------- |
+| GET  | `/`                | 返回面板页面 `panel/index.html`（**仅** `SERVE_PAGE=1` 时挂载） |
+| GET  | `/app-config.json` | 客户端引导：`{api_origin, api_port, pages_port, portal_port}`   |
+| GET  | `/health`          | 模型就绪状态 + 这台服务商自己的能力声明                         |
 
 ```jsonc
 // GET /health
@@ -34,10 +34,17 @@
   "error": null,
   "api_key": true,
   "static_api_keys": false,
+  "anonymous": true, // 允不允许**不带凭据**访问（服务商策略，见下）
 }
 ```
 
 - `ready=false` 时，重建接口返回 **503**（模型首次加载需数分钟）。
+- `anonymous=false` 时，除白名单外的一切数据端点**要求 `X-Api-Key` 或 `X-Auth-Token`**，
+  无凭据一律 **401** `{"error": ..., "requires_key": true}`。白名单只有
+  `/health`、`/api/auth/*`（登录流程本身必须开放）、`/api/models` 与静态资源
+  （见 `panel/server.py` 的 `_ANON_ALLOWED_EXACT/_PREFIXES`）——
+  ⚠️ **`/reconstruct` 不在 `/api/` 前缀下**，但同样受管，别只按前缀写判断。
+  开关是环境变量 `OMNI3D_ALLOW_ANONYMOUS`（默认 `1` = 允许，本机自用零配置）。
 - 交互式文档：`/docs`、`/redoc`、`/openapi.json`（FastAPI 自带）。
 
 ### 1.2 认证（挑战-应答）
@@ -72,7 +79,7 @@ proof    = sha256(nonce + verifier)         ← 客户端计算
 - **用户名规则**（服务端强制）：3–32 个字符，仅 `[A-Za-z0-9_.-]`。
 - **密码规则**（至少 8 位、不得全空白）：**只能在客户端校验**。
   协议只上行 `verifier`，服务器从未接触明文密码，因此无法复核密码强度；
-  网页端实同名规则（`web/index.html`）；服务端额外强制**用户名**规则。
+  网页端实同名规则（`panel/index.html`）；服务端额外强制**用户名**规则。
 - `claim` 同时迁移 **SQLite 会话层**与**内存任务表**的归属，保证并入后立即在历史列表可见。
 
 ### 1.3 重建任务
@@ -233,7 +240,7 @@ X-Auth-Token: <可选>
 - 未命中区分两种 `reason`：`out_of_range`（超 `max_distance`）与 `empty`（该会话
   没有点云）。**绝不**硬给一个远处的点 —— 宁可明说「这里没点到东西」。
 - 实现：`scipy.spatial.cKDTree` + 按会话 **LRU 缓存**（`OMNI3D_SNAP_CACHE`，默认 3），
-  详见 `web/snap_index.py`。缓存以「文件大小 + mtime」为签名，PLY 被覆盖会自动重建。
+  详见 `panel/snap_index.py`。缓存以「文件大小 + mtime」为签名，PLY 被覆盖会自动重建。
 - 资源与实测数字见 [`PERFORMANCE.md`](PERFORMANCE.md) 的吸附一节。
 
 **状态码**：`400` 入参非法（空数组 / 非 3 维 / 含 NaN / 超过 500 点 / `max_distance` 非数字）；
@@ -251,12 +258,21 @@ Content-Type: application/json
 { "op": "length", "element_ids": ["e1", "e2"] }
 ```
 
-| `op`            | 点数 | 量纲 | 定义                                                                |
-| --------------- | ---: | ---: | ------------------------------------------------------------------- |
-| `length`        |    2 |    1 | `\|AB\|`                                                            |
-| `triangle_area` |    3 |    2 | `½·\|AB × AC\|`                                                     |
-| `area`          |    3 |    2 | `\|AB × AC\|` —— **恰为三角形面积的 2 倍**（UI 必须写清，避免误用） |
-| `volume`        |    4 |    3 | `\|det[AB, AC, AD]\|`（与「长×宽×高」同值）                         |
+| `op`                | 点数 | 量纲 | 定义                                                                                    |
+| ------------------- | ---: | ---: | --------------------------------------------------------------------------------------- |
+| `length`            |    2 |    1 | `\|AB\|`                                                                                |
+| `triangle_area`     |    3 |    2 | `½·\|AB × AC\|`                                                                         |
+| `area`              |    3 |    2 | `\|AB × AC\|` —— **恰为三角形面积的 2 倍**（UI 必须写清，避免误用）                     |
+| `volume`            |    4 |    3 | `\|det[AB, AC, AD]\|`（与「长×宽×高」同值）                                             |
+| `polygon_area`      |  ≥3  |    2 | 点围成的**平面多边形面积**（与传入顺序**无关**：内部拟合平面 + 极角重排再 shoelace）   |
+| `polyhedron_volume` |  ≥4  |    3 | 这些点的**凸包体积**（与顺序**无关**；内部点被忽略；共面时给 `0` 而**不**报错）          |
+
+> 「面积」「体积」两个工具用的是 `polygon_area` / `polyhedron_volume`：用户是
+> **手选全部顶点**，顺序只是点云里点的创建顺序，不能当输入。
+>
+> ⚠️ 两个 op 的语义**不同**：`polygon_area` 量的是点围出的**多边形**（边界，
+> 每个顶点接两条边），`polyhedron_volume` 量的是点集的**凸包**（与连线无关 ——
+> 三棱柱每个顶点的度数是 3）。客户端的就是这个区别：见 `docs/DESIGN.md`「测量引导」。
 
 ```json
 {
@@ -265,6 +281,7 @@ Content-Type: application/json
     "id": "m_1a2b3c4d", "kind": "measurement",
     "op": "length", "refs": ["e1", "e2"], "dim": 1,
     "points": [[x,y,z], [x,y,z]],
+    "outline": [],
     "raw": 1.027,          // 模型单位值
     "value": 1.231,        // 按 scale 换算后
     "unit": "m", "calibrated": true, "scale": 1.198
@@ -275,8 +292,12 @@ Content-Type: application/json
 - **`element_ids` 可以是点元素，也可以直接是派生元素**（线段 / 面 / 立体）：
   服务器沿 `refs` 递归展开成点列。点数必须**恰好等于**该 `op` 的需点数，多了少了都报 400
   （静默忽略多余点会掩盖选错）。
+- **`outline`**：`[[i, j], ...]`，索引指向同一响应里的 `points` —— 这是
+  「**这个量到底在量哪块形状**」的骨架。`polyhedron_volume` 给的是凸包的**棱**
+  （已按支撑平面合并共面三角片，所以立方体是 12 条而不是 18 条），其它 op 为空表。
+  前端就按它画，**不自己再算一遍凸包** —— 否则会出现「画出来的不是算出来的」。
 - **未标定**（`scale` 为 `null`）时单位是 `u` / `u²` / `u³`，且 `calibrated: false`。
-- **值不存死**：测量元素只存 `op` + `refs`；`raw`/`value`/`points`/`unit` 都在
+- **值不存死**：测量元素只存 `op` + `refs`；`raw`/`value`/`points`/`unit`/`outline` 都在
   **读取时由几何 + 当前 scale 重算** —— 所以重新标定后所有已有测量会**自动跟着变**。
 - 客户端在 `PUT /annotations` 里塞的 `value` **不作数**，服务器会按几何重算
   （避免「显示的数值」与「存的标注」两套真相）。
@@ -321,7 +342,7 @@ Content-Type: application/json
 
 | 方法 | 路径               | 说明                                                        |
 | ---- | ------------------ | ----------------------------------------------------------- |
-| GET  | `/`                | 面板页面（读 `web/index.html`）                             |
+| GET  | `/`                | 面板页面（读 `panel/index.html`）                           |
 | GET  | `/app-config.json` | 与 §1.1 同一份引导信息                                      |
 | GET  | `/assets/*`        | 静态资源（品牌图等）                                        |
 | GET  | `/health`          | `{role: "pages", api_origin, api_port}` —— **不是**模型健康 |
@@ -333,7 +354,7 @@ Content-Type: application/json
 
 ## 三、官网（portal，:50867）
 
-控制面：账号 / 计费 / API Key / 流水。**认证端点与服务商共用同一份实现**（`web/auth_api.py`），
+控制面：账号 / 计费 / API Key / 流水。**认证端点与服务商共用同一份实现**（`panel/auth_api.py`），
 路径与 §1.2 完全一致：`/api/auth/{salt,register,challenge,login,logout,me,password}`。
 
 | 方法     | 路径                          | 说明                                                                                                |
@@ -352,7 +373,7 @@ Content-Type: application/json
 | GET/POST | `/api/p/keys`                 | 列出 / 新建 API Key（**明文只在新建响应里出现一次**）                                               |
 | POST     | `/api/p/keys/{key_id}/revoke` | 吊销                                                                                                |
 
-计费常量（单价 / 包规格 / 折扣 / 充值档 / 重置周期）全部在 `web/portal_store.py` 顶部；
+计费常量（单价 / 包规格 / 折扣 / 充值档 / 重置周期）全部在 `panel/portal_store.py` 顶部；
 扣减顺序（计划包 → 用量包 → 余额）与 `BETA_FREE` 语义见 `CONTEXT.md` §3。
 
 ---
