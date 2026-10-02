@@ -274,17 +274,15 @@ def _load_model():
 
 @app.on_event("startup")
 def _startup():
-    # 把「允许匿名」这件事**显式说出来**：它是默认值，很容易在对外部署时被忘掉。
-    # （不能靠监听地址判断 —— 走内网穿透时绑的还是 127.0.0.1。）
     if ALLOW_ANONYMOUS:
         print(
-            "[server] 匿名访问：**允许**（默认，本机自用）。"
-            "对外提供服务请设 OMNI3D_ALLOW_ANONYMOUS=0",
+            "[server] 匿名访问 enabled(default)"
+            "请设置 OMNI3D_ALLOW_ANONYMOUS=0",
             flush=True,
         )
     else:
         print(
-            "[server] 匿名访问：已关闭 —— 数据端点要求 X-Api-Key 或 X-Auth-Token",
+            "[server] 匿名访问 disabled",
             flush=True,
         )
     threading.Thread(target=_load_model, daemon=True).start()
@@ -300,36 +298,27 @@ def health():
         "ready": _model_ready,
         "device": str(config.DEVICE),
         "error": _model_error,
-        # 客户端靠它提示「这台服务商支不支持 API Key」
         "api_key": api_key_enabled(),
         "static_api_keys": static_keys_enabled(),
-        # ★ 服务商自己的策略：能不能**不带凭据**用。客户端据此决定
-        # 「提交前先拦下」还是「直接提交」，而不是靠猜或靠来源地址。
         "anonymous": ALLOW_ANONYMOUS,
     }
 
 
 # ---- 可用模型列表 ----
-# 客户端的「模型」菜单就靠它：模型清单由**服务器**决定，客户端不写死。
-# 面板侧的主入口是「验证 API Key」——那一次请求就把可用模型一起回传（`/api/auth/me`），
-# `/api/models` 作为匿名 / 刷新时的备用入口，两者走同一份口径。
 _AVAILABLE_MODELS = [
     {"id": "fast3r", "name": "Fast3R", "sub": "多视图三维重建"},
 ]
 
 
 def models_for_identity() -> list[dict]:
-    """当前身份可用的模型。
-
-    现在所有身份都一样（本机就一个模型）；把身份参数留着，
-    以后「某些模型只开给某些套餐/Key」时只改这里。
+    """
+    当前身份可用的模型。
     """
     return [dict(m) for m in _AVAILABLE_MODELS]
 
 
 def server_capabilities() -> dict:
-    """服务商的**能力门槛**：客户端据此决定可选参数，而不是写死在页面里。
-
+    """服务商服务门槛
     与 `models_for_identity()` 一起构成「这台服务商能干什么」。改硬件 / 改环境
     变量后客户端只需重新请求一次（初始化、切换服务商时各一次）即可跟着变。
     """
@@ -346,11 +335,8 @@ def server_capabilities() -> dict:
 
 
 def frame_limit_error(frame_count: int) -> str | None:
-    """视角数量越界时给出**点名真凶**的文案（当前值 / 上限 / 去哪里改）；合法返回 None。
-
-    档位由 `config.frame_options()`（按显存）给出，客户端会展示它，
-    但服务端**必须自己拦** —— 否则旧页面、脚本直接提交、或手改表单，
-    换个数字就能把显存打满。
+    """视角数量越界时报告；合法返回 None。
+    档位由 `config.frame_options()`给出
     """
     allowed = config.frame_options()
     if frame_count in allowed:
@@ -366,7 +352,7 @@ def frame_limit_error(frame_count: int) -> str | None:
 
 @app.get("/api/models")
 def list_models():
-    """列出**当前身份**可用的重建模型 + 服务商能力门槛（带 API Key 时以该账号口径返回）。"""
+    """列出当前身份可用的重建模型 + 服务商能力门槛"""
     return {
         "models": models_for_identity(),
         "capabilities": server_capabilities(),
@@ -393,7 +379,7 @@ _FALLBACK_RGB = (255, 180, 60)
 
 
 def _pts_to_ply(points, colors=None) -> bytes:
-    """点坐标 (N,3) + 颜色 (N,3,0~255) → **二进制小端** PLY 字节串。
+    """点坐标 (N,3) + 颜色 (N,3,0~255) → 二进制小端 PLY 字节串。
 
     没有颜色时退化为单色（不再是唯一选择：正常路径会用上真实 RGB）。
     全向量化，百万点也只是几次 numpy 拷贝。
