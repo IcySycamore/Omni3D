@@ -2872,14 +2872,8 @@
               ></button>
               <button
                 class="tool-btn"
-                data-tool="triangleArea"
-                hidden
-                data-help="三角形面积：量 3 个点确定的三角形面积（是平行四边形面积的一半）。选 3 个点后点「应用」，或直接点三个点。默认在设置 → 界面里开启。"
-              ></button>
-              <button
-                class="tool-btn"
                 data-tool="volume"
-                data-help="体积：依次点实体的各个顶点（三棱柱就是 6 个角）—— 够 4 个起就有数值，点「完成」按这些顶点算凸包体积并画出轮廓。"
+                data-help="体积：依次选取实体各顶点，测量凸包体积"
               ></button>
             </div>
           </div>
@@ -3244,13 +3238,17 @@
               </label>
             </div>
             <div class="glass-card">
-              <h3>测量</h3>
+              <h3>元素视图</h3>
+              <label class="modal-check" style="margin: 0 0 10px">
+                <input type="checkbox" id="cascadeSelectToggle" />
+                选中父元素时级联选中子元素
+              </label>
+              <label class="modal-check" style="margin: 0 0 10px">
+                <input type="checkbox" id="cascadeDeleteToggle" />
+                删除父元素时级联删除子元素
+              </label>
               <label class="modal-check" style="margin: 0">
-                <input
-                  type="checkbox"
-                  id="collapseChildrenToggle"
-                  data-help="开启后，一条测量完成时它的顶点会折在测量行内（点测量行最前面的箭头可以展开）。关掉则始终铺开。"
-                />
+                <input type="checkbox" id="collapseChildrenToggle" />
                 测量完成时折叠子元素
               </label>
             </div>
@@ -3468,6 +3466,12 @@
         cloudHasRgb: false,
         // 设置项：测量完成后把它的子元素（被引用的顶点）折起来（默认开）。
         collapseMeasureChildren: true,
+        // 设置项：选中父元素（测量）时把子元素（顶点）一起选中（默认关）。
+        cascadeSelect: false,
+        // 设置项：删除父元素时把子元素一起删（默认关）。
+        // 反方向（删子元素 → 连带删父元素）**不是设置**：父元素已经被破坏，
+        // 没有子元素的测量算不出东西，留着只是条坏数据。
+        cascadeDelete: false,
         // 手动展开过的测量 id —— 默认全折叠，所以记的是**展开**而不是折叠。
         expandedMeasurements: new Set(),
         cloudColors: null, // {rgb, height} 两种着色快照，供颜色开关切换
@@ -3621,6 +3625,8 @@
         toolLayout: $("#toolLayout"),
         boxNoRotateToggle: $("#boxNoRotateToggle"),
         collapseChildrenToggle: $("#collapseChildrenToggle"),
+        cascadeSelectToggle: $("#cascadeSelectToggle"),
+        cascadeDeleteToggle: $("#cascadeDeleteToggle"),
         gridGroundToggle: $("#gridGroundToggle"),
         serverList: $("#serverList"),
         addServerBtn: $("#addServerBtn"),
@@ -6689,7 +6695,6 @@
         "tool:line": `${_SVG_OPEN}<circle cx="6.2" cy="17.4" r="2"/><circle cx="17.8" cy="6.6" r="2"/><path d="M7.7 16.1 16.3 7.9"/></svg>`,
         "tool:calibrate": `${_SVG_OPEN}<path d="M3.4 14.6 14.6 3.4l6 6L9.4 20.6z"/><path d="M7.7 10.3l1.7 1.7M10.5 7.5l1.7 1.7M13.3 4.7l1.7 1.7"/></svg>`,
         "tool:area": `${_SVG_OPEN}<path d="M6.4 17.6h6.8l4.4-11.2H10.8z"/></svg>`,
-        "tool:triangleArea": `${_SVG_OPEN}<path d="M12 4.8 20 19.2H4z"/></svg>`,
         "tool:volume": `${_SVG_OPEN}<path d="M12 3.2 19.4 7.5v9L12 20.8 4.6 16.5v-9z"/><path d="M4.6 7.5 12 11.8l7.4-4.3M12 11.8v9"/></svg>`,
         modelPickBtn: `${_SVG_OPEN}<rect x="6" y="6" width="12" height="12" rx="2.4"/><path d="M9.5 3.6v2.4M14.5 3.6v2.4M9.5 18v2.4M14.5 18v2.4M3.6 9.5H6M3.6 14.5H6M18 9.5h2.4M18 14.5h2.4"/></svg>`,
       };
@@ -6710,7 +6715,6 @@
         "tool:line": "画线",
         "tool:calibrate": "反向尺度推导",
         "tool:area": "面积",
-        "tool:triangleArea": "三角形面积",
         "tool:volume": "体积",
       };
       function toolbarKeyOf(btn) {
@@ -7223,7 +7227,7 @@
           });
           const name = document.createElement("span");
           name.className = "tl-name";
-          // 图标先上：平行四边形／三角形／体积这几个光看名字容易搞混
+          // 图标先上：面积／体积这几个光看名字容易搞混
           const icon = TOOLBAR_ICONS[`tool:${item.tool}`];
           if (icon) {
             const ico = document.createElement("span");
@@ -9137,11 +9141,6 @@
           need: 3,
           op: "polygon_area",
         },
-        triangleArea: {
-          label: "三角形面积",
-          need: 3,
-          op: "triangle_area",
-        },
         volume: {
           label: "体积",
           need: 4,
@@ -9149,16 +9148,11 @@
         },
       };
       // 工具组的默认顺序与设置页的「工具组」配置共用
-      const TOOL_ORDER_DEFAULT = [
-        "line",
-        "calibrate",
-        "area",
-        "triangleArea",
-        "volume",
-      ];
+      const TOOL_ORDER_DEFAULT = ["line", "calibrate", "area", "volume"];
       // 默认**不可见**的工具（可在设置 → 界面 里打开）。
-      // 三角形面积与平行四边形面积是同一套三点流程，默认只留一个，避免按钮堆一排。
-      const TOOL_DEFAULT_VISIBLE = { triangleArea: false };
+      // 现在没有这一类的工具（三角形面积已删：量三点围成的面积由「面积」覆盖），
+      // 机制留着 —— 加新工具时把 id 放进来即可。
+      const TOOL_DEFAULT_VISIBLE = {};
       function toolDefaultVisible(tool) {
         return TOOL_DEFAULT_VISIBLE[tool] !== false;
       }
@@ -10301,7 +10295,13 @@
         return true;
       }
 
-      // ---- 级联删除：删一个点，引用它的测量/派生形一起删 ----
+      // ---- 级联删除 ----
+      // 两个方向：
+      //   子 → 父：删一个顶点，引用它的测量/派生形一起删（**总是**这样）。
+      //            父元素少了顶点就算不出东西，留着只是条坏数据 —— 不是设置项。
+      //   父 → 子：删一条测量，它的顶点是否一起删（设置 → 行为「删除父元素时级联
+      //            删除子元素」，默认关）。
+      // 两个方向一起做不动点迭代：父 → 子 删掉的顶点可能又让别的测量变成坏数据。
       function withDependents(ids) {
         const doomed = new Set(ids);
         let changed = true;
@@ -10314,6 +10314,15 @@
               changed = true;
             }
           }
+          if (!STATE.cascadeDelete) continue;
+          for (const el of STATE.elements) {
+            if (!doomed.has(el.id) || el.kind !== "measurement") continue;
+            for (const r of el.refs || []) {
+              if (doomed.has(r)) continue;
+              doomed.add(r);
+              changed = true;
+            }
+          }
         }
         return doomed;
       }
@@ -10323,13 +10332,37 @@
         askDeleteElements([...STATE.selectedIds]);
       }
 
+      // 级联选中用：这个元素连同它引用的子元素（传递展开）。
+      // 只往**下**走（父 → 子）：选中一个顶点不会顺手选中引用它的测量 ——
+      // 那样「只想动这个点」就做不到了。
+      function selectionGroupOf(id) {
+        const out = [];
+        const seen = new Set();
+        const stack = [id];
+        while (stack.length) {
+          const cur = stack.pop();
+          if (seen.has(cur)) continue;
+          seen.add(cur);
+          const el = elementById(cur);
+          if (!el) continue;
+          out.push(cur);
+          for (const r of el.refs || []) stack.push(r);
+        }
+        return out;
+      }
+
       function toggleSelect(id, additive) {
+        // 「选中父元素时级联选中子元素」（设置 → 行为，默认关）
+        const group = STATE.cascadeSelect ? selectionGroupOf(id) : [id];
         if (additive) {
-          if (STATE.selectedIds.has(id)) STATE.selectedIds.delete(id);
-          else STATE.selectedIds.add(id);
+          const on = !STATE.selectedIds.has(id);
+          for (const x of group) {
+            if (on) STATE.selectedIds.add(x);
+            else STATE.selectedIds.delete(x);
+          }
         } else {
           STATE.selectedIds.clear();
-          STATE.selectedIds.add(id);
+          for (const x of group) STATE.selectedIds.add(x);
         }
         renderElementList();
         renderElements();
@@ -11283,12 +11316,6 @@
           tool: "calibrate",
         },
         { id: "tool:area", label: "面积", def: "5", tool: "area" },
-        {
-          id: "tool:triangleArea",
-          label: "三角形面积",
-          def: "",
-          tool: "triangleArea",
-        },
         { id: "tool:volume", label: "体积", def: "6", tool: "volume" },
         { id: "tool:pan", label: "移动", def: "7", tool: "pan" },
         { id: "undo", label: "撤销", def: "z", btn: "undoBtn" },
@@ -11507,6 +11534,36 @@
             STATE.collapseMeasureChildren
               ? "测量完成后折叠子元素"
               : "测量完成后展开子元素",
+            "success",
+          );
+        });
+      }
+      // 设置页：行为 —— 选中父元素时是否级联选中子元素
+      if (dom.cascadeSelectToggle) {
+        dom.cascadeSelectToggle.addEventListener("change", () => {
+          STATE.cascadeSelect = dom.cascadeSelectToggle.checked;
+          try {
+            writeLS("omni3d.cascade_select", STATE.cascadeSelect ? "1" : "0");
+          } catch (_) {
+            /* 忽略 */
+          }
+          showToast(
+            STATE.cascadeSelect ? "选中父元素时也选中子元素" : "只选中点的那个元素",
+            "success",
+          );
+        });
+      }
+      // 设置页：行为 —— 删除父元素时是否级联删除子元素
+      if (dom.cascadeDeleteToggle) {
+        dom.cascadeDeleteToggle.addEventListener("change", () => {
+          STATE.cascadeDelete = dom.cascadeDeleteToggle.checked;
+          try {
+            writeLS("omni3d.cascade_delete", STATE.cascadeDelete ? "1" : "0");
+          } catch (_) {
+            /* 忽略 */
+          }
+          showToast(
+            STATE.cascadeDelete ? "删除父元素时也删掉子元素" : "删除父元素保留子元素",
             "success",
           );
         });
@@ -11833,6 +11890,22 @@
         STATE.collapseMeasureChildren = saved === null ? true : saved === "1";
         if (dom.collapseChildrenToggle) {
           dom.collapseChildrenToggle.checked = STATE.collapseMeasureChildren;
+        }
+      }
+      // 行为：选中父元素时级联选中子元素（默认关）
+      {
+        const saved = readLS("omni3d.cascade_select");
+        STATE.cascadeSelect = saved === null ? false : saved === "1";
+        if (dom.cascadeSelectToggle) {
+          dom.cascadeSelectToggle.checked = STATE.cascadeSelect;
+        }
+      }
+      // 行为：删除父元素时级联删除子元素（默认关）
+      {
+        const saved = readLS("omni3d.cascade_delete");
+        STATE.cascadeDelete = saved === null ? false : saved === "1";
+        if (dom.cascadeDeleteToggle) {
+          dom.cascadeDeleteToggle.checked = STATE.cascadeDelete;
         }
       }
       // 行为：网格是否贴合点云地面（默认贴；只有显式存了 "0" 才不贴）

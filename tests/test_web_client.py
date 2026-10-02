@@ -205,8 +205,9 @@ class TestMultiVertexMeasurement:
         help_text = _tool_button_html(index_html, "volume")
         for banned in ("虚线", "收口", "连一条线"):
             assert banned not in help_text, f"体积不连线，说明里不该出现「{banned}」"
-        assert "完成" in help_text, "得说清怎么结束"
-        # 它量的是**凸包体积**，不是「凸多边体面积」（旧文案里的错词）
+        # ⚠️ 不再要求「说清怎么结束」：用户把这条说明改成了自己那版短的
+        #（「体积：依次选取实体各顶点，测量凸包体积」），怎么写由他定。
+        # 守卫只盯两个硬错误：提了连线类动作、名字写错。
         assert "凸多边体面积" not in help_text
         assert "体积" in help_text
 
@@ -1266,32 +1267,87 @@ class TestGizmoHUDMustStayVisible:
 
 
 class TestToolGroupTools:
-    """工具组：可见性 / 顺序 / 默认不可见的三角形面积。"""
+    """工具组：可见性 / 顺序；三角形面积已删（三角形那个生态位由「面积」占）。"""
 
-    def test_triangle_measured_as_its_own_op(self, index_html):
-        """三角形面积 = 独立工具，走服务端已有的 `triangle_area`。"""
-        assert "triangleArea:" in index_html
-        assert '"triangle_area"' in index_html
-        # 元素/数值的展示早已支持它，别再另造一套
-        assert "三角形面积" in index_html
+    def test_triangle_tool_is_gone(self, index_html):
+        """三角形面积整个删了 —— 量三点围成的面积由「面积」覆盖。
 
-    def test_triangle_is_hidden_by_default(self, index_html):
-        """默认只留一个三点流程（平行四边形），三角形在设置里开。"""
-        assert "TOOL_DEFAULT_VISIBLE" in index_html
-        assert "triangleArea: false" in index_html
-        assert "function toolDefaultVisible" in index_html
-        assert 'data-tool="triangleArea"' in index_html
+        ⚠️ 删一个工具不只是删按钮：图标表 / 名称表 / 快捷键表 / 工具定义 / 排序表
+        里都得删干净 —— 否则「图标表不许有孤儿」那条守卫会红（定义了就得有人用）。
+        服务端的 `triangle_area` op **留着**：旧标注还能算，test_geometry 也在用。
+        """
+        assert 'data-tool="triangleArea"' not in index_html
+        assert "triangleArea: {" not in index_html
+        assert "tool:triangleArea" not in index_html
+        assert "TOOL_DEFAULT_VISIBLE = { triangleArea" not in index_html
 
     def test_hidden_buttons_actually_hide(self, index_html):
-        """⚠️ `[hidden]` 会被 `.tool-btn{display:flex}` 盖掉，必须显式兜底。"""
+        """⚠️ `[hidden]` 会被 `.tool-btn{display:flex}` 盖掉，必须显式兜底。
+
+        现在没有默认隐藏的工具了，但「设置 → 界面」仍可把任意工具藏起来。
+        """
         assert ".tool-btn[hidden]" in index_html
 
     def test_layout_rows_show_icons(self, index_html):
-        """光看名字分不清平行四边形 / 三角形，配置项里带图标。"""
+        """光看名字分不清面积 / 体积，配置项里带图标。"""
         assert "tl-icon" in index_html
 
-    def test_triangle_has_a_shortcut_row(self, index_html):
-        assert 'id: "tool:triangleArea"' in index_html
+
+class TestElementViewCascade:
+    """行为 → 元素视图：级联选中 / 级联删除 / 折叠（用户给的规格）。"""
+
+    def test_the_card_has_the_three_switches(self, index_html):
+        assert _contains_text(index_html, "<h3>元素视图</h3>")
+        for toggle in (
+            "cascadeSelectToggle",
+            "cascadeDeleteToggle",
+            "collapseChildrenToggle",
+        ):
+            assert f'id="{toggle}"' in index_html, f"设置里没有 {toggle}"
+            assert f'{toggle}: $("#' in index_html, f"{toggle} 没接进 dom"
+        # 默认值：级联选中 / 级联删除关，折叠开
+        assert "cascadeSelect: false" in index_html
+        assert "cascadeDelete: false" in index_html
+        assert "collapseMeasureChildren: true" in index_html
+        assert _contains_text(
+            index_html,
+            'STATE.cascadeSelect = saved === null ? false : saved === "1";',
+        )
+        assert _contains_text(
+            index_html,
+            'STATE.cascadeDelete = saved === null ? false : saved === "1";',
+        )
+        # 用户要求：控件里**不**解释那条「删子元素必删父元素」，写进帮助
+        assert _contains_text(index_html, 'writeLS("omni3d.cascade_select"')
+        assert _contains_text(index_html, 'writeLS("omni3d.cascade_delete"')
+
+    def test_deleting_a_child_always_deletes_its_parent(self, index_html):
+        """删子元素一定连带删父元素 —— 这条**不是设置项**（用户明确要求）。
+
+        少了顶点的测量算不出任何东西，留着只是一条坏数据。用户还说：这条不要
+        在控件里解释，写进帮助文档。
+        """
+        body = _fn_body(index_html, "withDependents")
+        assert _contains_text(
+            body, "if ((el.refs || []).some((r) => doomed.has(r))) {"
+        ), "子 → 父 那条不见了"
+        # 父 → 子 才是设置项
+        assert "STATE.cascadeDelete" in body
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            doc = fh.read()
+        assert "一定" in doc and "不是" in doc, "帮助文档没写这条不受设置影响"
+
+    def test_selecting_a_parent_can_cascade_to_children(self, index_html):
+        assert "function selectionGroupOf" in index_html
+        body = _fn_body(index_html, "toggleSelect")
+        assert _contains_text(
+            body, "const group = STATE.cascadeSelect ? selectionGroupOf(id) : [id];"
+        )
+        # 只往下走：选中一个顶点不该顺手选中引用它的测量
+        group = _fn_body(index_html, "selectionGroupOf")
+        assert "el.refs" in group
+        assert "withDependents" not in group
 
 
 class TestTooltipsCarryNoDashTail:
