@@ -61,7 +61,7 @@ def _snap_bench(ply_bytes, n_queries=200):
     """建树 / 查询耗时（#25）：把 PLY 落成临时文件后走**真实吸附路径**。"""
     import tempfile
 
-    from snap_index import SnapIndex, read_ply_xyz
+    from panel.snap_index import SnapIndex, read_ply_xyz
 
     with tempfile.TemporaryDirectory() as td:
         path = os.path.join(td, "cloud.ply")

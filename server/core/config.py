@@ -142,7 +142,7 @@ MAX_RENDER_POINTS = _env_int("OMNI3D_MAX_RENDER_POINTS", 60000)
 VIS_POINT_SIZE = 0.0004          # 点云点大小
 
 # ---- 点云来源（用哪个 head）----
-# 上游在**重建评测**里默认用 local head：`configs/model/fast3r.yaml` 的
+# 上游在**重建评测**里默认用 local head：`training/configs/model/fast3r.yaml` 的
 # `eval_use_pts3d_from_local_head: true`，`multiview_dust3r_module.py` 的
 # `evaluate_reconstruction` 取 `pred["pts3d_local_aligned_to_global"]` + `conf_local`。
 # global head 则是 `pred["pts3d_in_other_view"]` + `conf`。

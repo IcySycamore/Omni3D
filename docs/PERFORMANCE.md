@@ -157,7 +157,7 @@
 
 - `local`（**默认**）→ `pts3d_local_aligned_to_global` + `conf_local` ——
   local head 经 `align_local_pts3d_to_global` 对齐到全局坐标系；
-  与上游重建评测口径一致（`configs/model/fast3r.yaml` 的
+  与上游重建评测口径一致（`training/configs/model/fast3r.yaml` 的
   `eval_use_pts3d_from_local_head: true`）。
 - `global` → `pts3d_in_other_view` + `conf`（全局 head 原始输出）。
 

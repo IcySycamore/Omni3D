@@ -5,8 +5,8 @@
 
 .. code-block:: bash
 
-    python scripts/run_benchmark.py --config configs/eval/benchmark_re10k.yaml
-    python scripts/run_benchmark.py --config configs/eval/benchmark_recon.yaml
+    python training/scripts/run_benchmark.py --config training/configs/eval/benchmark_re10k.yaml
+    python training/scripts/run_benchmark.py --config training/configs/eval/benchmark_recon.yaml
 """
 
 import argparse
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 # 允许从项目根目录导入 fast3r
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from fast3r.eval.benchmark import BenchmarkRunner  # pylint: disable=wrong-import-position
 

@@ -10,7 +10,7 @@
 .. code-block:: python
 
     from fast3r.eval.benchmark import BenchmarkRunner
-    runner = BenchmarkRunner.from_config("configs/eval/benchmark_re10k.yaml")
+    runner = BenchmarkRunner.from_config("training/configs/eval/benchmark_re10k.yaml")
     runner.run()
 """
 

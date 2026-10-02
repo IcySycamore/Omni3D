@@ -1290,16 +1290,15 @@
         gap: 10px;
         flex-wrap: wrap;
         margin-top: auto;
-        padding: 6px 12px;
-        min-height: 34px;
-        background: rgba(8, 10, 18, 0.96);
+        padding: 7px 12px;
+        min-height: 36px;
+        background: var(--bg-elevated);
         border: 1px solid var(--glass-border-active);
         border-radius: 10px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        font-size: 0.76rem;
+        box-shadow: var(--shadow-lift);
+        font-size: 0.8rem;
         line-height: 1.5;
-        color: var(--text-muted);
+        color: var(--text-secondary);
       }
       .sb-tool {
         font-weight: 600;
@@ -2476,7 +2475,7 @@
               <button
                 class="tool-btn"
                 data-tool="volume"
-                data-help="体积：量 4 个点确定的体积。选 4 个点后点「应用」，或直接点四个点。"
+                data-help="体积：先选 3 个点定底面，再选 1 个点定高。"
               >
                 ▣ 体积
               </button>
@@ -2790,12 +2789,9 @@
           <div class="settings-group hidden" data-settings-panel="ui">
             <div class="glass-card">
               <h3>主题</h3>
-              <p class="card-subtitle" style="margin-bottom: 10px">
-                只改配色，不改布局与功能。选完立即生效，并记住你的选择。
-              </p>
               <div class="radio-group" id="themeGroup">
                 <button class="radio-pill" data-theme-pick="deep">
-                  深空青（默认）
+                  深空青
                 </button>
                 <button class="radio-pill" data-theme-pick="slate">
                   石板
@@ -3045,7 +3041,7 @@
             <p>
               没标定前显示的是 u / u² / u³（任意单位），标定后按真实尺寸显示。长度
               = 两点距离；面积 = |AB × AC|（两向量张成的平行四边形，恰好是三角形面积的
-              2 倍）；体积 = |det[AB, AC, AD]|（平行六面体）。工具栏的三角形面积同理，选
+              2 倍）；体积 = |det[AB, AC, AD]|。工具栏的三角形面积同理，选
               3 个点就行。
             </p>
 
@@ -3242,6 +3238,9 @@
         activeTool: "select", // 默认先选元素，再点工具应用（工具应用模型） // 工具组是模态的，默认「面积」
         elements: [], // 服务端标注的镜像：[{id, kind, points, refs, op, value, unit, ...}]
         pendingIds: [], // 本次测量已取的点（Esc 取消但不删点）
+        // 「模型对齐水平」的旋转（单位四元数 = 未旋转）。只作用于显示层：
+        // 元素坐标与服务端 PLY 始终是**原始**坐标。
+        modelQuat: new THREE.Quaternion(),
         selectedIds: new Set(), // 选中集（元素视图里勾选）
         undoStack: [], // 客户端快照栈（JSON 字符串）
         redoStack: [],
@@ -5995,25 +5994,35 @@
         grid.scale.setScalar(span / 1.2);
       }
 
+      // 把**模型**转到水平：点云与标注一起绕原点旋转，使拟合出的「地面」法向
+      // 对齐世界 +Y。网格则保持世界水平**不动** —— 要把地面摆正的是模型，不是网格。
+      //
+      // 只动显示层：元素坐标与服务端 PLY 仍是**原始**坐标，因此
+      //   ① 拾取得到的世界坐标要逆旋回原始坐标再落点；
+      //   ② /snap 查询前逆旋、拿到结果再正旋。
       function alignGridToGround() {
+        const q = new THREE.Quaternion(); // 单位四元数 = 不旋转
+        if (STATE.gridFollowGround !== false) {
+          const plane = estimateGroundPlane();
+          if (plane) {
+            const n = new THREE.Vector3().fromArray(plane.normal).normalize();
+            if (n.y < 0) n.negate();
+            q.setFromUnitVectors(n, new THREE.Vector3(0, 1, 0));
+          }
+        }
+        STATE.modelQuat.copy(q);
+        if (STATE.viewerPointCloud) {
+          STATE.viewerPointCloud.quaternion.copy(q);
+        }
+        if (STATE.elementGroup) {
+          STATE.elementGroup.quaternion.copy(q);
+        }
         const grid = STATE.gridHelper;
-        if (!grid) return;
-        if (STATE.gridFollowGround === false) {
+        if (grid) {
           grid.quaternion.identity();
           grid.position.set(0, -0.6, 0);
           applyGridSize();
-          return;
         }
-        const plane = estimateGroundPlane();
-        if (!plane) {
-          applyGridSize();
-          return;
-        }
-        const n = new THREE.Vector3().fromArray(plane.normal).normalize();
-        if (n.y < 0) n.negate(); // 法向朝上，避免网格翻面
-        grid.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
-        grid.position.set(plane.point[0], plane.point[1], plane.point[2]);
-        applyGridSize();
       }
 
       // 把相机放到「刚好装下」的位置（而不是按包围球半径 * 2 拍脑袋）
@@ -7694,6 +7703,11 @@
         // 没有会话 id（仅本地预览）→ 退化为直接用渲染点
         if (!sessionId)
           return { hit: true, point: point.clone(), fallback: true };
+        // 服务端的全量点云是**未旋转**的原始坐标：查询前把点逆旋回去，
+        // 命中后再正旋回显示坐标。
+        const _q = STATE.modelQuat || new THREE.Quaternion();
+        const _qInv = _q.clone().invert();
+        const _local = point.clone().applyQuaternion(_qInv);
         try {
           const resp = await fetch(
             "/api/sessions/" + encodeURIComponent(sessionId) + "/snap",
@@ -7701,7 +7715,7 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                points: [point.toArray()],
+                points: [_local.toArray()],
                 // 上限给到约 40px 的世界距离：正常总能吸附到，
                 // 吸附不到说明这个位置真的没东西
                 max_distance: worldPerPixel() * 40,
@@ -7715,7 +7729,7 @@
             return { hit: false, reason: (r && r.reason) || "miss" };
           return {
             hit: true,
-            point: new THREE.Vector3().fromArray(r.point),
+            point: new THREE.Vector3().fromArray(r.point).applyQuaternion(_q),
             distance: r.distance,
           };
         } catch (err) {
@@ -7957,7 +7971,7 @@
       // 只与视口高度成正比）。点云尺度是任意的（模型坐标系），所以标签必须
       // **屏幕恒定**，不能用世界尺寸 —— 否则小模型上的标签会占满屏。
       const LABEL_SCALE_POINT = 0.022; // 编号小圆点，约 20px
-      const LABEL_SCALE_TEXT = 0.03; // 文字标签，约 26px
+      const LABEL_SCALE_TEXT = 0.058; // 文字标签，约 50px（原来 26px 看不清）
 
       // 生成带数字的小标签（Canvas Sprite）
       function makePointLabel(n) {
@@ -8616,7 +8630,7 @@
           label: "体积",
           need: 4,
           op: "volume",
-          hint: "量 4 个点确定的体积：选好 4 个点后点「应用」，或直接点四个点。",
+          hint: "先选 3 个点定底面，再选 1 个点定高。",
         },
       };
       // 工具组的默认顺序与设置页的「工具组」配置共用
@@ -9243,7 +9257,13 @@
         const tool = TOOL_DEFS[STATE.activeTool] || TOOL_DEFS.select;
         if (!tool.need) return;
         pushUndo();
-        const el = makePointElement([point.x, point.y, point.z]);
+        // 点云可能被「模型对齐」旋转过：元素坐标必须存**原始坐标**
+        // （与服务端 PLY / 测量一致），所以先逆旋回去。
+        const _inv = (STATE.modelQuat || new THREE.Quaternion())
+          .clone()
+          .invert();
+        const _p = point.clone().applyQuaternion(_inv);
+        const el = makePointElement([_p.x, _p.y, _p.z]);
         STATE.elements.push(el);
         if (tool.need === 1) {
           await persistCurrent(); // 单纯的「选点」
@@ -9253,8 +9273,13 @@
         if (STATE.pendingIds.length < tool.need) {
           renderElementList();
           renderElements();
+          const got = STATE.pendingIds.length;
           setToolHint(
-            `${tool.label}：已取 ${STATE.pendingIds.length}/${tool.need} 个点（Esc 取消）`,
+            tool === "volume"
+              ? got < 3
+                ? `体积：底面已取 ${got}/3 个点（Esc 取消）`
+                : "体积：底面已定，再选 1 个点定高（Esc 取消）"
+              : `${tool.label}：已取 ${got}/${tool.need} 个点（Esc 取消）`,
           );
           // 先落库，这样 Esc 后这些点依然在（#33）
           await persistCurrent();
@@ -9595,13 +9620,13 @@
       // ---- 元素在 3D 里的可视化：两级点亮（待定 vs 已定）----
       function makeTextSprite(text, color) {
         const canvas = document.createElement("canvas");
-        canvas.width = 256;
-        canvas.height = 64;
+        canvas.width = 512;
+        canvas.height = 128;
         const ctx = canvas.getContext("2d");
         ctx.fillStyle = "rgba(8,10,18,0.75)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = color || "#00d4ff";
-        ctx.font = "bold 34px monospace";
+        ctx.font = "bold 76px monospace";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(String(text), canvas.width / 2, canvas.height / 2);
@@ -9635,6 +9660,7 @@
         }
         const group = new THREE.Group();
         STATE.elementGroup = group;
+        group.quaternion.copy(STATE.modelQuat || new THREE.Quaternion());
         scene.add(group);
 
         // 点元素统一用「屏幕恒定像素尺寸」的 Points 渲染。
@@ -9681,19 +9707,71 @@
             (el.points || []).length >= 2
           ) {
             const pts = el.points.map((p) => new THREE.Vector3().fromArray(p));
-            const loop =
-              el.op === "area" ||
-              el.op === "triangle_area" ||
-              el.op === "volume";
-            const closed = loop ? [...pts, pts[0]] : pts;
-            const line = new THREE.Line(
-              new THREE.BufferGeometry().setFromPoints(closed),
-              new THREE.LineBasicMaterial({
-                color: el.error ? 0xf87171 : 0x00d4ff,
-                transparent: true,
-                opacity: 0.9,
-              }),
-            );
+            const loop = el.op === "area" || el.op === "triangle_area";
+            // 面积（area）算的是 **3 点张成的平行四边形** |AB x AC|，所以画成
+            // A-B-C-D-A（D = B + C − A）—— 画三角形会多出一条 A→C 对角线，
+            // 而且正好和体积的底面重合不上。triangle_area 才用三角形。
+            // 直四棱柱：前 3 点确定同一个平行四边形底面，第 4 点 E 定高
+            // （E 到底面的垂直距离）→ 8 顶点 / 12 条边。
+            const isArea = el.op === "area" && pts.length >= 3;
+            const isVolume = el.op === "volume" && pts.length >= 4;
+            const lineMatOpts = {
+              color: el.error ? 0xf87171 : 0x00d4ff,
+              transparent: true,
+              opacity: 0.95,
+            };
+            let geom;
+            let mat;
+            let line;
+            if (isVolume) {
+              const [A, B, C, E] = pts;
+              const AB = B.clone().sub(A);
+              const AC = C.clone().sub(A);
+              const nrm = new THREE.Vector3().crossVectors(AB, AC);
+              const scale = Math.max(AB.length(), AC.length(), 1e-6);
+              if (nrm.lengthSq() < 1e-12) {
+                geom = new THREE.BufferGeometry().setFromPoints(pts);
+                mat = new THREE.LineBasicMaterial(lineMatOpts);
+                line = new THREE.Line(geom, mat);
+              } else {
+                nrm.normalize();
+                const D = B.clone().add(C).sub(A); // 平行四边形的第 4 个顶点
+                const h = E.clone().sub(A).dot(nrm); // 高（有符号）
+                const lift = nrm.clone().multiplyScalar(h);
+                const A2 = A.clone().add(lift);
+                const B2 = B.clone().add(lift);
+                const C2 = C.clone().add(lift);
+                const D2 = D.clone().add(lift);
+                // D 是**对角**顶点 → 环序必须是 A → B → D → C（不是 A→B→C→D，
+                // 那样画出来是「两条边 + 两条对角线」的蝴蝶结）。
+                const segs = [
+                  A, B, B, D, D, C, C, A, // 底面 4 边
+                  A2, B2, B2, D2, D2, C2, C2, A2, // 顶面 4 边
+                  A, A2, B, B2, C, C2, D, D2, // 4 条侧棱（对位相连）
+                ];
+                geom = new THREE.BufferGeometry().setFromPoints(segs);
+                mat = new THREE.LineDashedMaterial({
+                  ...lineMatOpts,
+                  dashSize: scale * 0.09,
+                  gapSize: scale * 0.06,
+                });
+                line = new THREE.LineSegments(geom, mat);
+                line.computeLineDistances();
+              }
+            } else if (isArea) {
+              const [A, B, C] = pts;
+              const D = B.clone().add(C).sub(A); // 第 4 个顶点（**对角**那位）
+              // 环序 A → B → D → C：D 在对角，写成 A→B→C→D 会交叉成蝴蝶结
+              geom = new THREE.BufferGeometry().setFromPoints([A, B, D, C, A]);
+              mat = new THREE.LineBasicMaterial(lineMatOpts);
+              line = new THREE.Line(geom, mat);
+            } else {
+              geom = new THREE.BufferGeometry().setFromPoints(
+                loop ? [...pts, pts[0]] : pts,
+              );
+              mat = new THREE.LineBasicMaterial(lineMatOpts);
+              line = new THREE.Line(geom, mat);
+            }
             line.renderOrder = 997;
             group.add(line);
             const mid = pts
@@ -10237,7 +10315,7 @@
           }
           alignGridToGround();
           showToast(
-            STATE.gridFollowGround ? "网格贴合点云地面" : "网格保持世界水平",
+            STATE.gridFollowGround ? "模型已对齐水平" : "模型保持原始姿态",
             "success",
           );
         });

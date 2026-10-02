@@ -150,11 +150,13 @@ Omni3D/
 ├── archive/      # 已废弃实现（desktop-pyqt-vtk：旧的 PyQt5 + VTK 客户端）
 ├── app/       # 移动端 App 壳（WebView 加载 web client）+ 本地桥
 ├── server/core/     # 共享核心（config / pipeline / scale）——被 server 使用
-├── fast3r/       # vendored 模型仓库（model 层）
+├── fast3r/       # vendored 模型仓库（model 层，训练与推理共用）
+├── training/     # 训练/评测：configs（Hydra 树）+ notebooks + 评测脚本
 └── docs/         # 架构 / 审计文档（部署文档已延后至 release）
 ```
 
-> Phase 2 计划（独立 PR）：物理重组为 `server/` + `client/{web,qt}`。
+> **训练**与**使用**是两条线：`training/**` 只跑训练与量化评测；`server/**` +
+> `panel/**` 只消费推理入口，对 `training/**` **零引用**。
 > 详见 `docs/ARCHITECTURE.md`。
 
 ---

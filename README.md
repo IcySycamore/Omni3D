@@ -239,9 +239,10 @@ Omni3D/
 │   ├── qml/WebShell.qml  # WebView 壳
 │   ├── qml/ScanPage.qml  # AR 扫描覆盖层
 │   └── src/              # 桥 / 扫描 / AREngine / 预览（Android）
-├── fast3r/               # vendored 模型仓库（训练/推理）
+├── fast3r/               # vendored 模型仓库（训练与推理共用）
+├── training/             # 训练/评测：configs（Hydra 树）+ notebooks + 评测脚本
 ├── docs/                 # 架构说明 / 审计文档
-├── configs/  scripts/  notebooks/  demo_examples/   # 模型实验
+├── scripts/  demo_examples/                        # 服务侧诊断脚本 / 示例数据
 └── jedyang97/            # 模型权重（.gitignore，需手动放置）
 ```
 

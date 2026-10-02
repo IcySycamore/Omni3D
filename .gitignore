@@ -3,8 +3,8 @@ logs
 # Qoder IDE files
 .qoder/
 
-notebooks/figures/
-notebooks/output/
+training/notebooks/figures/
+training/notebooks/output/
 
 *.ply
 
@@ -160,7 +160,7 @@ dmypy.json
 *.bin
 
 # Lightning-Hydra-Template
-configs/local/default.yaml
+training/configs/local/default.yaml
 /data/
 /logs/
 .env

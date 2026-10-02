@@ -11,7 +11,7 @@ import urllib.error
 import urllib.request
 
 sys.path.insert(0, ".")
-from web.snap_index import read_ply_xyz  # noqa: E402
+from panel.snap_index import read_ply_xyz  # noqa: E402
 
 BASE = "http://127.0.0.1:50865"
 SID = "19ba1b3317ce4716"
