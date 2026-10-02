@@ -22,36 +22,172 @@
 
     <style>
       :root {
-        --bg-deep: #0a0c14;
-        --bg-card: rgba(18, 20, 32, 0.75);
-        --bg-card-hover: rgba(24, 27, 42, 0.82);
-        --bg-sidebar: rgba(12, 14, 24, 0.9);
-        --glass-border: rgba(255, 255, 255, 0.07);
-        --glass-border-active: rgba(255, 255, 255, 0.14);
-        --text-primary: #e8e8f0;
-        --text-secondary: #a0a4b8;
+        /* ---- 底色：三层纵深（画布 / 卡片 / 浮层）---- */
+        --bg-deep: #070911;
+        --bg-elevated: #0c0f1a;
+        /* 底色：三层纵深（最深的画布 / 抬起的卡 / 浮层）---- 当前只用到两层，
+           第三层需要时再加，别先摆一个没人用的变量。*/
+        --bg-card: rgba(17, 20, 33, 0.78);
+        --bg-card-hover: rgba(23, 27, 43, 0.86);
+        --bg-sidebar: rgba(10, 12, 20, 0.92);
+        /* ---- 描边：一级比一级亮，用「层次」代替「加粗」---- */
+        --glass-border: var(--fill-2);
+        --glass-border-active: var(--fill-3);
+        /* ---- 文字：三级 ---- */
+        --text-primary: #eaeaf2;
+        --text-secondary: #9ea3b8;
         --text-muted: #6b6f85;
-        --accent-cyan: #00d4ff;
+        /* ---- 主色：青管动作、紫只做氛围 ----
+           以前两者等权，整页偏「花」；现在按钮/描边一律走青，紫只留在
+           渐变与大面积背景里。 */
+        --accent-cyan: #22d3ee;
+        --accent-cyan-soft: rgba(34, 211, 238, 0.16);
+        /* 青色的半透明派生（描边 / 发光 / 选中底 / 极淡光晕）：
+           这些值以前散落在 17 处硬编码里，换主题时不会跟着变 ——
+           浅色主题下就变成“发光的浅青”，而深青才是能看清的那个。*/
+        --accent-faint: rgba(34, 211, 238, 0.08);
+        --accent-wash: rgba(34, 211, 238, 0.16);
+        --accent-glow: rgba(34, 211, 238, 0.35);
+        --accent-edge: rgba(34, 211, 238, 0.6);
         --accent-purple: #a855f7;
-        --accent-gradient: linear-gradient(135deg, #00d4ff, #a855f7);
-        --accent-gradient-warm: linear-gradient(135deg, #00d4ff, #7c3aed);
+        --accent-gradient: linear-gradient(135deg, #22d3ee, #a855f7);
+        --accent-gradient-warm: linear-gradient(135deg, #22d3ee, #7c3aed);
         --danger: #f87171;
         --success: #4ade80;
         --warning: #fbbf24;
-        --radius-sm: 10px;
-        --radius: 14px;
-        --radius-lg: 20px;
-        --radius-xl: 24px;
+        --radius-sm: 9px;
+        --radius: 13px;
+        --radius-lg: 18px;
+        --radius-xl: 22px;
+        /* 一张卡只用一个阴影；越靠上层越深 */
         --shadow-card:
-          0 4px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+          0 1px 2px rgba(0, 0, 0, 0.32), 0 8px 28px rgba(0, 0, 0, 0.36);
+        --shadow-lift:
+          0 2px 4px rgba(0, 0, 0, 0.36), 0 14px 40px rgba(0, 0, 0, 0.46);
         --shadow-glow:
-          0 0 40px rgba(0, 212, 255, 0.12), 0 0 80px rgba(168, 85, 247, 0.06);
-        --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-        --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          0 0 0 1px rgba(34, 211, 238, 0.16), 0 0 32px rgba(34, 211, 238, 0.1);
+        --transition-fast: 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-smooth: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         --font-mono:
           "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas",
           monospace;
         --sidebar-width: 236px;
+        /* ---- 半透明填充 / 描边 ----
+           深色主题是「往白里加」，浅色主题必须反过来「往黑里加」，
+           所以它们必须是变量，不能写死在组件规则里。*/
+        --fill-1: rgba(255, 255, 255, 0.03);
+        --fill-2: rgba(255, 255, 255, 0.06);
+        --fill-3: rgba(255, 255, 255, 0.1);
+        --fill-4: rgba(255, 255, 255, 0.2);
+        --star-opacity: 1;
+        /* 3D 视口自己的底色（three.js 读不到 CSS 变量，由 JS 同步）*/
+        --viewer-bg: #080a12;
+        /* 「模态遮罩」：浅色主题下必须反转，所以也得变量化 */
+        --overlay: rgba(0, 0, 0, 0.6);
+        /* 品牌 logo 是白色描边的图，浅色主题下要压暗才看得见 */
+        --logo-filter: none;
+      }
+
+      /* ============ 主题 ============
+         主题**只覆盖变量**，不碰任何组件规则 —— 加主题 = 在这里加一段。
+         用 :root[data-theme]（html 元素）而不是 body[...]：
+         `html, body` 上的 background 都读 html 上的变量，挂在 body 上盖不住 html。*/
+      /* 石板：低饱和冷灰，像仪器面板 */
+      :root[data-theme="slate"] {
+        --bg-deep: #0b0e12;
+        --bg-elevated: #12161c;
+        --bg-card: rgba(22, 27, 35, 0.8);
+        --bg-card-hover: rgba(28, 34, 44, 0.88);
+        --bg-sidebar: rgba(14, 18, 24, 0.94);
+        --accent-cyan: #7dd3fc;
+        --accent-cyan-soft: rgba(125, 211, 252, 0.14);
+        --accent-faint: rgba(125, 211, 252, 0.08);
+        --accent-wash: rgba(125, 211, 252, 0.16);
+        --accent-glow: rgba(125, 211, 252, 0.3);
+        --accent-edge: rgba(125, 211, 252, 0.55);
+        --accent-purple: #94a3b8;
+        --accent-gradient: linear-gradient(135deg, #7dd3fc, #94a3b8);
+        --accent-gradient-warm: linear-gradient(135deg, #7dd3fc, #64748b);
+        --star-opacity: 0.45;
+        --viewer-bg: #0a0d11;
+      }
+      /* 星云紫 */
+      :root[data-theme="violet"] {
+        --bg-deep: #0b0714;
+        --bg-elevated: #150e24;
+        --bg-card: rgba(28, 18, 46, 0.78);
+        --bg-card-hover: rgba(36, 23, 58, 0.86);
+        --bg-sidebar: rgba(17, 11, 30, 0.93);
+        --accent-cyan: #c084fc;
+        --accent-cyan-soft: rgba(192, 132, 252, 0.16);
+        --accent-faint: rgba(192, 132, 252, 0.09);
+        --accent-wash: rgba(192, 132, 252, 0.18);
+        --accent-glow: rgba(192, 132, 252, 0.32);
+        --accent-edge: rgba(192, 132, 252, 0.55);
+        --accent-purple: #f0abfc;
+        --accent-gradient: linear-gradient(135deg, #c084fc, #f0abfc);
+        --accent-gradient-warm: linear-gradient(135deg, #a855f7, #ec4899);
+        --star-opacity: 0.9;
+        --viewer-bg: #0a0611;
+      }
+      /* 暖琥珀 */
+      :root[data-theme="amber"] {
+        --bg-deep: #100c08;
+        --bg-elevated: #1a140d;
+        --bg-card: rgba(35, 27, 18, 0.8);
+        --bg-card-hover: rgba(45, 35, 23, 0.88);
+        --bg-sidebar: rgba(20, 15, 10, 0.94);
+        --accent-cyan: #fbbf24;
+        --accent-cyan-soft: rgba(251, 191, 36, 0.16);
+        --accent-faint: rgba(251, 191, 36, 0.08);
+        --accent-wash: rgba(251, 191, 36, 0.16);
+        --accent-glow: rgba(251, 191, 36, 0.3);
+        --accent-edge: rgba(251, 191, 36, 0.55);
+        --accent-purple: #fb923c;
+        --accent-gradient: linear-gradient(135deg, #fbbf24, #fb923c);
+        --accent-gradient-warm: linear-gradient(135deg, #f59e0b, #ef4444);
+        --star-opacity: 0.35;
+        --viewer-bg: #0e0a07;
+      }
+
+      /* 明亮（浅色）
+         ⚠️ 3D 视口**故意保持深色**（--viewer-bg）：点云的“按高度着色”是蓝→白渐变，
+         放在浅底上基本看不见；浅色的 3D 工具（Figma / Blender）也都是这么做的。*/
+      :root[data-theme="light"] {
+        --bg-deep: #f1f4f9;
+        --bg-elevated: #ffffff;
+        --bg-card: rgba(255, 255, 255, 0.92);
+        --bg-card-hover: rgba(255, 255, 255, 1);
+        --bg-sidebar: rgba(248, 250, 253, 0.96);
+        --glass-border: rgba(15, 23, 42, 0.1);
+        --glass-border-active: rgba(15, 23, 42, 0.2);
+        --fill-1: rgba(15, 23, 42, 0.035);
+        --fill-2: rgba(15, 23, 42, 0.07);
+        --fill-3: rgba(15, 23, 42, 0.12);
+        --fill-4: rgba(15, 23, 42, 0.22);
+        --text-primary: #101827;
+        --text-secondary: #4b5568;
+        --text-muted: #6b7280;
+        --overlay: rgba(15, 23, 42, 0.28);
+        --logo-filter: brightness(0.22) saturate(1.4);
+        --accent-cyan: #0e7490;
+        --accent-cyan-soft: rgba(14, 116, 144, 0.12);
+        --accent-faint: rgba(14, 116, 144, 0.07);
+        --accent-wash: rgba(14, 116, 144, 0.14);
+        --accent-glow: rgba(14, 116, 144, 0.22);
+        --accent-edge: rgba(14, 116, 144, 0.5);
+        --accent-purple: #7c3aed;
+        --accent-gradient: linear-gradient(135deg, #0891b2, #7c3aed);
+        --accent-gradient-warm: linear-gradient(135deg, #0891b2, #6d28d9);
+        --danger: #dc2626;
+        --success: #15803d;
+        --warning: #b45309;
+        --shadow-card:
+          0 1px 2px rgba(15, 23, 42, 0.08), 0 8px 28px rgba(15, 23, 42, 0.1);
+        --shadow-lift:
+          0 2px 4px rgba(15, 23, 42, 0.1), 0 14px 40px rgba(15, 23, 42, 0.14);
+        --star-opacity: 0;
+        --viewer-bg: #0d1117;
       }
 
       * {
@@ -83,11 +219,17 @@
         z-index: 0;
         pointer-events: none;
         overflow: hidden;
+        opacity: var(--star-opacity, 1);
       }
       .starfield canvas {
         display: block;
         width: 100%;
         height: 100%;
+      }
+      /* 品牌 logo 是白色描边图：浅色主题下靠 --logo-filter 压暗（见 :root[data-theme]）*/
+      .sidebar-logo .logo-mark,
+      .sidebar-logo .logo-word {
+        filter: var(--logo-filter);
       }
 
       /* ============ 主布局 ============ */
@@ -104,7 +246,7 @@
         width: var(--sidebar-width);
         min-width: var(--sidebar-width);
         height: 100%;
-        background: #0c0e18;
+        background: var(--bg-sidebar);
         border-right: 1px solid var(--glass-border);
         display: flex;
         flex-direction: column;
@@ -122,6 +264,12 @@
         gap: 10px;
         padding: 16px 16px 12px;
         flex-shrink: 0;
+      }
+      /* 任务状态图标：矢量，不用 emoji */
+      .task-item .task-status-icon svg {
+        width: 1.15rem;
+        height: 1.15rem;
+        display: block;
       }
       .sidebar-logo .logo-mark {
         height: 34px;
@@ -150,7 +298,7 @@
       }
       .sidebar-resizer:hover,
       .sidebar-resizer.dragging {
-        background: rgba(0, 212, 255, 0.35);
+        background: var(--accent-glow);
       }
       body.resizing {
         cursor: col-resize;
@@ -189,12 +337,17 @@
         position: relative;
       }
       .sidebar-nav button:hover {
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--fill-1);
         color: var(--text-primary);
       }
       .sidebar-nav button.active {
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
+        background: linear-gradient(
+          90deg,
+          var(--accent-cyan-soft),
+          transparent 72%
+        );
+        /* 主色而不是写死的白：浅色主题下侧栏是浅底，白字会直接消失 */
+        color: var(--accent-cyan);
         box-shadow: inset 3px 0 0 var(--accent-cyan);
         font-weight: 600;
       }
@@ -302,7 +455,7 @@
         position: fixed;
         inset: 0;
         z-index: 99;
-        background: rgba(0, 0, 0, 0.6);
+        background: var(--overlay);
         /* 不用 backdrop-filter：部分 WebView 引擎会把模糊错误应用到侧栏本身 */
         transition: opacity var(--transition-smooth);
       }
@@ -325,7 +478,7 @@
         background: transparent;
       }
       .main-content::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--fill-3);
         border-radius: 10px;
       }
 
@@ -370,8 +523,9 @@
         transition: all var(--transition-smooth);
       }
       .glass-card:hover {
+        background: var(--bg-card-hover);
         border-color: var(--glass-border-active);
-        box-shadow: var(--shadow-card), var(--shadow-glow);
+        box-shadow: var(--shadow-lift);
       }
       .glass-card.card-accent {
         border-left: 3px solid var(--accent-cyan);
@@ -462,12 +616,14 @@
         border-radius: 20px;
         padding: 5px 12px;
         font-size: 0.8rem;
+        /* ⚠️ 故意用固定黑白，不跟主题：它浮在**摄像头画面/视频**上，
+           底色是任意内容（不是主题面板），跟主题走反而会看不清。*/
         color: #fff;
         pointer-events: none;
         z-index: 5;
         backdrop-filter: blur(6px);
         -webkit-backdrop-filter: blur(6px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid var(--fill-4);
       }
       .recording-badge .rec-dot {
         width: 10px;
@@ -499,7 +655,7 @@
         color: var(--text-secondary);
         padding: 8px 14px;
         border-radius: var(--radius-sm);
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
         border: 1px solid var(--glass-border);
         max-width: 560px;
         transition: all var(--transition-fast);
@@ -523,7 +679,7 @@
         padding: 10px 18px;
         border-radius: 25px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--fill-1);
         color: var(--text-primary);
         cursor: pointer;
         font-size: 0.88rem;
@@ -535,9 +691,9 @@
         letter-spacing: 0.02em;
       }
       .btn:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--fill-3);
         border-color: var(--glass-border-active);
-        box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
+        box-shadow: 0 0 20px var(--accent-faint);
       }
       .btn:active {
         scale: 0.96;
@@ -558,7 +714,7 @@
         letter-spacing: 0.03em;
       }
       .btn-primary:hover {
-        box-shadow: 0 6px 28px rgba(0, 212, 255, 0.35);
+        box-shadow: 0 6px 28px var(--accent-glow);
         transform: translateY(-1px);
       }
       .btn-danger {
@@ -612,7 +768,7 @@
         max-width: 560px;
         height: 5px;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.06);
+        background: var(--fill-2);
         overflow: hidden;
         transition: opacity var(--transition-fast);
       }
@@ -622,7 +778,7 @@
         background: var(--accent-gradient);
         transition: width 0.4s ease;
         width: 0%;
-        box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+        box-shadow: 0 0 12px var(--accent-glow);
       }
       .progress-container.hidden {
         opacity: 0;
@@ -677,10 +833,12 @@
         left: 50%;
         transform: translateX(-50%);
         background: rgba(0, 0, 0, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--fill-4);
         border-radius: 22px;
         padding: 8px 18px;
         font-size: 0.9rem;
+        /* ⚠️ 故意固定黑白：它浮在 3D 视口上，而视口**故意保持深色**
+           （--viewer-bg），所以这里不跟主题。*/
         color: #fff;
         z-index: 10;
         backdrop-filter: blur(10px);
@@ -708,7 +866,7 @@
         flex-wrap: wrap;
         padding: 12px 16px;
         border-radius: var(--radius);
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
         border: 1px dashed var(--glass-border);
         font-size: 0.84rem;
         color: var(--text-secondary);
@@ -729,7 +887,7 @@
       .calibration-bar input:focus {
         outline: none;
         border-color: var(--accent-cyan);
-        box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        box-shadow: 0 0 12px var(--accent-glow);
       }
       .calibration-bar .cal-result {
         font-weight: 600;
@@ -750,7 +908,7 @@
         gap: 12px;
         padding: 13px 16px;
         border-radius: var(--radius);
-        background: rgba(255, 255, 255, 0.025);
+        background: var(--fill-1);
         border: 1px solid var(--glass-border);
         transition: all var(--transition-fast);
         cursor: default;
@@ -758,7 +916,7 @@
       }
       .task-item:hover {
         border-color: var(--glass-border-active);
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--fill-1);
       }
       .task-item .task-status-icon {
         font-size: 1.3rem;
@@ -811,12 +969,12 @@
       }
       #editorToolbar .tool-btn:hover,
       #editorToolbar .cmd-btn:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.09);
+        background: var(--fill-2);
         color: #fff;
       }
       #editorToolbar .tool-btn.active {
-        background: rgba(0, 212, 255, 0.18);
-        color: #7ff0ff;
+        background: var(--accent-wash);
+        color: var(--accent-cyan);
       }
       #editorToolbar .tool-btn.satisfied {
         color: var(--accent-cyan);
@@ -863,7 +1021,7 @@
         cursor: pointer;
       }
       .sb-pick:hover {
-        background: rgba(255, 255, 255, 0.07);
+        background: var(--fill-2);
         color: #fff;
       }
       .sb-pick-text {
@@ -894,9 +1052,9 @@
         min-width: 220px;
         max-width: min(86vw, 320px);
         border-radius: 12px;
-        background: #141a25;
+        background: var(--bg-elevated);
         border: 1px solid var(--glass-border-active);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+        box-shadow: var(--shadow-lift);
         padding: 8px;
       }
       .picker-menu.hidden {
@@ -923,7 +1081,7 @@
         cursor: pointer;
       }
       .picker-item:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.08);
+        background: var(--fill-2);
       }
       .picker-item:disabled {
         opacity: 0.45;
@@ -951,7 +1109,7 @@
       .tool-section + .tool-section {
         margin-left: 10px;
         padding-left: 10px;
-        border-left: 1px solid rgba(255, 255, 255, 0.09);
+        border-left: 1px solid var(--fill-2);
       }
       .group-label {
         font-size: 0.68rem;
@@ -1023,8 +1181,8 @@
         padding: 10px 12px;
         margin-bottom: 8px;
         border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--fill-3);
+        background: var(--fill-1);
         color: var(--text-primary, #e8ecf6);
         cursor: pointer;
       }
@@ -1040,9 +1198,9 @@
         z-index: 300;
         max-width: min(92vw, 360px);
         border-radius: 12px;
-        background: #141a25;
-        border: 1px solid var(--accent, #00d4ff);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+        background: var(--bg-elevated);
+        border: 1px solid var(--accent-cyan);
+        box-shadow: var(--shadow-lift);
         padding: 12px;
       }
       .help-pop.hidden {
@@ -1062,7 +1220,7 @@
         color: var(--text-primary, #e8ecf6);
       }
       body.help-mode .tool-btn[data-help] {
-        outline: 1px dashed rgba(0, 212, 255, 0.6);
+        outline: 1px dashed var(--accent-edge);
         outline-offset: 1px;
       }
       body.help-mode .viewer-container {
@@ -1134,9 +1292,11 @@
         margin-top: auto;
         padding: 6px 12px;
         min-height: 34px;
-        background: rgba(10, 12, 20, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 8px;
+        background: rgba(8, 10, 18, 0.96);
+        border: 1px solid var(--glass-border-active);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         font-size: 0.76rem;
         line-height: 1.5;
         color: var(--text-muted);
@@ -1150,11 +1310,11 @@
         flex: 0 0 auto;
         width: 1px;
         height: 13px;
-        background: rgba(255, 255, 255, 0.14);
+        background: var(--fill-3);
       }
       .sb-state {
         white-space: nowrap;
-        color: var(--accent, #00d4ff);
+        color: var(--accent-cyan, #22d3ee);
       }
       .sb-state.insufficient {
         color: #fbbf24;
@@ -1203,12 +1363,12 @@
         padding: 1px 8px;
         border-radius: 999px;
         font-size: 0.72rem;
-        background: rgba(255, 255, 255, 0.08);
+        background: var(--fill-2);
         color: var(--text-muted, #8792a8);
       }
       .cal-tag.calibrated {
-        background: rgba(0, 212, 255, 0.16);
-        color: #7ff0ff;
+        background: var(--accent-wash);
+        color: var(--accent-cyan);
       }
       .modal-mask {
         position: fixed;
@@ -1227,7 +1387,7 @@
         width: min(92vw, 400px);
         border-radius: 14px;
         background: #12161f;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid var(--fill-3);
         box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
         padding: 16px;
       }
@@ -1302,7 +1462,7 @@
         margin-top: 14px;
       }
       .element-props {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid var(--fill-2);
         padding: 8px 10px;
         font-size: 0.74rem;
         line-height: 1.6;
@@ -1339,7 +1499,7 @@
         padding: 9px 16px;
         border-radius: 22px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
         cursor: pointer;
         font-size: 0.84rem;
         color: var(--text-secondary);
@@ -1352,10 +1512,11 @@
         color: #fff;
       }
       .radio-pill.selected {
-        background: rgba(0, 212, 255, 0.12);
+        background: var(--accent-wash);
         border-color: var(--accent-cyan);
-        color: #fff;
-        box-shadow: 0 0 16px rgba(0, 212, 255, 0.15);
+        /* 同上：白字在浅色主题的浅底上看不见 */
+        color: var(--accent-cyan);
+        box-shadow: 0 0 16px var(--accent-wash);
       }
       /* 有风险的选项（如 224：会被裁成正方形，仅适合快速预览） */
       .radio-pill.radio-warn {
@@ -1389,7 +1550,7 @@
         border: 1px solid rgba(251, 191, 36, 0.3);
       }
       .tag-muted {
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--fill-1);
         color: var(--text-muted);
         border: 1px solid var(--glass-border);
       }
@@ -1407,7 +1568,7 @@
         padding: 8px 10px;
         border: 1px solid var(--glass-border);
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
       }
       .tool-group,
       .command-group {
@@ -1419,15 +1580,20 @@
       .tool-sep {
         width: 1px;
         height: 20px;
-        background: var(--glass-border);
-        margin: 0 4px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          var(--glass-border-active),
+          transparent
+        );
+        margin: 0 5px;
       }
       .tool-btn,
       .cmd-btn {
         padding: 7px 11px;
         border-radius: 8px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
         color: var(--text-secondary);
         font-family: inherit;
         font-size: 0.82rem;
@@ -1441,7 +1607,7 @@
       }
       /* 工具组是模态的：只有一个是「按下」状态 */
       .tool-btn.active {
-        background: rgba(0, 212, 255, 0.14);
+        background: var(--accent-wash);
         border-color: var(--accent-cyan);
         color: #fff;
       }
@@ -1483,7 +1649,11 @@
         flex: 1 1 auto;
         min-width: 0;
       }
-      /* 万向轴（方向梭镜）：右下角覆盖层，负责接管指针事件 */
+      /* 万向轴（三环）：右下角覆盖层，只负责接管指针事件。
+         环是**画在它下面那张 canvas 上**的（scissor 小视口），所以这个 div
+         ⚠️ 绝不能有背景或 backdrop-filter —— 一层半透明底 + blur 会把环
+         糊成一团（实测：加过 blur(6px) 后环完全看不清）。
+         环的姿态固定：用户要的是「环固定，用它转」，不是「环跟着模型转」。*/
       .gizmo-pad {
         position: absolute;
         right: 10px;
@@ -1491,9 +1661,9 @@
         width: 96px;
         height: 96px;
         z-index: 25;
-        border-radius: 12px;
-        background: rgba(8, 10, 18, 0.42);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: transparent;
+        border: none;
         cursor: grab;
         touch-action: none;
       }
@@ -1509,7 +1679,7 @@
         flex-direction: column;
         border: 1px solid var(--glass-border);
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
         overflow: hidden;
       }
       .element-head {
@@ -1547,10 +1717,10 @@
         color: var(--text-secondary);
       }
       .element-row:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--fill-1);
       }
       .element-row.selected {
-        background: rgba(0, 212, 255, 0.12);
+        background: var(--accent-wash);
         color: #fff;
       }
       .element-row.pending {
@@ -1565,7 +1735,7 @@
         font-size: 0.72rem;
         padding: 1px 5px;
         border-radius: 5px;
-        background: rgba(255, 255, 255, 0.06);
+        background: var(--fill-2);
       }
       .element-value {
         margin-left: auto;
@@ -1637,7 +1807,7 @@
         padding: 5px;
         border-radius: 7px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--fill-1);
         color: #fff;
         font-family: var(--font-mono);
         text-transform: lowercase;
@@ -1675,14 +1845,14 @@
         padding: 7px 9px;
         border-radius: 9px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--fill-1);
       }
       .server-row input,
       .server-row select {
         padding: 4px 7px;
         border-radius: 7px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--fill-1);
         color: var(--text-primary);
         font-size: 0.78rem;
       }
@@ -1739,7 +1909,7 @@
         line-height: 1;
         border-radius: 7px;
         border: 1px solid var(--glass-border);
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--fill-1);
         color: var(--text-secondary);
         cursor: pointer;
         font-size: 0.8rem;
@@ -1810,7 +1980,7 @@
         box-sizing: border-box;
         padding: 10px 12px;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--fill-1);
         border: 1px solid var(--glass-border);
         color: var(--text-primary);
         font-size: 0.9rem;
@@ -1819,7 +1989,7 @@
       }
       .auth-field input:focus {
         border-color: var(--accent-cyan);
-        box-shadow: 0 0 12px rgba(0, 212, 255, 0.18);
+        box-shadow: 0 0 12px var(--accent-wash);
       }
       .auth-account-row {
         display: flex;
@@ -1828,7 +1998,7 @@
         gap: 10px;
         padding: 10px 12px;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--fill-1);
         border: 1px solid var(--glass-border);
         margin-bottom: 12px;
       }
@@ -1873,7 +2043,7 @@
         padding-left: 18px;
       }
       .help-section code {
-        background: rgba(255, 255, 255, 0.06);
+        background: var(--fill-2);
         padding: 2px 7px;
         border-radius: 4px;
         font-family: var(--font-mono);
@@ -1952,7 +2122,7 @@
           /* 折叠时完全不渲染侧栏：彻底杜绝模糊残留/边缘伪影（Qt WebView 等引擎差异） */
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          background: #0c0e18;
+          background: var(--bg-sidebar);
           transition:
             transform var(--transition-smooth),
             visibility 0s linear 0.3s;
@@ -2040,7 +2210,7 @@
             <span class="nav-icon">⚙</span> 设置
           </button>
           <button data-page="help">
-            <span class="nav-icon">❓</span> 帮助
+            <span class="nav-icon">❓</span> 帮助文档
           </button>
           <button data-page="promo">
             <span class="nav-icon">📣</span> 推广
@@ -2192,7 +2362,7 @@
                 id="axesToggleBtn"
                 data-help="万向轴（方向棱镜）：右下角显示当前姿态。抓住某条圈拖动 → 只绕该轴旋转；抓不到圈不响应。关掉就隐藏且不可用。"
               >
-                🧭 三维轴
+                🧭 万向轴
               </button>
               <button
                 class="tool-btn"
@@ -2238,6 +2408,13 @@
                 data-help="帮助模式：打开后点任意按钮或视图区域，就会显示它的用途说明。"
               >
                 ❓ 帮助
+              </button>
+              <button
+                class="tool-btn"
+                id="helpDocBtn"
+                data-help="打开帮助文档：从采集、重建、测量到服务商与 API Key 的逐条说明。"
+              >
+                📖 文档
               </button>
             </div>
 
@@ -2311,7 +2488,7 @@
               <div class="viewer-container" id="viewerContainer"></div>
               <div class="viewer-stats-overlay" id="viewerStats"></div>
               <!-- 测量chip（在viewerContainer内动态创建） -->
-              <!-- 万向轴（方向梭镜）：显示方向 + 拖动旋转；开关控制可见与可用 -->
+              <!-- 万向轴（三环）：姿态固定，抓住某条环拖动 → 只绕那条世界轴转 -->
               <div
                 class="gizmo-pad hidden"
                 id="gizmoPad"
@@ -2488,7 +2665,21 @@
               id="refreshTasksBtn"
               style="margin-top: 10px"
             >
-              🔄 刷新
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                width="15"
+                height="15"
+                aria-hidden="true"
+              >
+                <path d="M20.4 12a8.4 8.4 0 1 1-2.46-5.94" />
+                <path d="M20.4 4.8v4.8h-4.8" />
+              </svg>
+              刷新
             </button>
           </div>
         </section>
@@ -2598,6 +2789,29 @@
           <!-- ---- 界面 ---- -->
           <div class="settings-group hidden" data-settings-panel="ui">
             <div class="glass-card">
+              <h3>主题</h3>
+              <p class="card-subtitle" style="margin-bottom: 10px">
+                只改配色，不改布局与功能。选完立即生效，并记住你的选择。
+              </p>
+              <div class="radio-group" id="themeGroup">
+                <button class="radio-pill" data-theme-pick="deep">
+                  深空青（默认）
+                </button>
+                <button class="radio-pill" data-theme-pick="slate">
+                  石板
+                </button>
+                <button class="radio-pill" data-theme-pick="violet">
+                  星云紫
+                </button>
+                <button class="radio-pill" data-theme-pick="amber">
+                  暖琥珀
+                </button>
+                <button class="radio-pill" data-theme-pick="light">
+                  明亮
+                </button>
+              </div>
+            </div>
+            <div class="glass-card">
               <h3>工具组</h3>
               <div class="tool-layout" id="toolLayout"></div>
             </div>
@@ -2641,7 +2855,7 @@
                 <input
                   type="checkbox"
                   id="gridGroundToggle"
-                  data-help="开启后，参考网格会自动转到点云的主平面（用最低那层点拟合出的「地面」），不再固定贴着世界水平面。只转网格、不动点云 —— 没有 AR 位姿时「哪个方向是重力」本来就是模型猜的。"
+                  data-help="开启后，参考网格会自动转到点云的主平面（用最低那层点拟合出的「地面」），不再固定贴着世界水平面。只转网格、不动点云。"
                 />
                 网格贴合点云地面
               </label>
@@ -2726,13 +2940,12 @@
               </div>
             </div>
             <!-- ===== 留档结束 ===== -->
-          </div>
         </section>
 
         <!-- ==================== 帮助页 ==================== -->
         <section class="page help-section" id="page-help">
           <div class="glass-card">
-            <h3>帮助</h3>
+            <h3>帮助文档</h3>
             <h4>采集视频</h4>
             <p>
               三种方式：① 点「● 录制」用摄像头录视频（需浏览器授权，推荐
@@ -2792,8 +3005,8 @@
                 <strong>滚转：</strong>双指扭转；也可以在设置里给旋转键绑键位。
               </li>
               <li>
-                <strong>万向轴：</strong
-                >右下角的方向棱镜显示当前姿态：抓住某条圈拖动就只绕那条轴旋转（抓不到圈不响应）。不需要时可以从工具栏关掉。
+                <strong>万向轴（三环）：</strong
+                >右下角的方向棱镜显示当前姿态：抓住某条圈拖动就只绕那条轴旋转（抓不到圈不响应）。不需要时可以从工具栏的「万向轴」关掉。
               </li>
               <li>
                 <strong>重置视角：</strong>工具栏的 ⤾ ，把点云重新放到画面中央。
@@ -2996,7 +3209,8 @@
         huaweiFusion: false, // 查看器是否融合华为点云
         colorMode: "rgb", // 'rgb'（真实颜色）| 'height'（按高度着色）
         cloudColors: null, // {rgb, height} 两种着色快照，供颜色开关切换
-        axesVisible: false, // 万向轴（方向棱镜）是否显示；初始化时按本地设置覆盖
+        axesVisible: false, // 万向轴（三环）是否显示；初始化时按本地设置覆盖
+        theme: "deep", // 当前主题名（定义见 :root[data-theme=...]）
         unit: "m", // 标尺默认单位：m | cm | mm
         helpMode: false, // 帮助模式（点按钮/视图看说明）
         toolLayout: null, // 工具组顺序与可见性 [{tool, visible}]
@@ -3109,6 +3323,7 @@
         clearViewerBtn: $("#clearViewerBtn"),
         resetViewBtn: $("#resetViewBtn"),
         helpBtn: $("#helpBtn"),
+        helpDocBtn: $("#helpDocBtn"),
         // 编辑器（#30 #31 #34）
         editorToolbar: $("#editorToolbar"),
         toolGroup: $("#toolGroup"),
@@ -4907,7 +5122,7 @@
         btn.disabled = !has;
         btn.classList.toggle("satisfied", !!STATE.huaweiFusion);
         btn.title = has
-          ? `华为点云融合：${STATE.huaweiFusion ? "已叠显（点击关闭）" : "点击叠加显示"} —— 共 ${STATE.huaweiPoints.length.toLocaleString()} 个 AR 点`
+          ? `华为点云融合：${STATE.huaweiFusion ? "已叠显（点击关闭）" : "点击叠加显示"}`
           : "华为点云融合：没有 AR 点云（需先用 App 做 AR 扫描）";
       }
 
@@ -5547,8 +5762,16 @@
             }
             return mode;
           },
-          // ---- 供万向轴（方向棱镜）调用 ----
-          // 绕**世界轴** x/y/z 刚性旋转机位，角度为弧度
+          rotateFreeBy(dxPx, dyPx) {
+            const rect = dom.getBoundingClientRect();
+            const perPx = 180 / Math.max(rect.height, 1);
+            yaw(-THREE.MathUtils.degToRad(dxPx * perPx));
+            pitch(-THREE.MathUtils.degToRad(dyPx * perPx));
+          },
+          stopRotation: stopAllHolds,
+          // ---- 供万向轴（三环）拖动调用 ----
+          // 绕**世界轴** x/y/z 刚性旋转机位，角度为弧度。
+          // 环的姿态固定，所以「抓哪条环 = 绕哪条世界轴」在屏幕上也是固定的。
           rotateWorldAxis(axisName, angle) {
             const a =
               axisName === "x"
@@ -5558,14 +5781,6 @@
                   : new THREE.Vector3(0, 1, 0);
             rotateWorld(a, angle);
           },
-          // 按屏幕方向自由旋转：与在画布上拖动同手感
-          rotateFreeBy(dxPx, dyPx) {
-            const rect = dom.getBoundingClientRect();
-            const perPx = 180 / Math.max(rect.height, 1);
-            yaw(-THREE.MathUtils.degToRad(dxPx * perPx));
-            pitch(-THREE.MathUtils.degToRad(dyPx * perPx));
-          },
-          stopRotation: stopAllHolds,
         };
       }
 
@@ -5587,7 +5802,8 @@
         const w = container.clientWidth;
         const h = container.clientHeight || 400;
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color("#080a12");
+        // 底色取自 CSS token，换主题时由 syncViewerBackground 再同步一次
+        scene.background = new THREE.Color(viewerBgColor());
         STATE.viewerScene = scene;
         const camera = new THREE.PerspectiveCamera(
           55,
@@ -5601,7 +5817,7 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(w, h);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor("#080a12");
+        renderer.setClearColor(viewerBgColor());
         container.appendChild(renderer.domElement);
         STATE.viewerRenderer = renderer;
         const controls = createCameraRig(camera, renderer.domElement);
@@ -5645,7 +5861,7 @@
           if (STATE.viewerControls) STATE.viewerControls.update();
           if (STATE.viewerRenderer && STATE.viewerScene && STATE.viewerCamera) {
             STATE.viewerRenderer.render(STATE.viewerScene, STATE.viewerCamera);
-            syncGizmo();
+            syncGizmo(); // 每条环只绕自己的轴转（见 syncGizmo）
             renderGizmo();
           }
         }
@@ -5857,14 +6073,14 @@
         updateViewButtons();
       }
 
-      // ==================== 万向轴（航空式方向棱镜）====================
-      // 为什么不用场景里的 AxesHelper：那只是一组静态参考线，不能用来转视角。
-      // 这里用一个 96×96 的小视口画「方向棱镜」：
-      //   - 三条环分别绕世界 X / Y / Z，环的朝向跟随主相机 → 看到的就是当前姿态；
-      //   - **抓住哪条圈就只绕那条轴转**（按抓点切向拖动 → 转多少），
-      //     抓不到圈（包括中心）就完全不响应 —— 没有自由旋转；
-      //   - 开关同时控制它的**可见性与可用性**（隐藏时连覆盖层一起收起，
-      //     指针事件落回画布，不会被吃掉）。
+      // ==================== 万向轴（三环 / 方向棱镜）====================
+      // 三条环分别绕世界 X / Y / Z。**环的位置与朝向都是固定的**（不跟随相机），
+      // 抓住某条环拖动就只绕那条世界轴转 —— 用户要的是「环固定、用它来转」，
+      // 而不是「环跟着模型一起转」。
+      //   为什么"跟随相机"会被当成 bug：点云是静止的、拖画布其实是在转**相机**，
+      //   所以跟随相机的环看起来就像「贴在模型上的轴标记」，跟着模型一起转。
+      //   固定朝向之后，「哪条环 = 哪条世界轴」在屏幕上永远不变，更好用。
+      // 开关同时控制可见与可用（隐藏时连覆盖层一起收起，指针事件落回画布）。
       const GIZMO_PX = 96; // 与 .gizmo-pad 的 CSS 尺寸保持一致
       const GIZMO_INSET = 10; // 与 .gizmo-pad 的 right/bottom 一致
       const GIZMO_SIGN = 1; // 轴向拖动的正负号（与画布拖动方向对齐）
@@ -5877,6 +6093,8 @@
         { axis: "y", color: 0x4ade80 },
         { axis: "z", color: 0x60a5fa },
       ];
+      // 每条环只绕**自己的轴**转，所以不需要什么固定姿态常量。
+      // 具体怎么转见 syncGizmo。
       let gizmo = null;
       const _gizmoProbe = new THREE.Vector3();
 
@@ -5915,6 +6133,12 @@
         return gizmo;
       }
 
+      // 棱镜朝向 = 主相机姿态的逆（这样环就等于世界轴在屏幕上的样子）
+      function syncGizmo() {
+        if (!gizmo || !STATE.viewerCamera) return;
+        gizmo.group.quaternion.copy(STATE.viewerCamera.quaternion).invert();
+      }
+
       // 开关：可见 + 可用一起切
       function updateGizmo() {
         if (dom.gizmoPad) {
@@ -5923,19 +6147,13 @@
         if (STATE.axesVisible) initGizmo();
       }
 
-      // 棱镜朝向 = 主相机姿态的逆（这样环就等于世界轴在屏幕上的样子）
-      function syncGizmo() {
-        if (!gizmo || !STATE.viewerCamera) return;
-        gizmo.group.quaternion.copy(STATE.viewerCamera.quaternion).invert();
-      }
-
       function renderGizmo() {
         const r = STATE.viewerRenderer;
         if (!r || !gizmo || !STATE.axesVisible) return;
         const w = r.domElement.clientWidth || 1;
         const h = r.domElement.clientHeight || 1;
         r.autoClear = false;
-        r.clearDepth(); // 棱镜永远画在最上层
+        r.clearDepth(); // 环永远画在最上层
         r.setScissorTest(false);
         r.setViewport(
           w - GIZMO_PX - GIZMO_INSET,
@@ -5957,10 +6175,10 @@
         const cx = rect.width / 2;
         const cy = rect.height / 2;
         if (Math.hypot(mx - cx, my - cy) < GIZMO_HUB_PX) return null;
-        // 不用 raycaster：环的管半径只有 0.045 世界单位（≈1.5px），
-        // 细到这个程度基本点不中。改成「把每条环采样投到挂载层，
-        // 取离指针最近的那条」，容差可调，侧看压扁成线时同样能点中。
-        // 除了轴名，还带回「抓点位置 / 该环的屏幕半径 / 挂载层中心」，
+        // 不用 raycaster：环的管半径只有 0.07 世界单位（≈2px），细到这个程度
+        // 基本点不中。改成「把每条环采样投到覆盖层，取离指针最近的那条」，
+        // 容差可调，侧看压扁成线时同样能点中。
+        // 除了轴名，还带回「抓点位置 / 该环的屏幕半径 / 覆盖层中心」，
         // 拖动时用它算**切向**位移 → 只绕这条轴的圈转。
         let best = null;
         let bestD = Infinity;
@@ -6009,12 +6227,12 @@
         return best;
       }
 
-      // 抓住某条圈后，拖动方向怎么映射到旋转量。
+      // 抓住某条环后，拖动方向怎么映射到旋转量。
       // 关键：**只看「抓取点 → 当前指针」的相对方向**，而且把「环在屏幕上的
       // 局部运动」当作基准：
       //   - 环面朝你（屏幕上是个圆）→ 抓点就跟着指针走；
-      //   - 环侧看是一条线（比如绕屏幕竖直方向的轴）→ 指针在抓取点**上方**
-      //     就把这段弧推**向屏幕内**，在下方就拉**向屏幕外**。
+      //   - 环侧看是一条线 → 指针在抓取点**上方**就把这段弧推**向屏幕内**，
+      //     在下方就拉**向屏幕外**。
       // 实现上：算出绕该轴 +1 弧度时抓点在**视图空间**的位移 m，
       // 屏幕方向取 (m.x, -m.y + m.z)：竖直分量照搬，深度分量折到屏幕竖直轴上
       // （+z 朝观察者 ⇒ 向上代表向屏幕内），灵敏度用环的投影半径。
@@ -6051,7 +6269,7 @@
         return { x: ux, y: uy };
       }
 
-      // 悬停高亮：指到哪条圈就把哪条点亮（其余变淡）
+      // 悬停高亮：指到哪条环就把哪条点亮（其余变淡）
       function setGizmoHover(axis) {
         if (!gizmo) return;
         for (const ring of gizmo.rings) {
@@ -6070,8 +6288,8 @@
         pad.addEventListener("pointerdown", (ev) => {
           if (!STATE.axesVisible || !STATE.viewerControls) return;
           initGizmo();
-          // 只认「抓住了哪个圈」：抓不到圈（包括中心）就完全不响应 ——
-          // 没有自由旋转，也不会因为抓错圈而绕别的轴转。
+          // 只认「抓住了哪个环」：抓不到环（包括中心）就完全不响应 ——
+          // 没有自由旋转，也不会因为抓错环而绕别的轴转。
           const hit = gizmoAxisAt(ev);
           if (!hit) {
             setGizmoHover(null);
@@ -6084,7 +6302,7 @@
           } catch (_) {
             /* 忽略 */
           }
-          // 拖动基准 = 抓取点：把「抓取点→当前指针」的位移投影到这条圈的
+          // 拖动基准 = 抓取点：把「抓取点→当前指针」的位移投影到这条环的
           // 局部运动方向上（方向里已经含了「上=向屏幕内」的约定）
           const dir = gizmoDragVector(hit.axis, hit.pl, hit.radius);
           const den = dir.x * dir.x + dir.y * dir.y;
@@ -6155,6 +6373,7 @@
         redoBtn: `${_SVG_OPEN}<path d="M14.8 7.8l3.8 3.8-3.8 3.8"/><path d="M18.6 11.6h-8.1a4.4 4.4 0 0 0 0 8.8h3.2"/></svg>`,
         resetViewBtn: `${_SVG_OPEN}<path d="M4 9V5.6A1.6 1.6 0 0 1 5.6 4H9M20 9V5.6A1.6 1.6 0 0 0 18.4 4H15M4 15v3.4A1.6 1.6 0 0 0 5.6 20H9M20 15v3.4A1.6 1.6 0 0 1 18.4 20H15"/><circle cx="12" cy="12" r="2.5"/></svg>`,
         helpBtn: `${_SVG_OPEN}<circle cx="12" cy="12" r="8.6"/><path d="M9.7 9.8a2.4 2.4 0 1 1 3.1 2.3c-.7.25-.8.75-.8 1.2v.4"/><circle cx="12" cy="16.8" r=".95" fill="currentColor" stroke="none"/></svg>`,
+        helpDocBtn: `${_SVG_OPEN}<path d="M4.6 5.4h4.9a2.6 2.6 0 0 1 2.5 1.5 2.6 2.6 0 0 1 2.5-1.5h4.9v12.1h-4.9a2.4 2.4 0 0 0-2.5 1.4 2.4 2.4 0 0 0-2.5-1.4H4.6z"/><path d="M12 6.9v12"/></svg>`,
         "tool:select": `${_SVG_OPEN}<path d="M6 4.2 17 11.2l-4.6.9-1.8 4.4z"/></svg>`,
         "tool:box2d": `${_SVG_OPEN}<rect x="3.8" y="6" width="16.4" height="12" rx="1.6" stroke-dasharray="3.2 2.8"/></svg>`,
         "tool:pan": `${_SVG_OPEN}<path d="M8.1 11.4V6.9a1.3 1.3 0 0 1 2.6 0v4.2"/><path d="M10.7 11V5.4a1.3 1.3 0 0 1 2.6 0V11"/><path d="M13.3 11.2V6.7a1.3 1.3 0 0 1 2.6 0v6.6"/><path d="M8.1 11.4v1.2l-1.2-1.4a1.34 1.34 0 0 0-2 1.8l3.3 4.1a5.6 5.6 0 0 0 4.4 2.1h1.2a4.2 4.2 0 0 0 4.2-4.2v-2.7"/></svg>`,
@@ -6168,13 +6387,14 @@
       const TOOLBAR_NAMES = {
         huaweiFusionBtn: "华为点云融合",
         colorModeBtn: "颜色",
-        axesToggleBtn: "三维轴",
+        axesToggleBtn: "万向轴",
         exportBtn: "导出",
         clearViewerBtn: "清空查看器",
         undoBtn: "撤销",
         redoBtn: "重做",
         resetViewBtn: "重置视角",
         helpBtn: "帮助",
+        helpDocBtn: "帮助文档",
         "tool:select": "选择",
         "tool:box2d": "框选",
         "tool:pan": "移动",
@@ -6196,7 +6416,10 @@
           const name = TOOLBAR_NAMES[key] || "";
           btn.dataset.name = name;
           btn.setAttribute("aria-label", name);
-          if (name) btn.title = `${name}——${btn.dataset.help || ""}`;
+          // 悬浮提示**只给名称**。以前是「名称 + 破折号 + data-help 全文」，
+          // 名称被重复一遍不说，还让悬浮文案和帮助文案两处各改各的、迟早对不上。
+          // 详细说明看「帮助模式」：它会读 data-help。
+          if (name) btn.title = name;
         });
         document
           .querySelectorAll("#editorToolbar .group-label")
@@ -7274,7 +7497,7 @@
         reloadAnnotations();
         alignGridToGround(); // 网格贴合点云主平面（「地面」）
         fitViewToCloud(); // 取景
-        applyCloudExtras(); // 颜色模式 + 三维轴
+        applyCloudExtras(); // 颜色模式 + 万向轴
         updateViewButtons();
         // 真实尺度来源：优先服务器对齐出的 scale（会话级、会落库），
         // 其次 AR 桥上报的 scale。
@@ -8115,6 +8338,11 @@
         return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
       }
 
+      // 历史记录的状态图标（矢量）：勾 / 叉 / 时钟
+      const TASK_ICON_DONE = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.9 17.7 19.2 6.6"/></svg>`;
+      const TASK_ICON_FAILED = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6"/></svg>`;
+      const TASK_ICON_PENDING = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.6V12l3 1.8"/></svg>`;
+
       async function loadTaskList() {
         dom.taskList.innerHTML =
           '<span style="color:var(--text-muted);font-size:0.84rem;">加载中...</span>';
@@ -8130,12 +8358,14 @@
           }
           dom.taskList.innerHTML = sessions
             .map((s) => {
+              // 状态图标用矢量而不是 emoji：emoji 的字形与配色随平台/主题变，
+              // 在浅色主题里还容易跟背景撞色。
               const statusIcon =
                 s.status === "done"
-                  ? "✅"
+                  ? TASK_ICON_DONE
                   : s.status === "failed"
-                    ? "❌"
-                    : "⏳";
+                    ? TASK_ICON_FAILED
+                    : TASK_ICON_PENDING;
               const viewsText =
                 s.num_views != null ? ` · ${s.num_views} 个视角` : "";
               // 不显示内部比例系数与会话编号：对使用者没有意义
@@ -9798,7 +10028,7 @@
         { id: "redo", label: "重做", def: "y", btn: "redoBtn" },
         { id: "resetView", label: "重置视角", def: "f", btn: "resetViewBtn" },
         { id: "color", label: "切换颜色", def: "c", btn: "colorModeBtn" },
-        { id: "axes", label: "三维轴开关", def: "g", btn: "axesToggleBtn" },
+        { id: "axes", label: "万向轴开关", def: "g", btn: "axesToggleBtn" },
         { id: "export", label: "导出 PLY", def: "v", btn: "exportBtn" },
         {
           id: "clearViewer",
@@ -9897,6 +10127,11 @@
           updateGizmo();
           updateViewButtons();
         });
+      }
+      if (dom.helpDocBtn) {
+        // 帮助“文档”与帮助“模式”是两回事：一个是逐条说明的页面，
+        // 一个是「点控件看用途」的交互。入口分开放，免得互相掩盖。
+        dom.helpDocBtn.addEventListener("click", () => navigateTo("help"));
       }
       if (dom.exportBtn)
         dom.exportBtn.addEventListener("click", openExportDialog);
@@ -10172,11 +10407,88 @@
       STATE.model = readLS("omni3d.model") || "fast3r";
       STATE.model = readLS("omni3d.model") || "fast3r";
       STATE.toolLayout = loadToolLayout();
+      // ==================== 主题 ====================
+      // 主题全都定义在 CSS 里（`:root[data-theme=...]` 只覆盖变量），
+      // 这里只负责「选、存、套用」，外加把 3D 视口的底色同步过去 ——
+      // three.js 读不到 CSS 变量，它的 background / clearColor 是**值**不是变量。
+      const THEMES = ["deep", "slate", "violet", "amber", "light"];
+      const THEME_LS = "omni3d.theme";
+
+      function readThemeToken(name, fallback) {
+        const v = getComputedStyle(document.documentElement)
+          .getPropertyValue(name)
+          .trim();
+        return v || fallback;
+      }
+
+      function viewerBgColor() {
+        return readThemeToken("--viewer-bg", "#080a12");
+      }
+
+      function syncViewerBackground() {
+        const c = viewerBgColor();
+        const scene = STATE.viewerScene;
+        if (scene) {
+          if (scene.background && scene.background.isColor) {
+            scene.background.set(c);
+          } else {
+            scene.background = new THREE.Color(c);
+          }
+        }
+        if (STATE.viewerRenderer) STATE.viewerRenderer.setClearColor(c);
+      }
+
+      function paintThemeButtons() {
+        document
+          .querySelectorAll("#themeGroup [data-theme-pick]")
+          .forEach((b) => {
+            b.classList.toggle("selected", b.dataset.themePick === STATE.theme);
+          });
+      }
+
+      function applyTheme(name) {
+        const t = THEMES.includes(name) ? name : "deep";
+        // deep 是 :root 上的基础值，不写属性 —— 少一层覆盖，排查时也清楚
+        if (t === "deep") {
+          document.documentElement.removeAttribute("data-theme");
+        } else {
+          document.documentElement.setAttribute("data-theme", t);
+        }
+        STATE.theme = t;
+        paintThemeButtons();
+        syncViewerBackground();
+      }
+
+      function initTheme() {
+        const group = document.getElementById("themeGroup");
+        if (group) {
+          group.addEventListener("click", (e) => {
+            const b = e.target.closest("[data-theme-pick]");
+            if (!b) return;
+            const t = b.dataset.themePick;
+            try {
+              writeLS(THEME_LS, t);
+            } catch (_) {
+              /* 忽略 */
+            }
+            applyTheme(t);
+          });
+        }
+        let saved = null;
+        try {
+          saved = readLS(THEME_LS);
+        } catch (_) {
+          saved = null;
+        }
+        applyTheme(saved);
+      }
+
       // 万向轴：默认显示（用户明确要的功能），记住上次开关
       const gizmoSaved = readLS("omni3d.gizmo");
       STATE.axesVisible = gizmoSaved === null ? true : gizmoSaved === "1";
       paintToolbarIcons();
       paintNavIcons();
+      initTheme();
       initGizmoPad();
       updateGizmo();
       initSidebarResizer();

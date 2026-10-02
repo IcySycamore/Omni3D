@@ -178,6 +178,10 @@ jedyang97/
 # ---- IDE ----
 .idea/
 
+# ---- 前端 JS 自检产物（scripts/_check_js.py / _check_portal_js.py 生成）----
+scripts/_index_module.mjs
+scripts/_portal_module.mjs
+
 # ---- 会话报告（需要版本控制时删掉这几行）----
 Omni3D_系统分析报告.html
 Omni3D_尺度方案审计与开发方向.html

@@ -22,6 +22,7 @@ API 端口」推）。这只是**第一次使用（注册账号 / 匿名）时�
 from __future__ import annotations
 
 import os
+import time
 
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles

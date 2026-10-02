@@ -241,6 +241,185 @@ class TestSettingsTabs:
             assert glyph not in index_html
 
 
+class TestThemes:
+    """主题：只覆盖 CSS 变量，能在设置里切换并记住。"""
+
+    _TOKENS = (
+        "--bg-deep",
+        "--bg-card",
+        "--accent-cyan",
+        "--star-opacity",
+        "--viewer-bg",
+    )
+
+    @pytest.mark.parametrize("name", ["slate", "violet", "amber"])
+    def test_each_theme_covers_all_key_tokens(self, index_html, name: str):
+        """漏覆盖 token 的后果是「切过去之后某处还是上个主题的颜色」。"""
+        marker = f':root[data-theme="{name}"]'
+        assert marker in index_html, f"没有 {name} 主题块"
+        block = index_html.split(marker)[1].split("}")[0]
+        missing = [t for t in self._TOKENS if t not in block]
+        assert not missing, f"{name} 缺少 {missing}"
+
+    def test_choices_are_in_settings_and_include_default(self, index_html):
+        for name in ("deep", "slate", "violet", "amber"):
+            assert f'data-theme-pick="{name}"' in index_html
+        assert 'id="themeGroup"' in index_html
+
+    def test_theme_is_persisted_and_applied(self, index_html):
+        assert "omni3d.theme" in index_html
+        assert "function applyTheme" in index_html
+        assert "documentElement.setAttribute(\"data-theme\"" in index_html
+        assert "function initTheme" in index_html
+
+    def test_viewer_bg_follows_the_token_not_hardcoded(self, index_html):
+        """three.js 的 background / clearColor 是**值**不是 CSS 变量，
+        写死的话换主题后 3D 视口会留着一块上个主题的底色。"""
+        assert 'new THREE.Color("#080a12")' not in index_html
+        assert 'setClearColor("#080a12")' not in index_html
+        assert "viewerBgColor()" in index_html
+        assert "function syncViewerBackground" in index_html
+
+    def test_light_theme_keeps_the_viewer_dark(self, index_html):
+        """浅色主题下 3D 视口**必须**保持深色。
+
+        点云的「按高度着色」是蓝→白渐变，放在浅底上基本看不见；
+        浅色的 3D 工具（Figma / Blender）也都是让视口保持深色。
+        """
+        import re
+
+        block = index_html.split(':root[data-theme="light"]')[1].split("}")[0]
+        m = re.search(r"--viewer-bg:\s*#([0-9a-fA-F]{6})", block)
+        assert m, "light 主题没写 --viewer-bg"
+        h = m.group(1)
+        r, g, b = (int(h[i : i + 2], 16) for i in (0, 2, 4))
+        assert (r + g + b) / 3 < 90, f"浅色主题的视口底色太亮（{h}），点云会看不清"
+
+    def test_selected_states_do_not_use_hardcoded_white_text(self, index_html):
+        """选中态曾经写死 `color: #fff` —— 浅色主题下白字落在浅底上直接隐形。"""
+        for sel in (".sidebar-nav button.active {", ".radio-pill.selected {"):
+            block = index_html.split(sel)[1].split("}")[0]
+            assert "color: #fff" not in block, f"{sel} 又用写死的白字了"
+
+    @pytest.mark.parametrize("name", ["deep", "slate", "violet", "amber", "light"])
+    def test_every_theme_defines_accent_derivatives(self, index_html, name: str):
+        """青色的半透明派生（描边/发光/选中底）漏掉的话，会退回 :root 的青色，
+        与主题主色不搭 —— 比如暖琥珀主题里冒出一道青光。"""
+        if name == "deep":
+            block = index_html.split(":root {")[1].split("}")[0]
+        else:
+            block = index_html.split(f':root[data-theme="{name}"]')[1].split("}")[0]
+        missing = [
+            t
+            for t in ("--accent-faint", "--accent-wash", "--accent-glow", "--accent-edge")
+            if t not in block
+        ]
+        assert not missing, f"{name} 缺少 {missing}"
+
+
+    def test_no_orphan_tokens(self, index_html):
+        """定义了却没人用的 token = 换主题时那一处不动。
+
+        侧栏就这么坏过：`--bg-sidebar` 在 5 个主题里都定义好了，但 `.sidebar`
+        的 `background` 写死 `#0c0e18`（移动端媒体查询里还有第二处），
+        于是浅色主题下侧栏依然是深色 —— 光看代码很难发现。
+        """
+        import re
+
+        style = index_html.split("<style>")[1].split("</style>")[0]
+        root = style.split(":root {")[1].split("}")[0]
+        defs = re.findall(r"(--[a-z0-9-]+)\s*:", root)
+        allowed = {
+            # 给 JS 读的（getComputedStyle），不经过 var()
+            "--viewer-bg",
+            "--star-opacity",
+            "--logo-filter",
+            # 主题体系成型前就存在的预留变量（本轮不动它们）
+            "--accent-purple",
+            "--radius-xl",
+            "--shadow-glow",
+        }
+        unused = [d for d in defs if f"var({d})" not in style and d not in allowed]
+        assert not unused, f"这些 token 定义了却没人用：{unused}"
+
+    def test_theme_blocks_have_no_stray_tokens(self, index_html):
+        """主题块里多定义了 `:root` 没有的变量 = 只会在那一个主题里凭空出现，
+        基本是删变量时漏删的残渣。"""
+        import re
+
+        style = index_html.split("<style>")[1].split("</style>")[0]
+        root = style.split(":root {")[1].split("}")[0]
+        base = set(re.findall(r"(--[a-z0-9-]+)\s*:", root))
+        for name in ("slate", "violet", "amber", "light"):
+            blk = style.split(f':root[data-theme="{name}"]')[1].split("}", 1)[0]
+            extra = [v for v in re.findall(r"(--[a-z0-9-]+)\s*:", blk) if v not in base]
+            assert not extra, f"{name} 多定义了 {extra}"
+
+    def test_sidebar_background_follows_the_token(self, index_html):
+        """侧栏背景必须走变量 —— 写死的话浅色主题下侧栏还是深色。
+
+        ⚠️ 有**两处**：基础规则 + 移动端媒体查询里各一份；只改一处的话，
+        在窄屏（含手机 App 的 WebView）上依然是深色。
+        """
+        style = index_html.split("<style>")[1].split("</style>")[0]
+        blocks = style.split(".sidebar {")[1:]
+        assert len(blocks) >= 2, "只找到一处 .sidebar 规则，媒体查询那份丢了？"
+        for blk in blocks:
+            body = blk.split("}", 1)[0]
+            assert "background: var(--bg-sidebar)" in body, (
+                "某处 .sidebar 的 background 没走变量：" + body.strip()[:100]
+            )
+
+
+class TestGizmoRingsFollowTheCamera:
+    """万向轴（三环）：朝向跟随相机姿态；抓某条环拖动只绕那条世界轴。
+
+    ⚠️ 这块被反复改过（方向键 → 固定姿态 → 每条环独立绕轴），最后用户明确要求
+    「重置成最开始的形式」，也就是 `group.quaternion = camera.quaternion⁻¹`。
+    别再自作主张改它的旋转模型。
+    """
+
+    def _gizmo_block(self, index_html: str) -> str:
+        assert "万向轴（三环 / 方向棱镜）" in index_html, "万向轴实现段不见了"
+        return index_html.split("万向轴（三环 / 方向棱镜）")[1].split(
+            "\n      // ===================="
+        )[0]
+
+    def test_orientation_follows_the_camera(self, index_html):
+        block = self._gizmo_block(index_html)
+        sync = block.split("function syncGizmo()")[1].split("\n      }")[0]
+        assert "gizmo.group.quaternion.copy" in sync, "朝向应跟随相机"
+        assert "viewerCamera.quaternion" in sync
+        assert ".invert()" in sync, "要用相机姿态的逆"
+
+    def test_picking_and_dragging_use_the_group_orientation(self, index_html):
+        """命中检测与拖动切向都必须经过 group 的姿态，否则环看得见却抓不准。"""
+        block = self._gizmo_block(index_html)
+        n = block.count("gizmo.group.quaternion")
+        assert n >= 3, f"拾取/拖动里少了 group 姿态（只出现 {n} 次）"
+
+
+class TestGizmoHUDMustStayVisible:
+    """万向轴覆盖层不许把它自己盖住的环糊掉。
+
+    实测：`.gizmo-pad` 上曾经有 `background: rgba(9,11,19,.5)` + `backdrop-filter:
+    blur(6px)`，而环是画在**下面那张 canvas** 上（scissor 小视口）的，
+    那层半透明模糊正好糊在环上。同一帧的像素统计：彩色像素 4498 -> **0**、
+    边缘能量 4.86 -> 0.52，也就是环被彻底抹掉。
+    """
+
+    def _pad_block(self, index_html: str) -> str:
+        style = index_html.split("<style>")[1].split("</style>")[0]
+        assert ".gizmo-pad {" in style, "找不到 .gizmo-pad 规则"
+        return style.split(".gizmo-pad {")[1].split("}", 1)[0]
+
+    def test_pad_does_not_obscure_the_rings(self, index_html):
+        blk = self._pad_block(index_html)
+        assert "backdrop-filter" not in blk, ".gizmo-pad 又加模糊了 —— 会把环糊没"
+        assert "background: transparent" in blk, ".gizmo-pad 不该有底色"
+        assert "box-shadow" not in blk, ".gizmo-pad 不该有阴影"
+
+
 class TestToolGroupTools:
     """工具组：可见性 / 顺序 / 默认不可见的三角形面积。"""
 
@@ -268,6 +447,33 @@ class TestToolGroupTools:
 
     def test_triangle_has_a_shortcut_row(self, index_html):
         assert 'id: "tool:triangleArea"' in index_html
+
+
+class TestTooltipsCarryNoDashTail:
+    """悬浮提示只显示名称，不许再拼「名称——说明」。
+
+    ⚠️ 这个 `——` **不在 HTML 源码里**，是 `paintToolbarIcons()` 运行时用
+    `` `${name}——${btn.dataset.help}` `` 拼出来的。所以"在源文件里 grep `——`"
+    会得到**假阴性** —— 实测踩过：据此还错误地告诉过用户"全文件只剩 1 处"。
+    要守的是**拼接模式**，不是某个字面实例。
+    """
+
+    def test_toolbar_does_not_concatenate_a_dash(self, index_html):
+        assert "${name}——" not in index_html, (
+            "工具栏 title 又拼破折号了：悬浮会显示成"
+            "「重置视角——重置视角：把点云重新放到画面中央并铺满。」，"
+            "名称还会重复一遍。只显示名称就好。"
+        )
+
+    def test_toolbar_title_is_the_bare_name(self, index_html):
+        assert "btn.title = name;" in index_html, (
+            "工具栏按钮的 title 应当就是名称本身。"
+        )
+
+    def test_fusion_tooltip_has_no_dash_tail(self, index_html):
+        assert "—— 共" not in index_html, (
+            "华为点云融合的 title 又拼了「—— 共 N 个 AR 点」。"
+        )
 
 
 class TestBehaviorSettings:
