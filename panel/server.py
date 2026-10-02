@@ -1013,20 +1013,27 @@ def put_annotations(session_id: str, body: Any = Body(...),
 
 
 # ---- 测量：在服务器上按元素坐标计算并落标注（#28）----
-_MEASURE_MAX_ELEMENTS = 8
+# element_ids 上限：面积/体积现在要选「全部顶点」（用户手选，量级很小），
+# 原来的 8 会直接把一个 10 个顶点的体积判成 400。
+_MEASURE_MAX_ELEMENTS = 64
 
 
 @app.post("/api/sessions/{session_id}/measure")
 def measure_session(session_id: str, body: Any = Body(...),
                     client_id: str = "default",
                     x_auth_token: Optional[str] = Header(default=None)):
-    """按元素坐标计算长度 / 面积 / 体积，**同时**持久化为标注。
+    """按元素坐标计算长度 / 面积 / 体积。
 
-    Body: ``{"op": "length"|"triangle_area"|"area"|"volume",
-              "element_ids": ["e1", "e2"]}``
+    Body: ``{"op": "length"|"triangle_area"|"area"|"volume"|
+              "polygon_area"|"polyhedron_volume",
+              "element_ids": ["e1", "e2"], "preview": false}``
 
     为什么在服务器算：长度/面积/体积必须有**唯一实现**，否则「显示的数值」与
     「存的标注」会出现两套真相；而且重新标定 `scale` 后要能自动重算。
+
+    ``preview=true`` → **只算不存**（不 append、不落库）。网页端逐点落点时要
+    实时看到数值，但每落一个点就产生一条标注显然不对；预览走的仍然是这份
+    **唯一实现**，客户端不自己算。
 
     坐标来自标注元素（客户端已把它们吸附到**全量点云**，见 /snap），
     未标定时返回 `u`/`u²`/`u³` 并在结果上标记 `calibrated: false`。
@@ -1082,6 +1089,15 @@ def measure_session(session_id: str, body: Any = Body(...),
         "scale": scale,
         "created_at": time.time(),
     }
+    if body.get("preview"):
+        # 预览：算完就够了，不 append、不落库
+        return JSONResponse({
+            "ok": True,
+            "session_id": session_id,
+            "measurement": measurement,
+            "points": points,
+            "preview": True,
+        })
     elements.append(measurement)
     if not session_store.save_annotations(session_id, owner, annotations):
         return JSONResponse({"error": "会话不存在或无权访问"}, status_code=404)

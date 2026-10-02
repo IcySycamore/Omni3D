@@ -1,14 +1,22 @@
 """几何测量纯函数 + 标注元素解析（无 torch / Qt 依赖，可独立单测）。
 
+依赖只有标准库 + numpy/scipy（凸包用 `scipy.spatial.ConvexHull`；SOR 早就
+在用 scipy 的 cKDTree，所以这不是新引入的重依赖）。
+
 **为什么要有这个模块**：面积 / 体积 / 长度必须有**唯一实现** —— 两端各算一遍
 必然出现「显示的数值」与「服务器存的标注」两套真相。
 
-定义（与 issue #28 一致，UI 需要写清楚避免误用）：
+定义：
 
 - 长度 `|AB|`
 - 三角形面积 `½·|AB × AC|`
 - 面积（元素为平行四边形，由 3 点确定）`|AB × AC|` —— **恰为三角形面积的 2 倍**
 - 体积（平行六面体，由 4 点确定）`|det[AB, AC, AD]|` —— 与「长×宽×高」同值
+- 凸多边形面积 `polygon_area`（**≥3 点**，手选的全部顶点）—— **顶点顺序无关**：
+  最小二乘拟合平面 → 点投影上去 → 按绕质心极角重排 → shoelace；
+  恰 3 点时退化为三角形面积
+- 凸包体积 `polyhedron_volume`（**≥4 点**，手选的全部顶点）—— 顶点顺序无关；
+  所有点共面（围不出体）时体积为 **0**，不报错
 
 尺度换算：长度 ×s、面积 ×s²、体积 ×s³；未标定（`scale is None`）时返回模型单位
 `u` / `u²` / `u³`，由调用方在结果上标记「未标定」。
@@ -22,14 +30,26 @@ from __future__ import annotations
 import math
 from typing import Iterable, Optional, Sequence
 
+import numpy as np
+from scipy.spatial import ConvexHull, QhullError
+
 __all__ = [
     "GeometryError",
     "OPS",
+    "MIN_OPS",
+    "COPLANAR_TOLERANCE_RATIO",
     "required_points",
     "segment_length",
     "triangle_area",
     "parallelogram_area",
     "parallelepiped_volume",
+    "polygon_area",
+    "polyhedron_volume",
+    "bbox_volume",
+    "envelope_scale",
+    "coplanar_tolerance",
+    "plane_distance",
+    "coplanar_distances",
     "apply_scale_factor",
     "unit_for",
     "compute",
@@ -52,7 +72,14 @@ OPS = {
     "parallelogram_area": (3, 2),
     "volume": (4, 3),
     "parallelepiped_volume": (4, 3),
+    # 手选凸多边形 / 凸多面体的**全部顶点**：点数不设上限
+    "polygon_area": (3, 2),
+    "polyhedron_volume": (4, 3),
 }
+
+# 这几个 op 接受「**至少** need 个点」（其它一律要求精确匹配）。
+# 为什么其它要精确匹配：多给一个点却静默忽略，用户会以为它算进去了。
+MIN_OPS = frozenset({"polygon_area", "polyhedron_volume"})
 
 _UNITS = {1: ("u", "m"), 2: ("u²", "m²"), 3: ("u³", "m³")}
 
@@ -94,6 +121,14 @@ def _norm(u) -> float:
     return math.sqrt(_dot(u, u))
 
 
+def _unit(u):
+    """归一化；零向量（退化）时返回 ``None`` 而不是抛错或给 NaN。"""
+    n = _norm(u)
+    if n <= 1e-12:
+        return None
+    return (u[0] / n, u[1] / n, u[2] / n)
+
+
 def segment_length(a: Sequence[float], b: Sequence[float]) -> float:
     """两点距离 ``|AB|``。两点重合时为 0（不是错误）。"""
     return _norm(_sub(_vec(a), _vec(b)))
@@ -122,6 +157,116 @@ def parallelepiped_volume(a, b, c, d) -> float:
     va, vb, vc, vd = _vec(a), _vec(b), _vec(c), _vec(d)
     ab, ac, ad = _sub(vb, va), _sub(vc, va), _sub(vd, va)
     return abs(_dot(ab, _cross(ac, ad)))
+
+
+def polygon_area(points) -> float:
+    """用手选顶点算凸多边形面积 —— **与顶点顺序无关**。
+
+    内部流程：最小二乘拟合平面 → 点投影上去 → 按绕质心的极角重排 → shoelace。
+    恰 3 点时退化为 ``½·|AB × AC|``（与 :func:`triangle_area` 同值）。
+
+    为什么把排序放在这里：shoelace 要求顶点沿边界有序，而调用方给的顺序可能是
+    「元素创建顺序」（用户在元素列表里勾选顶点那条路），与几何环绕毫无关系。
+    乱序时 shoelace 会算出无意义的数 —— 实测同一个正方形的四个角，按创建顺序
+    （恰好是 Z 字形、自交）得 **0**，按环绕顺序得 **1**。
+    把这件事**收在服务端**，任何调用方（网页端、桌面端、以后别的客户端）
+    都不需要自己保证顺序；客户端的排序就只是为了让连线画得好看。
+
+    ⚠️ 前提是「凸」（更一般地：以质心为中心的星形多边形）。凹多边形会被当成
+    星形处理、面积偏大 —— 使用口径是「任意选择凸多面性的顶点」。
+
+    点共线 / 重合（拟合不出平面）时返回 0，不报错。
+    """
+    pts = np.asarray([_vec(p) for p in points], dtype=float)
+    if len(pts) < 3:
+        raise GeometryError(
+            f"polygon_area 至少需要 3 个点，收到 {len(pts)} 个")
+    centre = pts.mean(axis=0)
+    d = pts - centre
+    try:
+        # 最小奇异值方向就是最佳拟合平面的法向
+        _, sv, vt = np.linalg.svd(d, full_matrices=False)
+    except np.linalg.LinAlgError:
+        return 0.0
+    if len(sv) < 2 or sv[1] <= abs(sv[0]) * 1e-9:
+        return 0.0  # 全部共线 → 围不出面积
+    u, v = vt[0], vt[1]
+    ang = np.arctan2(d @ v, d @ u)
+    xy = np.stack([d @ u, d @ v], axis=1)[np.argsort(ang)]
+    x, y = xy[:, 0], xy[:, 1]
+    acc = float(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
+    return abs(acc) * 0.5
+
+
+def polyhedron_volume(points) -> float:
+    """用手选顶点算**凸包体积**（顶点顺序无关，凸包只对集合定义）。
+
+    退化的点集（4 点共面、全部共线…）qhull 会直接拒绝 → 按 **0** 返回。
+    这不是错误：用户选的点确实围不出体积，报 0 比报错更贴近事实。
+    """
+    pts = [_vec(p) for p in points]
+    if len(pts) < 4:
+        raise GeometryError(
+            f"polyhedron_volume 至少需要 4 个点，收到 {len(pts)} 个")
+    try:
+        return float(ConvexHull(np.asarray(pts, dtype=float)).volume)
+    except QhullError:
+        return 0.0
+
+
+# ══════════════════ 共面判定（供 UI 引导用）══════════════════
+# 口径：**第 4 个点起**，每点到「前三点所在平面」的距离与模型包络之比 < 3%，
+# 一律在**模型世界单位**上算（与是否标定过无关）。
+#
+# ⚠️ 「距离 / 体积」量纲不成立（是 1/面积），所以包络取**等效边长** = 包围盒
+#    体积的立方根 —— 这是唯一量纲正确的读法，也才对得上「相对模型大小」的直觉。
+# ⚠️ 客户端 panel/index.html 有一份 JS 镜像（落点时要即时判定，等不了往返）：
+#    改这个常量必须两边一起改，`test_web_client.py` 里有守卫盯着。
+COPLANAR_TOLERANCE_RATIO = 0.03
+
+
+def bbox_volume(points) -> float:
+    """点集的轴对齐包围盒体积（模型单位）。空集 → 0。"""
+    pts = [_vec(p) for p in points]
+    if not pts:
+        return 0.0
+    vol = 1.0
+    for axis in range(3):
+        values = [p[axis] for p in pts]
+        vol *= max(0.0, max(values) - min(values))
+    return vol
+
+
+def envelope_scale(points) -> float:
+    """模型包络的特征长度 = 包围盒体积的**立方根**（与共面容差同量纲）。"""
+    return bbox_volume(points) ** (1.0 / 3.0)
+
+
+def coplanar_tolerance(envelope: float) -> float:
+    """由包络特征长度算出共面容差（点到平面的距离阈值，模型单位）。"""
+    return COPLANAR_TOLERANCE_RATIO * max(0.0, float(envelope))
+
+
+def plane_distance(point, a, b, c) -> float:
+    """点 ``point`` 到平面 ``(a, b, c)`` 的垂直距离。
+
+    三点共线（平面未定义）时返回 0：此时「是否共面」无从谈起，不该反过来
+    把用户的点判成错的。
+    """
+    p, va, vb, vc = _vec(point), _vec(a), _vec(b), _vec(c)
+    nrm = _cross(_sub(vb, va), _sub(vc, va))
+    nn = _norm(nrm)
+    if nn <= 1e-12:
+        return 0.0
+    return abs(_dot(_sub(p, va), nrm)) / nn
+
+
+def coplanar_distances(base, points) -> list:
+    """``points`` 中每个点到 ``base`` 前三点所定平面的距离（模型单位）。"""
+    if len(base) < 3:
+        raise GeometryError(f"需要 3 个基准点，收到 {len(base)} 个")
+    va, vb, vc = _vec(base[0]), _vec(base[1]), _vec(base[2])
+    return [plane_distance(p, va, vb, vc) for p in points]
 
 
 def apply_scale_factor(value: float, dim: int, scale: Optional[float]) -> float:
@@ -153,7 +298,10 @@ def compute(op: str, points: Sequence[Sequence[float]]) -> float:
     if need is None:
         raise GeometryError(f"未知测量类型: {op!r}")
     pts = list(points)
-    if len(pts) != need:
+    if op in MIN_OPS:
+        if len(pts) < need:
+            raise GeometryError(f"{op} 至少需要 {need} 个点，收到 {len(pts)} 个")
+    elif len(pts) != need:
         raise GeometryError(f"{op} 需要 {need} 个点，收到 {len(pts)} 个")
     if op in ("length", "segment_length"):
         return segment_length(pts[0], pts[1])
@@ -161,6 +309,10 @@ def compute(op: str, points: Sequence[Sequence[float]]) -> float:
         return triangle_area(pts[0], pts[1], pts[2])
     if op in ("area", "parallelogram_area"):
         return parallelogram_area(pts[0], pts[1], pts[2])
+    if op == "polygon_area":
+        return polygon_area(pts)
+    if op == "polyhedron_volume":
+        return polyhedron_volume(pts)
     return parallelepiped_volume(pts[0], pts[1], pts[2], pts[3])
 
 

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 import time
+import uuid
 
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -61,6 +62,49 @@ SERVE_PAGE = _flag("SERVE_PAGE", False)
 INDEX_HTML = os.path.join(_PANEL_DIR, "index.html")
 ASSETS_DIR = os.path.join(_PANEL_DIR, "assets")
 
+# 项目根（panel/ 的上一级）—— 数据目录与实例标识都放这儿
+PROJECT_ROOT = os.path.dirname(_PANEL_DIR)
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
+_INSTANCE_FILE = os.path.join(DATA_DIR, "instance_id")
+
+# 注入到页面里的占位符（见 `index()` 与 panel/index.html 的 CLIENT_ID）
+INSTANCE_META = '<meta name="omni3d-instance" content="{value}" />'
+
+_instance_cache: str | None = None
+
+
+def instance_id() -> str:
+    """本部署的**固定实例标识**（首次调用生成并落盘，之后一直不变）。
+
+    为什么不让浏览器各自随机生成：那样换浏览器 / 清一次浏览器数据，历史就再也
+    认不回来了（记录还躺在库里，但没有归属键）。历史应该跟着**这台设备上的这份
+    部署**走 —— 一台设备一份 panel = 一套历史。
+
+    服务商侧只按 ``anon:<这个 id>`` 归档；登录后改为 ``user:<用户名>``，
+    那时与本机无关，任何设备登录同一账号都能看到。
+    """
+    global _instance_cache
+    if _instance_cache:
+        return _instance_cache
+    try:
+        with open(_INSTANCE_FILE, encoding="utf-8") as fh:
+            value = fh.read().strip()
+        if value:
+            _instance_cache = value
+            return value
+    except OSError:
+        pass
+    value = uuid.uuid4().hex
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(_INSTANCE_FILE, "w", encoding="utf-8") as fh:
+            fh.write(value)
+    except OSError:
+        # 落盘失败（只读部署）也不致命：本次进程内保持一致即可
+        pass
+    _instance_cache = value
+    return value
+
 
 def app_config() -> dict:
     """``/app-config.json`` 的载荷（客户端引导用）。"""
@@ -70,6 +114,8 @@ def app_config() -> dict:
         # 面板靠这两个把「去官网」链接拼对（官网 = 账号 / 套餐 / API Key）
         "pages_port": PAGE_PORT,
         "portal_port": PORTAL_PORT,
+        # 本部署的固定实例标识：客户端用它做匿名归属（不依赖浏览器 localStorage）
+        "instance_id": instance_id(),
     }
 
 
@@ -93,6 +139,16 @@ def mount_page_routes(app) -> None:
         """
         with open(INDEX_HTML, encoding="utf-8") as fh:
             html = fh.read()
+        # 注入本部署的实例标识：页面的匿名归属用它，而不是浏览器自己随机生成。
+        # 占位符必须在 —— 缺失时**必须响亮地失败**：静默跳过会让页面悄悄退回
+        # 「浏览器本地随机 id」，一切看着正常，但换浏览器历史就散了。
+        placeholder = INSTANCE_META.format(value="")
+        if placeholder not in html:
+            raise RuntimeError(
+                f"{INDEX_HTML} 里找不到实例标识占位符 {placeholder!r}，无法注入。"
+                " 请检查该文件是否被误改（占位符被删/改名都会走到这里）。"
+            )
+        html = html.replace(placeholder, INSTANCE_META.format(value=instance_id()))
         return HTMLResponse(
             content=html,
             headers={"Cache-Control": "no-cache, must-revalidate"},

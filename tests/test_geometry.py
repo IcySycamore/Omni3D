@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+import itertools
 import json
 import math
 import os
@@ -158,6 +159,167 @@ def _elements() -> list:
         {"id": "a1", "kind": "face", "refs": ["e1", "e2", "e3"]},
         {"id": "v1", "kind": "solid", "refs": ["e1", "e2", "e3", "e4"]},
     ]
+
+
+CUBE_2 = [[float(x), float(y), float(z)]
+          for x in (0, 2) for y in (0, 2) for z in (0, 2)]
+
+
+class TestPolygonArea:
+    """手选顶点算凸多边形面积（「面积」工具现在用这个）。"""
+
+    def test_three_points_degenerate_to_a_triangle(self):
+        """恰 3 点 = 三角形面积。
+
+        注意这**不是**旧的 `area`（平行四边形，恰好 2 倍）：用户要的是「选这块
+        面的全部顶点」，3 个顶点围出来的就是三角形。
+        """
+        assert compute("polygon_area", [O, X, Y]) == pytest.approx(0.5)
+        assert compute("polygon_area", [O, X, Y]) == pytest.approx(
+            triangle_area(O, X, Y))
+
+    def test_square(self):
+        assert compute("polygon_area", [O, X, [1.0, 1.0, 0.0], Y]) == pytest.approx(1.0)
+
+    def test_regular_hexagon(self):
+        """正六边形（外接圆半径 1）面积 = 3√3/2。"""
+        hexa = [[math.cos(k * math.pi / 3), math.sin(k * math.pi / 3), 0.0]
+                for k in range(6)]
+        assert compute("polygon_area", hexa) == pytest.approx(3 * math.sqrt(3) / 2)
+
+    def test_order_direction_does_not_matter(self):
+        """顺时针 / 逆时针都行。"""
+        sq = [O, X, [1.0, 1.0, 0.0], Y]
+        assert compute("polygon_area", sq) == pytest.approx(
+            compute("polygon_area", list(reversed(sq))))
+
+    def test_any_order_gives_the_same_answer(self):
+        """**任意**顺序都给同一个数 —— 不只是顺/逆时针。
+
+        为什么必须这样：调用方给的顺序可能是「元素创建顺序」（用户在列表里勾选
+        顶点那条路），与几何环绕毫无关系。实测同一个正方形的四个角，按创建顺序
+        （恰好是 Z 字形、自交）用 shoelace 得 **0**，而「完成」照样是亮的
+        —— 用户会拿 0 当结果。所以排序收在服务端内部做。
+        """
+        sq = [O, X, [1.0, 1.0, 0.0], Y]
+        got = {round(compute("polygon_area", p), 9)
+               for p in itertools.permutations(sq)}
+        assert got == {1.0}, f"不同顶点顺序给出了不同结果：{got}"
+
+    def test_accepts_more_than_the_minimum(self):
+        """「至少 3 个点」：多给不报错 —— 这正是它区别于 `area` 的地方。"""
+        assert compute("polygon_area", [O, X, [1.0, 1.0, 0.0], Y]) == pytest.approx(1.0)
+
+    def test_rejects_fewer_than_three(self):
+        with pytest.raises(GeometryError, match="至少需要 3 个点"):
+            compute("polygon_area", [O, X])
+
+    def test_collinear_first_three_no_longer_wrecks_it(self):
+        """前三点共线不再报废。
+
+        旧实现拿**首三点**钉平面 —— 一且前三个刚好共线（点云上随手勾选时太容易了，
+        比如沿同一条棱勾了两个点）就直接返回 0。现在用最小二乘拟合平面，
+        不需要挑出「合适的三个点」。
+        """
+        assert compute("polygon_area", [O, X, [2.0, 0.0, 0.0], Y]) == pytest.approx(1.0)
+
+    def test_all_collinear_gives_zero(self):
+        """所有点共线 → 围不出面积 → 0（不是 NaN）。"""
+        assert compute("polygon_area", [O, X, [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]]) == 0.0
+
+    def test_off_plane_points_are_projected(self):
+        """容差内的点会被投影到拟合平面上 —— 略有偏离不算错。
+
+        正方形 O-X-(1,1)-Y，**最后一个**顶点抬高了 0.02；拟合平面随之微微倾斜，
+        所以结果不是精确的 1，而是 1.0001（投影面积 = 真实面积 / cos θ）。
+        旧实现拿首三点钉平面、能得到精确的 1 —— 但那是靠“挑对了前三个点”，
+        代价是前三点一旦共线就整个报废（见上一条）。
+        """
+        tilted = [O, X, [1.0, 1.0, 0.0], [0.0, 1.0, 0.02]]
+        assert compute("polygon_area", tilted) == pytest.approx(1.0, abs=1e-3)
+
+
+class TestPolyhedronVolume:
+    """手选顶点算凸包体积（「体积」工具现在用这个）。"""
+
+    def test_tetrahedron(self):
+        """4 点 = 四面体体积 = |det| / 6。"""
+        assert compute("polyhedron_volume", [O, X, Y, Z]) == pytest.approx(1.0 / 6.0)
+
+    def test_cube_from_all_eight_vertices(self):
+        """用户选的是「凸多面体的所有顶点」—— 8 个一起给。"""
+        assert compute("polyhedron_volume", CUBE_2) == pytest.approx(8.0)
+
+    def test_order_does_not_matter(self):
+        """凸包只对**集合**定义：连线的顺序不影响体积。"""
+        assert compute("polyhedron_volume", CUBE_2) == pytest.approx(
+            compute("polyhedron_volume", list(reversed(CUBE_2))))
+
+    def test_interior_points_are_ignored(self):
+        """手选时很难避开内部点 —— 凸包会忽略它，体积不变。"""
+        pts = [O, X, Y, Z, [0.2, 0.2, 0.2]]
+        assert compute("polyhedron_volume", pts) == pytest.approx(1.0 / 6.0)
+
+    def test_coplanar_points_give_zero_not_error(self):
+        """共面 → 体积 0（用户定的口径），**不能**报错。"""
+        assert compute("polyhedron_volume", [O, X, Y, [1.0, 1.0, 0.0]]) == 0.0
+
+    def test_collinear_points_give_zero(self):
+        assert compute(
+            "polyhedron_volume", [O, X, [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]]) == 0.0
+
+    def test_rejects_fewer_than_four(self):
+        with pytest.raises(GeometryError, match="至少需要 4 个点"):
+            compute("polyhedron_volume", [O, X, Y])
+
+
+class TestCoplanarJudgement:
+    """共面容差口径：第 4 点起，距离 / 模型包络 < 3%（模型世界单位）。"""
+
+    def test_ratio_is_three_percent(self):
+        from server.core import geometry
+        assert geometry.COPLANAR_TOLERANCE_RATIO == 0.03
+
+    def test_envelope_is_the_cube_root_of_the_bbox_volume(self):
+        """包络取**立方根**：距离 / 体积量纲不成立，必须换成同量纲的长度。"""
+        from server.core import geometry
+        assert geometry.bbox_volume(CUBE_2) == pytest.approx(8.0)
+        assert geometry.envelope_scale(CUBE_2) == pytest.approx(2.0)
+
+    def test_tolerance_scales_with_the_model(self):
+        from server.core import geometry
+        assert geometry.coplanar_tolerance(2.0) == pytest.approx(0.06)
+        assert geometry.coplanar_tolerance(100.0) == pytest.approx(3.0)
+
+    def test_empty_points_have_zero_envelope(self):
+        from server.core import geometry
+        assert geometry.bbox_volume([]) == 0.0
+        assert geometry.envelope_scale([]) == 0.0
+
+    def test_plane_distance(self):
+        from server.core import geometry
+        # a,b,c 定的是 z=0 平面 → 距离就是 |z|
+        assert geometry.plane_distance([0.0, 0.0, 0.5], O, X, Y) == pytest.approx(0.5)
+
+    def test_degenerate_plane_gives_zero(self):
+        """三点共线 → 平面没定义 → 返回 0。
+
+        不要反过来把用户的点判成「不共面」——「无从谈起」不是「违反」。
+        """
+        from server.core import geometry
+        assert geometry.plane_distance([5.0, 5.0, 5.0], O, X, [2.0, 0.0, 0.0]) == 0.0
+
+    def test_coplanar_distances(self):
+        from server.core import geometry
+        got = geometry.coplanar_distances(
+            [O, X, Y], [[0.5, 0.5, 0.0], [0.5, 0.5, 0.3]])
+        assert got[0] == pytest.approx(0.0)
+        assert got[1] == pytest.approx(0.3)
+
+    def test_coplanar_distances_needs_three_base_points(self):
+        from server.core import geometry
+        with pytest.raises(GeometryError):
+            geometry.coplanar_distances([O, X], [[0.0, 0.0, 0.1]])
 
 
 class TestResolvePoints:
@@ -360,6 +522,52 @@ class TestMeasureEndpoint:
         ids = ["e1"] * (server._MEASURE_MAX_ELEMENTS + 1)
         resp = server.measure_session("s1", {"op": "length", "element_ids": ids},
                                       client_id="alice", x_auth_token=None)
+        assert resp.status_code == 400
+
+    def test_element_limit_allows_a_many_vertex_solid(self, env):
+        """原上限 8 会把一个 10 个顶点的体积直接判成 400（手选全顶点必超）。"""
+        _put_elements(env)
+        assert server._MEASURE_MAX_ELEMENTS > 8
+
+    def test_polygon_area_end_to_end(self, env):
+        """「面积」工具现在用 polygon_area：3 个顶点 = 三角形面积。"""
+        _put_elements(env)
+        m = _body(server.measure_session(
+            "s1", {"op": "polygon_area", "element_ids": ["e1", "e2", "e3"]},
+            client_id="alice", x_auth_token=None))["measurement"]
+        assert m["value"] == pytest.approx(0.5)
+        assert m["dim"] == 2
+
+    def test_polyhedron_volume_end_to_end(self, env):
+        """「体积」工具现在用 polyhedron_volume：4 个顶点 = 四面体。"""
+        _put_elements(env)
+        m = _body(server.measure_session(
+            "s1",
+            {"op": "polyhedron_volume", "element_ids": ["e1", "e2", "e3", "e4"]},
+            client_id="alice", x_auth_token=None))["measurement"]
+        assert m["value"] == pytest.approx(1.0 / 6.0)
+        assert m["unit"] == "u³"
+
+    def test_preview_computes_but_does_not_persist(self, env):
+        """preview：只算不存 —— 网页逐点落点时看实时数值就靠它。"""
+        store, owner = env
+        _put_elements(env)
+        body = _body(server.measure_session(
+            "s1",
+            {"op": "polygon_area", "element_ids": ["e1", "e2", "e3"],
+             "preview": True},
+            client_id="alice", x_auth_token=None))
+        assert body["preview"] is True
+        assert body["measurement"]["value"] == pytest.approx(0.5)
+        stored = store.get_annotations("s1", owner)
+        assert [e["kind"] for e in stored["elements"]].count("measurement") == 0
+
+    def test_preview_still_validates_the_op(self, env):
+        """预览不是「随便算」——非法 op 一样 400。"""
+        _put_elements(env)
+        resp = server.measure_session(
+            "s1", {"op": "nope", "element_ids": ["e1", "e2"], "preview": True},
+            client_id="alice", x_auth_token=None)
         assert resp.status_code == 400
 
 

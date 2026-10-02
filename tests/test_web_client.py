@@ -27,6 +27,18 @@ if _ROOT not in sys.path:
 from panel import auth_store  # noqa: E402
 
 
+def _contains_text(haystack: str, needle: str) -> bool:
+    """按**空白不敏感**判断一句文案在不在。
+
+    为什么不直接 `needle in haystack`：编辑器/格式化进程会把长行折开
+    （实测「200 点 = 1 分」被劈成两行，中间还插了缩进），直接比对会红，
+    但页面上那句话完全正常 —— 这种假红比没有断言更糟，它会淹没真正的
+    文案丢失。
+    """
+    squash = lambda s: re.sub(r"\s+", "", s)
+    return squash(needle) in squash(haystack)
+
+
 @pytest.fixture(scope="module")
 def index_html() -> str:
     with open(_INDEX, encoding="utf-8") as fh:
@@ -42,6 +54,307 @@ def _run_node(script: str) -> None:
         encoding="utf-8", errors="replace", timeout=60, check=False,
     )
     assert proc.returncode == 0, f"{proc.stdout}\n{proc.stderr}"
+
+
+class TestMultiVertexMeasurement:
+    """面积 / 体积改成「手选全部顶点 + 依次连线段」—— 下面盯住关键接线。
+
+    为什么不在这里测数值：数值的唯一真相在服务端（`server/core/geometry.py`），
+    这里只保证客户端**没有自己算**、也没把约束写丢。
+    """
+
+    def test_area_and_volume_use_the_multi_vertex_ops(self, index_html):
+        assert 'op: "polygon_area"' in index_html
+        assert 'op: "polyhedron_volume"' in index_html
+
+    def test_coplanar_ratio_is_mirrored_from_the_server(self, index_html):
+        """客户端要在落点那一刻判定（等不了往返），常量必须与服务端一致。
+
+        任一边被改掉这条就会红 —— 这就是它存在的意义。
+        """
+        from server.core import geometry
+
+        expected = (
+            f"const COPLANAR_TOLERANCE_RATIO = {geometry.COPLANAR_TOLERANCE_RATIO}"
+        )
+        assert expected in index_html
+
+    def test_links_cannot_exceed_degree_two(self, index_html):
+        """连线只允许接到度数 < 2 的顶点 —— 每个顶点最多两条边，连不出分叉。"""
+        assert "function degreeOfPoint" in index_html
+        assert "degreeOfPoint(prevId) >= 2" in index_html
+        assert "degreeOfPoint(el.id) >= 2" in index_html
+
+    def test_finish_requires_every_vertex_to_have_degree_two(self, index_html):
+        """「完成」要求围成闭环：没收口时必须显式拒绝，不能静默放行。"""
+        assert "function openVertices" in index_html
+        assert "还没围起来" in index_html
+
+    def test_the_action_button_says_finish_for_these_tools(self, index_html):
+        """多点工具的动作按钮是「完成」而不是「应用」。"""
+        assert "isMultiPointTool(STATE.activeTool)" in index_html
+        assert '? "完成"' in index_html
+
+    def test_preview_computes_on_the_server_without_persisting(self, index_html):
+        """实时数值走 preview：仍由服务端算，但不落库（否则每次落点都多一条标注）。"""
+        assert "function previewMeasure" in index_html
+        assert "preview: true" in index_html
+
+    def test_edges_are_their_own_element_kind(self, index_html):
+        """连线是独立元素（不是"长度"测量），否则元素视图会冒出一堆长度行。"""
+        assert 'kind: "edge"' in index_html
+        assert 'edge: "连线"' in index_html
+
+    def test_area_rejects_off_plane_vertices(self, index_html):
+        """面积是平面图形：偏出前三点平面的顶点直接拒绝落点。"""
+        assert "面积要求所有顶点共面" in index_html
+
+    def test_volume_is_not_blocked_when_coplanar(self, index_html):
+        """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。"""
+        assert "这 4 个点共面，体积会是 0" in index_html
+
+    def test_volume_draws_no_box_anymore(self, index_html):
+        """体积不再画「3 点底面 + 1 点定高」的直四棱柱，只留数值标签。"""
+        assert 'const isHull = el.op === "polyhedron_volume"' in index_html
+
+
+class TestPicking:
+    """选点必须在**屏幕空间**遍历全部渲染点。
+
+    症状：在建模结果里点一个位置，选中的点跑到**触摸位置下方**。
+    真因：用 `raycaster.intersectObject(cloud)` 取候选，而它是按**沿射线的深度**
+    排序的 —— `slice(0, 64)` 只留下「圆柱里最靠相机的那批点」，它们在屏幕上
+    整体偏下；而屏幕上真正离手指最近的点被截掉了。另外射线阈值是**世界距离**，
+    在比环绕中心更近的点云上换算出的屏幕半径实测达 39px（远超 24px 容差），
+    于是大片位置连候选都捞不到。
+    """
+
+    def test_walks_the_cloud_in_screen_space(self, index_html):
+        assert "function screenNearestPoint" in index_html
+        # 屏幕上定位：先换世界坐标再投影，而不是用相机空间的深度筛选
+        assert "pickNearestPoint" in index_html
+
+    def test_no_longer_truncates_candidates_by_depth(self, index_html):
+        """不许回到「raycast 取候选 + slice 截断」那条路。
+
+        只查**代码**：注释里提到这些名字是允许的（正是在解释为什么不用它）。
+        """
+        assert "new THREE.Raycaster()" not in index_html, "又建 raycaster 来拾取了"
+        assert "PICK_RAY_PX" not in index_html
+        assert ".intersectObject(" not in index_html.replace(
+            "raycaster.intersectObject(cloud)", ""
+        ), "又用 raycast 取候选了"
+
+    def test_pick_radius_scales_with_the_viewport(self, index_html):
+        """命中半径必须随视口缩放。
+
+        固定 24px 在 269px 高的手机视口里占 9%，手指稍偏就会把落点放到明显
+        错位的地方（用户描述的「点上面选下面」）。
+        """
+        assert "function pickRadiusPx" in index_html
+        assert "PICK_RADIUS_RATIO" in index_html
+        # 上下都要夹住：太小会处处点空，太大会选到偏离手指的点
+        assert "PICK_RADIUS_MIN" in index_html
+        assert "PICK_RADIUS_MAX" in index_html
+
+    def test_fallback_radius_is_bounded(self, index_html):
+        """兜底不能放太宽 —— 实测点云在屏幕上只占一小块（578x269 里只 118x155），
+        放太宽就等于「你点轮廓外的背景，它把落点拉到物体边缘上」。"""
+        assert "PICK_FALLBACK_FACTOR" in index_html
+        assert "PICK_FALLBACK_FACTOR = 1.25" in index_html, (
+            "兜底倍数被改大了：那又会出现「点上面选下面」"
+        )
+        assert "screenNearestPoint(mx, my, r * PICK_FALLBACK_FACTOR)" in index_html
+
+    def test_pick_does_not_snap_to_the_full_cloud(self, index_html):
+        """落点必须**就是拾取结果** —— 不再有「吸附到全量点云」那一步。
+
+        为什么删掉它：`server._sample_for_render` 是**取索引的均匀抽样**
+        （`np.linspace(...)`），不是重采样 —— 渲染点云本来就是全量点云的子集，
+        屏幕上看到的每一个点都已经是真实点。那次吸附只会把落点换成
+        **用户看不到的另一个点**（118 万 vs 6 万的抽样），屏幕上就落在别处，
+        表现为「点了这里、落点在下面」。试过用漂移校验补救，也只能把偏差压到
+        17px 量级（校验 5px + 拾取半径 12px），在 269px 高的视口里仍然看得出来。
+        """
+        assert "async function snapToFullCloud" not in index_html, (
+            "吸附又回来了 —— 它会把落点换成用户看不到的点"
+        )
+        assert "snapToFullCloud(" not in index_html
+        # 预览与落点必须走同一个函数、同一个位置
+        assert "await onToolClick(picked);" in index_html
+        assert "function pickNearestPoint" in index_html
+
+    def test_prefers_screen_distance_over_camera_depth(self, index_html):
+        """同半径内必须**屏幕距离优先**，不能按「离相机最近」取胜。
+
+        透视投影下这两个不是一回事：离相机最近的点可能落在屏幕上偏好几个
+        像素的地方。实测按相机深度取胜时平均偏移 13.11px，改成屏幕距离优先
+        后降到 7.09px。
+        """
+        assert "bestRing" in index_html, "没有分环 —— 又回到按相机深度取胜了"
+        assert "const ring = Math.floor(d)" in index_html
+        assert "if (ring > bestRing) continue" in index_html
+
+
+class TestElementCoordinateSpace:
+    """元素坐标（原始）与屏幕投影（世界）**不能混用**。
+
+    症状：选点落下去以后，marker 出现在触摸点**旁边/下方**（实测偏 25px），
+    而悬停预览圆环却精准贴在手指上 —— 预览和落点走的是两条路，差别就是
+    坐标系：
+
+      · `hoverMarker` 直接挂在 scene 上，`pickNearestPoint` 给的是**世界坐标**，
+        所以它永远正确；
+      · 元素挂在 `STATE.elementGroup` 上，而 `renderElements` / `alignGridToGround`
+        会给整个组设 `quaternion = STATE.modelQuat`（本机实测 6.13°），
+        所以元素的**存储值必须是原始坐标**。
+
+    此前 `selectCloudPointAt` 把世界坐标直接存进元素，渲染时又被正旋一次
+    —— 转两次，落点整体偏出去。而 `pickElement` / `pickPendingVertex` / 框选
+    反着错：拿原始坐标去 `projectToScreen`，少转一次，于是「点不中看得见的那个点」。
+
+    这一组断言就是钉死这两条转换：**落点逆旋，投影正旋**。
+    """
+
+    def test_element_coordinates_are_raw_not_world(self, index_html):
+        """拾取给的是世界坐标，落成元素前必须逆旋回原始坐标。"""
+        assert "function worldPointToElement" in index_html
+        # 选择工具落点：必须逆旋（这正是 5 轮没修好的那个 bug）
+        assert "const p = worldPointToElement(picked);" in index_html, (
+            "selectCloudPointAt 又把世界坐标直接存进元素了 —— 会转两次"
+        )
+        # 坐标轴变换就一处，避免各写各的
+        assert "applyQuaternion(q.clone().invert())" in index_html
+
+    def test_element_projections_are_rotated_before_projecting(self, index_html):
+        """元素坐标投屏前必须正旋 —— 少了这一步，点选会整体打偏。"""
+        assert "function elementWorldPoint" in index_html
+        assert "function projectElementToScreen" in index_html
+        # 三处「拿元素坐标问屏幕位置」的地方都要走它
+        for site in ("pickElement", "pickPendingVertex"):
+            assert site in index_html
+        # 元素锚点不得再直接喂给只认世界坐标的 projectToScreen
+        assert "projectToScreen(anchor)" not in index_html, (
+            "pickElement/框选又拿原始坐标直接投影了"
+        )
+        assert "projectToScreen(v)" not in index_html.replace(
+            "projectToScreen(v.toArray())", ""
+        )
+
+    def test_measurement_click_shares_the_same_rotation(self, index_html):
+        """测量工具早就有逆旋（注释里写明了约定），别让它被删掉。"""
+        assert "const _inv = (STATE.modelQuat || new THREE.Quaternion())" in index_html
+        assert "applyQuaternion(_inv)" in index_html
+
+    def test_box_select_applies_the_cloud_matrix(self, index_html):
+        """点云几何是局部坐标，框选要先过 matrixWorld 再投影。"""
+        assert "applyMatrix4(cloudMatrix)" in index_html
+
+    def test_hover_marker_stays_in_world_space(self, index_html):
+        """预览圆环挂在 scene 上、用世界坐标 —— 这是它对的原因，不要"统一"掉。"""
+        assert "STATE.viewerScene.add(hoverMarker)" in index_html
+        assert "hoverMarker.position.copy(p)" in index_html
+
+
+class TestMultiPointEntryPoints:
+    """多点工具的两条入口都必须把「工具参数」归一化。
+
+    症状：选好顶点后点状态栏的「完成」，弹 400「未知测量类型: None」，
+    测量根本没创建 —— 用起来就像「完成键点不动」。
+    真因：按钮处理器传的是**工具名字符串**（`onToolButtonClick(STATE.activeTool)`），
+    而 `finishMultiPointMeasure` 全程按**定义对象**用（`tool.op` / `tool.need` /
+    `tool.label`），于是 `op` 是 undefined，服务端收到 None。
+    """
+
+    def test_tool_parameter_is_normalised_at_both_entry_points(self, index_html):
+        assert "function toolDefOf" in index_html
+        assert _contains_text(
+            index_html, 'return typeof tool === "string" ? TOOL_DEFS[tool] : tool;'
+        )
+        # 两处（落点定稿 / 建测量）都要过它，不许直接读 tool.op
+        assert _contains_text(index_html, "const def = toolDefOf(tool);")
+        assert _contains_text(index_html, "op: def.op, element_ids: refs")
+
+    def test_the_status_bar_button_path_passes_a_tool_name(self, index_html):
+        """「完成」按钮走的是传名字那条路 —— 这就是上面那条归一存在的原因。"""
+        assert "onToolButtonClick(STATE.activeTool)" in index_html
+
+    def test_selected_points_are_adopted_as_vertices(self, index_html):
+        """在元素列表里选好顶点、再点工具，「完成」必须马上可用。
+
+        上一版多点工具只看「本次落下的点」，完全无视选中集 —— 于是选了 8 个点
+        点体积，状态栏还写「至少要 4 个顶点」、按钮是灰的（用户实测）。
+        """
+        assert "async function adoptSelectionAsVertices" in index_html
+        assert _contains_text(
+            index_html, "if (isMultiPointTool(tool)) await adoptSelectionAsVertices(tool);"
+        )
+        # 采纳后要连线段（顺序 = 顶点顺序），够数就收口
+        assert _contains_text(index_html, "for (let i = 1; i < chain.length; i++) link(chain[i - 1], chain[i]);")
+
+    def test_failed_measurement_keeps_the_pending_vertices(self, index_html):
+        """服务端拒了就别清引导 —— 否则用户只剩一堆连线、没法接着改。"""
+        assert _contains_text(
+            index_html,
+            "if (await createMeasurement(def, refs)) { STATE.pendingIds = [];",
+        )
+
+    def test_area_ring_order_is_derived_not_guessed(self, index_html):
+        """面积曾经依赖顶点顺序，客户端负责排环序。
+
+        现在**正确性已经收到服务端**（`polygon_area` 内部拟合平面 + 极角重排，
+        与传入顺序无关 —— 见 `test_geometry.py::test_any_order_gives_the_same_answer`）。
+        客户端这份排序保留下来，只是为了让**连线画得好看**（按几何环绕而不是
+        元素创建顺序），不再是正确性的依赖。
+
+        实测反例（立方体一个面的 4 个角，创建顺序恰好是 Z 字形／自交）：
+        用 shoelace 直接算得 0，而「完成」照样是亮的 —— 用户会把 0 当结果。
+        """
+        assert "function orderRingVertices" in index_html
+        assert _contains_text(index_html, "const ordered = orderRingVertices(picked);")
+        assert _contains_text(index_html, "if (ordered) picked = ordered;")
+        # 极角序的成立前提是「凸」—— 这行注释是给下一个改代码的人的警告
+        assert _contains_text(
+            index_html, "对**凸多边形**，绕质心的极角序就是唯一正确的环序"
+        )
+
+    def test_adopting_selection_checks_coplanarity(self, index_html):
+        """两个入口的校验必须一致：手动落点会拦共面，勾选采纳也不能放行。
+
+        否则勾 8 个立方体角去点「面积」，会被照单全收并给出一个无意义的数。
+        """
+        assert _contains_text(
+            index_html, "面积要求所有顶点共面：有 ${off.length} 个点偏出前三点所在平面"
+        )
+        assert _contains_text(
+            index_html, "return; // 不采纳、也不动数据"
+        )
+
+
+class TestStatusBarStaysShort:
+    """状态栏只写「下一步做什么」和数值，不复述工具名与个数上限。
+
+    用户原话：「状态栏一堆过多的说明」。原来切到体积时，状态栏同时挂着
+    `TOOL_DEFS.volume.hint` 那整句操作说明、`opReq` 的进度、以及 preview 的
+    「N 个顶点 · 还没收口」—— 同一件事说了三遍，按钮反而找不到。
+    """
+
+    def test_operation_manual_is_not_parked_in_the_status_bar(self, index_html):
+        """那句说明属于帮助内容（帮助模式里能看到），不该常驻状态栏。"""
+        assert _contains_text(
+            index_html,
+            'setToolHint(isMultiPointTool(def) ? "" : TOOL_DEFS[def].hint || "");',
+        )
+
+    def test_preview_hint_carries_only_the_number(self, index_html):
+        # 只断到模板串为止：调用可能被格式化器拆行/加尾随逗号
+        assert _contains_text(
+            index_html,
+            'setToolHint(`${formatMeasurement(m)}${m.calibrated ? "" : "（未标定）"}`',
+        )
+
+    def test_progress_hint_does_not_restate_the_tool_name(self, index_html):
+        assert _contains_text(index_html, "if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;")
 
 
 class TestInlineJavaScript:
@@ -77,7 +390,7 @@ class TestAuthWiring:
         assert 'id="promoIdentityLine"' not in index_html
         assert "当前服务商：" not in index_html
         # 计费方式要写在页面上
-        assert "200 点 = 1 分" in index_html
+        assert _contains_text(index_html, "200 点 = 1 分")
         assert "$8.99" in index_html and "$18.99" in index_html
 
     def test_fetch_interceptor_is_installed(self, index_html):
@@ -515,8 +828,26 @@ class TestPerServerCredentials:
         assert 'headers["X-Api-Key"] = cred.apiKey' in index_html
         assert "server-cred-row" in index_html
 
-    def test_help_page_documents_providers_and_measurement(self, index_html):
-        """服务商与凭据的说明现在放在帮助页，推广页不再重复。"""
+    def test_help_doc_is_loaded_from_its_own_file(self, index_html):
+        """帮助文档已抽到 panel/assets/help.html：改文案不用碰 index.html。
+
+        这里只盯接线：空槽位 + 加载代码 + **失败要报出来**（静默留白会被
+        当成「帮助页本来就是空的」，最难查）。
+        """
+        assert "data-help-doc" in index_html
+        assert 'fetch("/assets/help.html", { cache: "no-store" })' in index_html
+        assert "文档加载失败" in index_html
+
+    def test_help_doc_content_is_gone_from_index_html(self, index_html):
+        """抽干净：内容若还留在 index.html，改那个文件就不会生效（静默失效）。"""
+        assert "<h4>服务商与 API Key</h4>" not in index_html
+        assert "<h4>测量尺度原理</h4>" not in index_html
+
+    def test_help_doc_file_covers_the_key_sections(self):
+        """文档也是产物：小节被删掉要红。"""
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            doc = fh.read()
         for section in (
             "<h4>服务商与 API Key</h4>",
             "<h4>抽帧速度</h4>",
@@ -524,5 +855,13 @@ class TestPerServerCredentials:
             "<h4>测量尺度原理</h4>",
             "<h4>关于</h4>",
         ):
-            assert section in index_html, f"帮助页缺少小节：{section}"
-        assert "AR 桥" in index_html
+            assert section in doc, f"帮助文档缺少小节：{section}"
+        assert "AR 桥" in doc
+
+    def test_help_doc_describes_the_multi_vertex_measurement(self):
+        """文档得跟上新交互（手选全部顶点 / 连成线 / 完成），否则用户不知道怎么做。"""
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            doc = fh.read()
+        assert "连成线" in doc, "帮助文档没说明「依次点顶点会自动连线」"
+        assert "完成" in doc, "帮助文档没说明点「完成」才定稿"

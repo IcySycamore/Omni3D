@@ -15,6 +15,8 @@ from __future__ import annotations
 import os
 import sys
 
+import pytest
+
 # torch 必须最先导入（本机 fbgemm.dll 加载顺序冲突）
 import torch  # noqa: F401,I001
 
@@ -59,6 +61,12 @@ class TestPortsSingleSource:
         # 默认不写死来源：由页面按「同主机 + API 端口」自己推
         assert cfg["api_origin"] == hosting.API_ORIGIN
 
+    def test_instance_id_is_stable_across_calls(self):
+        """实例 id 首次生成后必须稳定（同一份部署 = 同一套历史）。"""
+        first = hosting.instance_id()
+        assert first
+        assert hosting.instance_id() == first
+
 
 class TestMountPageRoutes:
     def test_routes_registered(self):
@@ -72,9 +80,37 @@ class TestMountPageRoutes:
     def test_index_serves_the_real_page(self):
         app = FastAPI()
         hosting.mount_page_routes(app)
-        resp = _endpoint(app, "/")()
+        body = _endpoint(app, "/")().body.decode("utf-8")
         with open(hosting.INDEX_HTML, encoding="utf-8") as fh:
-            assert resp.body.decode("utf-8") == fh.read()
+            raw = fh.read()
+        # 页面本体原样返回，只额外把实例标识填进占位符
+        expected = raw.replace(
+            hosting.INSTANCE_META.format(value=""),
+            hosting.INSTANCE_META.format(value=hosting.instance_id()),
+        )
+        assert body == expected
+
+    def test_index_html_carries_the_instance_placeholder(self):
+        """`index.html` 必须有实例标识占位符。
+
+        没有它时注入静默失效，页面会退回「浏览器本地随机 id」——历史归属
+        散掉却不报错，属最难发现的一类故障。
+        """
+        with open(hosting.INDEX_HTML, encoding="utf-8") as fh:
+            html = fh.read()
+        assert hosting.INSTANCE_META.format(value="") in html
+
+    def test_injection_fails_loudly_when_placeholder_is_gone(
+        self, monkeypatch, tmp_path
+    ):
+        """守卫必须被证明会失败：抽掉占位符就得报错，而不是悄悄不注入。"""
+        broken = tmp_path / "index.html"
+        broken.write_text("<html><body>nothing here</body></html>", encoding="utf-8")
+        monkeypatch.setattr(hosting, "INDEX_HTML", str(broken))
+        app = FastAPI()
+        hosting.mount_page_routes(app)
+        with pytest.raises(RuntimeError, match="占位符"):
+            _endpoint(app, "/")()
 
     def test_index_is_not_heuristically_cached(self):
         """页面必须发 no-cache。
@@ -91,6 +127,12 @@ class TestMountPageRoutes:
         app = FastAPI()
         hosting.mount_page_routes(app)
         assert _endpoint(app, "/app-config.json")() == hosting.app_config()
+
+    def test_app_config_exposes_the_deployment_instance_id(self):
+        """匿名归属要能拿到本部署的实例 id（页面据此设置 client_id）。"""
+        cfg = hosting.app_config()
+        assert cfg["instance_id"] == hosting.instance_id()
+        assert cfg["instance_id"]
 
     def test_missing_assets_dir_is_tolerated(self, monkeypatch, tmp_path):
         monkeypatch.setattr(hosting, "ASSETS_DIR", str(tmp_path / "nope"))
