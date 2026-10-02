@@ -2858,7 +2858,7 @@
               <button
                 class="tool-btn"
                 data-tool="line"
-                data-help="画线：量两点之间的距离"
+                data-help="长度：量两点之间的距离"
               ></button>
               <button
                 class="tool-btn"
@@ -6712,7 +6712,7 @@
         "tool:select": "选择",
         "tool:box2d": "框选",
         "tool:pan": "移动",
-        "tool:line": "画线",
+        "tool:line": "长度",
         "tool:calibrate": "反向尺度推导",
         "tool:area": "面积",
         "tool:volume": "体积",
@@ -8374,7 +8374,7 @@
           STATE.measurePoints[idx - 1].label = label;
         }
         if (STATE.measurePoints.length === 2) {
-          // 画线
+          // 长度
           const p1 = STATE.measurePoints[0].point;
           const p2 = STATE.measurePoints[1].point;
           const lineGeom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
@@ -9114,7 +9114,6 @@
       // 为什么要跑服务端：长度/面积/体积必须有**唯一实现**，否则「界面显示的数」
       // 与「存的标注」会变成两套真相。
       const TOOL_DEFS = {
-
         select: {
           label: "选择",
           need: 0,
@@ -9128,7 +9127,7 @@
           need: 0,
         },
         line: {
-          label: "画线",
+          label: "长度",
           need: 2,
           op: "length",
         },
@@ -9559,7 +9558,6 @@
             b.classList.toggle("active", b.dataset.tool === def);
           });
         if (!opts.silentHint) {
-
           setToolHint("");
         }
         if (STATE.viewerContainer) {
@@ -10032,7 +10030,7 @@
           return;
         }
 
-        // ---- 固定点数的工具（画线 / 尺度 / 三角形面积）：点满就结束 ----
+        // ---- 固定点数的工具（长度 / 尺度）：点满就结束 ----
         if (!isMultiPointTool(STATE.activeTool)) {
           pushUndo();
           const el = makePointElement([_p.x, _p.y, _p.z]);
@@ -10268,6 +10266,12 @@
         const def = toolDefOf(tool);
         const sid = currentSessionId();
         if (!sid) return false;
+        // ⚠️ **先落库，再让服务端算。** `/measure` 是按**服务端已存的标注**
+        //    解析 `element_ids` 的，而刚刚落下的那个点还在本地 —— 长度 / 尺度的
+        //    最后一个点就是这种情况：不先存就会报「元素不存在: e_xxxx」，
+        //    而界面上元素明明已经出现（用户实测：每次连线第二个点都报错）。
+        //    这里只存不回读（reloadAnnotations 会把本次引导状态清掉）。
+        await persistAnnotations();
         try {
           const resp = await fetch(
             `/api/sessions/${encodeURIComponent(sid)}/measure`,
@@ -11308,7 +11312,7 @@
       const COMMAND_DEFS = [
         { id: "tool:select", label: "选择", def: "1", tool: "select" },
         { id: "tool:box2d", label: "框选", def: "2", tool: "box2d" },
-        { id: "tool:line", label: "画线", def: "3", tool: "line" },
+        { id: "tool:line", label: "长度", def: "3", tool: "line" },
         {
           id: "tool:calibrate",
           label: "反向尺度推导",
@@ -11548,7 +11552,9 @@
             /* 忽略 */
           }
           showToast(
-            STATE.cascadeSelect ? "选中父元素时也选中子元素" : "只选中点的那个元素",
+            STATE.cascadeSelect
+              ? "选中父元素时也选中子元素"
+              : "只选中点的那个元素",
             "success",
           );
         });
@@ -11563,7 +11569,9 @@
             /* 忽略 */
           }
           showToast(
-            STATE.cascadeDelete ? "删除父元素时也删掉子元素" : "删除父元素保留子元素",
+            STATE.cascadeDelete
+              ? "删除父元素时也删掉子元素"
+              : "删除父元素保留子元素",
             "success",
           );
         });

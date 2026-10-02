@@ -1281,6 +1281,18 @@ class TestToolGroupTools:
         assert "tool:triangleArea" not in index_html
         assert "TOOL_DEFAULT_VISIBLE = { triangleArea" not in index_html
 
+    def test_line_tool_is_named_length(self, index_html):
+        """「画线」更名为「长度」（用户要求）：它量的是长度，跟面积 / 体积
+        一样属于测量工具 —— 名字要说「量什么」，而不是「怎么操作」。"""
+        assert "画线" not in index_html, "还有残留的「画线」"
+        assert _contains_text(index_html, 'label: "长度"')
+        assert _contains_text(index_html, '"tool:line": "长度"')
+        assert _contains_text(index_html, 'label: "长度", def: "3", tool: "line"')
+        assert _contains_text(index_html, 'data-help="长度：量两点之间的距离"')
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            assert "画线" not in fh.read(), "帮助文档里还有「画线」"
+
     def test_hidden_buttons_actually_hide(self, index_html):
         """⚠️ `[hidden]` 会被 `.tool-btn{display:flex}` 盖掉，必须显式兜底。
 
@@ -1603,6 +1615,20 @@ class TestTwoPointSegment:
             'if (STATE.activeTool === "calibrate") { '
             "await persistCurrent(); openCalibrationDialog(refs);",
         ), "开校准弹窗前没落库"
+
+    def test_measure_persists_before_asking_the_server(self, index_html):
+        """落点后要**先落库再 `/measure`** —— 否则报「元素不存在: e_xxxx」。
+
+        真因：`/measure` 是服务端按**已存的标注**解析 `element_ids` 的，而刚刚
+        落下的那个点还在本地。长度 / 尺度的最后一个点就是这种情况 —— 用户实测：
+        「每次连线时第二个点都会报错 e_xxxxx 不存在，但是元素视图会出现」
+        （元素在本地 STATE 里，所以列表里有；本体还没落库，所以服务端不认）。
+        """
+        body = _fn_body(index_html, "createMeasurement")
+        assert _contains_text(body, "await persistAnnotations();")
+        assert body.index("persistAnnotations()") < body.index("fetch("), (
+            "落库必须发生在 /measure 之前"
+        )
 
 
 class TestColorToggle:
