@@ -1,0 +1,29 @@
+"""把 web/index.html 里的 <script type="module"> 抽出来，供 `node --check` 做语法校验。
+
+不依赖浏览器，能在 CI / 命令行里快速发现括号、引号、模板串这类低级错误。
+"""
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.abspath(__file__))
+INDEX = os.path.join(ROOT, "web", "index.html")
+OUT = os.path.join(HERE, "_index_module.mjs")
+
+with open(INDEX, encoding="utf-8") as fh:
+    html = fh.read()
+
+blocks = re.findall(
+    r'<script type="module">(.*?)</script>', html, flags=re.DOTALL
+)
+if not blocks:
+    print("未找到 module 脚本")
+    sys.exit(1)
+
+# 取最长的那块（页面主脚本）
+body = max(blocks, key=len)
+with open(OUT, "w", encoding="utf-8") as fh:
+    fh.write(body)
+print(f"已抽出 {len(body)} 字符 -> {OUT}")
+sys.exit(0)

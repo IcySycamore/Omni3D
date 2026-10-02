@@ -6,9 +6,6 @@
 >
 > 配套：领域词汇见 [`CONTEXT.md`](../CONTEXT.md)、模块地图见 [`ARCHITECTURE.md`](ARCHITECTURE.md)、
 > 接口清单见 [`API.md`](API.md)、部署见 [`DEPLOYMENT.md`](DEPLOYMENT.md)。
->
-> **新仓库开工包（panel 先、服务后）见 [`docs/handover/`](handover/README.md)**：
-> 行业调研（panel 侧 / 服务侧）、**线协议**（请求/进度/结果/产物）、上下文与术语表、9 篇 ADR。
 
 ---
 
@@ -31,7 +28,7 @@
 .\run.ps1 server    # :50865 重建 API
 .\run.ps1 pages     # :50866 面板
 .\run.ps1 portal    # :50867 官网
-.\run.ps1 test      # 全量测试：313 项
+.\run.ps1 test      # 全量测试：316 项
 ```
 
 依赖：`requirements-app.txt`（**不要**装根 `requirements.txt`，那是研究栈）。权重用
@@ -271,11 +268,11 @@ API Key：官网签发（omni3d_ + 24 字节随机），库里只存 sha256；�
 
 ## 9. 验证资产
 
-- `.\run.ps1 test` → **313 项**（≈20s）。分区：认证 / 会话层 / 计费与门户 / 托管与端口 /
+- `.\run.ps1 test` → **316 项**（≈25s）。分区：认证 / 会话层 / 计费与门户 / 托管与端口 /
   几何测量 / 吸附 / PLY / SOR / 尺度集成 / 面板接线与文案。
-- 真机数据 E2E：`temp_preview_frames/_e2e_editor_api.py`（真实会话上验证 snap/measure/annotations/owner 隔离/幂等）。
+- 真机数据 E2E：`scripts/_e2e_editor_api.py`（真实会话上验证 snap/measure/annotations/owner 隔离/幂等）。
 - 基准：`scripts/sor_report.py`、`scripts/ab_pts3d_source.py`、`scripts/run_benchmark.py`。
-- 前端静态检查：`temp_preview_frames/_check_js.py`（面板）、`_check_portal_js.py`（官网）→ `node --check`。
+- 前端静态检查：`scripts/_check_js.py`（面板）、`scripts/_check_portal_js.py`（官网）→ `node --check`。
 
 ---
 

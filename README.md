@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/assets/logo-mark.png" width="110" alt="Omni3D" />
+</p>
+
 # Omni3D
 
 从视频 / 图片重建 **真实尺度的 3D 点云**——网页采集、云端推理、AR 加持，**并且已经是一个能收费的服务**。
@@ -5,8 +9,7 @@
 > **状态：`v1.0.0-mvp`（Python 参考实现，已冻结）**
 >
 > 功能完整、316 项测试全绿、三服务可部署；但后续开发将换成 **C# / .NET 重写**，本仓归档为参考实现。
-> 接手重构先读 **[`docs/HANDOVER.md`](docs/HANDOVER.md)**（冻结的行为契约、精度基线、旧→新接口地图）；
-> **新仓库开工包**（行业调研 + 线协议 + 术语表 + ADR，panel 先做）见 **[`docs/handover/`](docs/handover/README.md)**。
+> 接手重构先读 **[`docs/HANDOVER.md`](docs/HANDOVER.md)**（冻结的行为契约、精度基线、旧→新接口地图）。
 
 ```
 网页采集 ──► FastAPI 队列 ──► Fast3R 稠密重建 ──► 3D 点云查看 / 测量 / 下载
@@ -185,7 +188,8 @@ $
 - **采集端**：网页（浏览器）/ Qt App（AR 扫描）三路互斥，统一 multipart 契约（`is_video/frame_count/resolution/intrinsics/extrinsics` + `client_id`）。
 - **真实尺度**：AR 扫描的帧携带 AREngine 米制位姿（VIO），服务器据此重建，测量直接为米制。
 - **华为点云融合**：AR 扫描时 AREngine 累积稀疏 SLAM 点云（世界坐标），经桥 `/ar/scan/pointcloud` 取回，与服务器稠密点云同帧叠加（网页开关 + 下载合并）。
-- **点云回传**：服务器 `result.ply`（base64/URL）+ `points[:20000]` → 网页渲染；App 内下载走桥 `/ar/file/save` 写 `/sdcard/Download`。
+- **点云回传**：服务器回传**渲染子集** `points`（默认 6 万，`OMNI3D_MAX_RENDER_POINTS` 可调）→ 网页渲染；
+  全量点云不塞 JSON，走 `GET /api/history/{id}/ply` 下载；App 内下载走桥 `/ar/file/save` 写 `/sdcard/Download`。
 
 ### 对外服务
 
@@ -224,8 +228,7 @@ Omni3D/
 │   ├── session_manager.py# 会话管理：token → username
 │   ├── session_store.py  # 历史持久化（SQLite，按 owner/username 隔离）
 │   ├── task_queue.py     # 单 worker 任务队列
-│   ├── index.html        # 前端主体（采集/查看/测量/历史/设置）
-│   └── WEB_REQUIREMENTS.md  # 前端需求契约
+│   └── index.html        # 前端主体（采集/查看/测量/历史/设置）
 ├── archive/              # 已废弃的实现（保留供查阅）
 │   └── desktop-pyqt-vtk/ # 旧的 PyQt5 + VTK 桌面客户端，见其 README
 ├── app/core/             # 共享核心（server 使用）
@@ -250,10 +253,9 @@ Omni3D/
 - [服务清单（API）](docs/API.md) —— 全部接口、认证协议、状态码、curl 示例
 - [速度与质量（实测）](docs/PERFORMANCE.md) —— 分辨率/帧数对耗时与自洽性的影响
 - [架构说明](docs/ARCHITECTURE.md) —— server/client 模块地图、会话层、真实尺度
-- [网页端需求契约](web/WEB_REQUIREMENTS.md)
 
-> 📦 **部署**：部署指南、frp 隧道、容器（Dockerfile）与打包配置在开发阶段已移除，
-> 将于**发布（release）阶段**重建。详见 `docs/ARCHITECTURE.md`。
+> 📦 **部署**：三个服务同镜像、按 `ROLE` 起进程（`Dockerfile` + `docker-compose.yml`），
+> 详见 **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**。
 
 > 🖥 **客户端只有一个**：`web/index.html`。桌面端就是浏览器直接打开
 > <http://127.0.0.1:50865/>（无需安装）；移动端 App 加载的也是它。

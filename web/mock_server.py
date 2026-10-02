@@ -18,6 +18,10 @@ import threading
 import time
 import traceback
 
+# torch 必须先于 numpy 导入：本机 fbgemm.dll 加载顺序冲突（WinError 127）。
+# 同类处理见 web/server.py 与 tests/conftest.py。
+import torch  # noqa: F401
+
 import numpy as np
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -77,7 +81,7 @@ def _mock_reconstruct(image_paths, resolution, intrinsics=None, extrinsics=None,
         "num_views": len(image_paths),
         "num_points": len(points),
         "elapsed_s": round(elapsed, 2),
-        "points": points[:20000],
+        "points": points[: config.MAX_RENDER_POINTS],
         "ply": ply,
         "intrinsics": intrinsics,
         "extrinsics": extrinsics,

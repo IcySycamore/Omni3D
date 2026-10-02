@@ -5,9 +5,6 @@
 > 结论：**有可复用的协议形状，没有可复用的"官方服务商 + 计费"整条链路**。
 >
 > 配套：[`docs/HANDOVER.md`](HANDOVER.md)（§5.1 协议复用清单）、[`CONTEXT.md`](../CONTEXT.md)（领域词汇）。
->
-> **按「panel 侧 / 服务侧」拆分过的版本**（新仓库开工用）：
-> [`docs/handover/01-industry-research.md`](handover/01-industry-research.md)。
 
 ## 1. 五个对象的定位（别混为一谈）
 
