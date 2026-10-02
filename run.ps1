@@ -13,9 +13,6 @@
 .NOTES
   三个角色各占一个端口：面板 panel(50866) / 官网 portal(50867) / 服务商 API(50865)。
   面板开 http://127.0.0.1:50866/ —— 50865 **只做 API**，不再托管页面。
-
-  旧的 PyQt5 桌面客户端已归档到 archive/desktop-pyqt-vtk/，不再提供入口。
-  解释器解析顺序：$env:OMNI3D_PY → 常见 conda 环境路径 → PATH 里的 python。
 #>
 param(
     [Parameter(Mandatory = $true, Position = 0)]
