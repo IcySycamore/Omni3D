@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
+#include <QDateTime>
 
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
@@ -18,7 +19,7 @@
 #include "ar_bridge_server.h"
 #include "ar_scan_controller.h"
 #include "ar_scan_preview.h"
-#include "hw_ar_engine_session.h"
+#include "ar_runtime.h"
 #include "server_config.h"
 
 #ifdef Q_OS_ANDROID
@@ -38,8 +39,8 @@
 //     2) /ar/history —— 历史持久化（App 私有目录 JSON）
 // ============================================================
 
-static bool s_arEngineReady = false;   // AREngine 会话是否可用
-static bool s_arEngineTried = false;
+static bool s_arEngineReady = false;
+static qint64 s_nextArProbe = 0;
 
 // 网页入口地址（默认 adb reverse 的 127.0.0.1:50865；frp 隧道可覆盖）：
 //  1) Android Intent extra "homeUrl"（如 am start --es homeUrl https://xxx）→ 写入
@@ -113,20 +114,20 @@ static void scheduleMixedContentAllow(QObject *parent)
 // 初始化 AREngine（仅一次；WebView 壳无相机喂帧时 tracking=false → 回退传感器）
 static void ensureArEngineInitialized()
 {
-    if (s_arEngineTried)
+    if (s_arEngineReady || QDateTime::currentMSecsSinceEpoch() < s_nextArProbe)
         return;
-    s_arEngineTried = true;
-    if (HwArEngineSession::serverReady()) {
-        PROBE("ARENGINE: server ready, init...");
-        // 相机纹理：默认传 0（无相机帧时 tracking=false → 回退传感器）；
-        // AR 扫描时由预览渲染器创建 OES 纹理并 applyCameraTexture 启动相机
-        s_arEngineReady = HwArEngineSession::instance()->initialize(0);
-        PROBE(s_arEngineReady ? "ARENGINE: init OK" : "ARENGINE: init FAIL (fallback sensor)");
-        ArScanController::instance()->setAvailable(s_arEngineReady);
-    } else {
-        PROBE("ARENGINE: server NOT ready (fallback sensor)");
-        ArScanController::instance()->setAvailable(false);
-    }
+    s_nextArProbe = QDateTime::currentMSecsSinceEpoch() + 2000;
+#ifdef Q_OS_ANDROID
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    if (!context.isValid() || !QJniObject::callStaticMethod<jboolean>(
+            "com/omni3d/capture/ARHelper", "ensureCameraPermission",
+            "(Landroid/content/Context;)Z", context.object()))
+        return;
+#endif
+    s_arEngineReady = ArRuntime::tryInitialize();
+    if (s_arEngineReady)
+        PROBE(ArRuntime::name());
+    ArScanController::instance()->setAvailable(s_arEngineReady);
 }
 
 // 周期性推送位姿到桥：AREngine 可用 → AREngine 位姿；否则传感器旋转
@@ -135,13 +136,14 @@ static void feedPoseToBridge()
     ensureArEngineInitialized();
 
     // 优先 AREngine
-    if (s_arEngineReady) {
-        if (HwArEngineSession::instance()->glOwned()) {
+    if (s_arEngineReady && ArRuntime::session()) {
+        auto *session = ArRuntime::session();
+        if (session->glOwned()) {
             // 渲染线程已接管 AREngine（扫描中，GL 上下文线程），主线程不再 update
             return;
         }
-        HwArEngineSession::instance()->update();
-        const auto f = HwArEngineSession::instance()->frame();
+        session->update();
+        const auto f = session->frame();
         if (f.tracking) {
             QVector<float> p;
             for (int i = 0; i < 16; ++i)
@@ -175,7 +177,7 @@ static void feedPoseToBridge()
 
 int main(int argc, char *argv[])
 {
-    PROBE("1: main start (WebShell + AREngine)");
+    PROBE("1: main start (WebShell + AR)");
     QApplication app(argc, argv);
     QQuickStyle::setStyle("Basic");
     PROBE("3: style ok");
@@ -216,14 +218,11 @@ int main(int argc, char *argv[])
     QObject::connect(&engine, &QQmlEngine::warnings,
                      [](const QList<QQmlError> &ws) {
                          for (const auto &e : ws)
-                             __android_log_print(ANDROID_LOG_ERROR, "OmniProbe", "QMLERR: %s",
-                                                 e.toString().toUtf8().constData());
+                             PROBE(e.toString().toUtf8().constData());
                      });
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      [](QObject *obj, const QUrl &url) {
-                         __android_log_print(ANDROID_LOG_INFO, "OmniProbe",
-                                             "OBJ: %s %s", url.toString().toUtf8().constData(),
-                                             obj ? "OK" : "FAIL");
+                         PROBE(("OBJ: " + url.toString().toUtf8() + (obj ? " OK" : " FAIL")).constData());
                      });
 
     engine.load(QUrl(QStringLiteral("qrc:/Omni3D/qml/WebShell.qml")));

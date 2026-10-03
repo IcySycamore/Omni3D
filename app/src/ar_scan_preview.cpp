@@ -1,6 +1,6 @@
 #include "ar_scan_preview.h"
 #include "ar_scan_controller.h"
-#include "hw_ar_engine_session.h"
+#include "ar_runtime.h"
 #include "ar_bridge_server.h"
 
 #include <QOpenGLFramebufferObject>
@@ -236,12 +236,12 @@ void ArScanPreviewRenderer::render()
 {
     ensureTextureAndProgram();
 
-    HwArEngineSession *s = HwArEngineSession::instance();
+    ArSessionBackend *s = ArRuntime::session();
 
     // 等待 AREngine 会话创建后再把 OES 纹理交给 AREngine 启动相机。
     // ⚠️ 渲染线程可能先于主线程 initialize 运行 → 失败后每帧重试直到成功。
     // setCameraTextureName/resume 必须在 GL 上下文线程执行（主线程无 eglContext）。
-    if (m_texReady && !m_texApplied && s->isInitialized()) {
+    if (s && m_texReady && !m_texApplied && s->isInitialized()) {
         if (s->applyCameraTexture(static_cast<unsigned int>(m_oesTex))) {
             m_texApplied = true;
             PLOG("camera texture applied OK (render thread)");
@@ -252,7 +252,7 @@ void ArScanPreviewRenderer::render()
 
     // AREngine：渲染线程（GL 上下文 current）接管 update / 抓帧 / 位姿推送
     // （主线程无 GL 上下文 → AREngine 报 cannot get eglContext，无法跟踪）
-    if (s->glOwned()) {
+    if (s && s->glOwned()) {
         const bool uok = s->update();
         if (++m_renderCounter % 60 == 0) {
             const auto f = s->frame();
@@ -277,10 +277,12 @@ void ArScanPreviewRenderer::render()
         }
         if (ArScanController::instance()->consumeCaptureRequest()) {
             // GPU 纹理回读（高清，分辨率随 setPreviewSize）→ 失败回退 CPU 640×480
-            QByteArray jpeg = captureFromTexture();
-            const bool gpuUsed = !jpeg.isEmpty();
-            if (!gpuUsed)
-                jpeg = s->captureJpeg();
+            QByteArray jpeg = s->preferCpuCapture() ? s->captureJpeg() : captureFromTexture();
+            bool gpuUsed = !s->preferCpuCapture() && !jpeg.isEmpty();
+            if (jpeg.isEmpty()) {
+                jpeg = s->preferCpuCapture() ? captureFromTexture() : s->captureJpeg();
+                gpuUsed = s->preferCpuCapture() && !jpeg.isEmpty();
+            }
             if (!jpeg.isEmpty()) {
                 const auto f = s->frame();
                 QVector<float> pose16, k9;
@@ -289,20 +291,26 @@ void ArScanPreviewRenderer::render()
                 for (int i = 0; i < 9; ++i)
                     k9.append(f.k[i]);
                 if (gpuUsed) {
-                    // ⚠️ AREngine 内参是「显示方向」（如 1056×1420 竖屏），
-                    // GPU 帧是「传感器方向横屏」（如 1440×1080）→ 需旋转+缩放：
-                    //   fx_sensor=fy_disp, fy_sensor=fx_disp,
-                    //   cx_sensor=cy_disp, cy_sensor=width_disp-cx_disp，
-                    //   再按 (tw/imgH, th/imgW) 缩放到实际帧尺寸
+                    // GPU 回读尺寸可能不同于 SDK 的内参尺寸。华为内参按显示方向返回，
+                    // 需先旋转再缩放；ARCore 内参按传感器方向返回，只需缩放。
                     int iw = 0, ih = 0;
                     s->imageDimensions(&iw, &ih);
                     if (iw > 0 && ih > 0 && m_lastCapW > 0 && m_lastCapH > 0) {
-                        const float sx = float(m_lastCapW) / float(ih);
-                        const float sy = float(m_lastCapH) / float(iw);
-                        k9[0] = f.k[4] * sx;
-                        k9[2] = f.k[5] * sx;
-                        k9[4] = f.k[0] * sy;
-                        k9[5] = (float(iw) - f.k[2]) * sy;
+                        if (s->preferCpuCapture()) {
+                            if (!s->gpuIntrinsics(k9.data(), m_lastCapW, m_lastCapH)) {
+                                const float sx = float(m_lastCapW) / float(iw);
+                                const float sy = float(m_lastCapH) / float(ih);
+                                k9[0] = f.k[0] * sx; k9[2] = f.k[2] * sx;
+                                k9[4] = f.k[4] * sy; k9[5] = f.k[5] * sy;
+                            }
+                        } else {
+                            const float sx = float(m_lastCapW) / float(ih);
+                            const float sy = float(m_lastCapH) / float(iw);
+                            k9[0] = f.k[4] * sx;
+                            k9[2] = f.k[5] * sx;
+                            k9[4] = f.k[0] * sy;
+                            k9[5] = (float(iw) - f.k[2]) * sy;
+                        }
                     }
                 }
                 ArScanController::instance()->storeCaptureResult(jpeg, pose16, k9, f.tracking);

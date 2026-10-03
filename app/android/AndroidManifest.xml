@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- 高频传感器（游戏旋转向量） -->
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
     <uses-feature android:name="android.hardware.camera" android:required="true" />
@@ -24,9 +25,12 @@
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true">
         <!-- 华为 AREngine SDK 服务声明 -->
+        <meta-data android:name="com.google.ar.core" android:value="optional" />
         <meta-data
             android:name="com.huawei.hms.client.service.name:arenginesdk"
             android:value="arenginesdk:4.0.0.5" />
+        <receiver android:name="com.omni3d.capture.InstallResultReceiver"
+                  android:exported="false" />
         <activity
             android:name="org.qtproject.qt.android.bindings.QtActivity"
             android:exported="true"

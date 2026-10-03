@@ -10,7 +10,7 @@ Rectangle {
     z: 200
     color: "black"
 
-    // 预览（渲染线程创建 OES 纹理 → AREngine 开相机）
+    // 预览（渲染线程创建 OES 纹理 → 当前 AR SDK 开相机）
     ArScanPreview {
         id: preview
         anchors.fill: parent
@@ -104,7 +104,7 @@ Rectangle {
         }
     }
 
-    // 看门狗：AREngine 会话不可用（服务被卸载等极端情况）→ 关闭，避免黑屏卡死
+    // 看门狗：AR 会话不可用（服务被卸载等情况）→ 关闭，避免黑屏卡死
     Timer {
         id: watchdog
         interval: 8000
@@ -126,8 +126,8 @@ Rectangle {
         }
     }
 
-    // 预览尺寸就绪后同步给 AREngine display geometry
-    // ⚠️ 华为 AREngine setDisplayGeometry 需要物理像素（surface 像素），
+    // 预览尺寸就绪后同步给 AR SDK display geometry
+    // SDK setDisplayGeometry 需要物理像素（surface 像素），
     // 而 Qt Quick 的 width/height 是逻辑单位（dp）→ 必须乘 devicePixelRatio
     function syncSize() {
         if (preview.width > 0 && preview.height > 0)

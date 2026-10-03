@@ -6,7 +6,7 @@
 |              | 说明                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------- |
 | **运行什么** | WebView 加载服务器的网页 client（`http://127.0.0.1:50865/`，可由 `homeUrl` 换成部署域名）                   |
-| **额外提供** | ① 华为 AREngine 米制位姿（真实尺度）② 华为 SLAM 稀疏点云 ③ 系统文件对话框 ④ PLY 直存手机下载目录 ⑤ 本地历史 |
+| **额外提供** | ① 华为 AREngine / Google ARCore 米制位姿 ② AR 稀疏点云 ③ 系统文件对话框 ④ PLY 直存手机下载目录 ⑤ 本地历史 |
 | **不做**     | 不做推理（推理只在服务器）；不实现独立 UI                                                                   |
 
 桌面端**不是**另一种客户端——它就是浏览器直接打开同一个地址；旧的 PyQt5 + VTK 实现已归档，
@@ -20,9 +20,9 @@
 app/
 ├── CMakeLists.txt                  # Qt 6.5 + Android 打包（可选 desktop 目标）
 ├── build_apk.ps1                   # 命令行打包 APK
-├── android/                        # AndroidManifest + assets（含华为 AREngine 资产，已入库）
+├── android/                        # AndroidManifest + 华为资产 + ARCore AAR
 ├── arcore-hw/                      # 华为 AREngine NDK 头文件（库走运行时 dlopen）
-├── arcore/                         # ARCore NDK 资产（历史遗留，当前主线用 AREngine）
+├── arcore/                         # Google ARCore NDK C API 头文件
 ├── qml/
 │   ├─ WebShell.qml                # WebView 壳（顶部工具条：热重载 / 服务器 / 浏览器打开）
 │   └── ScanPage.qml                # AR 扫描覆盖层（预览 + 拍摄/录制 + 完成）
@@ -33,6 +33,8 @@ app/
     ├── ar_scan_preview.h/.cpp      # QQuickFramebufferObject：渲染线程抓帧
     ├── arsession_backend.h         # AR 后端抽象基类
     ├── hw_ar_engine_session.h/.cpp # 华为 AREngine 适配（dlopen 加载，避免 JNI_OnLoad 崩溃）
+    ├── arcore_session.h/.cpp       # Google ARCore 适配（普通 Android）
+    ├── ar_runtime.h/.cpp           # 运行时选择华为 / Google
     └── sensor_reader.h/.cpp        # 传感器回退（无 AR 时提供旋转位姿）
 ```
 
@@ -45,7 +47,7 @@ app/
 - 历史（App 私有目录 JSON）：`GET|POST /ar/history`
 - 文件：`/ar/file/pick`（系统对话框）、`/ar/file/save?name=`（写 `Downloads/`）
 - AR 扫描：`/ar/scan/{start,settings,capture,finish,stop,reset,status,data,frames/{i}}`
-- 华为点云：`/ar/scan/pointcloud`（PLY）
+- AR 点云：`/ar/scan/pointcloud`（PLY）
 
 所有响应带 CORS 头，供外部页面跨域访问。
 
@@ -57,15 +59,16 @@ app/
 | JDK                | 17                                                                         |
 | Android SDK / NDK  | SDK（platforms;android-33 + build-tools）、NDK r25b                        |
 | 华为 AREngine 资产 | 已入库：`android/assets/AREngine_Server.apk` + `libhuawei_arengine_ndk.so` |
-| 设备               | 需支持华为 AREngine（否则 AR 功能不可用，自动回退传感器）                  |
+| Google ARCore      | 已入库：`android/libs/arcore-1.56.0.aar`                                    |
+| 设备               | 支持华为 AREngine 或 Google ARCore；均不可用时回退传感器                     |
 
 ## 构建
 
 ```powershell
 cd app
 .\build_apk.ps1 -Project D:\PROJECT\Omni3D\app -LibTarget omni3d_capture `
-  -Abi arm64-v8a -ApkOut D:\PROJECT\Omni3D\app\Omni3D_Capture-hw-debug.apk
-adb install -r -g Omni3D_Capture-hw-debug.apk
+  -Abi arm64-v8a -Clean -ApkOut D:\PROJECT\Omni3D\app\Omni3D_Capture-debug.apk
+adb install -r -g Omni3D_Capture-debug.apk
 ```
 
 也可用 Qt Creator 打开 `CMakeLists.txt`，Kit 选 **Qt 6.5.3 Android arm64-v8a**。
@@ -88,7 +91,7 @@ adb install -r -g Omni3D_Capture-hw-debug.apk
 渲染线程 ArScanPreview ──► ArScanController
    ├─ 抓帧 JPEG（glReadPixels / AImage）
    ├─ 每帧 6DoF 米制位姿（col-major 4×4）+ 内参 K
-   └─ 累积华为 SLAM 稀疏点云（世界坐标，空间去重）
+   └─ 累积 AR SDK 稀疏点云（世界坐标，空间去重）
 网页（经桥取回）──► POST /api/tasks（multipart：帧 + intrinsics + extrinsics）
 服务器 ──► Fast3R 稠密重建 ──► 稠密点云 + 稀疏点云同帧叠加
 ```
@@ -104,4 +107,6 @@ App 采集时每帧都会带 **col-major 4×4 cam2world 位姿（米）** 一并
 ## 遗留
 
 - `intrinsics` 目前只做校验与报告，未参与几何求解（见 [`../CONTEXT.md`](../CONTEXT.md) 第 6 节）。
-- `arcore/` 目录是历史遗留（当前主线用华为 AREngine），待清理。
+- Android 优先使用已就绪的华为 AREngine，否则使用 Google ARCore。两者均为可选能力，
+  安装请求由用户开始 AR 扫描时触发；`/ar/status` 返回实际 `provider`。
+- iOS 客户端位于 [`../ios/README.md`](../ios/README.md)，使用 ARKit 并保持相同的 AR 本地桥协议。

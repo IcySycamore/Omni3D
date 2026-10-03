@@ -93,6 +93,8 @@ private:
     };
 
     std::atomic<bool> m_captureRequested{false};
+    int m_previewW = 0, m_previewH = 0;
+    int m_requestedW = 0, m_requestedH = 0;
     bool m_available = false;
     bool m_scanning = false;
     bool m_tracking = false;

@@ -1,13 +1,8 @@
-# ARCore NDK SDK 放置说明
+# Google ARCore NDK
 
-从 https://github.com/google-ar/arcore-android-sdk 下载 zip，解压后把以下文件放到本目录：
+`arcore_c_api.h` 是 Google ARCore NDK 的 C API 声明。运行库和 Java 类来自
+`../android/libs/arcore-1.56.0.aar`（Google Maven `com.google.ar:core:1.56.0`）。
+Qt Android 的默认 Gradle 模板会打包 `android/libs/*.aar`，因此无需手动复制 `.so`。
+ARCore 按 `optional` 集成，缺少 Google Play Services for AR 时可由用户触发安装。
 
-```
-arcore/
-├── arcore_c_api.h              ← 来自 sdk 的 libs/arcore_c_api.h
-└── lib/
-    └── arm64-v8a/
-        └── libarcore_sdk_c.so  ← 来自 sdk 的 libs/arm64-v8a/libarcore_sdk_c.so
-```
-
-> CMake 的 include 路径 = 本目录；链接路径 = `lib/${ANDROID_ABI}/libarcore_sdk_c.so`
+ARCore SDK 的使用受 [Google ARCore Additional Terms of Service](https://developers.google.com/ar/develop/terms) 约束。

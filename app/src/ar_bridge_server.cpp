@@ -1,5 +1,6 @@
 #include "ar_bridge_server.h"
 #include "ar_scan_controller.h"
+#include "ar_runtime.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -128,7 +129,8 @@ void ArBridgeServer::handleRequest(QTcpSocket *sock, const QByteArray &method,
     if (path.startsWith("/ar/status")) {
         QMutexLocker lk(&m_mutex);
         writeCors(sock, jsonReply({{"ok", true}, {"ready", true},
-                                   {"tracking", m_tracking}, {"scale", m_scale}}));
+                                   {"tracking", m_tracking}, {"scale", m_scale},
+                                   {"provider", ArRuntime::name()}}));
         return;
     }    // ---- 手机端原生文件选择（弹系统文件选择器，返回文件二进制）----
     if (path.startsWith("/ar/file/pick")) {
@@ -201,8 +203,10 @@ void ArBridgeServer::handleRequest(QTcpSocket *sock, const QByteArray &method,
     }
     if (path.startsWith("/ar/scan/start") && method == "POST") {
         if (!ArScanController::instance()->available()) {
+            const bool installing = ArRuntime::requestInstall();
             writeCors(sock, jsonReply({{"ok", false}, {"started", false},
-                                       {"error", "AREngine not available"}}));
+                                       {"error", installing ? "AR service installation requested; retry after installation"
+                                                            : "No compatible AR SDK is ready"}}));
             return;
         }
         emit scanRequested(); // QML 收到后显示扫描页（页内手动拍摄/录制）
@@ -224,7 +228,7 @@ void ArBridgeServer::handleRequest(QTcpSocket *sock, const QByteArray &method,
         writeCors(sock, jsonReply({{"ok", true}}));
         return;
     }
-    // ---- 华为 SLAM 稀疏点云（PLY，世界坐标）----
+    // ---- AR SDK 稀疏点云（PLY，世界坐标）----
     if (path.startsWith("/ar/scan/pointcloud")) {
         ArScanController *c = ArScanController::instance();
         const QByteArray ply = c->pointCloudPly();
@@ -234,7 +238,7 @@ void ArBridgeServer::handleRequest(QTcpSocket *sock, const QByteArray &method,
             return;
         }
         writeCors(sock, ply, 200, "application/octet-stream",
-                  "X-Filename: huawei_pointcloud.ply\r\n");
+                  "X-Filename: ar_pointcloud.ply\r\n");
         return;
     }
     if (path.startsWith("/ar/scan/capture") && method == "POST") {
@@ -298,6 +302,7 @@ void ArBridgeServer::handleRequest(QTcpSocket *sock, const QByteArray &method,
                                    {"frameCount", c->frameCount()},
                                    {"pointCloudCount", c->pointCloudCount()},
                                    {"tracking", c->tracking()},
+                                   {"provider", ArRuntime::name()},
                                    {"scale", c->scale()}}));
         return;
     }

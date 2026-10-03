@@ -2,11 +2,10 @@
 
 #include <QByteArray>
 #include <QMutex>
+#include <QVector>
 
 /**
- * AR 后端基类：当前唯一实现是 HwArEngineSession（华为 AREngine，dlopen 加载）。
- * 历史上有 Google ARCore 与工厂（ar_factory.*）第二个 adapter，已作为死代码删除；
- * 本基类保留的价值是共享 FrameData 数据结构 + 虚方法覆盖点，不再宣称多后端门面。
+ * Android AR 后端接口：华为 AREngine 和 Google ARCore 共用扫描流程。
  * ⚠️ 线程纪律：initialize/update/captureJpeg/applyCameraTexture 等须在 GL 线程
  *     （渲染线程）调用；主线程访问前需检查 glOwned()。见 hw_ar_engine_session.h。
  */
@@ -31,6 +30,21 @@ public:
 
     /** 设置显示尺寸（渲染线程每帧调用，用于内参旋转对齐） */
     virtual void setDisplaySize(int width, int height) = 0;
+
+    virtual bool isInitialized() const = 0;
+    virtual bool isCameraOn() const = 0;
+    virtual bool glOwned() const = 0;
+    virtual bool applyCameraTexture(unsigned int textureId) = 0;
+    virtual bool transformDisplayUv(const float *in, float *out, int count) = 0;
+    virtual QByteArray captureJpeg() = 0;
+    virtual void imageDimensions(int *width, int *height) const = 0;
+    virtual QVector<float> acquirePointCloud() = 0;
+    virtual void setPreviewResolution(int width, int height) = 0;
+    virtual bool consumeResizePending() = 0;
+    virtual bool applyResizeOnRenderThread() = 0;
+    virtual bool preferCpuCapture() const { return false; }
+    virtual bool gpuIntrinsics(float *outK9, int imageWidth, int imageHeight) const
+    { Q_UNUSED(outK9); Q_UNUSED(imageWidth); Q_UNUSED(imageHeight); return false; }
 
     /** 读取最近一帧数据 */
     virtual FrameData frame() const = 0;

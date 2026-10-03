@@ -10,7 +10,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2 WebView Network Wi
 
 # 华为 AR Engine NDK 头文件（库本身走 dlopen，避免 Qt 自动 System.load 触发 JNI_OnLoad 崩溃）
 set(ARCORE_HW_DIR ${CMAKE_CURRENT_SOURCE_DIR}/arcore-hw)
-include_directories(${ARCORE_HW_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${ARCORE_HW_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/arcore ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 qt_add_executable(omni3d_capture
     src/main.cpp
@@ -21,6 +21,10 @@ qt_add_executable(omni3d_capture
     src/ar_bridge_server.h
     src/ar_bridge_server.cpp
     src/arsession_backend.h
+    src/ar_runtime.h
+    src/ar_runtime.cpp
+    src/arcore_session.h
+    src/arcore_session.cpp
     src/hw_ar_engine_session.h
     src/hw_ar_engine_session.cpp
     src/ar_scan_controller.h
