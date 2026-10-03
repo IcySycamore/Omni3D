@@ -168,13 +168,41 @@ class TestMultiVertexMeasurement:
         assert 'kind: "edge"' in index_html
         assert 'edge: "连线"' in index_html
 
-    def test_area_rejects_off_plane_vertices(self, index_html):
-        """面积是平面图形：偏出前三点平面的顶点直接拒绝落点。"""
-        assert "面积要求所有顶点共面" in index_html
+    def test_area_does_not_reject_off_plane_vertices(self, index_html):
+        """面积**不**因为顶点偏出前三点平面就拒绝落点。
+
+        用户报的 bug：「测量面积时所有超出容差的都选不了」。服务端
+        `polygon_area` 自己最小二乘拟合平面再投影，本来就容得下不严格共面的
+        顶点（点云表面本来就有厚度）；客户端那道硬门槛只会让人点不动。
+        提示留着，用来说清算的是**投影**面积。
+        """
+        assert "面积要求所有顶点共面" not in index_html, "硬门槛的文案还在"
+        assert "已投到测量平面上" in index_html
+        body = _fn_body(index_html, "onToolClick")
+        start = body.index("const dist = pointPlaneDistance(")
+        # ⚠️ 一定要从 start 往后找：`const el = makePointElement` 在固定点数
+        #    工具那条分支里也出现过（在共面段**之前**），不加 start 会切出空字符串
+        #    —— 「不许有 return」于是永远绿灯（实测踩过）。
+        end = body.index("const el = makePointElement", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "return" not in _code_only(block), (
+            "共面容差又变回硬门槛了 —— 超出容差的顶点会落不下去"
+        )
 
     def test_volume_is_not_blocked_when_coplanar(self, index_html):
-        """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。"""
-        assert "这 4 个点共面，体积会是 0" in index_html
+        """体积共面时**不拦**（用户定的口径）：体积就是 0，但要提示一声。
+
+        提示的具体措辞不归测试管（用户会自己改文案），这里只盯「有提示」+
+        「不拦」两件事。
+        """
+        assert "共面" in index_html
+        body = _fn_body(index_html, "onToolClick")
+        start = body.index("const dist = pointPlaneDistance(")
+        end = body.index("const el = makePointElement", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "return" not in _code_only(block)
 
     def test_volume_draws_the_hull_the_server_measured(self, index_html):
         """体积画的是**服务端算的那个凸包的棱**（`el.outline`）。
@@ -198,13 +226,18 @@ class TestMultiVertexMeasurement:
         )
 
     def test_volume_hint_promises_no_ring(self, index_html):
-        """体积的提示不能提「连线 / 虚线 / 收口」—— 它不连线也不收口。"""
-        match = re.search(r"volume: \{(.*?)\n        \}", index_html, re.S)
-        assert match, "找不到 volume 的工具定义"
-        hint = match.group(1)
+        """体积的说明不能提「连线 / 虚线 / 收口」—— 它不连线也不收口。
+
+        工具说明现在只在一个地方：那个按钮的 `data-help`（帮助模式里看得到）。
+        """
+        help_text = _tool_button_html(index_html, "volume")
         for banned in ("虚线", "收口", "连一条线"):
-            assert banned not in hint, f"体积不连线，提示里不该出现「{banned}」"
-        assert "完成" in hint, "得说清怎么结束"
+            assert banned not in help_text, f"体积不连线，说明里不该出现「{banned}」"
+        # ⚠️ 不再要求「说清怎么结束」：用户把这条说明改成了自己那版短的
+        #（「体积：依次选取实体各顶点，测量凸包体积」），怎么写由他定。
+        # 守卫只盯两个硬错误：提了连线类动作、名字写错。
+        assert "凸多边体面积" not in help_text
+        assert "体积" in help_text
 
 
 class TestElementRowContent:
@@ -357,9 +390,11 @@ class TestElementCoordinateSpace:
         """元素坐标投屏前必须正旋 —— 少了这一步，点选会整体打偏。"""
         assert "function elementWorldPoint" in index_html
         assert "function projectElementToScreen" in index_html
-        # 三处「拿元素坐标问屏幕位置」的地方都要走它
-        for site in ("pickElement", "pickPendingVertex"):
-            assert site in index_html
+        # 「拿元素坐标问屏幕位置」的地方都要走它：函数定义本身 + pickElement +
+        # 框选。（曾经还有 pickPendingVertex，它已删 —— 见 TestAreaPickIsNeverBlocked。）
+        assert index_html.count("projectElementToScreen(") >= 3, (
+            "又有人拿原始坐标直接 projectToScreen 了"
+        )
         # 元素锚点不得再直接喂给只认世界坐标的 projectToScreen
         assert "projectToScreen(anchor)" not in index_html, (
             "pickElement/框选又拿原始坐标直接投影了"
@@ -380,7 +415,10 @@ class TestElementCoordinateSpace:
     def test_hover_marker_stays_in_world_space(self, index_html):
         """预览圆环挂在 scene 上、用世界坐标 —— 这是它对的原因，不要"统一"掉。"""
         assert "STATE.viewerScene.add(hoverMarker)" in index_html
-        assert "hoverMarker.position.copy(p)" in index_html
+        # 预览的是**真实落点**：面积会先把顶点投到测量平面上（landingPointFor），
+        # 圆环必须跟着投过去，否则它贴在点云表面、顶点却落在平面上。
+        assert "const land = p ? landingPointFor(p) : null;" in index_html
+        assert "hoverMarker.position.copy(land)" in index_html
 
 
 class TestMultiPointEntryPoints:
@@ -446,17 +484,20 @@ class TestMultiPointEntryPoints:
             index_html, "对**凸多边形**，绕质心的极角序就是唯一正确的环序"
         )
 
-    def test_adopting_selection_checks_coplanarity(self, index_html):
-        """两个入口的校验必须一致：手动落点会拦共面，勾选采纳也不能放行。
+    def test_adopting_selection_does_not_refuse_off_plane(self, index_html):
+        """勾选采纳那条路也不拦不共面的点 —— 与手动落点同一口径（只提示）。
 
-        否则勾 8 个立方体角去点「面积」，会被照单全收并给出一个无意义的数。
+        以前这里 `return`（不采纳、也不动数据）：用户勾好 6 个点再点「面积」，
+        界面什么都不发生（用户：「所有超出容差的都选不了」）。
         """
-        assert _contains_text(
-            index_html, "面积要求所有顶点共面：有 ${off.length} 个点偏出前三点所在平面"
-        )
-        assert _contains_text(
-            index_html, "return; // 不采纳、也不动数据"
-        )
+        assert "面积要求所有顶点共面" not in index_html
+        assert "已投到测量平面上" in index_html
+        body = _fn_body(index_html, "adoptSelectionAsVertices")
+        start = body.index("const off = pts.filter")
+        end = body.index("const ordered = orderRingVertices", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "return" not in _code_only(block)
 
 
 class TestStatusBarStaysShort:
@@ -468,11 +509,32 @@ class TestStatusBarStaysShort:
     """
 
     def test_operation_manual_is_not_parked_in_the_status_bar(self, index_html):
-        """那句说明属于帮助内容（帮助模式里能看到），不该常驻状态栏。"""
+        """那句说明属于帮助内容（帮助模式里的 `data-help` + 帮助文档），
+        不许常驻状态栏 —— 它会跟左边那列进度叠成「一堆过多的说明」。
+
+        用户为这条报过三次；最后一次是截图：状态栏同时出现
+        「已取 1/2 · 未完成」和「画线：已取 1/2 个点（Esc 取消）」。
+        """
         assert _contains_text(
-            index_html,
-            'setToolHint(isMultiPointTool(def) ? "" : TOOL_DEFS[def].hint || "");',
+            index_html, 'if (!opts.silentHint) { setToolHint(""); }'
         )
+        assert "TOOL_DEFS[def].hint" not in index_html
+        # 工具定义里不再有第二份说明
+        defs = re.search(r"const TOOL_DEFS = \{(.*?)\n      \};", index_html, re.S)
+        assert defs, "找不到 TOOL_DEFS"
+        assert "hint:" not in defs.group(1), "说明只留一份：工具按钮的 data-help"
+
+    def test_progress_is_reported_once(self, index_html):
+        """进度只在左边那列（opReq）说 —— 提示条不许再复述一遍。
+
+        用户截图里的重复：「已取 1/2 · 未完成」+「画线：已取 1/2 个点（Esc 取消）」。
+        取点进度的第二份文案（`progressHint` 的「还差 N 个顶点」）已整个删掉。
+        """
+        assert "progressHint" not in index_html
+        assert "还差" not in _fn_body(index_html, "onToolClick")
+        body = _fn_body(index_html, "onToolClick")
+        assert "个点（Esc 取消）" not in body
+        assert _contains_text(body, 'setToolHint("");')
 
     def test_preview_hint_carries_only_the_number(self, index_html):
         # 只断到模板串为止：调用可能被格式化器拆行/加尾随逗号
@@ -480,9 +542,6 @@ class TestStatusBarStaysShort:
             index_html,
             'setToolHint(`${formatMeasurement(m)}${m.calibrated ? "" : "（未标定）"}`',
         )
-
-    def test_progress_hint_does_not_restate_the_tool_name(self, index_html):
-        assert _contains_text(index_html, "if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;")
 
 
 class TestDesignTokens:
@@ -1243,33 +1302,287 @@ class TestGizmoHUDMustStayVisible:
         assert "box-shadow" not in blk, ".gizmo-pad 不该有阴影"
 
 
+class TestAreaPickIsNeverBlocked:
+    """面积落点不许被拦，也不许被「已取顶点」抢走。
+
+    用户实测：「测量面积时所有超出容差的都选不了，在容差内的会被识别成之前
+    选中的点」—— 两句话正好对应两个 bug：
+
+      · 「超出容差的都选不了」= 客户端把**共面容差**当成硬门槛（三点定平面，
+        第 4 点起偏离就 return，点都落不下）；而服务端 `polygon_area` 本来就是
+        「最小二乘拟合平面 → 投影上去 → 排序 → shoelace」，不需要严格共面。
+      · 「容差内的被识别成之前选中的点」= 落点前先做了 `pickPendingVertex`：
+        新点落在旧顶点的屏幕拾取半径内 → 当成「你又选了它」，新点落不下去。
+
+    两条入口（在点云上落点 / 先勾选顶点再点工具采纳）都得放开。
+    """
+
+    def test_the_snap_to_existing_vertices_is_gone(self, index_html):
+        body = _fn_body(index_html, "onViewerClick")
+        assert "pickPendingVertex" not in body, (
+            "又加回「点中已取顶点就连线」了 —— 会把靠近旧顶点的新点吃掉"
+        )
+        assert "await onToolClick(picked);" in body, "点云上的点击必须落成新顶点"
+        # 两个函数一起删：别留个没人调的收口入口在代码里（会被人再接线回去）
+        assert "function pickPendingVertex" not in index_html
+        assert "function linkToPendingVertex" not in index_html
+        # 收口仍然在：点「完成」时自动接上两个只剩一条线的端点
+        assert "async function closeRing" in index_html
+
+    def test_vertices_are_projected_onto_the_first_three_plane(self, index_html):
+        """面积：平面由**前三点**定死，后面的顶点投影上去。
+
+        用户：「使用拟合平面会导致用户无法确定实际测量的是哪里的面积，并不符合
+        使用需求」—— 拟合平面会随新点整体转，量的东西在用户看不见的地方变了。
+        前三点定平面 + 投影之后顶点严格共面，服务端算的就是画出来那块。
+        """
+        assert "function measurePlaneOf" in index_html
+        assert "function projectOntoPlane" in index_html
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(
+            body, "const plane = ring ? currentMeasurePlane(existing) : null;"
+        )
+        assert _contains_text(
+            body, "const vertex = plane ? projectOntoPlane(_p, plane) : _p;"
+        )
+        assert _contains_text(body, "makePointElement([vertex.x, vertex.y, vertex.z])")
+        # 勾选采纳那条路同一口径（投影结果写回点元素）
+        adopt = _fn_body(index_html, "adoptSelectionAsVertices")
+        assert _contains_text(adopt, "const q = projectOntoPlane(pts[i], plane);")
+        assert _contains_text(adopt, "el.points = [[q.x, q.y, q.z]];")
+
+    def test_the_measured_patch_is_drawn(self, index_html):
+        """被测的那块面必须画出来：测量中画（引导），完成后也画（结果）。
+
+        否则用户只看得见几个点和几条连线，看不出「量的是哪块面」。
+        """
+        assert "function makePolygonPatch" in index_html
+        assert "function refreshPlanePatch" in index_html
+        guide = _fn_body(index_html, "refreshPlanePatch")
+        assert "makePolygonPatch(world" in guide
+        render = _fn_body(index_html, "renderElements")
+        assert "makePolygonPatch(pts" in render, "完成的面积测量没画出被测那块"
+        assert "refreshPlanePatch();" in render, "引导用的那块面没跟着元素刷新"
+
+    def test_the_landing_preview_sits_on_the_plane(self, index_html):
+        """悬停圆环与橡皮筋都要指到**平面上的落点**，不能贴在点云表面。"""
+        assert "function landingPointFor" in index_html
+        assert "function ringPlaneWorld" in index_html
+        body = _fn_body(index_html, "updateMeasureHover")
+        assert _contains_text(body, "const land = p ? landingPointFor(p) : null;")
+        assert _contains_text(body, "updateGuideLines(land || null);")
+
+    def test_coplanar_check_only_warns(self, index_html):
+        body = _fn_body(index_html, "onToolClick")
+        start = body.index("const dist = pointPlaneDistance(")
+        end = body.index("const el = makePointElement", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "showToast" in block, "共面提示没了（要说清算的是投影面积）"
+        assert "return" not in _code_only(block), (
+            "共面容差又变回硬门槛了 —— 超出容差的顶点会落不下去"
+        )
+
+    def test_adopting_selected_vertices_does_not_refuse_off_plane(
+        self, index_html
+    ):
+        body = _fn_body(index_html, "adoptSelectionAsVertices")
+        start = body.index("const off = pts.filter")
+        end = body.index("const ordered = orderRingVertices", start)
+        block = body[start:end]
+        assert len(block) > 100, "切片是空的 —— 这条判据根本没在起作用"
+        assert "showToast" in block
+        assert "return" not in _code_only(block), "勾选采纳那条路又把不共面的点拒了"
+
+    def test_removed_tool_is_purged_from_the_saved_layout(self, index_html):
+        """删工具要连本地存的那份布局一起清。
+
+        用户：「删掉的三角形面积怎么在设置工具排序还存在？」——光在渲染时过滤，
+        存储里那条永远还在（旧页面/旧标签页一渲染就冒出来）。
+        """
+        body = _fn_body(index_html, "loadToolLayout")
+        assert _contains_text(body, "TOOL_ORDER_DEFAULT.includes(it.tool)")
+        assert "writeLS(" in body, "旧布局里的已删工具条目要顺手写回去清掉"
+
+
+class TestControlHelpAttributesAreWellFormed:
+    """控件说明（`data-help`）只守**结构**，不规定措辞。
+
+    用户：「现在帮助文档和帮助按钮说明的 ai 味道太重，我要对他们进行修改」
+    —— 措辞是他的，守卫不能把它写死（写死了他每改一次字就要改一次测试）。
+    守的是两件真会出事的事：
+
+      ① **属性必须闭合。** 实测：`data-help="……凸多边形面积` 少了收尾引号，
+         浏览器会把后面的 `></button><button class=` 全吃进属性值里 ——
+         **volume 按钮直接从 DOM 里消失**，而且不报错。
+      ② 说明不能是空壳，并且按约定以控件名开头（帮助模式里一眼能对上是哪个控件）。
+    """
+
+    TOOLS = ("select", "box2d", "pan", "line", "calibrate", "area", "volume")
+    SWITCHES = (
+        "cascadeSelectToggle",
+        "cascadeDeleteToggle",
+        "collapseChildrenToggle",
+        "boxNoRotateToggle",
+        "gridGroundToggle",
+    )
+
+    def test_every_tool_button_has_a_closed_help(self, index_html):
+        for tool in self.TOOLS:
+            tag = _tool_button_html(index_html, tool)
+            found = re.search(r'data-help="([^"<>]*)"', tag)
+            assert found, f"{tool} 的 data-help 没闭合（会把后面的按钮吃掉）：{tag!r}"
+            assert len(found.group(1).strip()) >= 8, f"{tool} 的说明是空壳"
+
+    def test_settings_controls_have_a_closed_help(self, index_html):
+        for cid in self.SWITCHES:
+            at = index_html.index(f'id="{cid}"')
+            tag = index_html[index_html.rindex("<input", 0, at) : index_html.index(">", at) + 1]
+            found = re.search(r'data-help="([^"<>]*)"', tag)
+            assert found, f"{cid} 的 data-help 没闭合：{tag!r}"
+            assert len(found.group(1).strip()) >= 8, f"{cid} 的说明是空壳"
+
+    def test_help_mode_reads_the_same_attribute(self, index_html):
+        """说明仍然只有一份：帮助模式读的就是控件上的 `data-help`。
+
+        悬浮 `title` 只给名称（见 TestTooltipsCarryNoDashTail），所以说明不能只写在
+        某处一次性拼好的字符串里。
+        """
+        assert 'closest("[data-help]")' in index_html
+
+
 class TestToolGroupTools:
-    """工具组：可见性 / 顺序 / 默认不可见的三角形面积。"""
+    """工具组：可见性 / 顺序；三角形面积已删（三角形那个生态位由「面积」占）。"""
 
-    def test_triangle_measured_as_its_own_op(self, index_html):
-        """三角形面积 = 独立工具，走服务端已有的 `triangle_area`。"""
-        assert "triangleArea:" in index_html
-        assert '"triangle_area"' in index_html
-        # 元素/数值的展示早已支持它，别再另造一套
-        assert "三角形面积" in index_html
+    def test_triangle_tool_is_gone(self, index_html):
+        """三角形面积整个删了 —— 量三点围成的面积由「面积」覆盖。
 
-    def test_triangle_is_hidden_by_default(self, index_html):
-        """默认只留一个三点流程（平行四边形），三角形在设置里开。"""
-        assert "TOOL_DEFAULT_VISIBLE" in index_html
-        assert "triangleArea: false" in index_html
-        assert "function toolDefaultVisible" in index_html
-        assert 'data-tool="triangleArea"' in index_html
+        ⚠️ 删一个工具不只是删按钮：图标表 / 名称表 / 快捷键表 / 工具定义 / 排序表
+        里都得删干净 —— 否则「图标表不许有孤儿」那条守卫会红（定义了就得有人用）。
+        服务端的 `triangle_area` op **留着**：旧标注还能算，test_geometry 也在用。
+        """
+        assert 'data-tool="triangleArea"' not in index_html
+        assert "triangleArea: {" not in index_html
+        assert "tool:triangleArea" not in index_html
+        assert "TOOL_DEFAULT_VISIBLE = { triangleArea" not in index_html
+
+    def test_line_tool_is_named_length(self, index_html):
+        """「画线」更名为「长度」（用户要求）：它量的是长度，跟面积 / 体积
+        一样属于测量工具 —— 名字要说「量什么」，而不是「怎么操作」。"""
+        assert "画线" not in index_html, "还有残留的「画线」"
+        assert _contains_text(index_html, 'label: "长度"')
+        assert _contains_text(index_html, '"tool:line": "长度"')
+        assert _contains_text(index_html, 'label: "长度", def: "3", tool: "line"')
+        assert _contains_text(_tool_button_html(index_html, "line"), 'data-help="长度：')
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            assert "画线" not in fh.read(), "帮助文档里还有「画线」"
 
     def test_hidden_buttons_actually_hide(self, index_html):
-        """⚠️ `[hidden]` 会被 `.tool-btn{display:flex}` 盖掉，必须显式兜底。"""
+        """⚠️ `[hidden]` 会被 `.tool-btn{display:flex}` 盖掉，必须显式兜底。
+
+        现在没有默认隐藏的工具了，但「设置 → 界面」仍可把任意工具藏起来。
+        """
         assert ".tool-btn[hidden]" in index_html
 
     def test_layout_rows_show_icons(self, index_html):
-        """光看名字分不清平行四边形 / 三角形，配置项里带图标。"""
+        """光看名字分不清面积 / 体积，配置项里带图标。"""
         assert "tl-icon" in index_html
 
-    def test_triangle_has_a_shortcut_row(self, index_html):
-        assert 'id: "tool:triangleArea"' in index_html
+
+class TestElementViewCascade:
+    """行为 → 元素视图：级联选中 / 级联删除 / 折叠（用户给的规格）。"""
+
+    def test_the_card_has_the_three_switches(self, index_html):
+        assert _contains_text(index_html, "<h3>元素视图</h3>")
+        for toggle in (
+            "cascadeSelectToggle",
+            "cascadeDeleteToggle",
+            "collapseChildrenToggle",
+        ):
+            assert f'id="{toggle}"' in index_html, f"设置里没有 {toggle}"
+            assert f'{toggle}: $("#' in index_html, f"{toggle} 没接进 dom"
+        # 默认值：级联选中 / 级联删除关，折叠开
+        assert "cascadeSelect: false" in index_html
+        assert "cascadeDelete: false" in index_html
+        assert "collapseMeasureChildren: true" in index_html
+        assert _contains_text(
+            index_html,
+            'STATE.cascadeSelect = saved === null ? false : saved === "1";',
+        )
+        assert _contains_text(
+            index_html,
+            'STATE.cascadeDelete = saved === null ? false : saved === "1";',
+        )
+        # 用户要求：控件里**不**解释那条「删子元素必删父元素」，写进帮助
+        assert _contains_text(index_html, 'writeLS("omni3d.cascade_select"')
+        assert _contains_text(index_html, 'writeLS("omni3d.cascade_delete"')
+
+    def test_deleting_a_child_always_deletes_its_parent(self, index_html):
+        """删子元素一定连带删父元素 —— 这条**不是设置项**（用户明确要求）。
+
+        少了顶点的测量算不出任何东西，留着只是一条坏数据。用户还说：这条不要
+        在控件里解释，写进帮助文档。
+        """
+        body = _fn_body(index_html, "withDependents")
+        assert _contains_text(
+            body, "if ((el.refs || []).some((r) => doomed.has(r))) {"
+        ), "子 → 父 那条不见了"
+        # 父 → 子 才是设置项
+        assert "STATE.cascadeDelete" in body
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            doc = fh.read()
+        assert "一定" in doc and "不是" in doc, "帮助文档没写这条不受设置影响"
+
+    def test_selecting_a_parent_can_cascade_to_children(self, index_html):
+        assert "function selectionGroupOf" in index_html
+        body = _fn_body(index_html, "toggleSelect")
+        assert _contains_text(
+            body, "const group = STATE.cascadeSelect ? selectionGroupOf(id) : [id];"
+        )
+        # 只往下走：选中一个顶点不该顺手选中引用它的测量
+        group = _fn_body(index_html, "selectionGroupOf")
+        assert "el.refs" in group
+        assert "withDependents" not in group
+
+
+class TestCameraStepBounds:
+    """平移 / 缩放的**世界步长**要夹上下限，否则贴近模型中心时会「滞涩」。
+
+    真因：平移步长 ∝ 相机到环绕中心的距离、缩放步长 ∝ 当前距离，而环绕中心就是
+    模型中心（fitViewToCloud 把 target 设成分位框中心）—— 越贴上去两者越趋近 0。
+    修法：保留相对关系，把世界步长夹在按模型尺度给出的 [lo, hi] 里。
+    """
+
+    def test_zoom_and_pan_steps_are_clamped(self, index_html):
+        assert "function clampStep" in index_html
+        assert _contains_text(index_html, "const lo = r * 0.001;")
+        assert _contains_text(index_html, "const hi = r * 0.5;")
+        pan = _fn_body(index_html, "panBy")
+        assert _contains_text(pan, "const worldPerPx = clampStep(raw);"), (
+            "平移步长没夹上下限"
+        )
+        zoom = _fn_body(index_html, "zoomBy")
+        # ⚠️ 缩放**只夹上限**：给步长加下限后，从最近处往回滚时每格只能挪固定的
+        #    一点点（线性增长），实测就是「缩放也卡住了」——自己把自己锁在中心。
+        assert _contains_text(zoom, "const step = dist * (1 - scale);")
+        assert _contains_text(zoom, "const bounded = Math.max(-hi, Math.min(hi, step));")
+        assert "clampStep(" not in zoom, "缩放不该用 clampStep（下限会把它锁死）"
+        # 「最近处」不能是环绕中心：那里朝向退化、看什么都一样，而且出不来
+        assert _contains_text(
+            zoom, "const floor = Math.max(modelRadius() * 0.05, MIN_DIST);"
+        )
+        assert _contains_text(zoom, "const len = Math.max(dist - bounded, floor);")
+
+    def test_the_bounds_use_the_model_scale(self, index_html):
+        """上下限必须按模型尺度给 —— 否则换个大小的模型手感就变了。"""
+        assert _contains_text(index_html, "STATE.fitRadius = radius;")
+        body = _fn_body(index_html, "modelRadius")
+        assert "STATE.fitRadius" in body
+        assert _contains_text(body, "return isFinite(r) && r > 0 ? r : 1;"), (
+            "没有回退值会算出 NaN 步长"
+        )
 
 
 class TestTooltipsCarryNoDashTail:
@@ -1393,9 +1706,25 @@ def _fn_body(index_html: str, name: str) -> str:
 
     不能用 `split("}", 1)[0]` —— 函数里有嵌套的 if/for，会在第一个右括号处
     截断，断言“找不到”时看着像是代码丢了。
+
+    ⚠️ 也不能直接找 `function name(` 之后的第一个 `{`：参数带默认对象时
+    （`function setActiveTool(tool, opts = {})`）那对花括号就是第一个，取到的
+    “函数体”是 `{}` —— 断言会**永远假绿/假红**（实测踩过）。先配平参数表的圆括号。
     """
-    start = index_html.index(f"function {name}(")
-    open_brace = index_html.index("{", start)
+    head = f"function {name}"
+    start = index_html.index(head)
+    i = start + len(head)
+    depth = 0
+    while i < len(index_html):
+        ch = index_html[i]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    open_brace = index_html.index("{", i)
     depth = 0
     for k in range(open_brace, len(index_html)):
         if index_html[k] == "{":
@@ -1405,6 +1734,27 @@ def _fn_body(index_html: str, name: str) -> str:
             if depth == 0:
                 return index_html[open_brace : k + 1]
     raise AssertionError(f"{name} 的花括号不配平")
+
+
+def _code_only(text: str) -> str:
+    """去掉整行 `//` 注释后的代码。
+
+    断言「这一段里不许有 return」时，注释里提到 return（解释历史用）会把它搞红
+    —— 实测踩过。判据只看代码。
+    """
+    return "\n".join(re.sub(r"//.*$", "", line) for line in text.splitlines())
+
+
+def _tool_button_html(index_html: str, tool: str) -> str:
+    """取工具按钮整段标签（含 `data-help`）。
+
+    ⚠️ 不要用「从 `data-tool="x"` 到下一个 `>`」——属性顺序不固定，
+    `data-help` 写在 `data-tool` **之前** 时就会漏掉。所以从 `<button` 开始取。
+    """
+    key = f'data-tool="{tool}"'
+    at = index_html.index(key)
+    start = index_html.rindex("<button", 0, at)
+    return index_html[start : index_html.index(">", at) + 1]
 
 
 def _css_rule(index_html: str, selector: str) -> str:
@@ -1425,6 +1775,191 @@ def _css_group(index_html: str, first_selector: str) -> str:
     """取出「选器表以 first_selector 开头」的那条规则（含表里所有选器）。"""
     start = index_html.index(first_selector)
     return index_html[start : index_html.index("}", start)]
+
+
+class TestStatusBarReadiness:
+    """常驻状态栏只报**当前进度**，不写操作说明，也不许提前说「可完成」。"""
+
+    def test_readiness_words_match_whether_it_can_finish(self, index_html):
+        """棕色的那行文字只在真的够数之后才能写「可完成」。
+
+        用户实测：面积只取了 2 个点，棕色的状态行已经写着「已取 2 个 · 可完成」，
+        而按钮是灰的 —— 看起来就像按钮坏了。
+        """
+        body = _fn_body(index_html, "toolStateFor")
+        assert _contains_text(body, "got < need ? `已取 ${got}/${need} · 未完成`")
+        assert _contains_text(body, "`已取 ${got} 个 · 可完成`")
+
+    def test_short_tools_use_the_same_status_language(self, index_html):
+        """画线 / 尺度（固定点数）的状态栏文案与面积 / 体积**同一套**。
+
+        用户原话：「将画线和尺度的状态栏引导语统一到体积和面积的风格」。
+        旧文案是「还需 2 个点」/「已取 2/2 点 · 可应用」/「数量不匹配」，
+        跟面积那套（至少要 N 个点 / 已取 N/M · 未完成 / 已取 N 个 · …）不是一路。
+
+        另：进度必须把**落点引导**也算上 —— 只看列表选中集，会出现「在视图里
+        点了两个点，状态栏还在说还需 2 个点」。
+        """
+        body = _fn_body(index_html, "toolStateFor")
+        assert _contains_text(body, "`至少要 ${need} 个点`")
+        assert _contains_text(body, "`已取 ${got}/${need} · 未完成`")
+        assert _contains_text(body, "`已取 ${got} 个 · 可应用`")
+
+        assert "`还需 ${need} 个点`" not in body, "旧文案又回来了"
+        assert "数量不匹配" not in body, "旧文案又回来了"
+        assert "pendingPointElements().length" in body
+        assert _contains_text(body, "const got = Math.max(pend, have);")
+
+    def test_the_hint_is_not_pushed_back_into_the_status_bar(self, index_html):
+        """工具做完不许再把整句操作说明塞回常驻状态栏（那是帮助内容）。
+
+        画线的说明写着「选好 2 个点后点「应用」，或直接点两个点」——
+        而两点一取完本来就已经算完了，那句话会让人以为还得再点一下
+        （用户实测：「连线选两个点就结束了不需要点完成」）。
+        """
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(body, 'setToolHint("");')
+        assert "setToolHint(tool.hint" not in body
+
+
+class TestTwoPointSegment:
+    """画线 / 尺度这种两点工具，量完要留下看得见的一段。"""
+
+    def test_two_point_tools_draw_their_segment(self, index_html):
+        """用户实测：「尺度选完两个点没有自动连线」—— 量完只剩两个孤零零的点，
+        看不出量的到底是哪一段。"""
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(body, "if (refs.length === 2) {")
+        assert _contains_text(
+            body, "STATE.elements.push(makeEdgeElement(refs[0], refs[1]));"
+        )
+
+    def test_calibration_persists_before_opening_the_dialog(self, index_html):
+        """尺度那条路必须自己落库：否则弹窗确认时 reloadAnnotations 会把刚画的
+        线段丢掉（校准这条分支没有 createMeasurement 帮忙存）。
+
+        ⚠️ 断言的是**紧邻关系**：`onToolClick` 里别处也有 `persistCurrent()`
+        （取点不足时的「先落库」），只查「函数里有没有」会永远绿。
+        """
+        body = _fn_body(index_html, "onToolClick")
+        assert _contains_text(
+            body,
+            'if (STATE.activeTool === "calibrate") { '
+            "await persistCurrent(); openCalibrationDialog(refs);",
+        ), "开校准弹窗前没落库"
+
+    def test_measure_persists_before_asking_the_server(self, index_html):
+        """落点后要**先落库再 `/measure`** —— 否则报「元素不存在: e_xxxx」。
+
+        真因：`/measure` 是服务端按**已存的标注**解析 `element_ids` 的，而刚刚
+        落下的那个点还在本地。长度 / 尺度的最后一个点就是这种情况 —— 用户实测：
+        「每次连线时第二个点都会报错 e_xxxxx 不存在，但是元素视图会出现」
+        （元素在本地 STATE 里，所以列表里有；本体还没落库，所以服务端不认）。
+        """
+        body = _fn_body(index_html, "createMeasurement")
+        assert _contains_text(body, "await persistAnnotations();")
+        assert body.index("persistAnnotations()") < body.index("fetch("), (
+            "落库必须发生在 /measure 之前"
+        )
+
+
+class TestColorToggle:
+    """颜色开关：快照不许和几何的属性共用同一份数组。"""
+
+    def test_color_attribute_never_shares_memory_with_the_snapshots(self, index_html):
+        """颜色属性必须自己拿一份拷贝 —— 否则「颜色只能切一次」。
+
+        three 的 `BufferAttribute` 只是**引用**传进去的数组（不拷贝），而
+        `setColorMode` 直接改写那个数组。共用一份的后果：切到高度着色时把快照里
+        的真彩色一起覆盖 → 再切回来时 rgb == height，画面不再变化（用户实测：
+        「点击颜色按钮只会切换一次然后就卡死了」）。删掉任意一处 `.slice()` 这条就红。
+        """
+        assert _contains_text(
+            index_html, "new THREE.BufferAttribute(colors.slice(), 3)"
+        )
+        assert _contains_text(
+            index_html, '(STATE.colorMode === "height" ? hgt : rgb).slice()'
+        )
+
+    def test_color_button_is_disabled_without_real_colors(self, index_html):
+        """没有真实颜色的云两种模式本来就是同一张图 → 置灰，而不是点了没反应。"""
+        assert "cloudHasRgb" in index_html
+        body = _fn_body(index_html, "updateViewButtons")
+        assert _contains_text(body, "!hasCloud || !STATE.cloudHasRgb")
+
+
+class TestMeasureChildrenCollapse:
+    """测量完成时子元素默认折叠在测量行内（设置里可关、可逐行展开）。"""
+
+    def test_children_are_collapsed_by_default(self, index_html):
+        assert "collapseMeasureChildren: true" in index_html
+        assert _contains_text(
+            index_html, 'const saved = readLS("omni3d.collapse_children");'
+        )
+        assert _contains_text(
+            index_html,
+            "STATE.collapseMeasureChildren = saved === null ? true : saved",
+        )
+        body = _fn_body(index_html, "renderElementList")
+        assert _contains_text(body, "if (childrenCollapsed(el)) return;")
+
+    def test_collapse_can_be_turned_off_and_expanded_per_row(self, index_html):
+        body = _fn_body(index_html, "childrenCollapsed")
+        assert "STATE.collapseMeasureChildren" in body
+        assert "STATE.expandedMeasurements.has(el.id)" in body
+        row = _fn_body(index_html, "buildElementRow")
+        assert _contains_text(row, "STATE.expandedMeasurements.add(el.id)")
+        assert _contains_text(row, "STATE.expandedMeasurements.delete(el.id)")
+        assert "UI_ICONS.caret" in row, "没有展开箭头就没法展开"
+        # 设置项要真的接上（有控件、有 dom 引用、有 change 处理器）
+        assert 'id="collapseChildrenToggle"' in index_html
+        assert "collapseChildrenToggle: $(" in index_html
+        assert "dom.collapseChildrenToggle.checked" in index_html
+
+
+class TestCalibrationDialog:
+    def test_the_dialog_input_is_not_a_raw_browser_input(self, index_html):
+        """弹窗里的输入框必须跟别的输入框一样是「浅坑」，不能是浏览器默认外观。
+
+        实测（在浏览器里读计算样式）：`#calDialogRealDist` 原本是
+        `background: rgb(255,255,255)` + `color: rgb(0,0,0)` +
+        `border: rgb(118,118,118)` + `font-family: Arial` + `appearance: auto`
+        —— 一块贴在新拟物台面上的白板，深色主题下更刺眼。这是「弹窗设计的
+        不好看」里最实的一条。
+        """
+        rule = _css_rule(index_html, '.modal-card input:not([type="checkbox"])')
+        assert "box-shadow: var(--neu-inset-soft)" in rule
+        assert "background: var(--fill-1)" in rule
+        assert "font-family: inherit" in rule
+        # 数字框的系统上下箭头在台面上是两个灰点
+        assert _contains_text(
+            index_html, '.modal-card input[type="number"] { appearance: textfield;'
+        )
+
+    def test_the_dialog_matches_the_spec(self, index_html):
+        """弹窗结构（用户给的规格）：标题在左上；右上角**一个帮助 + 一个叉号**；
+        两行**并列**（模型尺度 / 真实尺度）；右下角两个按钮。"""
+        assert _contains_text(index_html, 'class="cal-label">模型尺度<')
+        assert _contains_text(index_html, 'class="cal-label">真实尺度<')
+        assert 'id="calDialogHelp"' in index_html
+        assert 'id="calDialogClose"' in index_html
+        assert _contains_text(index_html, 'class="modal-head-actions"')
+        assert _contains_text(index_html, 'id="calDialogOk">完成')
+        # 弹窗里不该再出现「已选两点」这种废话（弹窗本来就是选完两点才弹的），
+        # 也不该重复输入框的 placeholder
+        assert "已选两点" not in index_html
+        assert "例：A4 长边" not in index_html
+
+    def test_the_help_button_points_at_the_scale_reference(self, index_html):
+        """右上角那个帮助要真的跳到「常见物品尺度」清单 —— 两边都得对得上。"""
+        assert _contains_text(index_html, 'getElementById("scale-reference")')
+        path = os.path.join(_ROOT, "panel", "assets", "help.html")
+        with open(path, encoding="utf-8") as fh:
+            doc = fh.read()
+        assert 'id="scale-reference"' in doc, "帮助文档里没有这个锚点"
+        # 清单得真给出可用的尺度，不能只是个小标题
+        for size in ("297", "85.6", "25 mm", "40 mm", "120 mm"):
+            assert size in doc, f"清单里少了 {size}"
 
 
 class TestProviderLightAndSubmitGate:

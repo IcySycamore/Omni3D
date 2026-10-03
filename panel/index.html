@@ -1729,15 +1729,64 @@
         font-size: var(--fs-md);
         color: var(--text-primary, #e8ecf6);
       }
-      .modal-field {
-        display: flex;
-        flex-direction: column;
-        gap: var(--sp-3);
-        font-size: var(--fs-base);
-        color: var(--text-muted, #8792a8);
-      }
-      .modal-field input {
+      /* 弹窗里的输入框。
+         ⚠️ 这条以前是**选择器白名单**（`.hotkey-input` / `.server-row input` …），
+         新写的输入框漏进名单就会退回浏览器默认外观（纯白底 + 黑字 + 灰描边 +
+         Arial + 系统箭头）—— 在新拟物台面上就是一块白板（实测过：
+         `#calDialogRealDist` 的 background 就是 rgb(255,255,255)）。
+         所以改成按**容器**兜底：弹窗里的输入框一律按同一套画。 */
+      .modal-card input:not([type="checkbox"]) {
         width: 100%;
+        background: var(--fill-1);
+        color: var(--text-primary);
+        border-color: transparent;
+        box-shadow: var(--neu-inset-soft);
+        font-family: inherit;
+      }
+      /* 数字框的系统上下箭头在台面上是两个灰点，占宽又没什么用 */
+      .modal-card input[type="number"] {
+        appearance: textfield;
+      }
+      /* 弹窗标题右侧的动作组（帮助 / 关闭） */
+      .modal-head-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+      }
+      /* 校准弹窗：两行**并列**（左边名字、右边值 / 输入框） */
+      .cal-row {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-4);
+        margin-bottom: var(--sp-4);
+        font-size: var(--fs-base);
+      }
+      .cal-label {
+        flex: 0 0 68px;
+        color: var(--text-muted);
+      }
+      .cal-val {
+        flex: 1 1 auto;
+        font-family: var(--font-mono);
+        color: var(--text-primary);
+        word-break: break-all;
+        font-variant-numeric: tabular-nums;
+      }
+      .cal-input-wrap {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        min-width: 0;
+      }
+      .cal-input-wrap input {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .cal-input-wrap em {
+        font-style: normal;
+        font-size: var(--fs-sm);
+        color: var(--text-muted);
       }
       .modal-note {
         margin: var(--sp-4) 0 0;
@@ -2035,6 +2084,36 @@
       .element-row input[type="checkbox"] {
         accent-color: var(--accent-cyan);
         cursor: pointer;
+      }
+      /* 元素行的展开箭头：只有带子元素的测量行才有。其它行留一个等宽占位，
+         否则同一列的复选框会参差不齐。不是控件，只负责展开 / 折叠。 */
+      .row-caret {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+      }
+      .row-caret svg {
+        width: 12px;
+        height: 12px;
+        transition: transform 0.12s ease;
+      }
+      /* 折起 = 箭头朝右 */
+      .row-caret.collapsed svg {
+        transform: rotate(-90deg);
+      }
+      .row-caret-empty {
+        cursor: default;
+        pointer-events: none;
+      }
+      .element-row:hover .row-caret:not(.row-caret-empty) {
+        color: var(--text-secondary);
       }
       /* 元素种类是**一个名字**，不是控件：不带底色 / 圆角 / 凸起阴影。
          它曾经挂过 `--neu-raised-sm`，看起来像个能点的按钮（用户报的就是这个）；
@@ -2714,7 +2793,7 @@
               <button
                 class="tool-btn"
                 id="axesToggleBtn"
-                data-help="万向轴（方向棱镜）：右下角显示当前姿态。抓住某条圈拖动 → 只绕该轴旋转；抓不到圈不响应。关掉就隐藏且不可用。"
+                data-help="万向轴：右下角显示当前姿态"
               ></button>
               <button
                 class="tool-btn"
@@ -2752,7 +2831,7 @@
               <button
                 class="tool-btn"
                 id="helpDocBtn"
-                data-help="打开帮助文档：从采集、重建、测量到服务商与 API Key 的逐条说明。"
+                data-help="打开帮助文档：采集、重建、测量、服务商与 API Key 的逐条说明。"
               ></button>
             </div>
 
@@ -2760,17 +2839,17 @@
               <button
                 class="tool-btn active"
                 data-tool="select"
-                data-help="选择：点元素 = 选中（Ctrl/⌘ 点 = 多选）；点云上的点 = 选中它（生成一个「点」元素，可拿去画线/量面积）；点空白 = 取消选择。"
+                data-help="选择：点击点云选点，按住Ctrl/⌘多选；点击空白处取消选择。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="box2d"
-                data-help="框选：按住左键拖出矩形，框内的点云点收成一个「框选点组」（上限 1000 个点，在元素视图里就是一行）；矩形内已有的元素也会被选中。"
+                data-help="框选：按住左键拖出矩形，框内的点云点收成一个最多 1000 点的点组；矩形内已有的元素也会被选中。"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="pan"
-                data-help="移动：按住左键拖动 = 平移画面。不转视角、也不选点。"
+                data-help="移动：按住左键拖动平移画面"
               ></button>
             </div>
 
@@ -2779,28 +2858,22 @@
               <button
                 class="tool-btn"
                 data-tool="line"
-                data-help="画线：量两点之间的距离。选 2 个点后点「应用」，或直接切换到此工具后在点云上点两个点。"
+                data-help="长度：量两点之间的距离"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="calibrate"
-                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度。选 2 个点（或直接点两个点），在弹窗里填真实长度即可。"
+                data-help="反向尺度推导：用一段已知的真实长度反推整模尺度"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="area"
-                data-help="面积：量 3 个点确定的平面面积（平行四边形，恰为三角形面积的 2 倍）。选 3 个点后点「应用」，或直接点三个点。"
-              ></button>
-              <button
-                class="tool-btn"
-                data-tool="triangleArea"
-                hidden
-                data-help="三角形面积：量 3 个点确定的三角形面积（是平行四边形面积的一半）。选 3 个点后点「应用」，或直接点三个点。默认在设置 → 界面里开启。"
+                data-help="面积：依次点选至少 3 个顶点，测量围成的凸多边形面积"
               ></button>
               <button
                 class="tool-btn"
                 data-tool="volume"
-                data-help="体积：先选 3 个点定底面，再选 1 个点定高。"
+                data-help="体积：依次点选至少 4 个非共面顶点，测量凸包体积"
               ></button>
             </div>
           </div>
@@ -2810,7 +2883,6 @@
               <div class="viewer-container" id="viewerContainer"></div>
               <div class="viewer-stats-overlay" id="viewerStats"></div>
               <!-- 测量chip（在viewerContainer内动态创建） -->
-              <!-- 万向轴（三环）：姿态固定，抓住某条环拖动 → 只绕那条世界轴转 -->
               <div class="gizmo-pad hidden" id="gizmoPad"></div>
             </div>
             <!-- /viewer-wrap -->
@@ -2827,7 +2899,7 @@
                   <button
                     class="btn btn-sm btn-danger"
                     id="clearElementsBtn"
-                    data-help="清空元素：删除当前会话里的全部标注元素（点、线、面积、体积）。"
+                    data-help="清空元素：删除当前会话里的全部标注元素"
                   >
                     清空
                   </button>
@@ -2843,7 +2915,7 @@
           </div>
           <!-- /editor-body -->
 
-          <!-- 状态栏：当前工具 / 取点进度 / 状态消息 / 应用（常驻，不遮挡画布） -->
+          <!-- 状态栏：当前工具 / 取点进度 / 状态消息 / 应用 -->
           <div class="status-bar" id="opCard">
             <span class="sb-tool" id="opTitle">选择</span>
             <span class="sb-rule"></span>
@@ -2879,33 +2951,43 @@
               <span
                 ><span class="btn-ic" data-icon="ruler"></span> 标尺校准</span
               >
-              <button class="modal-x" id="calDialogClose">
-                <span class="btn-ic" data-icon="x"></span>
-              </button>
+              <span class="modal-head-actions">
+                <button
+                  class="modal-x"
+                  id="calDialogHelp"
+                  data-help="常见物品尺度"
+                >
+                  <span class="btn-ic" data-icon="help"></span>
+                </button>
+                <button class="modal-x" id="calDialogClose">
+                  <span class="btn-ic" data-icon="x"></span>
+                </button>
+              </span>
             </div>
             <div class="modal-body">
-              <p class="modal-line">
-                已选两点，模型内距离：<strong id="calDialogModelDist">-</strong>
-              </p>
-              <label class="modal-field">
-                <span>真实距离（<em id="calDialogUnit">m</em>）</span>
-                <input
-                  type="number"
-                  id="calDialogRealDist"
-                  step="any"
-                  min="0"
-                  placeholder="例如 0.297"
-                />
-              </label>
-              <p class="modal-note">
-                这两点的真实长度（例：A4 长边 0.297 m）。
-              </p>
+              <div class="cal-row">
+                <span class="cal-label">模型尺度</span>
+                <span class="cal-val" id="calDialogModelDist">-</span>
+              </div>
+              <div class="cal-row">
+                <span class="cal-label">真实尺度</span>
+                <span class="cal-input-wrap">
+                  <input
+                    type="number"
+                    id="calDialogRealDist"
+                    step="any"
+                    min="0"
+                    placeholder="例如 0.297"
+                  />
+                  <em id="calDialogUnit">m</em>
+                </span>
+              </div>
               <p class="modal-note" id="calDialogResult"></p>
             </div>
             <div class="modal-foot">
               <button class="btn btn-sm" id="calDialogCancel">取消</button>
               <button class="btn btn-sm btn-primary" id="calDialogOk">
-                确定
+                完成
               </button>
             </div>
           </div>
@@ -3156,6 +3238,33 @@
               </label>
             </div>
             <div class="glass-card">
+              <h3>元素视图</h3>
+              <label class="modal-check" style="margin: 0 0 10px">
+                <input
+                  type="checkbox"
+                  id="cascadeSelectToggle"
+                  data-help="开启后，选中一个测量或点组会把它的顶点一起选中。默认关。"
+                />
+                选中父元素时级联选中子元素
+              </label>
+              <label class="modal-check" style="margin: 0 0 10px">
+                <input
+                  type="checkbox"
+                  id="cascadeDeleteToggle"
+                  data-help="开启后，删掉一个测量或点组时，它的顶点也一并删掉。默认关。"
+                />
+                删除父元素时级联删除子元素
+              </label>
+              <label class="modal-check" style="margin: 0">
+                <input
+                  type="checkbox"
+                  id="collapseChildrenToggle"
+                  data-help="开启后，测量完成时其顶点元素行会折叠在测量结果条目下，默认开。"
+                />
+                测量完成时折叠子元素
+              </label>
+            </div>
+            <div class="glass-card">
               <h3>视角</h3>
               <label class="modal-check" style="margin: 0 0 10px">
                 <input type="checkbox" id="turntableToggle" />
@@ -3165,7 +3274,7 @@
                 <input
                   type="checkbox"
                   id="gridGroundToggle"
-                  data-help="开启后，参考网格会自动转到点云的主平面（用最低那层点拟合出的「地面」），不再固定贴着世界水平面。只转网格、不动点云。"
+                  data-help="开启后，参考网格会自动转到点云的主平面"
                 />
                 网格贴合点云地面
               </label>
@@ -3364,6 +3473,19 @@
         huaweiPoints: null, // 华为 SLAM 稀疏点云 [{x,y,z},...]
         huaweiFusion: false, // 查看器是否融合华为点云
         colorMode: "rgb", // 'rgb'（真实颜色）| 'height'（按高度着色）
+        // 这朵云带不带真实颜色。不带（早期合成数据 / 服务端只回坐标）时
+        // 两种模式本来就是同一张图 → 颜色按钮没有意义，置灰。
+        cloudHasRgb: false,
+        // 设置项：测量完成后把它的子元素（被引用的顶点）折起来（默认开）。
+        collapseMeasureChildren: true,
+        // 设置项：选中父元素（测量）时把子元素（顶点）一起选中（默认关）。
+        cascadeSelect: false,
+        // 设置项：删除父元素时把子元素一起删（默认关）。
+        // 反方向（删子元素 → 连带删父元素）**不是设置**：父元素已经被破坏，
+        // 没有子元素的测量算不出东西，留着只是条坏数据。
+        cascadeDelete: false,
+        // 手动展开过的测量 id —— 默认全折叠，所以记的是**展开**而不是折叠。
+        expandedMeasurements: new Set(),
         cloudColors: null, // {rgb, height} 两种着色快照，供颜色开关切换
         axesVisible: false, // 万向轴（三环）是否显示；初始化时按本地设置覆盖
         theme: "deep", // 当前主题名（定义见 :root[data-theme=...]）
@@ -3514,6 +3636,9 @@
         unitGroup: $("#unitGroup"),
         toolLayout: $("#toolLayout"),
         boxNoRotateToggle: $("#boxNoRotateToggle"),
+        collapseChildrenToggle: $("#collapseChildrenToggle"),
+        cascadeSelectToggle: $("#cascadeSelectToggle"),
+        cascadeDeleteToggle: $("#cascadeDeleteToggle"),
         gridGroundToggle: $("#gridGroundToggle"),
         serverList: $("#serverList"),
         addServerBtn: $("#addServerBtn"),
@@ -3549,6 +3674,7 @@
         calDialogRealDist: $("#calDialogRealDist"),
         calDialogResult: $("#calDialogResult"),
         calDialogOk: $("#calDialogOk"),
+        calDialogHelp: $("#calDialogHelp"),
         calDialogCancel: $("#calDialogCancel"),
         calDialogClose: $("#calDialogClose"),
         // 历史页
@@ -5671,13 +5797,34 @@
         }
 
         // ---- 平移 / 缩放 ----
+        // ⚠️ 「滞涩」的根源：平移的步长 ∝ 相机到环绕中心的距离，缩放的步长 ∝ 当前距离，
+        //    而环绕中心就是**模型中心** —— 越贴上去，两者都越趋近 0，
+        //    手感上就是「拖了/滚了却几乎不动」。
+        //    修法：保留相对关系（远看粗、近看细），但把**世界单位**的步长夹在
+        //    上下限里；上下限按模型尺度给，换个大小的模型手感一致。
+        function modelRadius() {
+          const r = Number(STATE.fitRadius);
+          return isFinite(r) && r > 0 ? r : 1;
+        }
+        // 步长夹逼：先取绝对值夹到 [lo, hi]，再带回符号。
+        // ⚠️ 只给**平移**用它（平移的步长会随距离趋近 0）。缩放**不能**用：
+        //    给步长加下限后，从最近处往回滚时每格只能挪固定的一点点（线性增长），
+        //    实测就是「缩放也卡住了」——重得能自己把自己锁死在模型中心。
+        function clampStep(step) {
+          if (!isFinite(step) || step === 0) return 0;
+          const r = modelRadius();
+          const lo = r * 0.001; // 再贴也别低于「每 100px 动 0.1 个模型半径」
+          const hi = r * 0.5; // 再远也别高于「每 100px 动 50 个模型半径」
+          return Math.sign(step) * Math.min(Math.max(Math.abs(step), lo), hi);
+        }
         function panBy(dxPx, dyPx) {
           const rect = dom.getBoundingClientRect();
           const dist = camera.position.distanceTo(target);
           // 像素 → 世界：由相机 fov 与到 target 的距离决定
-          const worldPerPx =
+          const raw =
             (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * dist) /
             Math.max(rect.height, 1);
+          const worldPerPx = clampStep(raw);
           const delta = axisRight()
             .multiplyScalar(-dxPx * worldPerPx)
             .add(axisUp().multiplyScalar(dyPx * worldPerPx));
@@ -5686,8 +5833,17 @@
         }
         function zoomBy(scale) {
           const offset = camera.position.clone().sub(target);
-          const len = offset.length() * scale;
-          if (!isFinite(len) || len < MIN_DIST) return;
+          const dist = offset.length();
+          if (!isFinite(dist) || dist <= 0) return;
+          // 步长保持**相对**（远看快、近看细）：zoomBy 的倍率本身就不随距离变化，
+          // 所以不需要下限；只夹一个上限，防在很远的地方一滚就飞出模型。
+          const step = dist * (1 - scale);
+          const hi = modelRadius() * 0.5;
+          const bounded = Math.max(-hi, Math.min(hi, step));
+          // 「最近处」不能是环绕中心本身：那里朝向退化，而且看什么都一样。
+          // 留 5% 半径 —— 够近，又不是一个出不来的死点。
+          const floor = Math.max(modelRadius() * 0.05, MIN_DIST);
+          const len = Math.max(dist - bounded, floor);
           camera.position.copy(target).add(offset.setLength(len));
         }
 
@@ -6231,6 +6387,8 @@
         const dist = (radius * 1.3) / Math.tan(fov / 2);
         const dir = new THREE.Vector3(0.6, 0.35, 0.72).normalize();
         const target = new THREE.Vector3().fromArray(fit.center);
+        // 模型尺度：平移/缩放的步长上下限按它给（见 createCameraRig 里的 clampStep）
+        STATE.fitRadius = radius;
         STATE.viewerControls.target.copy(target);
         STATE.viewerCamera.position.copy(target).addScaledVector(dir, dist);
         STATE.viewerCamera.lookAt(target);
@@ -6581,7 +6739,6 @@
         "tool:line": `${_SVG_OPEN}<circle cx="6.2" cy="17.4" r="2"/><circle cx="17.8" cy="6.6" r="2"/><path d="M7.7 16.1 16.3 7.9"/></svg>`,
         "tool:calibrate": `${_SVG_OPEN}<path d="M3.4 14.6 14.6 3.4l6 6L9.4 20.6z"/><path d="M7.7 10.3l1.7 1.7M10.5 7.5l1.7 1.7M13.3 4.7l1.7 1.7"/></svg>`,
         "tool:area": `${_SVG_OPEN}<path d="M6.4 17.6h6.8l4.4-11.2H10.8z"/></svg>`,
-        "tool:triangleArea": `${_SVG_OPEN}<path d="M12 4.8 20 19.2H4z"/></svg>`,
         "tool:volume": `${_SVG_OPEN}<path d="M12 3.2 19.4 7.5v9L12 20.8 4.6 16.5v-9z"/><path d="M4.6 7.5 12 11.8l7.4-4.3M12 11.8v9"/></svg>`,
         modelPickBtn: `${_SVG_OPEN}<rect x="6" y="6" width="12" height="12" rx="2.4"/><path d="M9.5 3.6v2.4M14.5 3.6v2.4M9.5 18v2.4M14.5 18v2.4M3.6 9.5H6M3.6 14.5H6M18 9.5h2.4M18 14.5h2.4"/></svg>`,
       };
@@ -6599,10 +6756,9 @@
         "tool:select": "选择",
         "tool:box2d": "框选",
         "tool:pan": "移动",
-        "tool:line": "画线",
+        "tool:line": "长度",
         "tool:calibrate": "反向尺度推导",
         "tool:area": "面积",
-        "tool:triangleArea": "三角形面积",
         "tool:volume": "体积",
       };
       function toolbarKeyOf(btn) {
@@ -6690,6 +6846,9 @@
         trash: TOOLBAR_ICONS.clearViewerBtn,
         ruler: TOOLBAR_ICONS["tool:calibrate"],
         export: TOOLBAR_ICONS.exportBtn,
+        help: TOOLBAR_ICONS.helpBtn,
+        // 展开箭头：默认朝下（= 已展开），折起时靠 CSS 转 -90°
+        caret: `${_SVG_OPEN}<path d="M6 9.4 12 15.4l6-6"/></svg>`,
       };
       function paintUiIcons() {
         document.querySelectorAll("[data-icon]").forEach((slot) => {
@@ -6781,7 +6940,8 @@
         updateFusionButton();
         const hasCloud = !!STATE.viewerPointCloud;
         if (dom.colorModeBtn) {
-          dom.colorModeBtn.disabled = !hasCloud;
+          // 没有真实颜色的云没有可切换的东西 → 置灰（而不是点了没反应）
+          dom.colorModeBtn.disabled = !hasCloud || !STATE.cloudHasRgb;
           dom.colorModeBtn.classList.toggle(
             "satisfied",
             STATE.colorMode === "height",
@@ -7041,15 +7201,26 @@
           saved = null;
         }
         const out = [];
+        let stale = false;
         if (Array.isArray(saved)) {
           for (const it of saved) {
-            if (!it || !TOOL_ORDER_DEFAULT.includes(it.tool)) continue;
+            if (!it || !TOOL_ORDER_DEFAULT.includes(it.tool)) {
+              stale = true;
+              continue;
+            }
             out.push({ tool: it.tool, visible: it.visible !== false });
           }
         }
         for (const t of TOOL_ORDER_DEFAULT) {
           if (!out.some((x) => x.tool === t))
             out.push({ tool: t, visible: toolDefaultVisible(t) });
+        }
+        if (stale) {
+          try {
+            writeLS("omni3d.tool_layout", JSON.stringify(out));
+          } catch (_) {
+            /* 忽略：清不掉只影响下次打开 */
+          }
         }
         return out;
       }
@@ -7111,7 +7282,7 @@
           });
           const name = document.createElement("span");
           name.className = "tl-name";
-          // 图标先上：平行四边形／三角形／体积这几个光看名字容易搞混
+          // 图标先上：面积／体积这几个光看名字容易搞混
           const icon = TOOLBAR_ICONS[`tool:${item.tool}`];
           if (icon) {
             const ico = document.createElement("span");
@@ -7652,7 +7823,13 @@
         }
         const geom = new THREE.BufferGeometry();
         geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-        geom.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+        // ⚠️ 颜色属性必须拿**自己的**一份：three 的 BufferAttribute 只是引用
+        //    传进去的数组（不拷贝），而 `setColorMode` 直接改写这个数组 ——
+        //    共用一份就会把快照里的真彩色覆盖掉（见下面的 cloudColors）。
+        geom.setAttribute(
+          "color",
+          new THREE.BufferAttribute(colors.slice(), 3),
+        );
         const mat = new THREE.PointsMaterial({
           size: 0.008,
           vertexColors: true,
@@ -7663,12 +7840,15 @@
         const pointCloud = new THREE.Points(geom, mat);
         scene.add(pointCloud);
         STATE.viewerPointCloud = pointCloud;
-        // 两种着色各留一份拷贝供颜色开关切换。
-        // 不能共用同一个数组：切到高度着色时会把「真实颜色」那份也改掉。
+        // 两种着色各留一份**拷贝**供颜色开关切换。
+        // ⚠️ 不能共用同一个数组：切到高度着色时会把「真实颜色」那份也改掉
+        //    —— 表现就是「颜色只能切一次，之后再也切不回来」（用户实测）。
         STATE.cloudColors = {
           rgb: colors.slice(),
           height: buildHeightColors(positions),
         };
+        // 没有真实颜色的云：两种模式本来就是同一张图 → 颜色按钮没有意义
+        STATE.cloudHasRgb = !!decoded.hasRgb;
         // 完整基准：删「点云对象」时从这份过滤重建，撤销才回得去
         STATE.cloudSource = {
           positions: positions.slice(),
@@ -7825,6 +8005,8 @@
       //   closeLine = 收口预览（虚线）：当前指向的落点 → 起点
       let guideLine = null;
       let closeLine = null;
+      // 面积测量中显示的「被测那块」（半透明面 + 虚线边界），由 refreshPlanePatch 维护
+      let planePatch = null;
       // 最近一次悬停到的世界坐标。落点后引导线要立刻接上，
       // 而那时鼠标并没有动 —— 不记下来就只能等下一次 pointermove 才刷新。
       let lastHoverWorld = null;
@@ -7888,6 +8070,71 @@
       function hideGuideLines() {
         if (guideLine) guideLine.visible = false;
         if (closeLine) closeLine.visible = false;
+      }
+
+      function hidePlanePatch() {
+        if (!planePatch) return;
+        if (STATE.viewerScene) STATE.viewerScene.remove(planePatch);
+        planePatch.traverse((o) => {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) {
+            if (o.material.map) o.material.map.dispose();
+            o.material.dispose();
+          }
+        });
+        planePatch = null;
+      }
+
+      // 面积：把「即将量到的那块」画出来。顶点一到三个就没有平面可言（平面还没定），
+      // 所以什么都不画 —— 从第四个顶点起才看得出「前面三点定下的平面在哪」。
+      function refreshPlanePatch() {
+        hidePlanePatch();
+        const scene = STATE.viewerScene;
+        if (!scene || !ringToolActive()) return;
+        const vectors = pendingPointElements()
+          .map(elementVector)
+          .filter(Boolean);
+        if (vectors.length < 3) return;
+        // 元素存原始坐标，画到 scene 上要先正旋（与 hoverMarker / 引导线同一套约定）
+        const world = vectors.map((v) => elementWorldPoint([v.x, v.y, v.z]));
+        const patch = makePolygonPatch(world, { opacity: 0.18 });
+        if (!patch) return;
+        // 边界也画一圈（虚线）：收口那条边在「完成」之前还没落成元素，
+        // 不画出来用户就不知道这块面在哪合上。
+        const px =
+          STATE.viewerCamera && STATE.viewerRenderer ? worldPerPixel() : 0;
+        const loop = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([...world, world[0]]),
+          new THREE.LineDashedMaterial({
+            color: 0x00d4ff,
+            transparent: true,
+            opacity: 0.7,
+            dashSize: px > 0 ? px * 8 : 0.05,
+            gapSize: px > 0 ? px * 5 : 0.03,
+          }),
+        );
+        loop.computeLineDistances();
+        loop.renderOrder = 997;
+        loop.frustumCulled = false;
+        patch.add(loop);
+        planePatch = patch;
+        scene.add(patch);
+      }
+
+      // 悬停 / 落点的**真实落点**：面积会把顶点投到测量平面上，预览就得投到同一个
+      // 地方 —— 否则圆环贴在点云表面、顶点却落在平面上，看着像两个位置。
+      function ringPlaneWorld() {
+        if (!ringToolActive()) return null;
+        const pts = pendingPointElements()
+          .map((el) => elementVector(el))
+          .filter(Boolean)
+          .map((v) => elementWorldPoint([v.x, v.y, v.z]));
+        return pts.length >= 3 ? measurePlaneOf(pts) : null;
+      }
+
+      function landingPointFor(worldPoint) {
+        const plane = ringPlaneWorld();
+        return plane ? projectOntoPlane(worldPoint, plane) : worldPoint;
       }
 
       // 每次悬停 / 落点后刷新。hoverWorld = 当前指向的世界坐标（null = 没指向）
@@ -8165,13 +8412,12 @@
           }
           return;
         }
-        // 先看是不是点中了**本次已取**的顶点：是就不落新点，而是连一条线过去
-        // （收口就靠这个 —— 测量模式下点云永远落新点，没法点回旧点）
-        const hitPending = pickPendingVertex(event);
-        if (hitPending) {
-          await linkToPendingVertex(hitPending);
-          return;
-        }
+        // ❌ 这里**不再**先做一次「是不是点中了本次已取的顶点」的拾取。
+        //    那个分支会把「落在旧顶点拾取半径内的点击」吃掉，改成连一条线过去：
+        //    想在小物体上密集点几个顶点，只要靠近已经点过的那个点，就会被当成
+        //    「你又选了它」，新点根本落不下去（用户：「在容差内的会被识别成之前
+        //    选中的点」）。收口也不需要它 ——「完成」会调 closeRing()，自动把
+        //    两个只剩一条线的端点接上。所以测量模式下**每一次点击都落新点**。
         const picked = pickNearestPoint(event);
         if (!picked) {
           showToast("这里没点到东西（换个角度或放大些再试）", "warn");
@@ -8196,6 +8442,8 @@
           return;
         }
         const p = pickNearestPoint(event);
+        // 预览的是**真实落点**（面积会投到测量平面上），见 landingPointFor
+        const land = p ? landingPointFor(p) : null;
         if (!hoverMarker) {
           const ringGeom = new THREE.RingGeometry(
             HOVER_RING_OUTER_WORLD * 0.7,
@@ -8213,8 +8461,8 @@
           hoverMarker.renderOrder = 999;
           STATE.viewerScene.add(hoverMarker);
         }
-        if (p) {
-          hoverMarker.position.copy(p);
+        if (land) {
+          hoverMarker.position.copy(land);
           // 屏幕恒定大小：基准半径是世界单位，不按相机距离缩放的话，拉远就
           // 看不见了（用户会以为「预览没了」，其实它还在，只是成了一个点）。
           const s = (worldPerPixel() * HOVER_RING_PX) / HOVER_RING_OUTER_WORLD;
@@ -8224,7 +8472,7 @@
           hoverMarker.visible = false;
         }
         // 引导线与圆环同步（面积/体积才画；其他工具会自己隐掉）
-        updateGuideLines(p || null);
+        updateGuideLines(land || null);
       }
 
       function addMeasurementPoint(point) {
@@ -8249,7 +8497,7 @@
           STATE.measurePoints[idx - 1].label = label;
         }
         if (STATE.measurePoints.length === 2) {
-          // 画线
+          // 长度
           const p1 = STATE.measurePoints[0].point;
           const p2 = STATE.measurePoints[1].point;
           const lineGeom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
@@ -8498,6 +8746,19 @@
         dom.calDialogOk.addEventListener("click", confirmCalibration);
         dom.calDialogCancel.addEventListener("click", closeCalibrationDialog);
         dom.calDialogClose.addEventListener("click", closeCalibrationDialog);
+        // 「常见物品尺度」清单在帮助文档里 —— 跳过去并滚到那一节
+        if (dom.calDialogHelp) {
+          dom.calDialogHelp.addEventListener("click", () => {
+            closeCalibrationDialog();
+            navigateTo("help");
+            // 帮助文档是启动时异步载入的；navigateTo 会把滚动位置复位，
+            // 所以等一帧再滚到锚点。
+            requestAnimationFrame(() => {
+              const target = document.getElementById("scale-reference");
+              if (target) target.scrollIntoView({ block: "start" });
+            });
+          });
+        }
         dom.calDialog.addEventListener("click", (e) => {
           if (e.target === dom.calDialog) closeCalibrationDialog();
         });
@@ -8979,59 +9240,41 @@
         select: {
           label: "选择",
           need: 0,
-          hint: "",
         },
         box2d: {
           label: "框选",
           need: 0,
-          hint: "",
         },
         pan: {
           label: "移动",
           need: 0,
-          hint: "",
         },
         line: {
-          label: "画线",
+          label: "长度",
           need: 2,
           op: "length",
-          hint: "量两点之间的距离：选好 2 个点后点「应用」，或直接点两个点。",
         },
         calibrate: {
           label: "尺度",
           need: 2,
-          hint: "用一段已知的真实长度反推整模尺度：选好 2 个点，在弹窗里填这段的真实长度。",
         },
         area: {
           label: "面积",
           need: 3,
           op: "polygon_area",
-          hint: "沿这块面的边缘依次点拐角：每落一个点就连一条线，虚线预告收口的位置，够 3 个起点「完成」即可（会自动把环合上）。",
-        },
-        triangleArea: {
-          label: "三角形面积",
-          need: 3,
-          op: "triangle_area",
-          hint: "量 3 个点确定的三角形面积：选好 3 个点后点「应用」，或直接点三个点。",
         },
         volume: {
           label: "体积",
           need: 4,
           op: "polyhedron_volume",
-          hint: "依次点实体的各个顶点（三棱柱就是 6 个角）：够 4 个起就有数值，点「完成」按这些顶点算体积并画出轮廓。",
         },
       };
       // 工具组的默认顺序与设置页的「工具组」配置共用
-      const TOOL_ORDER_DEFAULT = [
-        "line",
-        "calibrate",
-        "area",
-        "triangleArea",
-        "volume",
-      ];
+      const TOOL_ORDER_DEFAULT = ["line", "calibrate", "area", "volume"];
       // 默认**不可见**的工具（可在设置 → 界面 里打开）。
-      // 三角形面积与平行四边形面积是同一套三点流程，默认只留一个，避免按钮堆一排。
-      const TOOL_DEFAULT_VISIBLE = { triangleArea: false };
+      // 现在没有这一类的工具（三角形面积已删：量三点围成的面积由「面积」覆盖），
+      // 机制留着 —— 加新工具时把 id 放进来即可。
+      const TOOL_DEFAULT_VISIBLE = {};
       function toolDefaultVisible(tool) {
         return TOOL_DEFAULT_VISIBLE[tool] !== false;
       }
@@ -9082,12 +9325,8 @@
           };
         }
         if (isMultiPointTool(tool)) {
-          // 进度看**本次引导**（pending）。元素列表里的选中集会在点工具那一刻
-          // 被采纳进来（见 adoptSelectionAsVertices），所以这里不用再看它。
           const got = pendingPointElements().length;
           const active = STATE.activeTool === tool;
-          // 不再要求「已经收口」才可完成 —— **「完成」自己会收口**。
-          // 否则用户得先猜着把环点上、按钮才亮，那正是「难受」的来源之一。
           return {
             enabled: true,
             canApply: active && got >= need,
@@ -9096,25 +9335,31 @@
             reason:
               !active || !got
                 ? `至少要 ${need} 个顶点`
-                : `已取 ${got} 个 · 可完成`,
+                : got < need
+                  ? `已取 ${got}/${need} · 未完成`
+                  : `已取 ${got} 个 · 可完成`,
           };
         }
-        if (need && have === need) {
+        // ---- 测量工具----
+        if (need) {
+          const pend =
+            STATE.activeTool === tool ? pendingPointElements().length : 0;
+          const got = Math.max(pend, have);
+          const canApply = have === need; // 列表里选中正好 need 个就能直接套用
+          const mismatch = have > 0 && have !== need;
           return {
-            enabled: true,
-            canApply: true,
-            have,
+            // 选中数既不是 0 也不是 need 禁用
+            enabled: !have || canApply,
+            canApply,
+            have: got,
             need,
-            reason: `已取 ${have}/${need} 点 · 可应用`,
-          };
-        }
-        if (!have) {
-          return {
-            enabled: true,
-            canApply: false,
-            have,
-            need,
-            reason: need ? `还需 ${need} 个点` : "",
+            reason: canApply
+              ? `已取 ${got} 个 · 可应用`
+              : mismatch
+                ? `已选 ${have} 个 · 只需 ${need} 个`
+                : !got
+                  ? `至少要 ${need} 个点`
+                  : `已取 ${got}/${need} · 未完成`,
           };
         }
         return {
@@ -9122,7 +9367,7 @@
           canApply: false,
           have,
           need,
-          reason: `已取 ${have}/${need} 点 · 数量不匹配`,
+          reason: "",
         };
       }
 
@@ -9136,7 +9381,7 @@
         solid: "体积",
         measurement: "测量",
       };
-      // 测量动作的中文名（元素行里显示）
+      // 测量动作的中文名
       const OP_LABEL = {
         length: "长度",
         triangle_area: "三角形面积",
@@ -9277,6 +9522,80 @@
         const len = nrm.length();
         if (len <= 1e-12) return 0;
         return Math.abs(new THREE.Vector3().subVectors(p, a).dot(nrm)) / len;
+      }
+
+      // ---- 面积的**测量平面** ----
+      // 用户口径：面积必须能指出「量的是哪一块」。最佳拟合平面做不到这一点 ——
+      // 点一多，整个平面会跟着转，量的东西在用户看不见的地方悄悄变了
+      //（用户：「使用拟合平面会导致用户无法确定实际测量的是哪里的面积」）。所以：
+      //   · 平面由**前三个顶点**定死（三个点本来就在一个平面上）；
+      //   · 之后每个顶点都投影到这个平面上 —— 顶点永远严格共面，服务端算的就是
+      //     这个投影多边形的面积，**所见即所测**；
+      //   · 平面本身**画出来**（半透明的一块 + 虚线边界）。
+      // 撤销（Ctrl+Z）删掉顶点后，平面按剩下的前三点重算 —— 这就是「重定平面」。
+      function measurePlaneOf(vectors) {
+        if (!vectors || vectors.length < 3) return null;
+        const a = vectors[0];
+        const nrm = new THREE.Vector3()
+          .subVectors(vectors[1], a)
+          .cross(new THREE.Vector3().subVectors(vectors[2], a));
+        if (nrm.length() <= 1e-12) return null; // 前三点共线 → 平面还没定下来
+        nrm.normalize();
+        const u = new THREE.Vector3().subVectors(vectors[1], a).normalize();
+        const v = new THREE.Vector3().crossVectors(nrm, u).normalize();
+        return { origin: a.clone(), normal: nrm, u, v };
+      }
+
+      function projectOntoPlane(p, plane) {
+        const off = new THREE.Vector3()
+          .subVectors(p, plane.origin)
+          .dot(plane.normal);
+        return p.clone().addScaledVector(plane.normal, -off);
+      }
+
+      // 本次引导（面积）的测量平面；顶点不够三个 / 前三点共线时是 null
+      function currentMeasurePlane(els) {
+        if (!isRingOp(activeOp())) return null;
+        const list = els || pendingPointElements();
+        return measurePlaneOf(list.map(elementVector).filter(Boolean));
+      }
+
+      // 面积那块「被测的面」：绕质心的扇形三角化（凸多边形下就是正解，
+      // 与服务端 polygon_area 「绕质心极角排序」同一套口径）。
+      function makePolygonPatch(points, opts = {}) {
+        if (!points || points.length < 3) return null;
+        const centre = new THREE.Vector3();
+        for (const p of points) centre.add(p);
+        centre.multiplyScalar(1 / points.length);
+        const verts = [];
+        for (let i = 0; i < points.length; i++) {
+          const a = points[i];
+          const b = points[(i + 1) % points.length];
+          verts.push(
+            centre.x,
+            centre.y,
+            centre.z,
+            a.x,
+            a.y,
+            a.z,
+            b.x,
+            b.y,
+            b.z,
+          );
+        }
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+        const mat = new THREE.MeshBasicMaterial({
+          color: opts.color === undefined ? 0x00d4ff : opts.color,
+          transparent: true,
+          opacity: opts.opacity === undefined ? 0.16 : opts.opacity,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.renderOrder = opts.renderOrder === undefined ? 996 : opts.renderOrder;
+        mesh.frustumCulled = false;
+        return mesh;
       }
 
       function elementVector(el) {
@@ -9436,10 +9755,7 @@
             b.classList.toggle("active", b.dataset.tool === def);
           });
         if (!opts.silentHint) {
-          // 多点工具的 hint 是一整句操作说明 —— 那属于帮助内容。常驻状态栏会和
-          // 左边的进度文案叠成「一堆过多的说明」（用户实测），所以这里留空，
-          // 进度由 opReq / progressHint 说。
-          setToolHint(isMultiPointTool(def) ? "" : TOOL_DEFS[def].hint || "");
+          setToolHint("");
         }
         if (STATE.viewerContainer) {
           STATE.viewerContainer.classList.toggle(
@@ -9481,14 +9797,9 @@
       function orderRingVertices(els) {
         if (els.length < 3) return null;
         const pts = els.map(elementVector);
-        const a = pts[0];
-        const nrm = new THREE.Vector3()
-          .subVectors(pts[1], a)
-          .cross(new THREE.Vector3().subVectors(pts[2], a));
-        if (nrm.length() <= 1e-12) return null; // 前三点共线 → 定不出平面
-        nrm.normalize();
-        const u = new THREE.Vector3().subVectors(pts[1], a).normalize();
-        const v = new THREE.Vector3().crossVectors(nrm, u);
+        const plane = measurePlaneOf(pts);
+        if (!plane) return null; // 前三点共线 → 定不出平面
+        const { u, v } = plane;
         const c = new THREE.Vector3();
         for (const p of pts) c.add(p);
         c.multiplyScalar(1 / pts.length);
@@ -9518,16 +9829,26 @@
         if (tool === "area") {
           const pts = picked.map(elementVector);
           if (pts.length >= 3) {
-            const tol = coplanarTolerance();
-            const off = pts.filter(
-              (p) => pointPlaneDistance(p, pts[0], pts[1], pts[2]) > tol,
-            );
-            if (off.length) {
-              showToast(
-                `面积要求所有顶点共面：有 ${off.length} 个点偏出前三点所在平面`,
-                "warn",
+            const plane = measurePlaneOf(pts);
+            // 与前三点定下的测量平面同一口径：所有顶点都**投到那个平面上**
+            // （投影结果写回点元素，量的是投影多边形，也就是画出来那块）。
+            // 以前这里遇到不共面就 return，用户勾好 6 个点再点「面积」什么都不发生
+            //（用户：「所有超出容差的都选不了」）。
+            if (plane) {
+              const tol = coplanarTolerance();
+              const off = pts.filter(
+                (p) => pointPlaneDistance(p, pts[0], pts[1], pts[2]) > tol,
               );
-              return; // 不采纳、也不动数据
+              picked.forEach((el, i) => {
+                const q = projectOntoPlane(pts[i], plane);
+                el.points = [[q.x, q.y, q.z]];
+              });
+              if (off.length) {
+                showToast(
+                  `有 ${off.length} 个顶点偏离测量平面，已投到测量平面上`,
+                  "warn",
+                );
+              }
             }
             const ordered = orderRingVertices(picked);
             if (ordered) picked = ordered;
@@ -9560,7 +9881,7 @@
         if (def.op && chain.length >= (def.need || 0)) {
           await previewMeasure(def);
         } else {
-          setToolHint(progressHint(def));
+          setToolHint("");
         }
         updateToolStates();
       }
@@ -9585,7 +9906,7 @@
         pushUndo();
         STATE.selectedIds.clear();
         STATE.pendingIds = [];
-        setToolHint(`${def.label}：已用选中的 ${refs.length} 个点计算`);
+        setToolHint(`已用选中的 ${refs.length} 个点`);
         await createMeasurement(def, refs);
         renderElementList();
         renderElements();
@@ -9645,10 +9966,13 @@
           }
         }
         pc.geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        // ⚠️ `.slice()` 不能省：BufferAttribute 只是引用传进去的数组，
+        //    而它和 `STATE.cloudColors` 必须各持一份 —— 否则切换颜色时会把
+        //    真彩色写坏，表现是「颜色只能切一次，之后再也切不回来」。
         pc.geometry.setAttribute(
           "color",
           new THREE.BufferAttribute(
-            STATE.colorMode === "height" ? hgt : rgb,
+            (STATE.colorMode === "height" ? hgt : rgb).slice(),
             3,
           ),
         );
@@ -9908,7 +10232,7 @@
           return;
         }
 
-        // ---- 固定点数的工具（画线 / 尺度 / 三角形面积）：点满就结束 ----
+        // ---- 固定点数的工具（长度 / 尺度）：点满就结束 ----
         if (!isMultiPointTool(STATE.activeTool)) {
           pushUndo();
           const el = makePointElement([_p.x, _p.y, _p.z]);
@@ -9917,9 +10241,8 @@
           if (STATE.pendingIds.length < tool.need) {
             renderElementList();
             renderElements();
-            setToolHint(
-              `${tool.label}：已取 ${STATE.pendingIds.length}/${tool.need} 个点（Esc 取消）`,
-            );
+
+            setToolHint("");
             // 先落库，这样 Esc 后这些点依然在（#33）
             await persistCurrent();
             updateToolStates();
@@ -9927,12 +10250,14 @@
           }
           const refs = STATE.pendingIds.slice();
           STATE.pendingIds = [];
-          // 提示条要复位：否则测量都完成了还挂着「已取 2/3 个点」，
-          // 用户会以为下一轮已经取过点了（数值由 toast 汇报）
-          setToolHint(tool.hint || "");
-          await persistCurrent();
-          // 校准不是「产生一个测量」，而是拿两点来定尺度 → 弹窗问真实长度
+          setToolHint("");
+          if (refs.length === 2) {
+            STATE.elements.push(makeEdgeElement(refs[0], refs[1]));
+            renderElementList();
+            renderElements();
+          }
           if (STATE.activeTool === "calibrate") {
+            await persistCurrent();
             openCalibrationDialog(refs);
             return;
           }
@@ -9940,9 +10265,7 @@
           return;
         }
 
-        // ---- 手选全部顶点（面积 / 体积）----
-        // 面积要围成环，所以「上一个顶点已经接了两条边」就不能再接了；
-        // 体积只看点集（凸包），连线与度数都不设限。
+        // ---- 手选全部顶点
         const ring = ringToolActive();
         const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
         if (ring && prevId && degreeOfPoint(prevId) >= 2) {
@@ -9951,7 +10274,12 @@
           return;
         }
 
-        // 共面判定：第 4 个点起，与「前三点所在平面」比距离
+        // 共面判定：第 4 个点起，与「前三点所在平面」比距离。
+        // ⚠️ **只提示、不拦。** 服务端的 `polygon_area` 是「最小二乘拟合平面 →
+        //    投影上去 → 绕质心排序 → shoelace」，本来就容得下不严格共面的顶点，
+        //    反倒在这里硬性 return 才是 bug：模型的面上随便点几下，点云表面本来
+        //    就有厚度，稍一偏离就什么都不让你点（用户：「测量面积时所有超出容差的
+        //    都选不了」）。提示留着，是为了让人知道算的是**投影**面积。
         const existing = pendingPointElements();
         if (existing.length >= 3) {
           const dist = pointPlaneDistance(
@@ -9962,26 +10290,30 @@
           );
           const tol = coplanarTolerance();
           if (dist > tol && tool.op === "polygon_area") {
-            // 面积是平面图形：顶点偏出平面就没法连成一个多边形 → 拒绝落点
             showToast(
-              `该点离前三点所在平面 ${dist.toFixed(4)}，超出容差 ${tol.toFixed(4)}（模型的 3%）——面积要求所有顶点共面`,
+              `这个点离测量平面 ${dist.toFixed(4)}（参考容差 ${tol.toFixed(
+                4,
+              )}）：顶点已投到测量平面上`,
               "warn",
             );
-            return;
           }
           if (
             dist <= tol &&
             existing.length === 3 &&
             tool.op === "polyhedron_volume"
           ) {
-            // 第 4 点仍与前三点共面 → 围不出体。**不拦**（用户定的口径：
-            // 共面就共面，体积就是 0），但要说一声，免得他对着 0 发愣。
-            showToast("这 4 个点共面，体积会是 0", "warn");
+            // 4 点共面 → 凸包体积是 0，提醒一下（但照样落点，用户可以再来一个）
+            showToast("这 4 个点基本共面", "warn");
           }
         }
 
+        // 面积：顶点投到「前三点定下的测量平面」上 —— 见 measurePlaneOf 的注释。
+        // 顶点严格共面，服务端算的就是**画出来那块**的面积，所见即所测。
+        const plane = ring ? currentMeasurePlane(existing) : null;
+        const vertex = plane ? projectOntoPlane(_p, plane) : _p;
+
         pushUndo();
-        const el = makePointElement([_p.x, _p.y, _p.z]);
+        const el = makePointElement([vertex.x, vertex.y, vertex.z]);
         STATE.elements.push(el);
         if (ring && prevId) STATE.elements.push(makeEdgeElement(prevId, el.id));
         STATE.pendingIds.push(el.id);
@@ -9994,22 +10326,12 @@
         await persistCurrent();
 
         if (STATE.pendingIds.length < tool.need) {
-          setToolHint(progressHint(tool));
+          setToolHint("");
           updateToolStates();
           return;
         }
         await previewMeasure(tool);
         updateToolStates();
-      }
-
-      // 取点进度（状态栏）。只写**下一步做什么**，不复述工具名与个数上限 ——
-      // 那些由左边的 opReq 说，两边都写就成了用户说的「一堆过多的说明」。
-      function progressHint(tool) {
-        const got = pendingPointElements().length;
-        // 收口不用用户操心（「完成」自己会做），所以这里**只说还差几个点**；
-        // 够数之后没什么要说的 —— 由左边的「已取 N 个 · 可完成」表达。
-        if (got < tool.need) return `还差 ${tool.need - got} 个顶点`;
-        return "";
       }
 
       // 落点后的实时数值：**只算不存**（preview）。
@@ -10048,29 +10370,10 @@
         }
       }
 
-      // 本次测量里的顶点在屏幕上的最近命中（用于「点回起点」收口）。
-      // 测量模式下点云永远落新点，所以收口只能靠点中已落的顶点。
-      function pickPendingVertex(event) {
-        if (!STATE.viewerCamera || !STATE.viewerRenderer) return null;
-        const rect = STATE.viewerRenderer.domElement.getBoundingClientRect();
-        const mx = event.clientX - rect.left;
-        const my = event.clientY - rect.top;
-        let best = null;
-        let bestD = Infinity;
-        for (const el of pendingPointElements()) {
-          const v = elementVector(el);
-          if (!v) continue;
-          // 同上：元素存原始坐标，比屏幕距离前先正旋
-          const s = projectElementToScreen([v.x, v.y, v.z]);
-          if (!s.visible) continue;
-          const d = Math.hypot(s.x - mx, s.y - my);
-          if (d < bestD) {
-            bestD = d;
-            best = el;
-          }
-        }
-        return bestD <= elementPickRadius() ? best : null;
-      }
+      // ⚠️ 这里曾经有个 pickPendingVertex（在屏幕上找最近的已取顶点），用来
+      //    「点回起点手动收口」。它是「新点落不下去」的元凶，已删：收口交给
+      //    closeRing（点「完成」时自动接上两个只剩一条线的端点）。
+      //    pickElement 仍然要走 projectElementToScreen，坐标转换只剩那一份。
 
       // 建一条连线 —— **唯一的建边路径**（含「每个顶点最多连两条」这条校验）。
       // opts.silent：失败只返回 false、不弹提示（调用方自己组织文案 —— 比如
@@ -10095,14 +10398,9 @@
         return true;
       }
 
-      // 从上一个顶点连一条线到指定的（本次已取的）顶点 —— **手动**收口走这里
-      async function linkToPendingVertex(el) {
-        const prevId = STATE.pendingIds[STATE.pendingIds.length - 1];
-        return await addEdgeBetween(prevId, el.id);
-      }
-
       // **自动**收口：把两个「只剩一条线」的端点接上（正常就是起点与最后一个点）。
       // 用户不必再精确点回起点 —— 那一下在稠密点云里很难点中（用户：「体验很难受」）。
+      // 现在它是**唯一**的收口路径：手动点回起点那条已经删了（它会吃掉新落点）。
       async function closeRing() {
         const ends = pendingPointElements().filter(
           (el) => degreeOfPoint(el.id) === 1,
@@ -10156,6 +10454,12 @@
         const def = toolDefOf(tool);
         const sid = currentSessionId();
         if (!sid) return false;
+        // ⚠️ **先落库，再让服务端算。** `/measure` 是按**服务端已存的标注**
+        //    解析 `element_ids` 的，而刚刚落下的那个点还在本地 —— 长度 / 尺度的
+        //    最后一个点就是这种情况：不先存就会报「元素不存在: e_xxxx」，
+        //    而界面上元素明明已经出现（用户实测：每次连线第二个点都报错）。
+        //    这里只存不回读（reloadAnnotations 会把本次引导状态清掉）。
+        await persistAnnotations();
         try {
           const resp = await fetch(
             `/api/sessions/${encodeURIComponent(sid)}/measure`,
@@ -10183,7 +10487,13 @@
         return true;
       }
 
-      // ---- 级联删除：删一个点，引用它的测量/派生形一起删 ----
+      // ---- 级联删除 ----
+      // 两个方向：
+      //   子 → 父：删一个顶点，引用它的测量/派生形一起删（**总是**这样）。
+      //            父元素少了顶点就算不出东西，留着只是条坏数据 —— 不是设置项。
+      //   父 → 子：删一条测量，它的顶点是否一起删（设置 → 行为「删除父元素时级联
+      //            删除子元素」，默认关）。
+      // 两个方向一起做不动点迭代：父 → 子 删掉的顶点可能又让别的测量变成坏数据。
       function withDependents(ids) {
         const doomed = new Set(ids);
         let changed = true;
@@ -10196,6 +10506,15 @@
               changed = true;
             }
           }
+          if (!STATE.cascadeDelete) continue;
+          for (const el of STATE.elements) {
+            if (!doomed.has(el.id) || el.kind !== "measurement") continue;
+            for (const r of el.refs || []) {
+              if (doomed.has(r)) continue;
+              doomed.add(r);
+              changed = true;
+            }
+          }
         }
         return doomed;
       }
@@ -10205,13 +10524,37 @@
         askDeleteElements([...STATE.selectedIds]);
       }
 
+      // 级联选中用：这个元素连同它引用的子元素（传递展开）。
+      // 只往**下**走（父 → 子）：选中一个顶点不会顺手选中引用它的测量 ——
+      // 那样「只想动这个点」就做不到了。
+      function selectionGroupOf(id) {
+        const out = [];
+        const seen = new Set();
+        const stack = [id];
+        while (stack.length) {
+          const cur = stack.pop();
+          if (seen.has(cur)) continue;
+          seen.add(cur);
+          const el = elementById(cur);
+          if (!el) continue;
+          out.push(cur);
+          for (const r of el.refs || []) stack.push(r);
+        }
+        return out;
+      }
+
       function toggleSelect(id, additive) {
+        // 「选中父元素时级联选中子元素」（设置 → 行为，默认关）
+        const group = STATE.cascadeSelect ? selectionGroupOf(id) : [id];
         if (additive) {
-          if (STATE.selectedIds.has(id)) STATE.selectedIds.delete(id);
-          else STATE.selectedIds.add(id);
+          const on = !STATE.selectedIds.has(id);
+          for (const x of group) {
+            if (on) STATE.selectedIds.add(x);
+            else STATE.selectedIds.delete(x);
+          }
         } else {
           STATE.selectedIds.clear();
-          STATE.selectedIds.add(id);
+          for (const x of group) STATE.selectedIds.add(x);
         }
         renderElementList();
         renderElements();
@@ -10255,11 +10598,13 @@
           const rows = [];
           const emit = (el, child) => {
             rows.push(buildElementRow(el, child));
-            if (el.kind === "measurement") {
-              for (const r of el.refs || []) {
-                const ref = elementById(r);
-                if (ref) emit(ref, true);
-              }
+            if (el.kind !== "measurement") return;
+            // 子元素（被引用的顶点）**默认折起来**（设置 → 行为 可关）：
+            // 一条测量动辄挂 4~10 个顶点，全铺开就把列表淹了。
+            if (childrenCollapsed(el)) return;
+            for (const r of el.refs || []) {
+              const ref = elementById(r);
+              if (ref) emit(ref, true);
             }
           };
           for (const el of elements) {
@@ -10370,12 +10715,46 @@
         return out;
       }
 
+      // 测量行的子元素要不要折叠。
+      // 默认**折**（设置项可关）；手动展开过的按 id 记在 expandedMeasurements 里。
+      function childrenCollapsed(el) {
+        if (!el || el.kind !== "measurement") return false;
+        if (!STATE.collapseMeasureChildren) return false;
+        if (!(el.refs || []).some((r) => elementById(r))) return false;
+        return !STATE.expandedMeasurements.has(el.id);
+      }
+
       function buildElementRow(el, isChild) {
         const row = document.createElement("div");
         row.className = "element-row" + (isChild ? " element-child" : "");
         row.dataset.id = el.id;
         if (STATE.selectedIds.has(el.id)) row.classList.add("selected");
         if (STATE.pendingIds.includes(el.id)) row.classList.add("pending");
+
+        // 展开 / 折叠（只有带子元素的测量行才有）：放最前面，便于竖向扫读。
+        const caret = document.createElement("button");
+        caret.type = "button";
+        caret.className = "row-caret";
+        const hasChildren =
+          el.kind === "measurement" &&
+          (el.refs || []).some((r) => elementById(r));
+        if (hasChildren) {
+          const collapsed = childrenCollapsed(el);
+          caret.innerHTML = UI_ICONS.caret;
+          caret.classList.toggle("collapsed", collapsed);
+          caret.title = collapsed ? "展开子元素" : "折叠子元素";
+          caret.addEventListener("click", (e) => {
+            e.stopPropagation(); // 别顺带把这一行选中了
+            if (collapsed) STATE.expandedMeasurements.add(el.id);
+            else STATE.expandedMeasurements.delete(el.id);
+            renderElementList();
+          });
+        } else {
+          caret.classList.add("row-caret-empty");
+          caret.disabled = true;
+          caret.tabIndex = -1;
+        }
+        row.appendChild(caret);
 
         const box = document.createElement("input");
         box.type = "checkbox";
@@ -10698,6 +11077,15 @@
               geom = new THREE.BufferGeometry().setFromPoints([...pts, pts[0]]);
               mat = new THREE.LineBasicMaterial(lineMatOpts);
               line = new THREE.Line(geom, mat);
+              // 被测的那块也填出来：只画一圈边，用户还是看不出「量的是哪块」
+              //（用户：「使用拟合平面会导致用户无法确定实际测量的是哪里的面积」）。
+              // 顶点已经共面（落点时就投到测量平面上了），所以这块面就是投影多边形。
+              const patch = makePolygonPatch(pts, {
+                opacity: 0.14,
+                renderOrder: 995,
+                color: el.error ? 0xf87171 : 0x00d4ff,
+              });
+              if (patch) group.add(patch);
             } else if (isVolume) {
               const [A, B, C, E] = pts;
               const AB = B.clone().sub(A);
@@ -10831,6 +11219,9 @@
           gcloud.renderOrder = 999;
           group.add(gcloud);
         }
+        // 引导用的「被测那块」（面积测量中）跟着元素一起刷新 —— 元素一变
+        // （落点 / 撤销 / 换工具）它就得重算，否则会停在上一次的平面上。
+        refreshPlanePatch();
       }
 
       // ---- 框选（2D）：把元素的锚点投到屏幕，落在矩形内即选中 ----
@@ -11121,7 +11512,7 @@
       const COMMAND_DEFS = [
         { id: "tool:select", label: "选择", def: "1", tool: "select" },
         { id: "tool:box2d", label: "框选", def: "2", tool: "box2d" },
-        { id: "tool:line", label: "画线", def: "3", tool: "line" },
+        { id: "tool:line", label: "长度", def: "3", tool: "line" },
         {
           id: "tool:calibrate",
           label: "反向尺度推导",
@@ -11129,12 +11520,6 @@
           tool: "calibrate",
         },
         { id: "tool:area", label: "面积", def: "5", tool: "area" },
-        {
-          id: "tool:triangleArea",
-          label: "三角形面积",
-          def: "",
-          tool: "triangleArea",
-        },
         { id: "tool:volume", label: "体积", def: "6", tool: "volume" },
         { id: "tool:pan", label: "移动", def: "7", tool: "pan" },
         { id: "undo", label: "撤销", def: "z", btn: "undoBtn" },
@@ -11332,6 +11717,61 @@
           }
           showToast(
             STATE.boxNoRotate ? "框选时不旋转视角" : "框选时可同时旋转视角",
+            "success",
+          );
+        });
+      }
+      // 设置页：行为 —— 测量完成时是否折叠子元素
+      if (dom.collapseChildrenToggle) {
+        dom.collapseChildrenToggle.addEventListener("change", () => {
+          STATE.collapseMeasureChildren = dom.collapseChildrenToggle.checked;
+          try {
+            writeLS(
+              "omni3d.collapse_children",
+              STATE.collapseMeasureChildren ? "1" : "0",
+            );
+          } catch (_) {
+            /* 忽略 */
+          }
+          renderElementList();
+          showToast(
+            STATE.collapseMeasureChildren
+              ? "测量完成后折叠子元素"
+              : "测量完成后展开子元素",
+            "success",
+          );
+        });
+      }
+      // 设置页：行为 —— 选中父元素时是否级联选中子元素
+      if (dom.cascadeSelectToggle) {
+        dom.cascadeSelectToggle.addEventListener("change", () => {
+          STATE.cascadeSelect = dom.cascadeSelectToggle.checked;
+          try {
+            writeLS("omni3d.cascade_select", STATE.cascadeSelect ? "1" : "0");
+          } catch (_) {
+            /* 忽略 */
+          }
+          showToast(
+            STATE.cascadeSelect
+              ? "选中父元素时也选中子元素"
+              : "只选中点的那个元素",
+            "success",
+          );
+        });
+      }
+      // 设置页：行为 —— 删除父元素时是否级联删除子元素
+      if (dom.cascadeDeleteToggle) {
+        dom.cascadeDeleteToggle.addEventListener("change", () => {
+          STATE.cascadeDelete = dom.cascadeDeleteToggle.checked;
+          try {
+            writeLS("omni3d.cascade_delete", STATE.cascadeDelete ? "1" : "0");
+          } catch (_) {
+            /* 忽略 */
+          }
+          showToast(
+            STATE.cascadeDelete
+              ? "删除父元素时也删掉子元素"
+              : "删除父元素保留子元素",
             "success",
           );
         });
@@ -11650,6 +12090,30 @@
         STATE.boxNoRotate = saved === null ? true : saved === "1";
         if (dom.boxNoRotateToggle) {
           dom.boxNoRotateToggle.checked = STATE.boxNoRotate;
+        }
+      }
+      // 行为：测量完成时折叠子元素（默认折）
+      {
+        const saved = readLS("omni3d.collapse_children");
+        STATE.collapseMeasureChildren = saved === null ? true : saved === "1";
+        if (dom.collapseChildrenToggle) {
+          dom.collapseChildrenToggle.checked = STATE.collapseMeasureChildren;
+        }
+      }
+      // 行为：选中父元素时级联选中子元素（默认关）
+      {
+        const saved = readLS("omni3d.cascade_select");
+        STATE.cascadeSelect = saved === null ? false : saved === "1";
+        if (dom.cascadeSelectToggle) {
+          dom.cascadeSelectToggle.checked = STATE.cascadeSelect;
+        }
+      }
+      // 行为：删除父元素时级联删除子元素（默认关）
+      {
+        const saved = readLS("omni3d.cascade_delete");
+        STATE.cascadeDelete = saved === null ? false : saved === "1";
+        if (dom.cascadeDeleteToggle) {
+          dom.cascadeDeleteToggle.checked = STATE.cascadeDelete;
         }
       }
       // 行为：网格是否贴合点云地面（默认贴；只有显式存了 "0" 才不贴）
