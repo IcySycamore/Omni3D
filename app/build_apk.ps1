@@ -113,6 +113,17 @@ if (-not (Test-Path (Join-Path $AndroidBuild "AndroidManifest.xml"))) {
 Copy-Item $soPath $destLib -Force
 Write-Host "==> 已更新 $soName"
 
+# androiddeployqt 仅在首次生成 android-build；后续增量构建也需同步新增的 ARCore AAR 与 Java 安装接收器。
+$sourceLibs = Join-Path $Project "android\libs"
+$packageLibs = Join-Path $AndroidBuild "libs"
+New-Item -ItemType Directory -Force -Path $packageLibs | Out-Null
+Get-ChildItem $sourceLibs -File | Where-Object { $_.Extension -in '.aar', '.jar' } |
+    ForEach-Object { Copy-Item $_.FullName $packageLibs -Force }
+$sourceJava = Join-Path $Project "android\src"
+$packageJava = Join-Path $AndroidBuild "src"
+New-Item -ItemType Directory -Force -Path $packageJava | Out-Null
+Copy-Item (Join-Path $sourceJava "*") $packageJava -Recurse -Force
+
 # ---------- 5. 手动 gradle 打包（本地 gradle，不经 wrapper 下载）----------
 Write-Host "==> gradle assembleDebug"
 & $Gradle "-Dorg.gradle.java.home=$env:JAVA_HOME" -p $AndroidBuild assembleDebug --no-daemon

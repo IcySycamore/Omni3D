@@ -1,5 +1,5 @@
 #include "ar_scan_controller.h"
-#include "hw_ar_engine_session.h"
+#include "ar_runtime.h"
 
 #include <QHash>
 #include <QtMath>
@@ -30,6 +30,12 @@ void ArScanController::setAvailable(bool ok)
     if (m_available == ok)
         return;
     m_available = ok;
+    if (ok && ArRuntime::session()) {
+        if (m_previewW > 0 && m_previewH > 0)
+            ArRuntime::session()->setDisplaySize(m_previewW, m_previewH);
+        if (m_requestedW > 0 && m_requestedH > 0)
+            ArRuntime::session()->setPreviewResolution(m_requestedW, m_requestedH);
+    }
     emit availableChanged();
     if (!ok) {
         m_timer.stop();
@@ -42,19 +48,21 @@ void ArScanController::setPreviewSize(int w, int h)
 {
     if (w <= 0 || h <= 0)
         return;
-    HwArEngineSession::instance()->setDisplaySize(w, h);
+    m_previewW = w; m_previewH = h;
+    if (ArRuntime::session()) ArRuntime::session()->setDisplaySize(w, h);
 }
 
 void ArScanController::setResolution(int w, int h)
 {
     if (w <= 0 || h <= 0)
         return;
-    HwArEngineSession::instance()->setPreviewResolution(w, h);
+    m_requestedW = w; m_requestedH = h;
+    if (ArRuntime::session()) ArRuntime::session()->setPreviewResolution(w, h);
 }
 
 bool ArScanController::startScan()
 {
-    if (!m_available || !HwArEngineSession::instance()->isCameraOn()) {
+    if (!m_available || !ArRuntime::session() || !ArRuntime::session()->isCameraOn()) {
         SLOG("startScan rejected (camera not on yet)");
         return false;
     }
@@ -80,7 +88,7 @@ void ArScanController::stopScan()
 // 拍一张：单帧采集（不启动录制）
 void ArScanController::captureOne()
 {
-    if (!m_available || !HwArEngineSession::instance()->isCameraOn()) {
+    if (!m_available || !ArRuntime::session() || !ArRuntime::session()->isCameraOn()) {
         SLOG("captureOne rejected (camera not on yet)");
         return;
     }

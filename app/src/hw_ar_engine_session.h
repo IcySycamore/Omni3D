@@ -30,28 +30,28 @@ public:
     bool initialize(unsigned int cameraTextureId) override;
     bool update() override;
     // 按 display rotation 变换相机纹理 UV（校准预览方向；须在 GL 线程调用）
-    bool transformDisplayUv(const float *in, float *out, int num);
+    bool transformDisplayUv(const float *in, float *out, int num) override;
     // 更新一帧并抓取相机 JPEG（YUV_420_888 → QImage → JPG）；同时刷新 m_data 位姿
-    QByteArray captureJpeg();
+    QByteArray captureJpeg() override;
     // 内参图像尺寸（显示方向，HwArCameraIntrinsics_getImageDimensions）
-    void imageDimensions(int *w, int *h) const;
+    void imageDimensions(int *w, int *h) const override;
     // 取当前帧的 SLAM 稀疏点云（世界坐标系，每点 xyz；须在 GL 线程 update 后调用）
-    QVector<float> acquirePointCloud();
+    QVector<float> acquirePointCloud() override;
     // 应用相机纹理并启动相机（AR 扫描时由渲染线程创建的 OES 纹理触发）
-    bool applyCameraTexture(unsigned int texId);
+    bool applyCameraTexture(unsigned int texId) override;
     // AREngine 会话是否已创建（渲染线程据此等待后再应用纹理）
-    bool isInitialized() const { return m_session != nullptr; }
+    bool isInitialized() const override { return m_session != nullptr; }
     // 相机是否已启动（AREngine 持有相机，用于判定扫描可用性）
-    bool isCameraOn() const { return m_cameraOn; }
+    bool isCameraOn() const override { return m_cameraOn; }
     // AREngine 是否由渲染线程接管（update/取帧需在 GL 上下文线程执行）
-    bool glOwned() const { return m_glOwned; }
+    bool glOwned() const override { return m_glOwned; }
     void setDisplaySize(int width, int height) override;
     // 设置相机采集分辨率（设置页 → 扫描前调用；相机运行时在渲染线程重配）
-    void setPreviewResolution(int width, int height);
+    void setPreviewResolution(int width, int height) override;
     // 渲染线程：是否有待应用的分辨率变更
-    bool consumeResizePending();
+    bool consumeResizePending() override;
     // 渲染线程：暂停→按新分辨率重配→恢复（相机运行时用；返回是否成功）
-    bool applyResizeOnRenderThread();
+    bool applyResizeOnRenderThread() override;
     FrameData frame() const override;
     void setRecording(bool on) override;
     bool isRecording() const override;

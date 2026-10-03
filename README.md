@@ -16,7 +16,7 @@
 ```
 网页采集 ──► FastAPI 队列 ──► Fast3R 稠密重建 ──► 3D 点云查看 / 测量 / 下载
                     ▲                    ▲
-       Qt App 壳（华为 AREngine）        │
+       手机 App（ARKit / ARCore / AREngine）│
        提供真实米制位姿 + 稀疏点云        官网（portal）：账号 / 计费 / 发 API Key
 ```
 
@@ -30,8 +30,8 @@
 
 - **web client**：**唯一的客户端实现**（`panel/index.html`）。采集（录制 / 拍摄 / 本地文件 / AR 扫描）、
   提交、3D 查看、测量、标尺校准、历史、设置，全部在浏览器完成。
-- **移动端 App**：不是第二种 client，而是 web client 的 **WebView 壳 + 本地桥 `:50687`**
-  （额外提供 AR 米制位姿、华为 SLAM 稀疏点云、系统文件对话框）。
+- **移动端 App**：web client 的 **WebView 壳 + 本地桥 `:50687`**。
+  iPhone 用 ARKit，普通 Android 用 ARCore，华为设备优先用 AREngine。
 - **计费**：按用量（点云 / 体素 / 网格）、按计划（Personal / Professional，月度重置）、
   用量包（预付、不过期）与余额；扣减顺序 = 计划包 → 用量包 → 余额。
   **验证阶段（`BETA_FREE`）全部免费**，但用量照记。
@@ -44,7 +44,7 @@
 - **多路采集**：网页摄像头录制 / 连拍 / 本地视频图片；App 内「AR 扫描」带真实尺度自动取帧
 - **稠密重建**：Fast3R（ViT-Large）多视图稠密点云，服务器 GPU 推理
 - **真实尺度**：**AR 位姿驱动** —— 服务器用帧携带的米制位姿把点云直接对齐到真实尺度与 AR 世界系（`scale` 随结果返回并入库）；纯网页用「标尺校准」兜底
-- **华为点云融合**：AR 扫描时累积华为 SLAM 稀疏点云，与服务器稠密点云同帧叠加（可开关、可合并下载）
+- **AR 点云融合**：AR 扫描时累积 SDK 稀疏点云，与服务器稠密点云同帧叠加（可开关、可合并下载）
 - **查看 / 测量**：three.js 点云渲染、两点测距、标尺校准、重置视角
 - **下载**：PLY 导出（App 内直写手机下载目录，PC 浏览器直接下载）
 - **历史记录**：任务列表 + 状态 + 删除
@@ -121,8 +121,8 @@ $
 构建见 [构建移动端 App](#-构建移动端-app)。App 内 WebView 加载的**就是第 2 步的网页 client**，
 所以网页端功能全部可用；此外多出两样网页拿不到的：
 
-- **AR 扫描**：AREngine 米制位姿（真实尺度）+ 华为 SLAM 稀疏点云融合
-- **系统文件对话框**选择本地媒体；PLY 直接保存到手机 `Downloads/`
+- **AR 扫描**：ARKit / ARCore / AREngine 米制位姿（真实尺度）+ 稀疏点云融合
+- **系统文件对话框**选择本地媒体；PLY 保存到 Android `Downloads/` 或 iPhone“文件”App
 
 ### 采集与重建要点
 
@@ -146,11 +146,11 @@ $
 | -------------------------------------------- | :----: | :--------: | -------------------------------------------------------- |
 | 本地视频 / 图片采集                          |   ✅   |     ✅     |                                                          |
 | 摄像头录制 / 连拍                            |   ✅   |     ❌     | App 内 WebView 通常拿不到 `getUserMedia`，用 AR 扫描代替 |
-| **AR 扫描**（米制位姿 + 华为 SLAM 稀疏点云） |   ❌   |     ✅     | 需要 AREngine，只有 App 有                               |
+| **AR 扫描**（米制位姿 + SDK 稀疏点云）     |   ❌   |     ✅     | 需要兼容的 ARKit / ARCore / AREngine 设备                 |
 | 提交重建 + 实时进度                          |   ✅   |     ✅     | `/api/tasks`                                             |
 | 3D 点云查看 / 两点测距 / 标尺校准            |   ✅   |     ✅     | three.js                                                 |
 | 真实尺度                                     |   ✅   |     ✅     | AR 位姿自动对齐；无 AR 时手动标尺校准                    |
-| PLY 下载                                     |   ✅   |     ✅     | App 内直写手机下载目录                                   |
+| PLY 下载                                     |   ✅   |     ✅     | Android 写 Downloads；iOS 写“文件”App                    |
 | 历史：列表 / 加载 / 删除                     |   ✅   |     ✅     | `/api/history`，按 `owner` 隔离                          |
 | 账号：注册 / 登录 / 登出、匿名记录并入       |   ✅   |     ✅     | 同一套挑战-应答                                          |
 | 帮助页                                       |   ✅   |     ✅     |                                                          |
@@ -188,8 +188,8 @@ $
 **关键协作点**
 
 - **采集端**：网页（浏览器）/ Qt App（AR 扫描）三路互斥，统一 multipart 契约（`is_video/frame_count/resolution/intrinsics/extrinsics` + `client_id`）。
-- **真实尺度**：AR 扫描的帧携带 AREngine 米制位姿（VIO），服务器据此重建，测量直接为米制。
-- **华为点云融合**：AR 扫描时 AREngine 累积稀疏 SLAM 点云（世界坐标），经桥 `/ar/scan/pointcloud` 取回，与服务器稠密点云同帧叠加（网页开关 + 下载合并）。
+- **真实尺度**：AR 扫描的帧携带 SDK 米制位姿，服务器据此重建，测量直接为米制。
+- **AR 点云融合**：扫描时累积稀疏点云（世界坐标），经桥 `/ar/scan/pointcloud` 取回，与服务器稠密点云同帧叠加（网页开关 + 下载合并）。
 - **点云回传**：服务器回传**渲染子集** `points`（默认 6 万，`OMNI3D_MAX_RENDER_POINTS` 可调）→ 网页渲染；
   全量点云不塞 JSON，走 `GET /api/history/{id}/ply` 下载；App 内下载走桥 `/ar/file/save` 写 `/sdcard/Download`。
 
@@ -198,7 +198,7 @@ $
 | 服务                         | 地址              | 接口数 | 分组                                                                       |
 | ---------------------------- | ----------------- | ------ | -------------------------------------------------------------------------- |
 | **重建服务器**               | `127.0.0.1:50865` | 19     | 页面/健康(2) · 认证(7) · 重建任务(5) · 历史(4) · 尺度反推(1)               |
-| **App 本地桥**（仅 Android） | `127.0.0.1:50687` | 16     | 健康/状态/位姿(3) · 历史(1) · 文件选择与保存(2) · AR 扫描(9) · 华为点云(1) |
+| **App 本地桥**（Android/iOS） | `127.0.0.1:50687` | 16     | 健康/状态/位姿 · 历史 · AR 扫描 · 稀疏点云 · 文件接口 |
 
 完整接口、请求/响应示例、状态码与 curl 示例见 **[服务清单 `docs/API.md`](docs/API.md)**。
 
@@ -206,17 +206,20 @@ $
 
 ## 🔧 构建移动端 App
 
-前置：Qt 6.5.3、Android SDK/NDK、JDK 17、华为 AREngine SDK。
+Android 前置：Qt 6.5.3、Android SDK/NDK、JDK 17。华为与 Google AR 库已入库。
 
 ```powershell
 cd app
 .\build_apk.ps1 -Project D:\PROJECT\Omni3D\app -LibTarget omni3d_capture `
-  -Abi arm64-v8a -ApkOut D:\PROJECT\Omni3D\app\Omni3D_Capture-hw-debug.apk
-adb install -r -g Omni3D_Capture-hw-debug.apk
+  -Abi arm64-v8a -Clean -ApkOut D:\PROJECT\Omni3D\app\Omni3D_Capture-debug.apk
+adb install -r -g Omni3D_Capture-debug.apk
 ```
 
 - App 入口 `homeUrl`：默认 `http://127.0.0.1:50865/`（adb reverse）；可持久化为部署域名（脱离 adb）。
 - 华为 AREngine Server 由 App 自集成安装（资产在 `app/android/assets/`）。
+- Google ARCore 在普通 Android 设备上按需使用。
+- iPhone 用 Xcode 构建 [`ios/Omni3DiOS.xcodeproj`](ios/Omni3DiOS.xcodeproj)，
+  详细流程及真机验收见 [`docs/AR_SDK_DEPLOYMENT.md`](docs/AR_SDK_DEPLOYMENT.md)。
 
 ---
 
@@ -240,7 +243,8 @@ Omni3D/
 ├── app/               # 移动端 App 壳（WebView 加载网页 client + 本地桥）
 │   ├── qml/WebShell.qml  # WebView 壳
 │   ├── qml/ScanPage.qml  # AR 扫描覆盖层
-│   └── src/              # 桥 / 扫描 / AREngine / 预览（Android）
+│   └── src/              # 桥 / 扫描 / ARCore / AREngine / 预览（Android）
+├── ios/               # ARKit iPhone App（同一网页 + 本地桥）
 ├── fast3r/               # vendored 模型仓库（训练与推理共用）
 ├── training/             # 训练/评测：configs（Hydra 树）+ notebooks + 评测脚本
 ├── docs/                 # 架构说明 / 审计文档

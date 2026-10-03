@@ -2783,7 +2783,7 @@
               <button
                 class="tool-btn"
                 id="huaweiFusionBtn"
-                data-help="把 AR 扫描得到的华为点云叠加显示（亮黄色），导出时也会一起写入。没有 AR 数据时不可用。"
+                data-help="把 AR 扫描得到的稀疏点云叠加显示（亮黄色），导出时也会一起写入。没有 AR 数据时不可用。"
               ></button>
               <button
                 class="tool-btn"
@@ -5195,6 +5195,9 @@
             method: "POST",
           });
           if (!resp.ok) throw new Error("启动扫描失败");
+          const result = await resp.json();
+          if (!result.ok || !result.started)
+            throw new Error(result.error || "AR SDK 尚未就绪");
           STATE.arScanActive = true;
           STATE.arScanFrameCount = 0;
           STATE.huaweiPoints = null;
@@ -5303,7 +5306,7 @@
           }
           const pcText =
             huaweiPoints && huaweiPoints.length
-              ? ` · 华为点云 ${huaweiPoints.length.toLocaleString()} 点`
+              ? ` · AR 点云 ${huaweiPoints.length.toLocaleString()} 点`
               : "";
           showMetaInfo(
             "ar",
@@ -5391,8 +5394,8 @@
         btn.disabled = !has;
         btn.classList.toggle("satisfied", !!STATE.huaweiFusion);
         btn.title = has
-          ? `华为点云融合：${STATE.huaweiFusion ? "已叠显（点击关闭）" : "点击叠加显示"}`
-          : "华为点云融合：没有 AR 点云（需先用 App 做 AR 扫描）";
+          ? `AR 点云融合：${STATE.huaweiFusion ? "已叠显（点击关闭）" : "点击叠加显示"}`
+          : "AR 点云融合：没有 AR 点云（需先用 App 做 AR 扫描）";
       }
 
       dom.arScanFinishBtn.addEventListener("click", async () => {
@@ -6743,7 +6746,7 @@
         modelPickBtn: `${_SVG_OPEN}<rect x="6" y="6" width="12" height="12" rx="2.4"/><path d="M9.5 3.6v2.4M14.5 3.6v2.4M9.5 18v2.4M14.5 18v2.4M3.6 9.5H6M3.6 14.5H6M18 9.5h2.4M18 14.5h2.4"/></svg>`,
       };
       const TOOLBAR_NAMES = {
-        huaweiFusionBtn: "华为点云融合",
+        huaweiFusionBtn: "AR 点云融合",
         colorModeBtn: "颜色",
         axesToggleBtn: "万向轴",
         exportBtn: "导出",
@@ -8901,7 +8904,7 @@
 
       dom.huaweiFusionBtn.addEventListener("click", () => {
         if (!STATE.huaweiPoints || !STATE.huaweiPoints.length) {
-          showToast("暂无华为点云数据", "error");
+          showToast("暂无 AR 点云数据", "error");
           return;
         }
         STATE.huaweiFusion = !STATE.huaweiFusion;
@@ -8910,8 +8913,8 @@
         if (STATE.resultData) renderPointCloud(STATE.resultData);
         showToast(
           STATE.huaweiFusion
-            ? "已融合华为点云（亮黄色）"
-            : "已关闭华为点云融合",
+            ? "已融合 AR 点云（亮黄色）"
+            : "已关闭 AR 点云融合",
           "success",
         );
       });

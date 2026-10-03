@@ -378,29 +378,32 @@ Content-Type: application/json
 
 ---
 
-## 四、App 本地桥（:50687，仅 Android）
+## 四、App 本地桥（:50687，Android / iOS）
 
-让网页访问手机原生能力（AR 位姿、系统文件对话框、华为点云）。
+让网页访问手机原生能力（AR 位姿、稀疏点云、系统文件选择与保存）。
 所有响应带 CORS 头。**桌面端运行时装出来的同一批接口对 `/ar/file/*` 与 `/ar/scan/*` 返回“仅 App 内可用”**。
 
 | 方法     | 路径                  | 说明                                                                            |
 | -------- | --------------------- | ------------------------------------------------------------------------------- |
 | GET      | `/ar/health`          | 存活探针                                                                        |
-| GET      | `/ar/status`          | `{ok, ready, tracking, scale}`                                                  |
+| GET      | `/ar/status`          | `{ok, ready, tracking, scale, provider}`                                        |
 | GET      | `/ar/pose`            | `{ok, pose:[16 枚 col-major 4×4], tracking}`                                    |
 | GET/POST | `/ar/history`         | App 私有目录历史（JSON）读写                                                    |
-| POST     | `/ar/file/pick`       | 弹系统文件选择器，返回文件二进制（`X-Filename` 头）                             |
-| GET      | `/ar/file/save?name=` | 把请求体写成 PLY 到手机 `Downloads/`                                            |
+| GET      | `/ar/file/pick`       | 弹系统文件选择器，返回文件二进制（`X-Filename` 头）                             |
+| POST     | `/ar/file/save?name=` | 把请求体写成 PLY；Android 到 `Downloads/`，iOS 到 App 的“文件”目录             |
 | POST     | `/ar/scan/start`      | 触发扫描页（App 内）                                                            |
 | POST     | `/ar/scan/settings`   | `{width,height}` 设采集分辨率                                                   |
 | POST     | `/ar/scan/capture`    | 抓一帧                                                                          |
 | POST     | `/ar/scan/finish`     | 完成扫描                                                                        |
 | POST     | `/ar/scan/stop`       | 停止连续采集                                                                    |
 | POST     | `/ar/scan/reset`      | 清空已抓帧/点云                                                                 |
-| GET      | `/ar/scan/status`     | `{available, scanning, finished, frameCount, pointCloudCount, tracking, scale}` |
+| GET      | `/ar/scan/status`     | `{available, scanning, finished, frameCount, pointCloudCount, tracking, scale, provider}` |
 | GET      | `/ar/scan/data`       | 全部帧的 `poses` + `intrinsics`                                                 |
 | GET      | `/ar/scan/frames/{i}` | 第 i 帧 JPEG                                                                    |
-| GET      | `/ar/scan/pointcloud` | 华为 SLAM 稀疏点云 PLY                                                          |
+| GET      | `/ar/scan/pointcloud` | 当前 AR SDK 的稀疏点云 PLY                                                      |
+
+`provider` 为 `apple-arkit`、`google-arcore`、`huawei-ar-engine` 或 `none`。
+AR 扫描接口两端共用；iOS 的 `/ar/scan/settings` 会接受请求，但采集分辨率由 ARKit 决定。
 
 ---
 

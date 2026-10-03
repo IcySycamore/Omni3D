@@ -273,18 +273,12 @@ bool HwArEngineSession::installServer()
     QJniObject ctx = QNativeInterface::QAndroidApplication::context();
     if (!ctx.isValid())
         return false;
-    QJniObject intent("android/content/Intent", "(Ljava/lang/String;)V",
-                      QJniObject::fromString("android.intent.action.VIEW").object());
-    QJniObject uri = QJniObject::callStaticObjectMethod(
-        "android/net/Uri", "parse", "(Ljava/lang/String;)Landroid/net/Uri;",
-        QJniObject::fromString("file://" + apk).object());
-    intent.callObjectMethod("setDataAndType",
-                            "(Landroid/net/Uri;Ljava/lang/String;)Landroid/content/Intent;",
-                            uri.object(), QJniObject::fromString("application/vnd.android.package-archive").object());
-    intent.callObjectMethod("addFlags", "(I)Landroid/content/Intent;", 0x00000001);
-    ctx.callObjectMethod("startActivity", "(Landroid/content/Intent;)V", intent.object());
-    HLOG("installServer: 已发起安装 Intent");
-    return true;
+    const jint result = QJniObject::callStaticMethod<jint>(
+        "com/omni3d/capture/ARHelper", "installServerApk",
+        "(Landroid/content/Context;Ljava/lang/String;)I",
+        ctx.object(), QJniObject::fromString(apk).object());
+    HLOG(result == 0 ? "installServer: PackageInstaller started" : "installServer: failed");
+    return result == 0;
 #else
     return false;
 #endif

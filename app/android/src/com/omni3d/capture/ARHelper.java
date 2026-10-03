@@ -3,6 +3,9 @@ package com.omni3d.capture;
 import android.app.PendingIntent;
 import android.app.Activity;
 import android.content.Context;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.content.Intent;
 import android.content.pm.PackageInstaller;
 import android.graphics.Bitmap;
@@ -13,6 +16,8 @@ import android.hardware.SensorManager;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.net.http.SslError;
+import android.net.Uri;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +44,23 @@ public final class ARHelper {
     private static SensorManager sSensorManager;
     private static SensorEventListener sListener;
     private static volatile float sYaw, sPitch, sRoll; // 度
+    private static boolean sCameraPermissionRequested = false;
+
+    public static boolean ensureCameraPermission(Context context) {
+        if (Build.VERSION.SDK_INT < 23 ||
+                context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
+            return true;
+        if (!sCameraPermissionRequested && context instanceof Activity) {
+            sCameraPermissionRequested = true;
+            Activity activity = (Activity) context;
+            activity.runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    activity.requestPermissions(new String[]{Manifest.permission.CAMERA}, 4001);
+                }
+            });
+        }
+        return false;
+    }
 
     public static void startSensors(Context ctx) {
         if (sSensorManager != null) return;
@@ -215,6 +237,13 @@ public final class ARHelper {
             return -1;
         }
         try {
+            if (Build.VERSION.SDK_INT >= 26 && !context.getPackageManager().canRequestPackageInstalls()) {
+                Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:" + context.getPackageName()));
+                settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(settings);
+                return 0; // 用户授权后再次点击扫描，继续安装
+            }
             PackageInstaller pi = context.getPackageManager().getPackageInstaller();
             PackageInstaller.SessionParams params =
                     new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
@@ -231,10 +260,10 @@ public final class ARHelper {
                 }
                 session.fsync(out);
             }
-            // 安装确认回调 -> 本 Activity（QtActivity）
-            Intent intent = new Intent(context, context.getClass());
-            int flags = Intent.FLAG_ACTIVITY_NEW_TASK;
-            PendingIntent pi2 = PendingIntent.getActivity(context, 0, intent, flags);
+            // PackageInstaller 先回调 STATUS_PENDING_USER_ACTION；接收器需启动确认页。
+            Intent intent = new Intent(context, InstallResultReceiver.class);
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE;
+            PendingIntent pi2 = PendingIntent.getBroadcast(context, sessionId, intent, flags);
             session.commit(pi2.getIntentSender());
             session.close();
             Log.i(TAG, "install session committed: " + sessionId);
