@@ -252,6 +252,8 @@ Omni3D/
 
 ## 📚 文档
 
+- [用户使用手册](docs/USER_GUIDE.md) —— 浏览器端采集、提交重建、查看与导出结果
+- [开发者手册](docs/DEVELOPER_GUIDE.md) —— 本地开发、测试、镜像发布、云端运维与排障
 - [领域词汇与分层约定](CONTEXT.md) —— 术语表 + server/client 硬约束
 - [服务清单（API）](docs/API.md) —— 全部接口、认证协议、状态码、curl 示例
 - [速度与质量（实测）](docs/PERFORMANCE.md) —— 分辨率/帧数对耗时与自洽性的影响
@@ -267,6 +269,19 @@ Omni3D/
 
 > 📦 **依赖**：应用侧（server）见 [requirements-app.txt](requirements-app.txt)；
 > vendored 模型仓库依赖见 `requirements.txt`。
+
+### 云端试运行
+
+项目已完成一次 **Docker + 容器镜像仓库 + GPU 云主机** 的真实模型部署验证：浏览器端上传
+视频或图片后，由云端 GPU 加载 Fast3R 完成重建。推荐的发布路径为：
+
+```text
+代码提交并合并 → 镜像仓库构建 → 云主机拉取镜像 → Compose 重建服务 → 健康检查与真实重建验收
+```
+
+部署参数、镜像地址、API Key、SSH 私钥、真实公网地址等均属于运行环境配置，**不得写入仓库**。
+面向公网正式发布前，应配置自有域名、HTTPS、访问控制、备份与监控；详细操作见
+[部署指南](docs/DEPLOYMENT.md) 和 [开发者手册](docs/DEVELOPER_GUIDE.md)。
 
 ## 🤝 贡献
 

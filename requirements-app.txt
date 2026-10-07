@@ -7,6 +7,15 @@
 
 # ---------- server（panel/） ----------
 torch>=2.0              # 必须最先导入（本机 fbgemm.dll 存在加载顺序冲突）
+# Fast3R 推理运行时依赖。镜像部署时不安装研究栈，需在此显式声明。
+huggingface-hub[torch]>=0.22
+einops
+omegaconf
+tqdm
+# Fast3R 在导入时会初始化训练/配置工具，即使推理时不训练也必须可导入。
+hydra-core
+lightning>=2.5.0
+rich
 fastapi>=0.110
 uvicorn[standard]>=0.27
 python-multipart        # FastAPI 表单 / 文件上传
